@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/layout/Header';
+import { DateNavigator } from './components/layout/DateNavigator';
 import { BottomNav, TabView } from './components/layout/BottomNav';
 import { BackgroundDecorations } from './components/layout/BackgroundDecorations';
 import { PrioritiesPage } from './components/pages/PrioritiesPage';
@@ -133,8 +134,19 @@ export function App() {
           onOpenScratchpad={() => setIsScratchpadOpen(true)}
         />
 
+        {/* Date Navigator Strip for Daily Views */}
+        {(activeTab === 'priorities' || activeTab === 'habits') && (
+          <div className="pt-2">
+            <DateNavigator
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+              stats={dayStats}
+            />
+          </div>
+        )}
+
         {/* Page Body View with safe bottom padding for dock */}
-        <main className="flex-1 w-full pt-2 pb-28">
+        <main className="flex-1 w-full pt-1 pb-28">
           {activeTab === 'priorities' && (
             <PrioritiesPage
               selectedDate={selectedDate}

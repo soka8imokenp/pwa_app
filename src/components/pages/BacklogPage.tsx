@@ -1,10 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   Search,
   Plus,
   ArrowUp,
   Trash2,
-  Lightbulb,
   Check,
   Code,
   Palette,
@@ -12,7 +11,7 @@ import {
   Activity,
   Archive,
   Crown,
-  CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 import type { Task } from '../../types';
 import { playTaskCheckSound, playClickSound, playSuccessChime } from '../../lib/sound';
@@ -27,13 +26,6 @@ interface BacklogPageProps {
   onQuickAddTask: (title: string, category?: string, minutes?: number) => void;
 }
 
-const QUICK_IDEA_TEMPLATES = [
-  { title: 'Code Refactor & Clean Code', category: 'code', minutes: 45, icon: <Code className="w-4 h-4 text-purple-900 stroke-[2.25]" /> },
-  { title: 'Design System & Icon Polish', category: 'design', minutes: 30, icon: <Palette className="w-4 h-4 text-orange-950 stroke-[2.25]" /> },
-  { title: 'Read 20 pages of Tech Book', category: 'learn', minutes: 25, icon: <BookOpen className="w-4 h-4 text-sky-950 stroke-[2.25]" /> },
-  { title: 'Stretch & Posture Session', category: 'health', minutes: 15, icon: <Activity className="w-4 h-4 text-lime-950 stroke-[2.25]" /> },
-];
-
 export const BacklogPage: React.FC<BacklogPageProps> = ({
   backlogTasks,
   canPromoteToPriority,
@@ -47,14 +39,8 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [quickTitle, setQuickTitle] = useState('');
 
-  // Stats
   const activeCount = backlogTasks.filter((t) => !t.isCompleted).length;
   const doneCount = backlogTasks.filter((t) => t.isCompleted).length;
-  const totalEstimatedMins = useMemo(() => {
-    return backlogTasks
-      .filter((t) => !t.isCompleted)
-      .reduce((sum, t) => sum + (t.estimatedMinutes || 30), 0);
-  }, [backlogTasks]);
 
   const handleCheck = (task: Task) => {
     playTaskCheckSound();
@@ -67,7 +53,7 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
           particleCount: 50,
           spread: 60,
           origin: { y: 0.7 },
-          colors: ['#C084FC', '#BEF264', '#FED7AA'],
+          colors: ['#FFE873', '#E8DCFF', '#D1FBE4'],
         });
       }, 100);
     }
@@ -77,13 +63,8 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
     e.preventDefault();
     if (!quickTitle.trim()) return;
     playClickSound();
-    onQuickAddTask(quickTitle.trim());
+    onQuickAddTask(quickTitle.trim(), selectedCategory !== 'all' ? selectedCategory : 'general', 30);
     setQuickTitle('');
-  };
-
-  const handleAddTemplate = (template: typeof QUICK_IDEA_TEMPLATES[0]) => {
-    playSuccessChime();
-    onQuickAddTask(template.title, template.category, template.minutes);
   };
 
   const handlePromote = (task: Task) => {
@@ -92,7 +73,7 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
       particleCount: 60,
       spread: 60,
       origin: { y: 0.6 },
-      colors: ['#FEF08A', '#C084FC', '#BEF264'],
+      colors: ['#FFE873', '#E8DCFF', '#D1FBE4'],
     });
     onPromoteToPriority(task);
   };
@@ -106,174 +87,82 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
     return true;
   });
 
-  const getCategoryDetails = (cat?: string) => {
-    switch (cat?.toLowerCase()) {
-      case 'design':
-      case 'ui':
-        return { bg: '#FED7AA', icon: <Palette className="w-5 h-5 text-orange-950 stroke-[2.25]" />, label: 'Design' };
-      case 'learn':
-        return { bg: '#BAE6FD', icon: <BookOpen className="w-5 h-5 text-sky-950 stroke-[2.25]" />, label: 'Learn' };
-      case 'health':
-      case 'fitness':
-        return { bg: '#BEF264', icon: <Activity className="w-5 h-5 text-lime-950 stroke-[2.25]" />, label: 'Health' };
+  const getCategoryIcon = (category?: string) => {
+    switch (category) {
       case 'code':
-      case 'dev':
+        return <Code className="w-3.5 h-3.5" />;
+      case 'design':
+        return <Palette className="w-3.5 h-3.5" />;
+      case 'health':
+        return <Activity className="w-3.5 h-3.5" />;
+      case 'learn':
+        return <BookOpen className="w-3.5 h-3.5" />;
       default:
-        return { bg: '#E9D5FF', icon: <Code className="w-5 h-5 text-purple-950 stroke-[2.25]" />, label: 'Dev' };
+        return <Sparkles className="w-3.5 h-3.5" />;
     }
   };
 
   return (
-    <div className="space-y-4 max-w-xl mx-auto pb-28 font-body select-none">
-      
-      {/* 1. Vault Metrics Overview Grid */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="bg-white/95 backdrop-blur-md border-[1.75px] border-[#18181B] rounded-[1.75rem] p-3 shadow-[2px_2px_0px_#18181B] text-center space-y-0.5">
-          <div className="w-8 h-8 rounded-full bg-[#E9D5FF] border border-[#18181B] flex items-center justify-center mx-auto text-xs shadow-2xs">
-            <Archive className="w-4 h-4 text-purple-950 stroke-[2.25]" />
-          </div>
-          <p className="text-sm font-black font-mono-num text-[#18181B]">
-            {activeCount}
-          </p>
-          <p className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider">
-            In Vault
-          </p>
-        </div>
-
-        <div className="bg-white/95 backdrop-blur-md border-[1.75px] border-[#18181B] rounded-[1.75rem] p-3 shadow-[2px_2px_0px_#18181B] text-center space-y-0.5">
-          <div className="w-8 h-8 rounded-full bg-[#FEF08A] border border-[#18181B] flex items-center justify-center mx-auto text-xs shadow-2xs">
-            <Crown className="w-4 h-4 text-amber-950 stroke-[2.25]" />
-          </div>
-          <p className="text-sm font-black font-mono-num text-[#18181B]">
-            ~{(totalEstimatedMins / 60).toFixed(1)}h
-          </p>
-          <p className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider">
-            Workload
-          </p>
-        </div>
-
-        <div className="bg-white/95 backdrop-blur-md border-[1.75px] border-[#18181B] rounded-[1.75rem] p-3 shadow-[2px_2px_0px_#18181B] text-center space-y-0.5">
-          <div className="w-8 h-8 rounded-full bg-[#BEF264] border border-[#18181B] flex items-center justify-center mx-auto text-xs shadow-2xs">
-            <Check className="w-4 h-4 text-lime-950 stroke-[3]" />
-          </div>
-          <p className="text-sm font-black font-mono-num text-[#18181B]">
-            {doneCount}
-          </p>
-          <p className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider">
-            Done
-          </p>
-        </div>
-      </div>
-
-      {/* 2. Top Header & Search Capsule */}
-      <div className="bg-white/95 backdrop-blur-md border-[1.75px] border-[#18181B] rounded-full px-4 py-2.5 shadow-[2px_2px_0px_#18181B] flex items-center gap-2.5">
-        <Search className="w-4 h-4 text-slate-400 stroke-[2.5] shrink-0" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search task vault..."
-          className="w-full text-xs font-bold bg-transparent outline-none placeholder:text-slate-400"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            className="text-[10px] font-black text-slate-400 hover:text-[#18181B] px-1.5 py-0.5 rounded-full bg-slate-100 cursor-pointer"
-          >
-            Clear
-          </button>
-        )}
-      </div>
-
-      {/* 3. Quick Add Capsule */}
-      <form
-        onSubmit={handleQuickAdd}
-        className="bg-white/95 backdrop-blur-md border-[1.75px] border-[#18181B] rounded-full p-1.5 shadow-[2px_2px_0px_#18181B] flex items-center gap-2"
-      >
-        <input
-          type="text"
-          value={quickTitle}
-          onChange={(e) => setQuickTitle(e.target.value)}
-          placeholder="Add side quest or backlog idea..."
-          className="flex-1 pl-4 pr-2 py-2 text-xs font-bold bg-transparent outline-none placeholder:text-slate-400"
-        />
-        <button
-          type="submit"
-          disabled={!quickTitle.trim()}
-          className="w-10 h-10 rounded-full bg-[#C084FC] hover:bg-[#B366FA] disabled:opacity-40 text-[#18181B] border-[1.5px] border-[#18181B] flex items-center justify-center shadow-xs active:translate-y-0.5 cursor-pointer shrink-0 transition-all"
-        >
-          <Plus className="w-5 h-5 stroke-[3]" />
-        </button>
-      </form>
-
-      {/* 4. Quick Starter Templates (1-Tap Idea Spark) */}
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-1.5 px-2">
-          <Lightbulb className="w-3.5 h-3.5 text-amber-500 fill-amber-400 stroke-[2.25]" />
-          <span className="text-[10px] font-black font-display uppercase tracking-wider text-slate-500">
-            Quick Idea Spark (1-Tap Add)
+    <div className="w-full space-y-4 pb-20 font-body select-none">
+      {/* 1. Header Overview & Counters */}
+      <div className="neo-card p-4 flex items-center justify-between gap-3 bg-white">
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+            Task Backlog Vault
           </span>
+          <h2 className="text-base font-bold font-display text-[#18181B] mt-0.5">
+            {activeCount} Active Tasks
+          </h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-1.5">
-          {QUICK_IDEA_TEMPLATES.map((tmpl, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleAddTemplate(tmpl)}
-              className="p-2.5 bg-white/90 hover:bg-white border border-[#18181B]/15 hover:border-[#18181B] rounded-2xl flex items-center justify-between text-left shadow-2xs hover:shadow-xs transition-all cursor-pointer group"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                {tmpl.icon}
-                <span className="text-[10px] font-extrabold text-[#18181B] truncate">
-                  {tmpl.title}
-                </span>
-              </div>
-              <span className="w-5 h-5 rounded-full bg-slate-50 group-hover:bg-[#E9D5FF] border border-[#18181B]/20 flex items-center justify-center text-[10px] font-black shrink-0 ml-1">
-                +
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 5. Filter Pills & Category Filters */}
-      <div className="space-y-2 pt-1">
-        <div className="flex items-center justify-between px-2">
-          <div className="flex gap-1.5">
-            {(['all', 'active', 'done'] as const).map((f) => {
-              const count = backlogTasks.filter((t) =>
-                f === 'all' ? true : f === 'active' ? !t.isCompleted : t.isCompleted
-              ).length;
-
-              return (
-                <button
-                  key={f}
-                  onClick={() => {
-                    playClickSound();
-                    setFilter(f);
-                  }}
-                  className={`px-3 py-1 rounded-full text-[10px] font-black uppercase transition-all cursor-pointer ${
-                    filter === f
-                      ? 'bg-[#18181B] text-white shadow-[1px_1px_0px_#C084FC]'
-                      : 'bg-white text-slate-500 border border-[#18181B]/15 hover:border-[#18181B]'
-                  }`}
-                >
-                  {f} ({count})
-                </button>
-              );
-            })}
-          </div>
-
+        <div className="flex items-center gap-2">
           {canPromoteToPriority && (
-            <span className="text-[10px] font-black text-purple-900 bg-[#E9D5FF] px-2.5 py-0.5 rounded-full border border-[#18181B] shadow-2xs flex items-center gap-1">
+            <span className="text-xs font-bold text-[#18181B] bg-[#FFE873] px-2.5 py-1 rounded-full border-[1.5px] border-[#18181B] shadow-[1px_1px_0px_#18181B] flex items-center gap-1">
               <Crown className="w-3 h-3 stroke-[2.25]" />
               <span>Top 3 Open</span>
             </span>
           )}
+          <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg border border-slate-200">
+            {doneCount} Done
+          </span>
+        </div>
+      </div>
+
+      {/* 2. Search & Quick Add */}
+      <div className="space-y-2">
+        <div className="relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search backlog..."
+            className="w-full pl-10 pr-4 py-2 bg-white border-[1.75px] border-[#18181B] rounded-xl text-xs font-medium text-[#18181B] placeholder:text-slate-400 shadow-[1.5px_1.5px_0px_#18181B] focus:outline-none"
+          />
         </div>
 
-        {/* Category Filter Chips */}
-        <div className="flex items-center gap-1.5 overflow-x-auto px-1 pb-1">
+        <form onSubmit={handleQuickAdd} className="flex items-center gap-2">
+          <input
+            type="text"
+            value={quickTitle}
+            onChange={(e) => setQuickTitle(e.target.value)}
+            placeholder="Add new backlog task..."
+            className="flex-1 px-3.5 py-2 bg-white border-[1.75px] border-[#18181B] rounded-xl text-xs font-medium text-[#18181B] placeholder:text-slate-400 shadow-[1.5px_1.5px_0px_#18181B] focus:outline-none"
+          />
+          <button
+            type="submit"
+            disabled={!quickTitle.trim()}
+            className="px-3.5 py-2 bg-[#E8DCFF] neo-btn text-xs text-[#18181B] cursor-pointer disabled:opacity-50 flex items-center gap-1"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add</span>
+          </button>
+        </form>
+      </div>
+
+      {/* 3. Category Filter Chips & Status Tabs */}
+      <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1">
+        <div className="flex items-center gap-1">
           {['all', 'code', 'design', 'learn', 'health'].map((cat) => (
             <button
               key={cat}
@@ -281,112 +170,112 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
                 playClickSound();
                 setSelectedCategory(cat);
               }}
-              className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shrink-0 border ${
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer border-[1.5px] ${
                 selectedCategory === cat
-                  ? 'bg-[#C084FC] text-[#18181B] border-[#18181B] shadow-2xs'
-                  : 'bg-white/80 text-slate-400 border-slate-200 hover:border-[#18181B]'
+                  ? 'bg-[#18181B] text-white border-[#18181B] shadow-[1px_1px_0px_#18181B]'
+                  : 'bg-white text-slate-600 border-slate-200 hover:border-[#18181B]'
               }`}
             >
-              {cat === 'all' ? 'All Tags' : cat}
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
+          {(['all', 'active', 'done'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => {
+                playClickSound();
+                setFilter(f);
+              }}
+              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-all cursor-pointer ${
+                filter === f ? 'bg-[#FFE873] text-[#18181B] font-extrabold' : 'text-slate-400 hover:text-[#18181B]'
+              }`}
+            >
+              {f}
             </button>
           ))}
         </div>
       </div>
 
-      {/* 6. List of Pillowy Task Capsules */}
-      <div className="space-y-2.5">
+      {/* 4. Task List */}
+      <div className="space-y-2">
         {filteredTasks.length === 0 ? (
-          <div className="bg-white/90 border-[1.5px] border-dashed border-slate-300 rounded-[2rem] p-6 text-center shadow-xs space-y-1.5">
-            <div className="w-12 h-12 rounded-full bg-[#FAF7F2] border border-slate-200 flex items-center justify-center mx-auto text-base">
-              <Archive className="w-6 h-6 text-slate-400 stroke-[2.25]" />
-            </div>
-            <h4 className="text-xs font-black font-display text-[#18181B]">
-              No tasks in this view
+          <div className="neo-card p-8 text-center bg-white border-dashed space-y-2">
+            <Archive className="w-8 h-8 text-slate-300 mx-auto" />
+            <h4 className="text-xs font-bold font-display text-slate-500">
+              No tasks found
             </h4>
-            <p className="text-[11px] font-medium text-slate-500 max-w-xs mx-auto">
-              {searchQuery ? 'Try another search keyword.' : 'Tap any starter idea above or type a new task.'}
-            </p>
           </div>
         ) : (
-          filteredTasks.map((task) => {
-            const cat = getCategoryDetails(task.category);
+          filteredTasks.map((task) => (
+            <div
+              key={task.id}
+              className={`neo-card p-3.5 flex items-center justify-between gap-3 bg-white transition-all ${
+                task.isCompleted ? 'opacity-70 bg-slate-50' : 'hover:-translate-y-0.5'
+              }`}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <button
+                  onClick={() => handleCheck(task)}
+                  className={`w-6 h-6 rounded-md border-[1.75px] border-[#18181B] flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                    task.isCompleted ? 'bg-[#D1FBE4] text-[#18181B]' : 'bg-white hover:bg-slate-50'
+                  }`}
+                >
+                  {task.isCompleted && <Check className="w-4 h-4 stroke-[2.5]" />}
+                </button>
 
-            return (
-              <div
-                key={task.id}
-                className={`bg-white/95 backdrop-blur-md border-[1.75px] border-[#18181B] rounded-[2rem] p-3 shadow-[2px_2px_0px_#18181B] flex items-center justify-between gap-3 transition-all ${
-                  task.isCompleted ? 'opacity-80 bg-slate-50/80' : 'hover:-translate-y-0.5'
-                }`}
-              >
-                {/* Left: Lucide Avatar Badge + Checkbox + Title */}
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <button
-                    onClick={() => handleCheck(task)}
-                    className={`w-11 h-11 rounded-full border-[1.75px] border-[#18181B] flex items-center justify-center shrink-0 shadow-2xs text-sm cursor-pointer transition-colors ${
-                      task.isCompleted ? 'bg-[#BEF264]' : 'hover:scale-105'
+                <div className="min-w-0">
+                  <span
+                    className={`text-xs sm:text-sm font-bold block truncate text-[#18181B] ${
+                      task.isCompleted ? 'line-through text-slate-400' : ''
                     }`}
-                    style={{
-                      backgroundColor: task.isCompleted ? '#BEF264' : cat.bg,
-                    }}
-                    title={task.isCompleted ? 'Mark as incomplete' : 'Mark as done'}
                   >
-                    {task.isCompleted ? <Check className="w-5 h-5 stroke-[3] text-lime-950" /> : cat.icon}
-                  </button>
-
-                  <div className="min-w-0 flex-1">
-                    <h4
-                      onClick={() => handleCheck(task)}
-                      className={`text-xs font-extrabold truncate cursor-pointer select-none ${
-                        task.isCompleted ? 'line-through text-slate-400' : 'text-[#18181B]'
-                      }`}
-                    >
-                      {task.title}
-                    </h4>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">
-                        {cat.label}
-                      </span>
-                      {task.estimatedMinutes && (
-                        <span className="text-[9px] font-black text-purple-700 font-mono-num">
-                          ~{task.estimatedMinutes}m
-                        </span>
-                      )}
-                    </div>
+                    {task.title}
+                  </span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase">
+                      {getCategoryIcon(task.category)}
+                      {task.category || 'general'}
+                    </span>
+                    <span className="text-[10px] text-slate-300">•</span>
+                    <span className="text-[10px] text-slate-500 font-mono-num">
+                      {task.estimatedMinutes || 30}m
+                    </span>
                   </div>
                 </div>
-
-                {/* Right: Actions */}
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {!task.isCompleted && canPromoteToPriority && (
-                    <button
-                      onClick={() => handlePromote(task)}
-                      title="Promote to Today's Top 3"
-                      className="flex items-center gap-1 px-3 py-1.5 bg-[#E9D5FF] text-[#18181B] border-[1.25px] border-[#18181B] rounded-full text-[10px] font-black hover:bg-[#D8B4FE] transition-all shadow-xs cursor-pointer active:translate-y-0.5"
-                    >
-                      <ArrowUp className="w-3 h-3 stroke-[2.5]" />
-                      <span>Top 3</span>
-                    </button>
-                  )}
-
-                  {task.id && (
-                    <button
-                      onClick={() => {
-                        playClickSound();
-                        onDeleteTask(task.id!);
-                      }}
-                      title="Delete task"
-                      className="w-8 h-8 rounded-full bg-[#FAF7F2] hover:bg-rose-50 border border-slate-200 hover:border-rose-400 flex items-center justify-center text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 stroke-[2.25]" />
-                    </button>
-                  )}
-                </div>
               </div>
-            );
-          })
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                {!task.isCompleted && canPromoteToPriority && (
+                  <button
+                    onClick={() => handlePromote(task)}
+                    title="Promote to Today Top 3"
+                    className="px-2.5 py-1 bg-[#FFE873] hover:bg-[#FCD34D] text-[#18181B] border-[1.5px] border-[#18181B] rounded-lg text-[10px] font-bold flex items-center gap-1 cursor-pointer shadow-[1px_1px_0px_#18181B]"
+                  >
+                    <ArrowUp className="w-3 h-3 stroke-[2.5]" />
+                    <span>Top 3</span>
+                  </button>
+                )}
+
+                {task.id && (
+                  <button
+                    onClick={() => {
+                      playClickSound();
+                      onDeleteTask(task.id!);
+                    }}
+                    title="Delete"
+                    className="w-7 h-7 rounded-lg bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-400 flex items-center justify-center text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 stroke-[2]" />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
         )}
       </div>
-
     </div>
   );
 };

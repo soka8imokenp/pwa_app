@@ -1,28 +1,28 @@
 import React from 'react';
-import { Compass, Inbox, Link2, Timer, BarChart3 } from 'lucide-react';
+import { CheckSquare, Inbox, Zap, Timer, BarChart3, Link2 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 
-export type TabView = 'priorities' | 'backlog' | 'links' | 'focus' | 'stats' | 'habits';
+export type TabView = 'priorities' | 'backlog' | 'habits' | 'focus' | 'stats' | 'links';
 
 interface BottomNavProps {
   activeTab: TabView;
   onChangeTab: (tab: TabView) => void;
-  onOpenSettings?: () => void;
 }
 
 interface NavItem {
   id: TabView;
   label: string;
   icon: React.ElementType;
-  bubbleBg: string;
+  activeBg: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'priorities', label: 'Themes', icon: Compass, bubbleBg: '#C084FC' },
-  { id: 'backlog', label: 'Posts', icon: Inbox, bubbleBg: '#FFDE59' },
-  { id: 'links', label: 'Links', icon: Link2, bubbleBg: '#FF844B' },
-  { id: 'focus', label: 'Focus', icon: Timer, bubbleBg: '#BEF264' },
-  { id: 'stats', label: 'Stats', icon: BarChart3, bubbleBg: '#38BDF8' },
+  { id: 'priorities', label: 'Today', icon: CheckSquare, activeBg: '#FFE873' },
+  { id: 'backlog', label: 'Backlog', icon: Inbox, activeBg: '#E8DCFF' },
+  { id: 'habits', label: 'Habits', icon: Zap, activeBg: '#D1FBE4' },
+  { id: 'focus', label: 'Focus', icon: Timer, activeBg: '#FED7AA' },
+  { id: 'stats', label: 'Stats', icon: BarChart3, activeBg: '#BAE6FD' },
+  { id: 'links', label: 'Links', icon: Link2, activeBg: '#FCE7F3' },
 ];
 
 export const BottomNav: React.FC<BottomNavProps> = ({
@@ -35,9 +35,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none pb-2 px-3 sm:pb-4">
-      {/* Floating Neo-Brutalist Dock with Solid Offset Shadow */}
-      <nav className="w-full max-w-md bg-white/95 backdrop-blur-xl border-2 border-black rounded-[2.5rem] shadow-[0_16px_35px_rgba(0,0,0,0.1),3px_3px_0px_#000000] px-3 pt-3.5 pb-2.5 flex items-center justify-around pointer-events-auto select-none font-body">
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none pb-3 px-3">
+      {/* Floating Sleek Neo-Brutalist Dock */}
+      <nav className="w-full max-w-lg bg-white/95 backdrop-blur-md border-[1.75px] border-[#18181B] rounded-2xl shadow-[0_12px_24px_rgba(0,0,0,0.06),2px_2px_0px_#18181B] p-1.5 flex items-center justify-between pointer-events-auto select-none font-body">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -46,32 +46,23 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             <button
               key={item.id}
               onClick={() => handleTabClick(item.id)}
-              className="flex flex-col items-center justify-center group cursor-pointer transition-transform active:scale-90"
+              className={`flex-1 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${
+                isActive
+                  ? 'border-[1.5px] border-[#18181B] shadow-[1px_1px_0px_#18181B]'
+                  : 'hover:bg-slate-50 border-[1.5px] border-transparent text-slate-500'
+              }`}
+              style={{
+                backgroundColor: isActive ? item.activeBg : 'transparent',
+              }}
             >
-              {/* Circular Icon Bubble with High-Contrast Solid Shadows */}
-              <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-150 border-2 ${
-                  isActive
-                    ? 'border-black shadow-[2.5px_2.5px_0px_#000000] scale-105'
-                    : 'bg-[#FAF6EE] border-black/20 group-hover:border-black group-hover:bg-slate-50'
+              <Icon
+                className={`w-4 h-4 stroke-[2] ${
+                  isActive ? 'text-[#18181B]' : 'text-slate-500'
                 }`}
-                style={{
-                  backgroundColor: isActive ? item.bubbleBg : undefined,
-                }}
-              >
-                <Icon
-                  className={`w-5 h-5 stroke-[2.25] transition-transform ${
-                    isActive ? 'text-black scale-105' : 'text-slate-600 group-hover:text-black'
-                  }`}
-                />
-              </div>
-
-              {/* Label underneath */}
+              />
               <span
-                className={`text-[11px] mt-1.5 tracking-tight leading-none transition-colors ${
-                  isActive
-                    ? 'font-black text-black'
-                    : 'font-bold text-slate-500 group-hover:text-black'
+                className={`text-[10px] mt-0.5 tracking-tight leading-none ${
+                  isActive ? 'font-bold text-[#18181B]' : 'font-medium text-slate-500'
                 }`}
               >
                 {item.label}

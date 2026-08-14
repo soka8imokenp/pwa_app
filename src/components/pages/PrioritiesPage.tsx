@@ -160,26 +160,14 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
         </div>
       </div>
 
-      {/* Stress Management Lottie Animation Card */}
-      <div className="neo-card p-4 bg-[#FAF7F2] border-[1.75px] border-[#18181B] flex items-center justify-between gap-3 shadow-[2px_2px_0px_#18181B]">
-        <div className="space-y-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 bg-[#E8DCFF] px-2 py-0.5 rounded-md border border-[#18181B] inline-block shadow-[1px_1px_0px_#18181B]">
-            Mindful Flow
-          </span>
-          <h3 className="text-xs sm:text-sm font-bold font-display text-[#18181B]">
-            Stay Centered & Calm
-          </h3>
-          <p className="text-[11px] text-slate-500">
-            Take a deep breath • One priority at a time.
-          </p>
-        </div>
-
-        <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 flex items-center justify-center">
+      {/* Stress Management Lottie Centerpiece Decoration */}
+      <div className="w-full flex justify-center items-center py-2 select-none pointer-events-none">
+        <div className="w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center">
           <LottiePlayer
             animationData={stressManagementAnimation}
             loop={true}
             autoplay={true}
-            className="w-full h-full"
+            className="w-full h-full object-contain"
           />
         </div>
       </div>

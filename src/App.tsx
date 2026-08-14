@@ -1,0 +1,280 @@
+import React, { useState, useEffect } from 'react';
+import { Header } from './components/layout/Header';
+import { BottomNav, TabView } from './components/layout/BottomNav';
+import { BackgroundDecorations } from './components/layout/BackgroundDecorations';
+import { PrioritiesPage } from './components/pages/PrioritiesPage';
+import { BacklogPage } from './components/pages/BacklogPage';
+import { HabitsPage } from './components/pages/HabitsPage';
+import { FocusPage } from './components/pages/FocusPage';
+import { StatsPage } from './components/pages/StatsPage';
+import { LinksPage } from './components/pages/LinksPage';
+import { AddTaskModal } from './components/planner/AddTaskModal';
+import { AddHabitModal } from './components/habits/AddHabitModal';
+import { SettingsModal } from './components/settings/SettingsModal';
+import { SmartBraindumpModal } from './components/modals/SmartBraindumpModal';
+import { EveningReviewModal } from './components/modals/EveningReviewModal';
+import { QuickScratchpadModal } from './components/scratchpad/QuickScratchpadModal';
+import { AuthContainer, UserProfile } from './components/auth/AuthContainer';
+import { usePlannerData } from './hooks/usePlannerData';
+import { getTodayString } from './lib/dateUtils';
+import { isSoundMuted, setSoundMuted, playClickSound } from './lib/sound';
+import type { Task } from './types';
+
+export function App() {
+  // Authentication State
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('kairo_auth_user');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          return null;
+        }
+      }
+    }
+    return null;
+  });
+
+  const [selectedDate, setSelectedDate] = useState(getTodayString());
+  const [activeTab, setActiveTab] = useState<TabView>('priorities');
+  const [soundMutedState, setSoundMutedState] = useState(isSoundMuted());
+
+  // Modals state
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+  const [addTaskPriorityDefault, setAddTaskPriorityDefault] = useState(false);
+  const [isAddHabitOpen, setIsAddHabitOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isBraindumpOpen, setIsBraindumpOpen] = useState(false);
+  const [isEveningReviewOpen, setIsEveningReviewOpen] = useState(false);
+  const [isScratchpadOpen, setIsScratchpadOpen] = useState(false);
+
+  // Focus Timer active selection
+  const [focusSelectedTask, setFocusSelectedTask] = useState<Task | null>(null);
+
+  // Planner Data Hook (IndexedDB / Dexie.js)
+  const {
+    allTasks,
+    allHabitLogs,
+    allFocusSessions,
+    allLinks,
+    priorityTasks,
+    backlogTasks,
+    habitsWithStats,
+    todaysFocusSessions,
+    overallStreak,
+    dayStats,
+    canAddPriority,
+    addTask,
+    bulkAddTasks,
+    toggleTaskComplete,
+    promoteTaskToPriority,
+    demoteTaskToBacklog,
+    deleteTask,
+    addHabit,
+    deleteHabit,
+    toggleHabitLog,
+    logFocusSession,
+    addLink,
+    deleteLink,
+    incrementLinkClicks,
+  } = usePlannerData(selectedDate);
+
+  const handleStartFocus = (task: Task) => {
+    setFocusSelectedTask(task);
+    setActiveTab('focus');
+    playClickSound();
+  };
+
+  const handleOpenAddTask = (prioritySlotIndex?: number) => {
+    if (prioritySlotIndex !== undefined) {
+      setAddTaskPriorityDefault(true);
+    } else {
+      setAddTaskPriorityDefault(false);
+    }
+    setIsAddTaskOpen(true);
+  };
+
+  const handleToggleSound = () => {
+    const next = !soundMutedState;
+    setSoundMutedState(next);
+    setSoundMuted(next);
+  };
+
+  const handleLoginSuccess = (profile: UserProfile) => {
+    setCurrentUser(profile);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('kairo_auth_user');
+    setCurrentUser(null);
+  };
+
+  // If not authenticated, render Login / Register / Forgot Password screen
+  if (!currentUser) {
+    return <AuthContainer onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  const displayName = `${currentUser.firstName} ${currentUser.lastName}`.trim() || currentUser.username || 'Sam Smith';
+
+  return (
+    <div className="min-h-screen bg-[#FAF7F2] text-[#18181B] flex justify-center bg-subtle-grid relative overflow-x-hidden">
+      {/* Dynamic Background Elements */}
+      <BackgroundDecorations />
+
+      {/* Mobile Screen Frame */}
+      <div className="w-full max-w-md min-h-screen flex flex-col relative px-3 sm:px-0 z-10">
+        
+        {/* Mobile Top Header with User Greeting */}
+        <Header
+          streakCount={overallStreak}
+          userName={displayName}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenScratchpad={() => setIsScratchpadOpen(true)}
+        />
+
+        {/* Page Body View with safe bottom padding for dock */}
+        <main className="flex-1 w-full pt-2 pb-28">
+          {activeTab === 'priorities' && (
+            <PrioritiesPage
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+              priorityTasks={priorityTasks}
+              allTasks={allTasks}
+              focusSessions={allFocusSessions}
+              onToggleComplete={toggleTaskComplete}
+              onDemoteToBacklog={demoteTaskToBacklog}
+              onDeleteTask={deleteTask}
+              onOpenAddTask={handleOpenAddTask}
+              onStartFocus={handleStartFocus}
+              onLogFocusSession={logFocusSession}
+              onQuickCreateTask={addTask}
+              onOpenSmartBraindump={() => setIsBraindumpOpen(true)}
+              onOpenEveningReview={() => setIsEveningReviewOpen(true)}
+            />
+          )}
+
+          {activeTab === 'backlog' && (
+            <BacklogPage
+              backlogTasks={backlogTasks}
+              canPromoteToPriority={canAddPriority}
+              onToggleComplete={toggleTaskComplete}
+              onPromoteToPriority={promoteTaskToPriority}
+              onDeleteTask={deleteTask}
+              onQuickAddTask={(title, category, minutes) =>
+                addTask({
+                  title,
+                  category: (category as any) || 'general',
+                  estimatedMinutes: minutes || 30,
+                  isPriority: false,
+                  isCompleted: false,
+                  date: selectedDate,
+                })
+              }
+            />
+          )}
+
+          {activeTab === 'habits' && (
+            <HabitsPage
+              habits={habitsWithStats}
+              selectedDate={selectedDate}
+              onToggleHabitLog={toggleHabitLog}
+              onDeleteHabit={deleteHabit}
+              onOpenAddHabit={() => setIsAddHabitOpen(true)}
+              onQuickAddHabit={(title, icon, color) =>
+                addHabit({ title, icon, color, targetDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] })
+              }
+            />
+          )}
+
+          {activeTab === 'links' && (
+            <LinksPage
+              links={allLinks}
+              onAddLink={addLink}
+              onDeleteLink={deleteLink}
+              onIncrementClicks={incrementLinkClicks}
+            />
+          )}
+
+          {activeTab === 'focus' && (
+            <FocusPage
+              activeTasks={priorityTasks.concat(backlogTasks)}
+              selectedTask={focusSelectedTask}
+              onClearSelectedTask={() => setFocusSelectedTask(null)}
+              onLogFocusSession={logFocusSession}
+              todaysSessions={todaysFocusSessions}
+              selectedDate={selectedDate}
+            />
+          )}
+
+          {activeTab === 'stats' && (
+            <StatsPage
+              tasks={allTasks}
+              habitLogs={allHabitLogs}
+              focusSessions={allFocusSessions}
+              onSelectDate={setSelectedDate}
+            />
+          )}
+        </main>
+
+        {/* Persistent Symmetrical Bottom Nav Dock */}
+        <BottomNav
+          activeTab={activeTab}
+          onChangeTab={setActiveTab}
+        />
+
+        {/* Modals & Drawers */}
+        <AddTaskModal
+          isOpen={isAddTaskOpen}
+          onClose={() => setIsAddTaskOpen(false)}
+          onAddTask={addTask}
+          defaultDate={selectedDate}
+          defaultPriority={addTaskPriorityDefault}
+          canAddPriority={canAddPriority}
+        />
+
+        <AddHabitModal
+          isOpen={isAddHabitOpen}
+          onClose={() => setIsAddHabitOpen(false)}
+          onAddHabit={addHabit}
+        />
+
+        <SmartBraindumpModal
+          isOpen={isBraindumpOpen}
+          onClose={() => setIsBraindumpOpen(false)}
+          onBulkAddTasks={bulkAddTasks}
+          selectedDate={selectedDate}
+          canAddPriority={canAddPriority}
+        />
+
+        <EveningReviewModal
+          isOpen={isEveningReviewOpen}
+          onClose={() => setIsEveningReviewOpen(false)}
+          priorityTasks={priorityTasks}
+          habits={habitsWithStats}
+          todaysSessions={todaysFocusSessions}
+          selectedDate={selectedDate}
+        />
+
+        <QuickScratchpadModal
+          isOpen={isScratchpadOpen}
+          onClose={() => setIsScratchpadOpen(false)}
+        />
+
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          darkMode={false}
+          onToggleDarkMode={() => {}}
+          isSoundMuted={soundMutedState}
+          onToggleSound={handleToggleSound}
+          onDataChanged={() => {}}
+          currentUser={currentUser}
+          onLogout={handleLogout}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default App;

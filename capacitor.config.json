@@ -1,0 +1,13 @@
+{
+  "appId": "com.kairo.planner",
+  "appName": "KAIRO Planner",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#FAF6EE",
+    "allowMixedContent": true
+  }
+}

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/pwa-192x192.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#FFDE59" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="KAIRO" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.svg" />
+    <meta name="description" content="KAIRO - Offline-First Neo-Brutalist Daily Planner, Habit Tracker & Pomodoro Focus Timer" />
+    
+    <!-- Premium Fonts: Plus Jakarta Sans (Modern Geometric Display) + Space Grotesk + JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    
+    <title>KAIRO • Neo-Brutalist Planner & Habits</title>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((reg) => console.log('[PWA] Service Worker active:', reg.scope))
+            .catch((err) => console.warn('[PWA] Service Worker registration:', err));
+        });
+      }
+    </script>
+  </head>
+  <body class="bg-[#FAF6EE] text-[#000000] min-h-screen antialiased select-none touch-manipulation overflow-x-hidden">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

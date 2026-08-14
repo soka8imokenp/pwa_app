@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="128" fill="#FFDE59"/>
+  <!-- Brutalist Shadow -->
+  <rect x="106" y="106" width="320" height="320" rx="48" fill="#000000"/>
+  <!-- Main Card -->
+  <rect x="96" y="96" width="320" height="320" rx="48" fill="#FAF6EE" stroke="#000000" stroke-width="24"/>
+  <!-- Top Badge -->
+  <rect x="144" y="144" width="224" height="44" rx="22" fill="#C084FC" stroke="#000000" stroke-width="16"/>
+  <!-- Lightning Bolt -->
+  <path d="M268 220 L200 320 L256 320 L244 400 L320 290 L264 290 Z" fill="#FFDE59" stroke="#000000" stroke-width="16" stroke-linejoin="round"/>
+</svg>

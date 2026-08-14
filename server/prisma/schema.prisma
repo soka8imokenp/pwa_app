@@ -1,0 +1,132 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  passwordHash String
+  firstName    String
+  lastName     String?
+  username     String?        @unique
+  avatarUrl    String?
+  themeAccent  String         @default("yellow")
+  soundEnabled Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  tasks        Task[]
+  habits       Habit[]
+  habitLogs    HabitLog[]
+  focusSessions FocusSession[]
+  links        Link[]
+  pushSubs     PushSubscription[]
+}
+
+model Task {
+  id               String    @id @default(uuid())
+  userId           String
+  clientLocalId    Int?
+  title            String
+  isPriority       Boolean   @default(false)
+  isCompleted      Boolean   @default(false)
+  date             String    // yyyy-MM-dd
+  category         String    @default("general")
+  estimatedMinutes Int       @default(30)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  focusSessions    FocusSession[]
+
+  @@index([userId, date])
+  @@index([userId, updatedAt])
+}
+
+model Habit {
+  id            String     @id @default(uuid())
+  userId        String
+  clientLocalId Int?
+  title         String
+  icon          String     @default("zap")
+  color         String     @default("#FFDE59")
+  targetDays    String     // JSON array string: ["mon","tue",...]
+  archived      Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime?
+
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs          HabitLog[]
+
+  @@index([userId, updatedAt])
+}
+
+model HabitLog {
+  id            String    @id @default(uuid())
+  userId        String
+  habitId       String
+  date          String    // yyyy-MM-dd
+  completed     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habit         Habit     @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, habitId, date])
+  @@index([userId, date])
+}
+
+model FocusSession {
+  id              String    @id @default(uuid())
+  userId          String
+  taskId          String?
+  taskTitle       String?
+  durationMinutes Int
+  mode            String    @default("pomodoro")
+  date            String    // yyyy-MM-dd
+  completedAt     BigInt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task            Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([userId, date])
+}
+
+model Link {
+  id            String    @id @default(uuid())
+  userId        String
+  clientLocalId Int?
+  title         String
+  url           String
+  icon          String    @default("link")
+  iconBg        String    @default("#FFDE59")
+  category      String    @default("general")
+  clicks        Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, updatedAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  keysJson  String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

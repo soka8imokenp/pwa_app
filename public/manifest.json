@@ -1,0 +1,87 @@
+{
+  "id": "/",
+  "name": "KAIRO - Offline-First Planner & Habits",
+  "short_name": "KAIRO",
+  "description": "Offline-First Neo-Brutalist Daily Planner, Habit Tracker, Focus Pomodoro Timer & Link Hub.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "window-controls-overlay", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#FAF6EE",
+  "theme_color": "#FFDE59",
+  "prefer_related_applications": false,
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["productivity", "utilities", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/pwa-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512x512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "540x960",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "KAIRO Daily Priorities and Focus View"
+    },
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "KAIRO Planner Desktop Overview"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Today Priorities",
+      "short_name": "Today",
+      "description": "View and manage today's top 3 priorities",
+      "url": "/?tab=priorities",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Focus Timer",
+      "short_name": "Focus",
+      "description": "Launch Pomodoro deep work flow timer",
+      "url": "/?tab=focus",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

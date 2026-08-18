@@ -31,6 +31,8 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-36 platforms;android-35 build-tools;34.0.0 platform-tools'
 
       - name: Install Node Dependencies
         run: pnpm install --frozen-lockfile || pnpm install

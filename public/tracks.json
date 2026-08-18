@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "title": "Grand Escape (feat. Toko Miura)",
+    "artist": "RADWIMPS, Toko Miura",
+    "duration": "05:39",
+    "coverUrl": "/icon-192x192.png",
+    "audioUrl": "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=japanese-garden-112344.mp3"
+  },
+  {
+    "id": "2",
+    "title": "バイオレンス (Violence)",
+    "artist": "QUEEN BEE (女王蜂)",
+    "duration": "03:52",
+    "coverUrl": "/icon-192x192.png",
+    "audioUrl": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=cyberpunk-2099-10701.mp3"
+  },
+  {
+    "id": "3",
+    "title": "This fffire",
+    "artist": "Franz Ferdinand",
+    "duration": "03:38",
+    "coverUrl": "/icon-192x192.png",
+    "audioUrl": "https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f792cb.mp3?filename=action-rock-124424.mp3"
+  }
+]

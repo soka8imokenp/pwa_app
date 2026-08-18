@@ -1,9 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Volume2, VolumeX, ListMusic, Music2, Plus, Sparkles, X } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Volume2, VolumeX, ListMusic, Music2, Plus, Sparkles, X, CloudDownload, Settings2, Check } from 'lucide-react';
 import { SOKA8IMO_PLAYLIST, Track } from '../../data/playlist';
 import { playClickSound } from '../../lib/sound';
 
 export const InAppMusicPlayer: React.FC = () => {
+  const [remoteUrl, setRemoteUrl] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('kairo_music_remote_url') || '';
+    }
+    return '';
+  });
+
   const [playlist, setPlaylist] = useState<Track[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('kairo_custom_tracks');
@@ -25,22 +32,70 @@ export const InAppMusicPlayer: React.FC = () => {
   const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
   const [volume, setVolume] = useState(0.8);
-  const [isMuted, setIsMuted] = useState(false);
   const [isTracklistOpen, setIsTracklistOpen] = useState(false);
   const [isAddTrackOpen, setIsAddTrackOpen] = useState(false);
+  const [isRemoteSettingsOpen, setIsRemoteSettingsOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
 
   // New track form
   const [newTitle, setNewTitle] = useState('');
   const [newArtist, setNewArtist] = useState('');
   const [newUrl, setNewUrl] = useState('');
+  const [inputRemoteUrl, setInputRemoteUrl] = useState(remoteUrl);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentTrack = playlist[currentIndex] || SOKA8IMO_PLAYLIST[0];
 
-  // Initialize or update audio element
+  // Auto-sync from remote Vercel repo on mount if configured
+  useEffect(() => {
+    if (remoteUrl) {
+      syncFromRemote(remoteUrl);
+    }
+  }, []);
+
+  const syncFromRemote = async (urlToFetch: string) => {
+    if (!urlToFetch.trim()) return;
+    setIsSyncing(true);
+    setSyncStatus('Загрузка с Vercel...');
+    try {
+      const res = await fetch(urlToFetch.trim());
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setPlaylist(data);
+          localStorage.setItem('kairo_custom_tracks', JSON.stringify(data));
+          setSyncStatus(`Успешно! Синхронизировано ${data.length} треков`);
+          setTimeout(() => setSyncStatus(null), 3000);
+        } else {
+          setSyncStatus('Файл пуст или имеет неверный формат');
+        }
+      } else {
+        setSyncStatus(`Ошибка сети: ${res.status}`);
+      }
+    } catch (err) {
+      setSyncStatus('Не удалось подключиться к Vercel URL');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleSaveRemoteUrl = (e: React.FormEvent) => {
+    e.preventDefault();
+    playClickSound();
+    const clean = inputRemoteUrl.trim();
+    setRemoteUrl(clean);
+    localStorage.setItem('kairo_music_remote_url', clean);
+    if (clean) {
+      syncFromRemote(clean);
+    }
+    setIsRemoteSettingsOpen(false);
+  };
+
+  // Initialize audio element
   useEffect(() => {
     const audio = new Audio(currentTrack.audioUrl);
-    audio.volume = isMuted ? 0 : volume;
+    audio.volume = volume;
     audioRef.current = audio;
 
     const handleTimeUpdate = () => {
@@ -195,23 +250,86 @@ export const InAppMusicPlayer: React.FC = () => {
           </span>
           <div>
             <h3 className="text-xs font-bold font-display text-[#18181B] leading-tight">soka8imo In-App Player</h3>
-            <span className="text-[10px] text-slate-500 font-medium">100% Встроенное воспроизведение без демо</span>
+            <span className="text-[10px] text-slate-500 font-medium">Синхронизация с Vercel / Без лимитов</span>
           </div>
         </div>
 
-        <button
-          onClick={() => {
-            playClickSound();
-            setIsTracklistOpen(!isTracklistOpen);
-          }}
-          className={`px-2.5 py-1 rounded-xl text-xs font-bold border-[1.5px] border-[#18181B] flex items-center gap-1 cursor-pointer transition-all ${
-            isTracklistOpen ? 'bg-[#18181B] text-white' : 'bg-[#FAF7F2] text-[#18181B] hover:bg-slate-100 shadow-[1px_1px_0px_#18181B]'
-          }`}
-        >
-          <ListMusic className="w-3.5 h-3.5" />
-          <span>Треки ({playlist.length})</span>
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => {
+              playClickSound();
+              setIsRemoteSettingsOpen(!isRemoteSettingsOpen);
+            }}
+            title="Настройка Vercel CDN"
+            className="w-7 h-7 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border-[1.5px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] cursor-pointer"
+          >
+            <CloudDownload className="w-3.5 h-3.5" />
+          </button>
+
+          <button
+            onClick={() => {
+              playClickSound();
+              setIsTracklistOpen(!isTracklistOpen);
+            }}
+            className={`px-2.5 py-1 rounded-xl text-xs font-bold border-[1.5px] border-[#18181B] flex items-center gap-1 cursor-pointer transition-all ${
+              isTracklistOpen ? 'bg-[#18181B] text-white' : 'bg-[#FAF7F2] text-[#18181B] hover:bg-slate-100 shadow-[1px_1px_0px_#18181B]'
+            }`}
+          >
+            <ListMusic className="w-3.5 h-3.5" />
+            <span>Треки ({playlist.length})</span>
+          </button>
+        </div>
       </div>
+
+      {/* Remote Vercel Config Modal/Drawer */}
+      {isRemoteSettingsOpen && (
+        <form onSubmit={handleSaveRemoteUrl} className="p-3 bg-[#E8DCFF] border-[1.75px] border-[#18181B] rounded-2xl space-y-2.5 shadow-[2px_2px_0px_#18181B]">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[#18181B] flex items-center gap-1">
+              <CloudDownload className="w-3.5 h-3.5" />
+              Подключение к вашему Vercel репозиторию
+            </span>
+            <button type="button" onClick={() => setIsRemoteSettingsOpen(false)} className="text-slate-600 hover:text-black">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <p className="text-[10px] text-slate-700 leading-snug">
+            Вставьте прямую ссылку на <code>tracks.json</code> с вашего Vercel проекта. Делая <code>git push</code> в репозиторий с треками, приложение само обновит плейлист!
+          </p>
+
+          <input
+            type="url"
+            value={inputRemoteUrl}
+            onChange={(e) => setInputRemoteUrl(e.target.value)}
+            placeholder="https://my-music-repo.vercel.app/tracks.json"
+            className="w-full px-3 py-1.5 bg-white border border-[#18181B] rounded-lg text-xs outline-none font-mono"
+          />
+
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <span className="text-[10px] font-bold text-purple-900">{syncStatus || (isSyncing ? 'Загрузка...' : '')}</span>
+
+            <div className="flex gap-2">
+              {remoteUrl && (
+                <button
+                  type="button"
+                  onClick={() => syncFromRemote(remoteUrl)}
+                  disabled={isSyncing}
+                  className="px-3 py-1 bg-white hover:bg-slate-50 text-xs font-bold rounded-lg border border-[#18181B] shadow-xs cursor-pointer"
+                >
+                  {isSyncing ? 'Синхронизация...' : 'Обновить сейчас'}
+                </button>
+              )}
+              <button
+                type="submit"
+                className="px-3 py-1 bg-[#18181B] text-white text-xs font-bold rounded-lg shadow-xs cursor-pointer"
+              >
+                Сохранить URL
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
 
       {/* Main Playing Track Hero Card */}
       <div className="p-3.5 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-3">
@@ -322,7 +440,7 @@ export const InAppMusicPlayer: React.FC = () => {
         <div className="space-y-2 pt-1">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-              Список треков в плейлисте
+              Список треков ({playlist.length})
             </span>
 
             <button
@@ -333,7 +451,7 @@ export const InAppMusicPlayer: React.FC = () => {
               className="text-xs font-bold text-[#18181B] hover:text-purple-700 flex items-center gap-1 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Добавить свой трек (URL)</span>
+              <span>Добавить трек вручную</span>
             </button>
           </div>
 

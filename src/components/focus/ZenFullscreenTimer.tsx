@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Play, Pause, RotateCcw, Minimize2, Target, Check, Hourglass, Music2 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 import { AmbientSoundType } from '../../lib/ambientSound';
-import { Track } from '../../data/playlist';
+import { musicPlayer, MusicPlayerState } from '../../lib/musicPlayerService';
 
 interface ZenFullscreenTimerProps {
   isOpen: boolean;
@@ -29,22 +29,16 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
   taskTitle,
   mode,
 }) => {
-  const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
-  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const [playerState, setPlayerState] = useState<MusicPlayerState>(() => musicPlayer.getState());
 
   useEffect(() => {
-    const handleTrackChange = (e: any) => {
-      if (e.detail) {
-        setCurrentTrack(e.detail.track || null);
-        setIsMusicPlaying(!!e.detail.isPlaying);
-      }
-    };
-
-    window.addEventListener('sumire-track-change', handleTrackChange);
-    return () => {
-      window.removeEventListener('sumire-track-change', handleTrackChange);
-    };
+    const unsubscribe = musicPlayer.subscribe((state) => {
+      setPlayerState(state);
+    });
+    return unsubscribe;
   }, []);
+
+  const { currentTrack, isPlaying: isMusicPlaying } = playerState;
 
   if (!isOpen) return null;
 
@@ -102,9 +96,16 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
           </div>
         </div>
 
-        {/* Now Playing Live Mini Player Pill */}
+        {/* Now Playing Live Mini Player Pill (Syncs automatically with musicPlayer) */}
         {currentTrack && (
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] max-w-xs sm:max-w-sm mx-auto">
+          <button
+            onClick={() => {
+              playClickSound();
+              musicPlayer.togglePlay();
+            }}
+            title={isMusicPlaying ? 'Click to Pause' : 'Click to Play'}
+            className="inline-flex items-center gap-2.5 px-4 py-2 bg-white hover:bg-slate-50 border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] max-w-xs sm:max-w-sm mx-auto cursor-pointer transition-all active:translate-y-0.5"
+          >
             <div className="w-6 h-6 rounded-lg bg-[#FFE873] border border-[#18181B] flex items-center justify-center shrink-0">
               <Music2 className="w-3.5 h-3.5 text-[#18181B] stroke-[2.25]" />
             </div>
@@ -114,14 +115,16 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
               <p className="text-[10px] text-slate-500 font-medium truncate">{currentTrack.artist}</p>
             </div>
 
-            {isMusicPlaying && (
+            {isMusicPlaying ? (
               <div className="flex items-center gap-0.5 shrink-0">
                 <span className="w-1 h-3 bg-[#18181B] rounded-full animate-pulse" />
                 <span className="w-1 h-4 bg-[#18181B] rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
                 <span className="w-1 h-2 bg-[#18181B] rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
               </div>
+            ) : (
+              <Play className="w-3.5 h-3.5 fill-[#18181B] text-[#18181B] shrink-0 ml-1" />
             )}
-          </div>
+          </button>
         )}
       </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Play,
   Pause,
@@ -13,54 +13,27 @@ import {
 } from 'lucide-react';
 import { Track } from '../../data/playlist';
 import { playClickSound } from '../../lib/sound';
+import { musicPlayer, MusicPlayerState } from '../../lib/musicPlayerService';
 
 const VERCEL_API_URL = 'https://sumiredaily-music.vercel.app/tracks.json';
 const VERCEL_BASE_ORIGIN = 'https://sumiredaily-music.vercel.app';
 
 export const InAppMusicPlayer: React.FC = () => {
-  const [playlist, setPlaylist] = useState<Track[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('kairo_custom_tracks');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
-          }
-        } catch {
-          // fallback
-        }
-      }
-    }
-    return [];
-  });
-
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [isShuffle, setIsShuffle] = useState(false);
-  const [isRepeat, setIsRepeat] = useState(false);
-
-  // UI state
+  const [playerState, setPlayerState] = useState<MusicPlayerState>(() => musicPlayer.getState());
   const [isTracklistOpen, setIsTracklistOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const currentTrack = playlist[currentIndex] || null;
-
-  // Broadcast current track to other components (like Zen Desk Mode)
+  // Subscribe to persistent player service
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(
-        new CustomEvent('sumire-track-change', {
-          detail: { track: currentTrack, isPlaying },
-        })
-      );
-    }
-  }, [currentTrack, isPlaying]);
+    const unsubscribe = musicPlayer.subscribe((state) => {
+      setPlayerState(state);
+    });
+    return unsubscribe;
+  }, []);
+
+  const { playlist, currentIndex, currentTrack, isPlaying, currentTime, duration, isShuffle, isRepeat } = playerState;
 
   // Helper to resolve full audio URL from Vercel
   const resolveAudioUrl = (url: string) => {
@@ -91,8 +64,7 @@ export const InAppMusicPlayer: React.FC = () => {
             audioUrl: resolveAudioUrl(t.audioUrl),
           }));
 
-          setPlaylist(formattedTracks);
-          localStorage.setItem('kairo_custom_tracks', JSON.stringify(formattedTracks));
+          musicPlayer.setPlaylist(formattedTracks);
           if (isManual) {
             setSyncStatus('Updated!');
             setTimeout(() => setSyncStatus(null), 3000);
@@ -123,119 +95,24 @@ export const InAppMusicPlayer: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Main Audio setup
-  useEffect(() => {
-    if (!currentTrack) return;
-
-    const fullAudioSrc = resolveAudioUrl(currentTrack.audioUrl);
-    const audio = new Audio(fullAudioSrc);
-    audioRef.current = audio;
-
-    const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-      setDuration(audio.duration || 0);
-    };
-
-    const handleEnded = () => {
-      handleNextTrack();
-    };
-
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('ended', handleEnded);
-
-    // MediaSession lock screen integration
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: currentTrack.title,
-        artist: currentTrack.artist,
-        album: 'Daily Sumire',
-        artwork: [
-          { src: currentTrack.coverUrl || '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
-        ],
-      });
-
-      navigator.mediaSession.setActionHandler('play', () => {
-        audio.play();
-        setIsPlaying(true);
-      });
-      navigator.mediaSession.setActionHandler('pause', () => {
-        audio.pause();
-        setIsPlaying(false);
-      });
-      navigator.mediaSession.setActionHandler('previoustrack', () => handlePrevTrack());
-      navigator.mediaSession.setActionHandler('nexttrack', () => handleNextTrack());
-    }
-
-    if (isPlaying) {
-      audio.play().catch(() => setIsPlaying(false));
-    }
-
-    return () => {
-      audio.pause();
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('ended', handleEnded);
-    };
-  }, [currentTrack]);
-
   const handleTogglePlay = () => {
     playClickSound();
-    if (!audioRef.current && currentTrack) {
-      const audio = new Audio(resolveAudioUrl(currentTrack.audioUrl));
-      audioRef.current = audio;
-    }
-    if (!audioRef.current) return;
-
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      audioRef.current.play().then(() => {
-        setIsPlaying(true);
-      }).catch(() => {
-        setIsPlaying(false);
-      });
-    }
+    musicPlayer.togglePlay();
   };
 
   const handleNextTrack = () => {
     playClickSound();
-    if (playlist.length === 0) return;
-
-    if (isRepeat && audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play();
-      setIsPlaying(true);
-      return;
-    }
-
-    if (isShuffle) {
-      const nextIdx = Math.floor(Math.random() * playlist.length);
-      setCurrentIndex(nextIdx);
-    } else {
-      setCurrentIndex((prev) => (prev + 1) % playlist.length);
-    }
-    setIsPlaying(true);
+    musicPlayer.nextTrack();
   };
 
   const handlePrevTrack = () => {
     playClickSound();
-    if (playlist.length === 0) return;
-
-    if (audioRef.current && audioRef.current.currentTime > 3) {
-      audioRef.current.currentTime = 0;
-      return;
-    }
-    setCurrentIndex((prev) => (prev - 1 + playlist.length) % playlist.length);
-    setIsPlaying(true);
+    musicPlayer.prevTrack();
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const time = Number(e.target.value);
-    setCurrentTime(time);
-    if (audioRef.current) {
-      audioRef.current.currentTime = time;
-    }
+    musicPlayer.seek(time);
   };
 
   const formatSeconds = (sec: number) => {
@@ -249,6 +126,8 @@ export const InAppMusicPlayer: React.FC = () => {
     t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     t.artist.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const progressPercent = duration > 0 ? Math.min(100, Math.max(0, (currentTime / duration) * 100)) : 0;
 
   return (
     <div className="neo-card p-4 bg-white space-y-3 font-body select-none">
@@ -321,7 +200,7 @@ export const InAppMusicPlayer: React.FC = () => {
           </div>
         )}
 
-        {/* Progress Scrubber Bar */}
+        {/* Progress Scrubber Bar with Solid Black Fill */}
         <div className="space-y-1">
           <input
             type="range"
@@ -330,7 +209,10 @@ export const InAppMusicPlayer: React.FC = () => {
             value={currentTime}
             onChange={handleSeek}
             disabled={!currentTrack}
-            className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#18181B]"
+            className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-[#18181B]"
+            style={{
+              background: `linear-gradient(to right, #18181B ${progressPercent}%, #E4E4E7 ${progressPercent}%)`,
+            }}
           />
           <div className="flex items-center justify-between text-[10px] font-bold font-mono-num text-slate-500">
             <span>{formatSeconds(currentTime)}</span>
@@ -344,7 +226,7 @@ export const InAppMusicPlayer: React.FC = () => {
           <button
             onClick={() => {
               playClickSound();
-              setIsShuffle(!isShuffle);
+              musicPlayer.toggleShuffle();
             }}
             disabled={!currentTrack}
             className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
@@ -388,7 +270,7 @@ export const InAppMusicPlayer: React.FC = () => {
           <button
             onClick={() => {
               playClickSound();
-              setIsRepeat(!isRepeat);
+              musicPlayer.toggleRepeat();
             }}
             disabled={!currentTrack}
             className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
@@ -401,9 +283,9 @@ export const InAppMusicPlayer: React.FC = () => {
         </div>
       </div>
 
-      {/* Tracklist Drawer */}
+      {/* Tracklist Drawer with Clean Padding & Borders */}
       {isTracklistOpen && (
-        <div className="space-y-2 pt-1">
+        <div className="p-3 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-2.5">
           {/* Search bar */}
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -412,39 +294,38 @@ export const InAppMusicPlayer: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search tracks or artists..."
-              className="w-full pl-8 pr-3 py-2 bg-[#FAF7F2] border border-[#18181B] rounded-xl text-xs outline-none font-medium"
+              className="w-full pl-8 pr-3 py-2 bg-white border border-[#18181B] rounded-xl text-xs outline-none font-medium"
             />
           </div>
 
           {/* Tracks List */}
-          <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+          <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1 py-0.5">
             {filteredPlaylist.length === 0 ? (
               <p className="text-xs text-slate-400 text-center py-4">
                 No tracks found. Upload .mp3 to Vercel and tap 🔄
               </p>
             ) : (
-              filteredPlaylist.map((track, idx) => {
+              filteredPlaylist.map((track) => {
                 const originalIndex = playlist.findIndex((t) => t.id === track.id);
                 const isCurrent = originalIndex === currentIndex;
 
                 return (
                   <div
-                    key={track.id || idx}
+                    key={track.id}
                     onClick={() => {
                       playClickSound();
-                      setCurrentIndex(originalIndex);
-                      setIsPlaying(true);
+                      musicPlayer.selectTrack(originalIndex);
                     }}
                     className={`p-2.5 rounded-xl border-[1.5px] border-[#18181B] flex items-center justify-between gap-2.5 cursor-pointer transition-all ${
                       isCurrent
                         ? 'bg-[#E8DCFF] shadow-[2px_2px_0px_#18181B] -translate-y-0.5'
-                        : 'bg-[#FAF7F2] hover:bg-slate-100 shadow-[1px_1px_0px_#18181B]'
+                        : 'bg-white hover:bg-slate-50 shadow-[1px_1px_0px_#18181B]'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div
                         className={`w-6 h-6 rounded-lg border border-[#18181B] flex items-center justify-center text-xs font-bold font-mono-num shrink-0 ${
-                          isCurrent ? 'bg-[#FFE873] text-[#18181B]' : 'bg-white text-slate-500'
+                          isCurrent ? 'bg-[#FFE873] text-[#18181B]' : 'bg-[#FAF7F2] text-slate-500'
                         }`}
                       >
                         {isCurrent && isPlaying ? '▶' : originalIndex + 1}

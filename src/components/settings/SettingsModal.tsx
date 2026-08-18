@@ -24,6 +24,7 @@ import {
   resetAndSeedDatabase,
 } from '../../lib/exportImport';
 import { playSuccessChime, playClickSound } from '../../lib/sound';
+import { checkForAppUpdate, AppVersionInfo } from '../../lib/updaterService';
 import type { UserProfile } from '../auth/AuthContainer';
 
 interface SettingsModalProps {
@@ -36,6 +37,7 @@ interface SettingsModalProps {
   onDataChanged: () => void;
   currentUser?: UserProfile | null;
   onLogout?: () => void;
+  onShowUpdateModal?: (info: AppVersionInfo) => void;
 }
 
 const THEME_ACCENTS = [
@@ -53,10 +55,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onDataChanged,
   currentUser,
   onLogout,
+  onShowUpdateModal,
 }) => {
   const [feedback, setFeedback] = useState<{ text: string; success: boolean } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedAccent, setSelectedAccent] = useState('lilac');
+  const [updateChecking, setUpdateChecking] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -336,6 +341,47 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <span>Reset & Reload Sample Data</span>
             </button>
           </div>
+        </div>
+
+        {/* 4. App Version & In-App APK Updates */}
+        <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-base">🚀</span>
+              <div>
+                <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
+                  Daily Sumire App
+                </h4>
+                <span className="text-[10px] text-slate-500 font-bold">Version v1.3.0 (Build 10)</span>
+              </div>
+            </div>
+            <button
+              onClick={async () => {
+                playClickSound();
+                setUpdateChecking(true);
+                setUpdateStatus('Checking GitHub for updates...');
+                const { hasUpdate, updateInfo } = await checkForAppUpdate();
+                setUpdateChecking(false);
+                if (hasUpdate && updateInfo) {
+                  setUpdateStatus(`New update v${updateInfo.version} found!`);
+                  if (onShowUpdateModal) {
+                    onShowUpdateModal(updateInfo);
+                  }
+                } else {
+                  setUpdateStatus('You have the latest version!');
+                  setTimeout(() => setUpdateStatus(null), 3000);
+                }
+              }}
+              disabled={updateChecking}
+              className="py-1.5 px-3 rounded-xl bg-[#FFE873] hover:bg-[#FED7AA] border-[1.5px] border-[#18181B] text-xs font-bold text-[#18181B] shadow-[1px_1px_0px_#18181B] active:translate-y-0.5 cursor-pointer transition-all flex items-center gap-1.5"
+            >
+              <RotateCcw className={`w-3 h-3 ${updateChecking ? 'animate-spin' : ''}`} />
+              <span>{updateChecking ? 'Checking...' : 'Check Updates'}</span>
+            </button>
+          </div>
+          {updateStatus && (
+            <p className="text-[11px] font-bold text-purple-700">{updateStatus}</p>
+          )}
         </div>
 
       </div>

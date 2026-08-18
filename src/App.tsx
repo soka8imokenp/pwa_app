@@ -15,6 +15,8 @@ import { SettingsModal } from './components/settings/SettingsModal';
 import { SmartBraindumpModal } from './components/modals/SmartBraindumpModal';
 import { EveningReviewModal } from './components/modals/EveningReviewModal';
 import { QuickScratchpadModal } from './components/scratchpad/QuickScratchpadModal';
+import { UpdateAvailableModal } from './components/modals/UpdateAvailableModal';
+import { checkForAppUpdate, AppVersionInfo } from './lib/updaterService';
 import { AuthContainer, UserProfile } from './components/auth/AuthContainer';
 import { usePlannerData } from './hooks/usePlannerData';
 import { getTodayString } from './lib/dateUtils';
@@ -49,6 +51,24 @@ export function App() {
   const [isBraindumpOpen, setIsBraindumpOpen] = useState(false);
   const [isEveningReviewOpen, setIsEveningReviewOpen] = useState(false);
   const [isScratchpadOpen, setIsScratchpadOpen] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [availableUpdate, setAvailableUpdate] = useState<AppVersionInfo | null>(null);
+
+  // Background update check on app launch
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      try {
+        const { hasUpdate, updateInfo } = await checkForAppUpdate();
+        if (hasUpdate && updateInfo) {
+          setAvailableUpdate(updateInfo);
+          setIsUpdateModalOpen(true);
+        }
+      } catch {
+        // silent fail
+      }
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Focus Timer active selection
   const [focusSelectedTask, setFocusSelectedTask] = useState<Task | null>(null);
@@ -283,6 +303,16 @@ export function App() {
           onDataChanged={() => {}}
           currentUser={currentUser}
           onLogout={handleLogout}
+          onShowUpdateModal={(info) => {
+            setAvailableUpdate(info);
+            setIsUpdateModalOpen(true);
+          }}
+        />
+
+        <UpdateAvailableModal
+          isOpen={isUpdateModalOpen}
+          onClose={() => setIsUpdateModalOpen(false)}
+          updateInfo={availableUpdate}
         />
       </div>
     </div>

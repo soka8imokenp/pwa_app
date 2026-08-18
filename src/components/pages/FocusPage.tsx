@@ -16,6 +16,7 @@ import { playAmbientSound, stopAmbientSound, AmbientSoundType } from '../../lib/
 import { sendLocalNotification, requestNotificationPermission } from '../../lib/notifications';
 import { ZenFullscreenTimer } from '../focus/ZenFullscreenTimer';
 import { SpotifyFocusPlayer } from '../focus/SpotifyFocusPlayer';
+import { InAppMusicPlayer } from '../focus/InAppMusicPlayer';
 import confetti from 'canvas-confetti';
 
 interface FocusPageProps {
@@ -260,7 +261,10 @@ export const FocusPage: React.FC<FocusPageProps> = ({
         </div>
       </div>
 
-      {/* 3. Integrated Spotify & Lo-Fi Focus Music Lounge */}
+      {/* 3. In-App Native Music Player (Full-length playback from CDN/Vercel) */}
+      <InAppMusicPlayer />
+
+      {/* 4. Integrated Spotify & Lo-Fi Focus Music Lounge */}
       <SpotifyFocusPlayer />
 
       {/* 4. Ambient Soundscapes */}

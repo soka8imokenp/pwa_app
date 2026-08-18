@@ -25,3 +25,6 @@ dev.db
 *.njsproj
 *.sln
 *.sw?
+
+sumiredaily_music/
+sumiredaily_music.zip

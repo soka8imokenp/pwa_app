@@ -35,7 +35,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none pb-3 px-3">
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none pb-[calc(env(safe-area-inset-bottom,0px)+20px)] px-3">
       {/* Floating Sleek Neo-Brutalist Dock */}
       <nav className="w-full max-w-lg bg-white/95 backdrop-blur-md border-[1.75px] border-[#18181B] rounded-2xl shadow-[0_12px_24px_rgba(0,0,0,0.06),2px_2px_0px_#18181B] p-1.5 flex items-center justify-between pointer-events-auto select-none font-body">
         {NAV_ITEMS.map((item) => {

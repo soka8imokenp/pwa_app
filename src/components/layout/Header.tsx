@@ -29,7 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
   const firstName = userName.split(' ')[0] || 'Friend';
 
   return (
-    <header className="w-full bg-transparent pt-3 pb-2 px-1 select-none font-body">
+    <header className="w-full bg-transparent pt-[calc(env(safe-area-inset-top,0px)+14px)] pb-2 px-1 select-none font-body">
       <div className="flex items-center justify-between gap-3">
         {/* Left: User Profile & Greeting */}
         <div className="flex items-center gap-2.5">

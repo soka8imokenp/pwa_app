@@ -146,7 +146,7 @@ export function App() {
         )}
 
         {/* Page Body View with safe bottom padding for dock */}
-        <main className="flex-1 w-full pt-1 pb-28">
+        <main className="flex-1 w-full pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+120px)]">
           {activeTab === 'priorities' && (
             <PrioritiesPage
               selectedDate={selectedDate}

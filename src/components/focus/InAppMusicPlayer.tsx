@@ -44,7 +44,7 @@ export const InAppMusicPlayer: React.FC = () => {
     return `${VERCEL_BASE_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
-  // Sync with Vercel API
+  // Sync with Vercel API (only on mount or manual button click)
   const fetchVercelTracks = async (isManual = false) => {
     if (isManual) {
       playClickSound();
@@ -86,13 +86,9 @@ export const InAppMusicPlayer: React.FC = () => {
     }
   };
 
-  // Initial fetch and auto-polling every 45s
+  // Initial fetch on mount only (no periodic interval to avoid stream interruptions)
   useEffect(() => {
     fetchVercelTracks(false);
-    const interval = setInterval(() => {
-      fetchVercelTracks(false);
-    }, 45000);
-    return () => clearInterval(interval);
   }, []);
 
   const handleTogglePlay = () => {

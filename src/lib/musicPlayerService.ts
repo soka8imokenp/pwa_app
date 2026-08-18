@@ -15,6 +15,7 @@ type Listener = (state: MusicPlayerState) => void;
 
 class MusicPlayerService {
   private audio: HTMLAudioElement | null = null;
+  private currentLoadedUrl: string | null = null;
   private listeners: Set<Listener> = new Set();
   private state: MusicPlayerState = {
     playlist: [],
@@ -49,16 +50,29 @@ class MusicPlayerService {
     }
   }
 
-  private initAudio() {
+  private initAudio(): HTMLAudioElement {
     if (this.audio) return this.audio;
     const audio = new Audio();
+    audio.preload = 'auto';
     this.audio = audio;
 
     audio.addEventListener('timeupdate', () => {
-      this.state.currentTime = audio.currentTime;
-      this.state.duration = audio.duration || 0;
-      this.updatePositionState();
-      this.notify();
+      if (this.audio && !isNaN(this.audio.currentTime)) {
+        this.state.currentTime = this.audio.currentTime;
+        if (!isNaN(this.audio.duration) && this.audio.duration > 0) {
+          this.state.duration = this.audio.duration;
+        }
+        this.updatePositionState();
+        this.notify();
+      }
+    });
+
+    audio.addEventListener('loadedmetadata', () => {
+      if (this.audio && !isNaN(this.audio.duration)) {
+        this.state.duration = this.audio.duration;
+        this.updatePositionState();
+        this.notify();
+      }
     });
 
     audio.addEventListener('ended', () => {
@@ -81,6 +95,10 @@ class MusicPlayerService {
       }
       this.syncNativeNotification();
       this.notify();
+    });
+
+    audio.addEventListener('error', (e) => {
+      console.warn('[Sumire Audio Engine] Audio stream error:', e);
     });
 
     return audio;
@@ -163,7 +181,7 @@ class MusicPlayerService {
 
   private updatePositionState() {
     if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
-      if (this.state.duration > 0 && !isNaN(this.state.duration)) {
+      if (this.state.duration > 0 && !isNaN(this.state.duration) && isFinite(this.state.duration)) {
         try {
           navigator.mediaSession.setPositionState({
             duration: Math.max(0, this.state.duration),
@@ -194,6 +212,8 @@ class MusicPlayerService {
   }
 
   public setPlaylist(newTracks: Track[]) {
+    if (!Array.isArray(newTracks) || newTracks.length === 0) return;
+
     // Only update if playlist actually changed
     const currentJson = JSON.stringify(this.state.playlist.map(t => t.id || t.audioUrl));
     const newJson = JSON.stringify(newTracks.map(t => t.id || t.audioUrl));
@@ -217,9 +237,9 @@ class MusicPlayerService {
     this.state.currentTrack = track;
 
     const audio = this.initAudio();
-    const currentSrc = audio.src;
 
-    if (currentSrc !== track.audioUrl) {
+    if (this.currentLoadedUrl !== track.audioUrl) {
+      this.currentLoadedUrl = track.audioUrl;
       audio.src = track.audioUrl;
       audio.load();
     }
@@ -242,7 +262,9 @@ class MusicPlayerService {
     if (!this.state.currentTrack) return;
 
     const audio = this.initAudio();
-    if (!audio.src || audio.src === '' || audio.src !== this.state.currentTrack.audioUrl) {
+
+    if (this.currentLoadedUrl !== this.state.currentTrack.audioUrl) {
+      this.currentLoadedUrl = this.state.currentTrack.audioUrl;
       audio.src = this.state.currentTrack.audioUrl;
       audio.load();
     }
@@ -299,7 +321,7 @@ class MusicPlayerService {
   }
 
   public seek(time: number) {
-    if (this.audio) {
+    if (this.audio && !isNaN(time)) {
       this.audio.currentTime = time;
       this.state.currentTime = time;
       this.updatePositionState();

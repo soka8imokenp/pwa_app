@@ -32,18 +32,21 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Dependencies
-        run: pnpm install
+      - name: Install Node Dependencies
+        run: pnpm install --frozen-lockfile || pnpm install
 
       - name: Build Web App
         run: pnpm build
 
       - name: Sync Capacitor Android
-        run: ./node_modules/.bin/cap sync android
+        run: npx cap sync android
+
+      - name: Make Gradlew Executable
+        run: chmod +x ./android/gradlew
 
       - name: Build Android APK via Gradle
         working-directory: ./android
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4

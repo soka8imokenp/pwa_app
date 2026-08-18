@@ -46,11 +46,14 @@ jobs:
         run: chmod +x ./android/gradlew
 
       - name: Clear Gradle Cache
-        run: rm -rf ~/.gradle/caches/jars-* || true
+        run: |
+          rm -rf ~/.gradle/caches/jars-* || true
+          rm -rf ~/.gradle/caches/modules-2 || true
+          rm -rf ~/.gradle/caches/build-cache-* || true
 
       - name: Build Android APK via Gradle
         working-directory: ./android
-        run: ./gradlew clean assembleDebug --stacktrace
+        run: ./gradlew clean assembleDebug --stacktrace --refresh-dependencies
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4

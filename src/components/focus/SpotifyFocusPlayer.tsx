@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Music, Radio, Sparkles, ExternalLink, Play, Pause, Volume2, VolumeX, ListMusic, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { Music, Radio, Sparkles, ExternalLink, Play, Pause, Volume2, VolumeX, ListMusic, ChevronDown, ChevronUp, Info, LogIn, X, RefreshCw } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 
 interface SpotifyFocusPlayerProps {
@@ -40,6 +40,9 @@ export const SpotifyFocusPlayer: React.FC<SpotifyFocusPlayerProps> = ({
 }) => {
   const [activeMode, setActiveMode] = useState<'spotify' | 'radio'>('spotify');
   const [playerSize, setPlayerSize] = useState<'full' | 'compact'>('full');
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const [playlistUrl, setPlaylistUrl] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('kairo_spotify_playlist') || initialPlaylistUrl;
@@ -198,25 +201,26 @@ export const SpotifyFocusPlayer: React.FC<SpotifyFocusPlayerProps> = ({
               >
                 {isEditingUrl ? 'Cancel' : 'Change Link'}
               </button>
-
-              <a
-                href={playlistUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-0.5 text-xs font-bold text-slate-500 hover:text-[#18181B]"
-                title="Open in Spotify App"
-              >
-                <ExternalLink className="w-3 h-3" />
-              </a>
             </div>
           </div>
 
-          {/* Helper Login Tip to Play Full Tracks */}
-          <div className="p-2.5 bg-[#F0FDF4] border border-[#86EFAC] rounded-xl flex items-start gap-2 text-[11px] text-[#166534] leading-relaxed">
-            <Info className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
-            <span>
-              <strong>Как слушать треки целиком:</strong> Нажмите <strong>«Log in»</strong> в верхнем правом углу внутри самого плеера Spotify ниже (подходит любой бесплатный аккаунт, без подписки).
-            </span>
+          {/* Dedicated In-App Spotify Login Button */}
+          <div className="p-2.5 bg-[#FAF7F2] border-[1.5px] border-[#18181B] rounded-xl flex items-center justify-between gap-2 shadow-[1.5px_1.5px_0px_#18181B]">
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-[#18181B]">Вход в аккаунт Spotify</p>
+              <p className="text-[10px] text-slate-500">Войдите 1 раз прямо в приложении для полных треков</p>
+            </div>
+
+            <button
+              onClick={() => {
+                playClickSound();
+                setIsLoginModalOpen(true);
+              }}
+              className="px-3 py-1.5 bg-[#1DB954] hover:bg-[#1AA34A] text-white text-xs font-bold rounded-lg border border-[#18181B] shadow-[1px_1px_0px_#18181B] flex items-center gap-1 shrink-0 cursor-pointer active:translate-y-0.5"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Войти</span>
+            </button>
           </div>
 
           {/* Change Playlist Input */}
@@ -241,6 +245,7 @@ export const SpotifyFocusPlayer: React.FC<SpotifyFocusPlayerProps> = ({
           {/* Spotify Official Iframe Widget */}
           <div className="w-full rounded-2xl overflow-hidden border-[1.75px] border-[#18181B] shadow-[2px_2px_0px_#18181B] bg-black">
             <iframe
+              key={refreshKey}
               src={getEmbedUrl(playlistUrl)}
               width="100%"
               height={playerSize === 'full' ? '352' : '152'}
@@ -309,6 +314,63 @@ export const SpotifyFocusPlayer: React.FC<SpotifyFocusPlayerProps> = ({
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* In-App Spotify Login Modal Sheet */}
+      {isLoginModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl border-t-2 sm:border-2 border-[#18181B] shadow-2xl flex flex-col h-[85vh] max-h-[700px] overflow-hidden animate-in slide-in-from-bottom duration-200">
+            {/* Header */}
+            <div className="p-4 bg-[#18181B] text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-[#1DB954] flex items-center justify-center text-white text-xs font-bold">
+                  🎧
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold leading-tight">Вход в Spotify в Daily Sumire</h3>
+                  <p className="text-[10px] text-slate-300">После входа нажмите «Готово» ниже</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  playClickSound();
+                  setIsLoginModalOpen(false);
+                  setRefreshKey((k) => k + 1);
+                }}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* In-App WebView Iframe */}
+            <div className="flex-1 w-full bg-[#121212] relative">
+              <iframe
+                src="https://accounts.spotify.com/en/login"
+                title="Spotify In-App Login"
+                className="w-full h-full border-none"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen"
+              />
+            </div>
+
+            {/* Bottom Done Action */}
+            <div className="p-3 bg-white border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
+              <span className="text-xs text-slate-500 font-medium">Вошли в аккаунт?</span>
+              <button
+                onClick={() => {
+                  playClickSound();
+                  setIsLoginModalOpen(false);
+                  setRefreshKey((k) => k + 1);
+                }}
+                className="px-5 py-2 bg-[#1DB954] text-white text-xs font-bold rounded-xl border-[1.5px] border-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] flex items-center gap-1.5 cursor-pointer active:translate-y-0.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Готово / Обновить плеер</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

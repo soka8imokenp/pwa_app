@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Music, Radio, Sparkles, ExternalLink, Play, Pause, Volume2, VolumeX, ListMusic, ChevronDown, ChevronUp } from 'lucide-react';
+import { Music, Radio, Sparkles, ExternalLink, Play, Pause, Volume2, VolumeX, ListMusic, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 
 interface SpotifyFocusPlayerProps {
@@ -39,6 +39,7 @@ export const SpotifyFocusPlayer: React.FC<SpotifyFocusPlayerProps> = ({
   initialPlaylistUrl = DEFAULT_PLAYLIST_URL,
 }) => {
   const [activeMode, setActiveMode] = useState<'spotify' | 'radio'>('spotify');
+  const [playerSize, setPlayerSize] = useState<'full' | 'compact'>('full');
   const [playlistUrl, setPlaylistUrl] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('kairo_spotify_playlist') || initialPlaylistUrl;
@@ -182,11 +183,22 @@ export const SpotifyFocusPlayer: React.FC<SpotifyFocusPlayerProps> = ({
 
             <div className="flex items-center gap-2">
               <button
+                onClick={() => {
+                  playClickSound();
+                  setPlayerSize(playerSize === 'full' ? 'compact' : 'full');
+                }}
+                className="text-[11px] font-bold text-slate-600 hover:text-black cursor-pointer underline"
+              >
+                {playerSize === 'full' ? 'Компактный вид' : 'Полный список'}
+              </button>
+
+              <button
                 onClick={() => setIsEditingUrl(!isEditingUrl)}
                 className="text-xs font-bold text-purple-700 hover:underline cursor-pointer"
               >
                 {isEditingUrl ? 'Cancel' : 'Change Link'}
               </button>
+
               <a
                 href={playlistUrl}
                 target="_blank"
@@ -197,6 +209,14 @@ export const SpotifyFocusPlayer: React.FC<SpotifyFocusPlayerProps> = ({
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
+          </div>
+
+          {/* Helper Login Tip to Play Full Tracks */}
+          <div className="p-2.5 bg-[#F0FDF4] border border-[#86EFAC] rounded-xl flex items-start gap-2 text-[11px] text-[#166534] leading-relaxed">
+            <Info className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
+            <span>
+              <strong>Как слушать треки целиком:</strong> Нажмите <strong>«Log in»</strong> в верхнем правом углу внутри самого плеера Spotify ниже (подходит любой бесплатный аккаунт, без подписки).
+            </span>
           </div>
 
           {/* Change Playlist Input */}
@@ -223,7 +243,7 @@ export const SpotifyFocusPlayer: React.FC<SpotifyFocusPlayerProps> = ({
             <iframe
               src={getEmbedUrl(playlistUrl)}
               width="100%"
-              height="152"
+              height={playerSize === 'full' ? '352' : '152'}
               frameBorder="0"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
               loading="lazy"

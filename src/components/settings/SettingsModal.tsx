@@ -344,18 +344,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* 4. App Version & In-App APK Updates */}
+        {/* 4. App Version & In-App Updates */}
         <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-base">🚀</span>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-[#FFE873] border border-[#18181B] flex items-center justify-center font-bold text-xs shadow-xs">
+                ⚡
+              </div>
               <div>
                 <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
-                  Daily Sumire App
+                  Daily Sumire
                 </h4>
                 <span className="text-[10px] text-slate-500 font-bold">Version v1.3.0 (Build 10)</span>
               </div>
             </div>
+
             <button
               onClick={async () => {
                 playClickSound();
@@ -382,33 +385,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           {updateStatus && (
-            <p className="text-[11px] font-bold text-purple-700">{updateStatus}</p>
+            <div className="p-2 bg-[#FAF7F2] border border-[#18181B] rounded-xl flex items-center gap-1.5 text-xs font-bold text-[#18181B]">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>{updateStatus}</span>
+            </div>
           )}
-
-          {/* Quick Direct Link to GitHub Actions Artifacts */}
-          <div className="pt-1 border-t border-slate-100 flex gap-2">
-            <button
-              onClick={() => {
-                playClickSound();
-                window.open('https://github.com/soka8imokenp/pwa_app/actions', '_system');
-              }}
-              className="flex-1 py-2 px-3 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border-[1.5px] border-[#18181B] text-xs font-bold text-[#18181B] flex items-center justify-center gap-1.5 shadow-[1px_1px_0px_#18181B] cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Open GitHub Actions</span>
-            </button>
-
-            <button
-              onClick={() => {
-                playClickSound();
-                window.open('https://github.com/soka8imokenp/pwa_app/releases/latest', '_system');
-              }}
-              className="flex-1 py-2 px-3 rounded-xl bg-[#E8DCFF] hover:bg-[#DDD0F8] border-[1.5px] border-[#18181B] text-xs font-bold text-[#18181B] flex items-center justify-center gap-1.5 shadow-[1px_1px_0px_#18181B] cursor-pointer"
-            >
-              <ArrowUpCircle className="w-3.5 h-3.5" />
-              <span>Latest Releases</span>
-            </button>
-          </div>
         </div>
 
       </div>

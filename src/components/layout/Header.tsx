@@ -43,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           <div>
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block leading-none">
-              Daily Sumire
+              Daily Planner
             </span>
             <h1 className="text-sm font-bold font-display text-[#18181B] tracking-tight leading-tight mt-0.5">
               Hey, {firstName}

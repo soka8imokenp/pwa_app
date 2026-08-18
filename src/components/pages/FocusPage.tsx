@@ -220,7 +220,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
           </div>
         ) : (
           <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-            {mode === 'break' ? '☕ Rest & Recharge' : '⚡ Deep Focus Mode'}
+            {mode === 'break' ? 'Rest & Recharge' : 'Deep Focus Mode'}
           </span>
         )}
 

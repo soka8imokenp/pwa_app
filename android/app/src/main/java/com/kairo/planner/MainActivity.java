@@ -44,6 +44,14 @@ public class MainActivity extends BridgeActivity {
                 settings.setJavaScriptCanOpenWindowsAutomatically(true);
                 settings.setSupportMultipleWindows(true);
                 settings.setMediaPlaybackRequiresUserGesture(false);
+                settings.setAllowContentAccess(true);
+                settings.setAllowFileAccess(true);
+
+                // Make Spotify identify this as standard Chrome browser rather than restricted Webview
+                String ua = settings.getUserAgentString();
+                if (ua != null) {
+                    settings.setUserAgentString(ua.replace("; wv", "").replace("Version/4.0 ", ""));
+                }
 
                 CookieManager cookieManager = CookieManager.getInstance();
                 cookieManager.setAcceptCookie(true);

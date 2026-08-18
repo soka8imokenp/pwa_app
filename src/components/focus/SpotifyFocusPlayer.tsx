@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Music, Radio, Sparkles, ExternalLink, Play, Pause, Volume2, VolumeX, ListMusic, ChevronDown, ChevronUp, PlayCircle } from 'lucide-react';
+import { Music, Radio, Sparkles, ExternalLink, Play, Pause, Volume2, VolumeX, ListMusic, ChevronDown, ChevronUp, Maximize2, X, RefreshCw } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 
 interface SpotifyFocusPlayerProps {
@@ -40,6 +40,8 @@ export const SpotifyFocusPlayer: React.FC<SpotifyFocusPlayerProps> = ({
 }) => {
   const [activeMode, setActiveMode] = useState<'spotify' | 'radio'>('spotify');
   const [playerSize, setPlayerSize] = useState<'full' | 'compact'>('full');
+  const [isFullInAppPlayerOpen, setIsFullInAppPlayerOpen] = useState(false);
+  const [webPlayerKey, setWebPlayerKey] = useState(0);
 
   const [playlistUrl, setPlaylistUrl] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -80,26 +82,6 @@ export const SpotifyFocusPlayer: React.FC<SpotifyFocusPlayerProps> = ({
       // fallback
     }
     return `https://open.spotify.com/embed/playlist/3QstTBzmJbgH2NDHVI9pTL?utm_source=generator&theme=0`;
-  };
-
-  // Convert to native Spotify App URI (spotify:playlist:xxx)
-  const getNativeSpotifyUri = (rawUrl: string) => {
-    try {
-      const url = new URL(rawUrl.trim());
-      const pathParts = url.pathname.split('/').filter(Boolean);
-      if (pathParts.length >= 2) {
-        return `spotify:${pathParts[0]}:${pathParts[1]}`;
-      }
-    } catch {
-      // fallback
-    }
-    return 'spotify:playlist:3QstTBzmJbgH2NDHVI9pTL';
-  };
-
-  const handleLaunchNativeSpotify = () => {
-    playClickSound();
-    const uri = getNativeSpotifyUri(playlistUrl);
-    window.location.href = uri;
   };
 
   const handleSaveCustomUrl = (e: React.FormEvent) => {
@@ -221,20 +203,23 @@ export const SpotifyFocusPlayer: React.FC<SpotifyFocusPlayerProps> = ({
             </div>
           </div>
 
-          {/* Quick Full Playback Launch Banner */}
+          {/* Full In-App Spotify Player Launcher */}
           <button
-            onClick={handleLaunchNativeSpotify}
+            onClick={() => {
+              playClickSound();
+              setIsFullInAppPlayerOpen(true);
+            }}
             className="w-full p-2.5 bg-[#1DB954] hover:bg-[#1AA34A] text-white border-[1.75px] border-[#18181B] rounded-xl flex items-center justify-between shadow-[2px_2px_0px_#18181B] cursor-pointer active:translate-y-0.5 active:shadow-none transition-all"
           >
             <div className="flex items-center gap-2">
-              <PlayCircle className="w-5 h-5 fill-white text-[#1DB954] shrink-0" />
+              <span className="text-base">🎧</span>
               <div className="text-left">
-                <p className="text-xs font-bold leading-tight">Включить весь плейлист в фоне</p>
-                <p className="text-[10px] text-white/90">Слушайте полные треки soka8imo нон-стоп</p>
+                <p className="text-xs font-bold leading-tight">Открыть полный Spotify в приложении</p>
+                <p className="text-[10px] text-white/90">Слушайте треки soka8imo целиком со всеми функциями</p>
               </div>
             </div>
 
-            <ExternalLink className="w-4 h-4 text-white/80 shrink-0" />
+            <Maximize2 className="w-4 h-4 text-white/80 shrink-0" />
           </button>
 
           {/* Change Playlist Input */}
@@ -327,6 +312,58 @@ export const SpotifyFocusPlayer: React.FC<SpotifyFocusPlayerProps> = ({
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Full In-App Spotify Player Sheet */}
+      {isFullInAppPlayerOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex flex-col pt-[calc(env(safe-area-inset-top,0px)+10px)] pb-[calc(env(safe-area-inset-bottom,0px)+10px)] px-2 sm:px-4">
+          <div className="w-full max-w-2xl mx-auto flex-1 bg-[#121212] rounded-3xl border-2 border-[#18181B] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Top Navigation Bar */}
+            <div className="p-3 bg-[#18181B] text-white border-b border-white/10 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-[#1DB954] flex items-center justify-center text-white text-xs font-bold">
+                  🎧
+                </span>
+                <div>
+                  <h3 className="text-xs font-bold leading-tight">Spotify Web Player • Daily Sumire</h3>
+                  <p className="text-[9px] text-slate-300">Полный плеер со всеми треками внутри планера</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setWebPlayerKey((k) => k + 1)}
+                  title="Reload Player"
+                  className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                </button>
+
+                <button
+                  onClick={() => {
+                    playClickSound();
+                    setIsFullInAppPlayerOpen(false);
+                  }}
+                  title="Close & Return to Focus"
+                  className="w-7 h-7 rounded-lg bg-rose-600 hover:bg-rose-700 flex items-center justify-center text-white cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* In-App Spotify Web Player Frame */}
+            <div className="flex-1 w-full bg-[#121212] relative">
+              <iframe
+                key={webPlayerKey}
+                src={playlistUrl}
+                title="Full Spotify Web Player"
+                className="w-full h-full border-none"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>

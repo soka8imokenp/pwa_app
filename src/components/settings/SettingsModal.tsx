@@ -16,6 +16,7 @@ import {
   Sparkles,
   Check,
   X,
+  ArrowUpCircle,
 } from 'lucide-react';
 import {
   exportDatabaseToJson,
@@ -359,7 +360,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={async () => {
                 playClickSound();
                 setUpdateChecking(true);
-                setUpdateStatus('Checking GitHub for updates...');
+                setUpdateStatus('Checking for updates...');
                 const { hasUpdate, updateInfo } = await checkForAppUpdate();
                 setUpdateChecking(false);
                 if (hasUpdate && updateInfo) {
@@ -369,7 +370,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   }
                 } else {
                   setUpdateStatus('You have the latest version!');
-                  setTimeout(() => setUpdateStatus(null), 3000);
+                  setTimeout(() => setUpdateStatus(null), 3500);
                 }
               }}
               disabled={updateChecking}
@@ -379,9 +380,35 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <span>{updateChecking ? 'Checking...' : 'Check Updates'}</span>
             </button>
           </div>
+
           {updateStatus && (
             <p className="text-[11px] font-bold text-purple-700">{updateStatus}</p>
           )}
+
+          {/* Quick Direct Link to GitHub Actions Artifacts */}
+          <div className="pt-1 border-t border-slate-100 flex gap-2">
+            <button
+              onClick={() => {
+                playClickSound();
+                window.open('https://github.com/soka8imokenp/pwa_app/actions', '_system');
+              }}
+              className="flex-1 py-2 px-3 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border-[1.5px] border-[#18181B] text-xs font-bold text-[#18181B] flex items-center justify-center gap-1.5 shadow-[1px_1px_0px_#18181B] cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Open GitHub Actions</span>
+            </button>
+
+            <button
+              onClick={() => {
+                playClickSound();
+                window.open('https://github.com/soka8imokenp/pwa_app/releases/latest', '_system');
+              }}
+              className="flex-1 py-2 px-3 rounded-xl bg-[#E8DCFF] hover:bg-[#DDD0F8] border-[1.5px] border-[#18181B] text-xs font-bold text-[#18181B] flex items-center justify-center gap-1.5 shadow-[1px_1px_0px_#18181B] cursor-pointer"
+            >
+              <ArrowUpCircle className="w-3.5 h-3.5" />
+              <span>Latest Releases</span>
+            </button>
+          </div>
         </div>
 
       </div>

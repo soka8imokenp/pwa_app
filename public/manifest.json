@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Sumire Planner - Focus & Habits",
-  "short_name": "Sumire",
+  "name": "Daily Sumire - Focus & Habits",
+  "short_name": "Daily Sumire",
   "description": "Offline-First Neo-Brutalist Daily Planner, Habit Tracker, Focus Pomodoro Timer & Link Hub.",
   "start_url": "/",
   "scope": "/",

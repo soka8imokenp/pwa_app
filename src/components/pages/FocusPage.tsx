@@ -15,7 +15,6 @@ import { playClickSound, playTimerFinishAlarm, playSuccessChime } from '../../li
 import { playAmbientSound, stopAmbientSound, AmbientSoundType } from '../../lib/ambientSound';
 import { sendLocalNotification, requestNotificationPermission } from '../../lib/notifications';
 import { ZenFullscreenTimer } from '../focus/ZenFullscreenTimer';
-import { SpotifyFocusPlayer } from '../focus/SpotifyFocusPlayer';
 import { InAppMusicPlayer } from '../focus/InAppMusicPlayer';
 import confetti from 'canvas-confetti';
 
@@ -263,38 +262,6 @@ export const FocusPage: React.FC<FocusPageProps> = ({
 
       {/* 3. In-App Native Music Player (Full-length playback from CDN/Vercel) */}
       <InAppMusicPlayer />
-
-      {/* 4. Integrated Spotify & Lo-Fi Focus Music Lounge */}
-      <SpotifyFocusPlayer />
-
-      {/* 4. Ambient Soundscapes */}
-      <div className="neo-card p-4 bg-white space-y-2.5">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold font-display text-slate-500 uppercase tracking-wider">
-            Ambient Flow Noise
-          </span>
-          <span className="text-[10px] font-bold text-slate-400">
-            {activeSound !== 'none' ? `Playing: ${activeSound}` : 'Off'}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-4 gap-2">
-          {AMBIENT_PRESETS.map((snd) => (
-            <button
-              key={snd.id}
-              onClick={() => handleToggleSound(snd.id)}
-              className={`py-2 px-1 rounded-xl border-[1.5px] border-[#18181B] flex flex-col items-center justify-center gap-1 text-xs font-bold transition-all cursor-pointer ${
-                activeSound === snd.id
-                  ? 'bg-[#E8DCFF] shadow-[1.5px_1.5px_0px_#18181B] -translate-y-0.5'
-                  : 'bg-[#FAF7F2] hover:bg-slate-100 shadow-[1px_1px_0px_#18181B]'
-              }`}
-            >
-              <span>{snd.icon}</span>
-              <span className="text-[10px] text-[#18181B]">{snd.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* 4. Today's Completed Focus History */}
       <div className="neo-card p-4 bg-white space-y-3">

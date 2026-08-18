@@ -6,19 +6,12 @@ import {
   SkipBack,
   Shuffle,
   Repeat,
-  Volume2,
-  VolumeX,
   ListMusic,
   RefreshCw,
   Sliders,
-  Sparkles,
-  CloudCheck,
   Search,
-  Flame,
-  Music,
-  Radio,
 } from 'lucide-react';
-import { SOKA8IMO_PLAYLIST, Track } from '../../data/playlist';
+import { Track } from '../../data/playlist';
 import { playClickSound } from '../../lib/sound';
 
 const VERCEL_API_URL = 'https://sumiredaily-music.vercel.app/tracks.json';
@@ -39,7 +32,7 @@ export const InAppMusicPlayer: React.FC = () => {
         }
       }
     }
-    return SOKA8IMO_PLAYLIST;
+    return [];
   });
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -48,12 +41,9 @@ export const InAppMusicPlayer: React.FC = () => {
   const [duration, setDuration] = useState(0);
   const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
-  const [volume, setVolume] = useState(0.8);
-  const [isMuted, setIsMuted] = useState(false);
 
   // Focus Soundscapes Ambient Layer (Mixer)
   const [ambientType, setAmbientType] = useState<'none' | 'rain' | 'waves' | 'forest' | 'whitenoise'>('none');
-  const [ambientVolume, setAmbientVolume] = useState(0.4);
   const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // UI state
@@ -64,7 +54,7 @@ export const InAppMusicPlayer: React.FC = () => {
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const currentTrack = playlist[currentIndex] || SOKA8IMO_PLAYLIST[0];
+  const currentTrack = playlist[currentIndex] || null;
 
   // Helper to resolve full audio URL from Vercel
   const resolveAudioUrl = (url: string) => {
@@ -89,7 +79,7 @@ export const InAppMusicPlayer: React.FC = () => {
           const formattedTracks: Track[] = rawTracks.map((t, idx) => ({
             id: t.id || (idx + 1).toString(),
             title: t.title || 'Unknown Track',
-            artist: t.artist || 'soka8imo',
+            artist: t.artist || 'Daily Sumire',
             duration: t.duration || '03:30',
             coverUrl: t.coverUrl?.startsWith('http') ? t.coverUrl : `${VERCEL_BASE_ORIGIN}${t.coverUrl || '/icon.png'}`,
             audioUrl: resolveAudioUrl(t.audioUrl),
@@ -98,17 +88,17 @@ export const InAppMusicPlayer: React.FC = () => {
           setPlaylist(formattedTracks);
           localStorage.setItem('kairo_custom_tracks', JSON.stringify(formattedTracks));
           if (isManual) {
-            setSyncStatus(`Синхронизировано: ${formattedTracks.length} треков!`);
-            setTimeout(() => setSyncStatus(null), 3500);
+            setSyncStatus('Треки обновлены!');
+            setTimeout(() => setSyncStatus(null), 3000);
           }
         } else if (isManual) {
-          setSyncStatus('В репозитории Vercel пока нет новых песен');
+          setSyncStatus('В репозитории Vercel пока нет файлов .mp3');
           setTimeout(() => setSyncStatus(null), 3000);
         }
       }
     } catch {
       if (isManual) {
-        setSyncStatus('Сервер Vercel обновляется...');
+        setSyncStatus('Связь с Vercel...');
         setTimeout(() => setSyncStatus(null), 3000);
       }
     } finally {
@@ -151,7 +141,7 @@ export const InAppMusicPlayer: React.FC = () => {
       }
       const amb = new Audio(soundUrl);
       amb.loop = true;
-      amb.volume = ambientVolume;
+      amb.volume = 0.5;
       amb.play().catch(() => {});
       ambientAudioRef.current = amb;
     }
@@ -163,17 +153,12 @@ export const InAppMusicPlayer: React.FC = () => {
     };
   }, [ambientType]);
 
-  useEffect(() => {
-    if (ambientAudioRef.current) {
-      ambientAudioRef.current.volume = ambientVolume;
-    }
-  }, [ambientVolume]);
-
   // Main Audio setup
   useEffect(() => {
+    if (!currentTrack) return;
+
     const fullAudioSrc = resolveAudioUrl(currentTrack.audioUrl);
     const audio = new Audio(fullAudioSrc);
-    audio.volume = isMuted ? 0 : volume;
     audioRef.current = audio;
 
     const handleTimeUpdate = () => {
@@ -193,7 +178,7 @@ export const InAppMusicPlayer: React.FC = () => {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: currentTrack.title,
         artist: currentTrack.artist,
-        album: 'Daily Sumire • Focus Vault',
+        album: 'Daily Sumire',
         artwork: [
           { src: currentTrack.coverUrl || '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
@@ -225,6 +210,10 @@ export const InAppMusicPlayer: React.FC = () => {
 
   const handleTogglePlay = () => {
     playClickSound();
+    if (!audioRef.current && currentTrack) {
+      const audio = new Audio(resolveAudioUrl(currentTrack.audioUrl));
+      audioRef.current = audio;
+    }
     if (!audioRef.current) return;
 
     if (isPlaying) {
@@ -241,6 +230,8 @@ export const InAppMusicPlayer: React.FC = () => {
 
   const handleNextTrack = () => {
     playClickSound();
+    if (playlist.length === 0) return;
+
     if (isRepeat && audioRef.current) {
       audioRef.current.currentTime = 0;
       audioRef.current.play();
@@ -259,6 +250,8 @@ export const InAppMusicPlayer: React.FC = () => {
 
   const handlePrevTrack = () => {
     playClickSound();
+    if (playlist.length === 0) return;
+
     if (audioRef.current && audioRef.current.currentTime > 3) {
       audioRef.current.currentTime = 0;
       return;
@@ -275,14 +268,6 @@ export const InAppMusicPlayer: React.FC = () => {
     }
   };
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = Number(e.target.value);
-    setVolume(val);
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : val;
-    }
-  };
-
   const formatSeconds = (sec: number) => {
     if (isNaN(sec) || sec <= 0) return '0:00';
     const m = Math.floor(sec / 60);
@@ -296,22 +281,17 @@ export const InAppMusicPlayer: React.FC = () => {
   );
 
   return (
-    <div className="neo-card p-4 bg-white space-y-3.5 font-body select-none">
+    <div className="neo-card p-4 bg-white space-y-3 font-body select-none">
       {/* Header Info & Sync Controls */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-[#FFE873] border-[1.75px] border-[#18181B] flex items-center justify-center text-sm shadow-[1.5px_1.5px_0px_#18181B] shrink-0 font-bold">
-            💿
+            🎵
           </div>
           <div>
-            <div className="flex items-center gap-1.5">
-              <h3 className="text-xs font-bold font-display text-[#18181B] leading-tight">Daily Sumire Music Studio</h3>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#D1FBE4] text-[#065F46] border border-[#065F46]/30">
-                Live Vercel
-              </span>
-            </div>
+            <h3 className="text-xs font-bold font-display text-[#18181B] leading-tight">Daily Sumire Music</h3>
             <span className="text-[10px] text-slate-500 font-medium">
-              {syncStatus || `Синхронизировано • ${playlist.length} треков`}
+              {syncStatus || 'Vercel Cloud Sync'}
             </span>
           </div>
         </div>
@@ -334,7 +314,7 @@ export const InAppMusicPlayer: React.FC = () => {
               playClickSound();
               setIsMixerOpen(!isMixerOpen);
             }}
-            title="Микшер звуков"
+            title="Микшер звуков фона"
             className={`w-8 h-8 rounded-xl border-[1.5px] border-[#18181B] flex items-center justify-center cursor-pointer transition-all ${
               ambientType !== 'none' || isMixerOpen
                 ? 'bg-[#E8DCFF] text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B]'
@@ -357,51 +337,35 @@ export const InAppMusicPlayer: React.FC = () => {
             }`}
           >
             <ListMusic className="w-3.5 h-3.5" />
-            <span>Треки ({playlist.length})</span>
+            <span>Треки</span>
           </button>
         </div>
       </div>
 
-      {/* Main Playing Track Hero Card */}
-      <div className="p-4 bg-[#FAF7F2] border-[2px] border-[#18181B] rounded-2xl shadow-[2.5px_2.5px_0px_#18181B] space-y-3.5">
-        <div className="flex items-center gap-3.5">
-          {/* Animated Spinning Vinyl Cover */}
-          <div className="relative w-16 h-16 rounded-2xl border-[2px] border-[#18181B] shadow-[2px_2px_0px_#18181B] overflow-hidden shrink-0 bg-[#18181B]">
-            <img
-              src="/icon-192x192.png"
-              alt="Track Cover"
-              className={`w-full h-full object-cover ${isPlaying ? 'animate-spin' : ''}`}
-              style={{ animationDuration: '5s' }}
-            />
-            <div className="absolute inset-0 m-auto w-5 h-5 rounded-full bg-[#FFE873] border-[1.5px] border-[#18181B]" />
-          </div>
-
-          {/* Title, Artist, & Live Animated Equalizer */}
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
+      {/* Main Playing Track Card (Clean title, artist, timeline & controls) */}
+      <div className="p-3.5 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-3">
+        {currentTrack ? (
+          <div className="min-w-0">
+            <div className="flex items-center justify-between gap-2">
               <h4 className="text-sm sm:text-base font-bold text-[#18181B] truncate">{currentTrack.title}</h4>
+              {isPlaying && (
+                <span className="flex items-center gap-0.5 shrink-0">
+                  <span className="w-1 h-3 bg-[#1DB954] rounded-full animate-pulse" />
+                  <span className="w-1 h-4 bg-[#1DB954] rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                  <span className="w-1 h-2 bg-[#1DB954] rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+                </span>
+              )}
             </div>
             <p className="text-xs text-slate-500 font-medium truncate mt-0.5">{currentTrack.artist}</p>
-
-            {/* Equalizer Audio Waves */}
-            <div className="flex items-center gap-1 mt-1.5">
-              {[0.4, 0.7, 0.3, 0.9, 0.5, 0.8, 0.4].map((h, i) => (
-                <span
-                  key={i}
-                  className={`w-1 rounded-full ${isPlaying ? 'bg-[#18181B] animate-pulse' : 'bg-slate-300'}`}
-                  style={{
-                    height: isPlaying ? `${h * 16}px` : '4px',
-                    animationDelay: `${i * 0.15}s`,
-                    animationDuration: '0.6s',
-                  }}
-                />
-              ))}
-              <span className="text-[10px] font-bold text-slate-400 ml-1 font-mono-num">
-                {formatSeconds(currentTime)} / {formatSeconds(duration)}
-              </span>
-            </div>
           </div>
-        </div>
+        ) : (
+          <div className="py-2 text-center">
+            <p className="text-xs font-bold text-slate-600">Библиотека пуста</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">
+              Загрузите .mp3 в ваш Vercel репозиторий и нажмите 🔄
+            </p>
+          </div>
+        )}
 
         {/* Progress Scrubber Bar */}
         <div className="space-y-1">
@@ -411,8 +375,13 @@ export const InAppMusicPlayer: React.FC = () => {
             max={duration || 100}
             value={currentTime}
             onChange={handleSeek}
-            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#18181B]"
+            disabled={!currentTrack}
+            className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#18181B]"
           />
+          <div className="flex items-center justify-between text-[10px] font-bold font-mono-num text-slate-500">
+            <span>{formatSeconds(currentTime)}</span>
+            <span>{formatSeconds(duration)}</span>
+          </div>
         </div>
 
         {/* Playback Controls */}
@@ -423,6 +392,7 @@ export const InAppMusicPlayer: React.FC = () => {
               playClickSound();
               setIsShuffle(!isShuffle);
             }}
+            disabled={!currentTrack}
             className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
               isShuffle ? 'bg-[#FFE873] border-[#18181B] text-[#18181B] shadow-[1px_1px_0px_#18181B]' : 'border-transparent text-slate-400 hover:text-black'
             }`}
@@ -434,7 +404,8 @@ export const InAppMusicPlayer: React.FC = () => {
           {/* Prev */}
           <button
             onClick={handlePrevTrack}
-            className="w-11 h-11 rounded-xl bg-white border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 cursor-pointer"
+            disabled={!currentTrack}
+            className="w-11 h-11 rounded-xl bg-white border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 cursor-pointer disabled:opacity-50"
             title="Предыдущий"
           >
             <SkipBack className="w-4 h-4 stroke-[2.5]" />
@@ -443,7 +414,8 @@ export const InAppMusicPlayer: React.FC = () => {
           {/* Big Play/Pause Button */}
           <button
             onClick={handleTogglePlay}
-            className="w-16 h-12 rounded-2xl bg-[#FFE873] hover:bg-[#FED7AA] border-[2px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[2.5px_2.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+            disabled={!currentTrack}
+            className="w-16 h-12 rounded-2xl bg-[#FFE873] hover:bg-[#FED7AA] border-[2px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[2.5px_2.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer disabled:opacity-50"
           >
             {isPlaying ? <Pause className="w-6 h-6 fill-[#18181B]" /> : <Play className="w-6 h-6 fill-[#18181B] ml-0.5" />}
           </button>
@@ -451,7 +423,8 @@ export const InAppMusicPlayer: React.FC = () => {
           {/* Next */}
           <button
             onClick={handleNextTrack}
-            className="w-11 h-11 rounded-xl bg-white border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 cursor-pointer"
+            disabled={!currentTrack}
+            className="w-11 h-11 rounded-xl bg-white border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 cursor-pointer disabled:opacity-50"
             title="Следующий"
           >
             <SkipForward className="w-4 h-4 stroke-[2.5]" />
@@ -463,6 +436,7 @@ export const InAppMusicPlayer: React.FC = () => {
               playClickSound();
               setIsRepeat(!isRepeat);
             }}
+            disabled={!currentTrack}
             className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
               isRepeat ? 'bg-[#FFE873] border-[#18181B] text-[#18181B] shadow-[1px_1px_0px_#18181B]' : 'border-transparent text-slate-400 hover:text-black'
             }`}
@@ -471,41 +445,15 @@ export const InAppMusicPlayer: React.FC = () => {
             <Repeat className="w-4 h-4 stroke-[2]" />
           </button>
         </div>
-
-        {/* Volume & Quick Mixer Bar */}
-        <div className="flex items-center gap-3 pt-1 border-t border-slate-200">
-          <button
-            onClick={() => {
-              const next = !isMuted;
-              setIsMuted(next);
-              if (audioRef.current) audioRef.current.volume = next ? 0 : volume;
-            }}
-            className="text-slate-500 hover:text-black cursor-pointer"
-          >
-            {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-          </button>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            value={isMuted ? 0 : volume}
-            onChange={handleVolumeChange}
-            className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#18181B]"
-          />
-          <span className="text-[10px] font-bold font-mono-num text-slate-500 w-8 text-right">
-            {Math.round((isMuted ? 0 : volume) * 100)}%
-          </span>
-        </div>
       </div>
 
-      {/* Focus Soundscapes Ambient Mixer Drawer */}
+      {/* Focus Soundscapes Ambient Mixer Drawer (Clean buttons without volume bar) */}
       {isMixerOpen && (
-        <div className="p-3.5 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-2xl space-y-3 shadow-[2px_2px_0px_#18181B]">
+        <div className="p-3 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-2xl space-y-2 shadow-[2px_2px_0px_#18181B]">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#18181B] flex items-center gap-1.5">
               <Sliders className="w-3.5 h-3.5" />
-              Микшер звуков фона (Наложение поверх музыки)
+              Микшер звуков фона
             </span>
             <span className="text-[10px] font-bold text-slate-500 uppercase">
               {ambientType !== 'none' ? `Активен: ${ambientType}` : 'Выключен'}
@@ -540,30 +488,12 @@ export const InAppMusicPlayer: React.FC = () => {
               );
             })}
           </div>
-
-          {ambientType !== 'none' && (
-            <div className="flex items-center gap-2 pt-1">
-              <span className="text-[10px] font-bold text-slate-500 shrink-0">Громкость фона:</span>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                value={ambientVolume}
-                onChange={(e) => setAmbientVolume(Number(e.target.value))}
-                className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#18181B]"
-              />
-              <span className="text-[10px] font-mono-num font-bold text-slate-600">
-                {Math.round(ambientVolume * 100)}%
-              </span>
-            </div>
-          )}
         </div>
       )}
 
-      {/* Tracklist Drawer */}
+      {/* Tracklist Drawer (Clean list with search) */}
       {isTracklistOpen && (
-        <div className="space-y-2.5 pt-1">
+        <div className="space-y-2 pt-1">
           {/* Search bar */}
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -577,10 +507,10 @@ export const InAppMusicPlayer: React.FC = () => {
           </div>
 
           {/* Tracks List */}
-          <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+          <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
             {filteredPlaylist.length === 0 ? (
               <p className="text-xs text-slate-400 text-center py-4">
-                Треков не найдено. Нажмите «Обновить» для загрузки с Vercel.
+                Треков пока нет. Загрузите .mp3 в ваш Vercel и нажмите 🔄
               </p>
             ) : (
               filteredPlaylist.map((track, idx) => {
@@ -595,7 +525,7 @@ export const InAppMusicPlayer: React.FC = () => {
                       setCurrentIndex(originalIndex);
                       setIsPlaying(true);
                     }}
-                    className={`p-3 rounded-xl border-[1.5px] border-[#18181B] flex items-center justify-between gap-2.5 cursor-pointer transition-all ${
+                    className={`p-2.5 rounded-xl border-[1.5px] border-[#18181B] flex items-center justify-between gap-2.5 cursor-pointer transition-all ${
                       isCurrent
                         ? 'bg-[#E8DCFF] shadow-[2px_2px_0px_#18181B] -translate-y-0.5'
                         : 'bg-[#FAF7F2] hover:bg-slate-100 shadow-[1px_1px_0px_#18181B]'
@@ -618,9 +548,9 @@ export const InAppMusicPlayer: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[10px] font-bold font-mono-num text-slate-500">{track.duration}</span>
-                    </div>
+                    <span className="text-[10px] font-bold font-mono-num text-slate-500 shrink-0">
+                      {track.duration}
+                    </span>
                   </div>
                 );
               })

@@ -1,22 +1,39 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Volume2, VolumeX, ListMusic, Music2, Plus, Sparkles, X, CloudDownload, Settings2, Check } from 'lucide-react';
+import {
+  Play,
+  Pause,
+  SkipForward,
+  SkipBack,
+  Shuffle,
+  Repeat,
+  Volume2,
+  VolumeX,
+  ListMusic,
+  RefreshCw,
+  Sliders,
+  Sparkles,
+  CloudCheck,
+  Search,
+  Flame,
+  Music,
+  Radio,
+} from 'lucide-react';
 import { SOKA8IMO_PLAYLIST, Track } from '../../data/playlist';
 import { playClickSound } from '../../lib/sound';
 
-export const InAppMusicPlayer: React.FC = () => {
-  const [remoteUrl, setRemoteUrl] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('kairo_music_remote_url') || '';
-    }
-    return '';
-  });
+const VERCEL_API_URL = 'https://sumiredaily-music.vercel.app/tracks.json';
+const VERCEL_BASE_ORIGIN = 'https://sumiredaily-music.vercel.app';
 
+export const InAppMusicPlayer: React.FC = () => {
   const [playlist, setPlaylist] = useState<Track[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('kairo_custom_tracks');
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
         } catch {
           // fallback
         }
@@ -32,70 +49,131 @@ export const InAppMusicPlayer: React.FC = () => {
   const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
   const [volume, setVolume] = useState(0.8);
+  const [isMuted, setIsMuted] = useState(false);
+
+  // Focus Soundscapes Ambient Layer (Mixer)
+  const [ambientType, setAmbientType] = useState<'none' | 'rain' | 'waves' | 'forest' | 'whitenoise'>('none');
+  const [ambientVolume, setAmbientVolume] = useState(0.4);
+  const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // UI state
   const [isTracklistOpen, setIsTracklistOpen] = useState(false);
-  const [isAddTrackOpen, setIsAddTrackOpen] = useState(false);
-  const [isRemoteSettingsOpen, setIsRemoteSettingsOpen] = useState(false);
+  const [isMixerOpen, setIsMixerOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
-
-  // New track form
-  const [newTitle, setNewTitle] = useState('');
-  const [newArtist, setNewArtist] = useState('');
-  const [newUrl, setNewUrl] = useState('');
-  const [inputRemoteUrl, setInputRemoteUrl] = useState(remoteUrl);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentTrack = playlist[currentIndex] || SOKA8IMO_PLAYLIST[0];
 
-  // Auto-sync from remote Vercel repo on mount if configured
-  useEffect(() => {
-    if (remoteUrl) {
-      syncFromRemote(remoteUrl);
+  // Helper to resolve full audio URL from Vercel
+  const resolveAudioUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
     }
+    return `${VERCEL_BASE_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
+  // Sync with Vercel API
+  const fetchVercelTracks = async (isManual = false) => {
+    if (isManual) {
+      playClickSound();
+      setIsSyncing(true);
+    }
+    try {
+      const res = await fetch(`${VERCEL_API_URL}?t=${Date.now()}`);
+      if (res.ok) {
+        const rawTracks = await res.json();
+        if (Array.isArray(rawTracks) && rawTracks.length > 0) {
+          const formattedTracks: Track[] = rawTracks.map((t, idx) => ({
+            id: t.id || (idx + 1).toString(),
+            title: t.title || 'Unknown Track',
+            artist: t.artist || 'soka8imo',
+            duration: t.duration || '03:30',
+            coverUrl: t.coverUrl?.startsWith('http') ? t.coverUrl : `${VERCEL_BASE_ORIGIN}${t.coverUrl || '/icon.png'}`,
+            audioUrl: resolveAudioUrl(t.audioUrl),
+          }));
+
+          setPlaylist(formattedTracks);
+          localStorage.setItem('kairo_custom_tracks', JSON.stringify(formattedTracks));
+          if (isManual) {
+            setSyncStatus(`Синхронизировано: ${formattedTracks.length} треков!`);
+            setTimeout(() => setSyncStatus(null), 3500);
+          }
+        } else if (isManual) {
+          setSyncStatus('В репозитории Vercel пока нет новых песен');
+          setTimeout(() => setSyncStatus(null), 3000);
+        }
+      }
+    } catch {
+      if (isManual) {
+        setSyncStatus('Сервер Vercel обновляется...');
+        setTimeout(() => setSyncStatus(null), 3000);
+      }
+    } finally {
+      if (isManual) {
+        setIsSyncing(false);
+      }
+    }
+  };
+
+  // Initial fetch and auto-polling every 45s
+  useEffect(() => {
+    fetchVercelTracks(false);
+    const interval = setInterval(() => {
+      fetchVercelTracks(false);
+    }, 45000);
+    return () => clearInterval(interval);
   }, []);
 
-  const syncFromRemote = async (urlToFetch: string) => {
-    if (!urlToFetch.trim()) return;
-    setIsSyncing(true);
-    setSyncStatus('Загрузка с Vercel...');
-    try {
-      const res = await fetch(urlToFetch.trim());
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setPlaylist(data);
-          localStorage.setItem('kairo_custom_tracks', JSON.stringify(data));
-          setSyncStatus(`Успешно! Синхронизировано ${data.length} треков`);
-          setTimeout(() => setSyncStatus(null), 3000);
-        } else {
-          setSyncStatus('Файл пуст или имеет неверный формат');
-        }
-      } else {
-        setSyncStatus(`Ошибка сети: ${res.status}`);
-      }
-    } catch (err) {
-      setSyncStatus('Не удалось подключиться к Vercel URL');
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  const handleSaveRemoteUrl = (e: React.FormEvent) => {
-    e.preventDefault();
-    playClickSound();
-    const clean = inputRemoteUrl.trim();
-    setRemoteUrl(clean);
-    localStorage.setItem('kairo_music_remote_url', clean);
-    if (clean) {
-      syncFromRemote(clean);
-    }
-    setIsRemoteSettingsOpen(false);
-  };
-
-  // Initialize audio element
+  // Ambient sound layer
   useEffect(() => {
-    const audio = new Audio(currentTrack.audioUrl);
-    audio.volume = volume;
+    const AMBIENT_SOUND_URLS: Record<string, string> = {
+      rain: 'https://cdn.pixabay.com/download/audio/2021/09/06/audio_730628a8d1.mp3?filename=soft-rain-ambient-111154.mp3',
+      waves: 'https://cdn.pixabay.com/download/audio/2022/04/27/audio_34f664a781.mp3?filename=ocean-waves-ambient-110397.mp3',
+      forest: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=in-the-forest-ambient-acoustic-guitar-12179.mp3',
+      whitenoise: 'https://cdn.pixabay.com/download/audio/2022/05/16/audio_db6591201e.mp3?filename=chill-abstract-intention-12099.mp3',
+    };
+
+    if (ambientType === 'none') {
+      if (ambientAudioRef.current) {
+        ambientAudioRef.current.pause();
+        ambientAudioRef.current = null;
+      }
+      return;
+    }
+
+    const soundUrl = AMBIENT_SOUND_URLS[ambientType];
+    if (soundUrl) {
+      if (ambientAudioRef.current) {
+        ambientAudioRef.current.pause();
+      }
+      const amb = new Audio(soundUrl);
+      amb.loop = true;
+      amb.volume = ambientVolume;
+      amb.play().catch(() => {});
+      ambientAudioRef.current = amb;
+    }
+
+    return () => {
+      if (ambientAudioRef.current) {
+        ambientAudioRef.current.pause();
+      }
+    };
+  }, [ambientType]);
+
+  useEffect(() => {
+    if (ambientAudioRef.current) {
+      ambientAudioRef.current.volume = ambientVolume;
+    }
+  }, [ambientVolume]);
+
+  // Main Audio setup
+  useEffect(() => {
+    const fullAudioSrc = resolveAudioUrl(currentTrack.audioUrl);
+    const audio = new Audio(fullAudioSrc);
+    audio.volume = isMuted ? 0 : volume;
     audioRef.current = audio;
 
     const handleTimeUpdate = () => {
@@ -115,7 +193,7 @@ export const InAppMusicPlayer: React.FC = () => {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: currentTrack.title,
         artist: currentTrack.artist,
-        album: 'soka8imo • Daily Sumire',
+        album: 'Daily Sumire • Focus Vault',
         artwork: [
           { src: currentTrack.coverUrl || '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
@@ -197,6 +275,14 @@ export const InAppMusicPlayer: React.FC = () => {
     }
   };
 
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = Number(e.target.value);
+    setVolume(val);
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : val;
+    }
+  };
+
   const formatSeconds = (sec: number) => {
     if (isNaN(sec) || sec <= 0) return '0:00';
     const m = Math.floor(sec / 60);
@@ -204,75 +290,70 @@ export const InAppMusicPlayer: React.FC = () => {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  const handleAddTrack = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim() || !newUrl.trim()) return;
-    playClickSound();
-
-    const newTrackObj: Track = {
-      id: Date.now().toString(),
-      title: newTitle.trim(),
-      artist: newArtist.trim() || 'soka',
-      duration: '03:30',
-      coverUrl: '/icon-192x192.png',
-      audioUrl: newUrl.trim(),
-    };
-
-    const updated = [...playlist, newTrackObj];
-    setPlaylist(updated);
-    localStorage.setItem('kairo_custom_tracks', JSON.stringify(updated));
-
-    setNewTitle('');
-    setNewArtist('');
-    setNewUrl('');
-    setIsAddTrackOpen(false);
-  };
-
-  const handleDeleteTrack = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    playClickSound();
-    if (playlist.length <= 1) return;
-    const updated = playlist.filter((t) => t.id !== id);
-    setPlaylist(updated);
-    localStorage.setItem('kairo_custom_tracks', JSON.stringify(updated));
-    if (currentIndex >= updated.length) {
-      setCurrentIndex(0);
-    }
-  };
+  const filteredPlaylist = playlist.filter((t) =>
+    t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.artist.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="neo-card p-4 bg-white space-y-3.5 font-body select-none">
-      {/* Header Info */}
-      <div className="flex items-center justify-between">
+      {/* Header Info & Sync Controls */}
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="w-6 h-6 rounded-lg bg-[#FFE873] border border-[#18181B] flex items-center justify-center text-xs shadow-xs">
+          <div className="w-8 h-8 rounded-xl bg-[#FFE873] border-[1.75px] border-[#18181B] flex items-center justify-center text-sm shadow-[1.5px_1.5px_0px_#18181B] shrink-0 font-bold">
             💿
-          </span>
+          </div>
           <div>
-            <h3 className="text-xs font-bold font-display text-[#18181B] leading-tight">soka8imo In-App Player</h3>
-            <span className="text-[10px] text-slate-500 font-medium">Синхронизация с Vercel / Без лимитов</span>
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-xs font-bold font-display text-[#18181B] leading-tight">Daily Sumire Music Studio</h3>
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#D1FBE4] text-[#065F46] border border-[#065F46]/30">
+                Live Vercel
+              </span>
+            </div>
+            <span className="text-[10px] text-slate-500 font-medium">
+              {syncStatus || `Синхронизировано • ${playlist.length} треков`}
+            </span>
           </div>
         </div>
 
+        {/* Action Pills */}
         <div className="flex items-center gap-1.5">
+          {/* Refresh / Check Vercel for new songs */}
+          <button
+            onClick={() => fetchVercelTracks(true)}
+            disabled={isSyncing}
+            title="Проверить новые треки на Vercel"
+            className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border-[1.5px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] cursor-pointer active:translate-y-0.5"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-purple-600' : ''}`} />
+          </button>
+
+          {/* Soundscapes Mixer Toggle */}
           <button
             onClick={() => {
               playClickSound();
-              setIsRemoteSettingsOpen(!isRemoteSettingsOpen);
+              setIsMixerOpen(!isMixerOpen);
             }}
-            title="Настройка Vercel CDN"
-            className="w-7 h-7 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border-[1.5px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] cursor-pointer"
+            title="Микшер звуков"
+            className={`w-8 h-8 rounded-xl border-[1.5px] border-[#18181B] flex items-center justify-center cursor-pointer transition-all ${
+              ambientType !== 'none' || isMixerOpen
+                ? 'bg-[#E8DCFF] text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B]'
+                : 'bg-[#FAF7F2] text-slate-600 hover:bg-slate-100 shadow-[1px_1px_0px_#18181B]'
+            }`}
           >
-            <CloudDownload className="w-3.5 h-3.5" />
+            <Sliders className="w-3.5 h-3.5" />
           </button>
 
+          {/* Tracklist Drawer Toggle */}
           <button
             onClick={() => {
               playClickSound();
               setIsTracklistOpen(!isTracklistOpen);
             }}
-            className={`px-2.5 py-1 rounded-xl text-xs font-bold border-[1.5px] border-[#18181B] flex items-center gap-1 cursor-pointer transition-all ${
-              isTracklistOpen ? 'bg-[#18181B] text-white' : 'bg-[#FAF7F2] text-[#18181B] hover:bg-slate-100 shadow-[1px_1px_0px_#18181B]'
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold border-[1.5px] border-[#18181B] flex items-center gap-1.5 cursor-pointer transition-all ${
+              isTracklistOpen
+                ? 'bg-[#18181B] text-white'
+                : 'bg-[#FAF7F2] text-[#18181B] hover:bg-slate-100 shadow-[1px_1px_0px_#18181B]'
             }`}
           >
             <ListMusic className="w-3.5 h-3.5" />
@@ -281,83 +362,44 @@ export const InAppMusicPlayer: React.FC = () => {
         </div>
       </div>
 
-      {/* Remote Vercel Config Modal/Drawer */}
-      {isRemoteSettingsOpen && (
-        <form onSubmit={handleSaveRemoteUrl} className="p-3 bg-[#E8DCFF] border-[1.75px] border-[#18181B] rounded-2xl space-y-2.5 shadow-[2px_2px_0px_#18181B]">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#18181B] flex items-center gap-1">
-              <CloudDownload className="w-3.5 h-3.5" />
-              Подключение к вашему Vercel репозиторию
-            </span>
-            <button type="button" onClick={() => setIsRemoteSettingsOpen(false)} className="text-slate-600 hover:text-black">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <p className="text-[10px] text-slate-700 leading-snug">
-            Вставьте прямую ссылку на <code>tracks.json</code> с вашего Vercel проекта. Делая <code>git push</code> в репозиторий с треками, приложение само обновит плейлист!
-          </p>
-
-          <input
-            type="url"
-            value={inputRemoteUrl}
-            onChange={(e) => setInputRemoteUrl(e.target.value)}
-            placeholder="https://my-music-repo.vercel.app/tracks.json"
-            className="w-full px-3 py-1.5 bg-white border border-[#18181B] rounded-lg text-xs outline-none font-mono"
-          />
-
-          <div className="flex items-center justify-between gap-2 pt-1">
-            <span className="text-[10px] font-bold text-purple-900">{syncStatus || (isSyncing ? 'Загрузка...' : '')}</span>
-
-            <div className="flex gap-2">
-              {remoteUrl && (
-                <button
-                  type="button"
-                  onClick={() => syncFromRemote(remoteUrl)}
-                  disabled={isSyncing}
-                  className="px-3 py-1 bg-white hover:bg-slate-50 text-xs font-bold rounded-lg border border-[#18181B] shadow-xs cursor-pointer"
-                >
-                  {isSyncing ? 'Синхронизация...' : 'Обновить сейчас'}
-                </button>
-              )}
-              <button
-                type="submit"
-                className="px-3 py-1 bg-[#18181B] text-white text-xs font-bold rounded-lg shadow-xs cursor-pointer"
-              >
-                Сохранить URL
-              </button>
-            </div>
-          </div>
-        </form>
-      )}
-
       {/* Main Playing Track Hero Card */}
-      <div className="p-3.5 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-3">
-        <div className="flex items-center gap-3">
+      <div className="p-4 bg-[#FAF7F2] border-[2px] border-[#18181B] rounded-2xl shadow-[2.5px_2.5px_0px_#18181B] space-y-3.5">
+        <div className="flex items-center gap-3.5">
           {/* Animated Spinning Vinyl Cover */}
-          <div className="relative w-14 h-14 rounded-2xl border-[1.75px] border-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] overflow-hidden shrink-0 bg-[#18181B]">
+          <div className="relative w-16 h-16 rounded-2xl border-[2px] border-[#18181B] shadow-[2px_2px_0px_#18181B] overflow-hidden shrink-0 bg-[#18181B]">
             <img
               src="/icon-192x192.png"
               alt="Track Cover"
               className={`w-full h-full object-cover ${isPlaying ? 'animate-spin' : ''}`}
-              style={{ animationDuration: '6s' }}
+              style={{ animationDuration: '5s' }}
             />
-            <div className="absolute inset-0 m-auto w-4 h-4 rounded-full bg-[#FFE873] border border-[#18181B]" />
+            <div className="absolute inset-0 m-auto w-5 h-5 rounded-full bg-[#FFE873] border-[1.5px] border-[#18181B]" />
           </div>
 
-          {/* Title & Artist */}
+          {/* Title, Artist, & Live Animated Equalizer */}
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <h4 className="text-sm font-bold text-[#18181B] truncate">{currentTrack.title}</h4>
-              {isPlaying && (
-                <span className="flex items-center gap-0.5 shrink-0">
-                  <span className="w-1 h-3 bg-[#1DB954] rounded-full animate-pulse" />
-                  <span className="w-1 h-4 bg-[#1DB954] rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
-                  <span className="w-1 h-2 bg-[#1DB954] rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
-                </span>
-              )}
+            <div className="flex items-center gap-2">
+              <h4 className="text-sm sm:text-base font-bold text-[#18181B] truncate">{currentTrack.title}</h4>
             </div>
-            <p className="text-xs text-slate-500 font-medium truncate">{currentTrack.artist}</p>
+            <p className="text-xs text-slate-500 font-medium truncate mt-0.5">{currentTrack.artist}</p>
+
+            {/* Equalizer Audio Waves */}
+            <div className="flex items-center gap-1 mt-1.5">
+              {[0.4, 0.7, 0.3, 0.9, 0.5, 0.8, 0.4].map((h, i) => (
+                <span
+                  key={i}
+                  className={`w-1 rounded-full ${isPlaying ? 'bg-[#18181B] animate-pulse' : 'bg-slate-300'}`}
+                  style={{
+                    height: isPlaying ? `${h * 16}px` : '4px',
+                    animationDelay: `${i * 0.15}s`,
+                    animationDuration: '0.6s',
+                  }}
+                />
+              ))}
+              <span className="text-[10px] font-bold text-slate-400 ml-1 font-mono-num">
+                {formatSeconds(currentTime)} / {formatSeconds(duration)}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -369,34 +411,30 @@ export const InAppMusicPlayer: React.FC = () => {
             max={duration || 100}
             value={currentTime}
             onChange={handleSeek}
-            className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#18181B]"
+            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#18181B]"
           />
-          <div className="flex items-center justify-between text-[10px] font-bold font-mono-num text-slate-500">
-            <span>{formatSeconds(currentTime)}</span>
-            <span>{formatSeconds(duration)}</span>
-          </div>
         </div>
 
         {/* Playback Controls */}
-        <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center justify-between pt-0.5">
           {/* Shuffle */}
           <button
             onClick={() => {
               playClickSound();
               setIsShuffle(!isShuffle);
             }}
-            className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
-              isShuffle ? 'bg-[#FFE873] border-[#18181B] text-[#18181B] shadow-xs' : 'border-transparent text-slate-400 hover:text-black'
+            className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
+              isShuffle ? 'bg-[#FFE873] border-[#18181B] text-[#18181B] shadow-[1px_1px_0px_#18181B]' : 'border-transparent text-slate-400 hover:text-black'
             }`}
-            title="Перемешать"
+            title="Перемешать треки"
           >
-            <Shuffle className="w-3.5 h-3.5 stroke-[2]" />
+            <Shuffle className="w-4 h-4 stroke-[2]" />
           </button>
 
           {/* Prev */}
           <button
             onClick={handlePrevTrack}
-            className="w-10 h-10 rounded-xl bg-white border-[1.5px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] active:translate-y-0.5 cursor-pointer"
+            className="w-11 h-11 rounded-xl bg-white border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 cursor-pointer"
             title="Предыдущий"
           >
             <SkipBack className="w-4 h-4 stroke-[2.5]" />
@@ -405,7 +443,7 @@ export const InAppMusicPlayer: React.FC = () => {
           {/* Big Play/Pause Button */}
           <button
             onClick={handleTogglePlay}
-            className="w-14 h-12 rounded-2xl bg-[#FFE873] hover:bg-[#FED7AA] border-[2px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[2px_2px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+            className="w-16 h-12 rounded-2xl bg-[#FFE873] hover:bg-[#FED7AA] border-[2px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[2.5px_2.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
           >
             {isPlaying ? <Pause className="w-6 h-6 fill-[#18181B]" /> : <Play className="w-6 h-6 fill-[#18181B] ml-0.5" />}
           </button>
@@ -413,7 +451,7 @@ export const InAppMusicPlayer: React.FC = () => {
           {/* Next */}
           <button
             onClick={handleNextTrack}
-            className="w-10 h-10 rounded-xl bg-white border-[1.5px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] active:translate-y-0.5 cursor-pointer"
+            className="w-11 h-11 rounded-xl bg-white border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 cursor-pointer"
             title="Следующий"
           >
             <SkipForward className="w-4 h-4 stroke-[2.5]" />
@@ -425,122 +463,168 @@ export const InAppMusicPlayer: React.FC = () => {
               playClickSound();
               setIsRepeat(!isRepeat);
             }}
-            className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
-              isRepeat ? 'bg-[#FFE873] border-[#18181B] text-[#18181B] shadow-xs' : 'border-transparent text-slate-400 hover:text-black'
+            className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
+              isRepeat ? 'bg-[#FFE873] border-[#18181B] text-[#18181B] shadow-[1px_1px_0px_#18181B]' : 'border-transparent text-slate-400 hover:text-black'
             }`}
-            title="Повтор"
+            title="Повтор трека"
           >
-            <Repeat className="w-3.5 h-3.5 stroke-[2]" />
+            <Repeat className="w-4 h-4 stroke-[2]" />
           </button>
+        </div>
+
+        {/* Volume & Quick Mixer Bar */}
+        <div className="flex items-center gap-3 pt-1 border-t border-slate-200">
+          <button
+            onClick={() => {
+              const next = !isMuted;
+              setIsMuted(next);
+              if (audioRef.current) audioRef.current.volume = next ? 0 : volume;
+            }}
+            className="text-slate-500 hover:text-black cursor-pointer"
+          >
+            {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+          </button>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={isMuted ? 0 : volume}
+            onChange={handleVolumeChange}
+            className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#18181B]"
+          />
+          <span className="text-[10px] font-bold font-mono-num text-slate-500 w-8 text-right">
+            {Math.round((isMuted ? 0 : volume) * 100)}%
+          </span>
         </div>
       </div>
 
-      {/* Tracklist Drawer */}
-      {isTracklistOpen && (
-        <div className="space-y-2 pt-1">
+      {/* Focus Soundscapes Ambient Mixer Drawer */}
+      {isMixerOpen && (
+        <div className="p-3.5 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-2xl space-y-3 shadow-[2px_2px_0px_#18181B]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-              Список треков ({playlist.length})
+            <span className="text-xs font-bold text-[#18181B] flex items-center gap-1.5">
+              <Sliders className="w-3.5 h-3.5" />
+              Микшер звуков фона (Наложение поверх музыки)
             </span>
-
-            <button
-              onClick={() => {
-                playClickSound();
-                setIsAddTrackOpen(!isAddTrackOpen);
-              }}
-              className="text-xs font-bold text-[#18181B] hover:text-purple-700 flex items-center gap-1 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Добавить трек вручную</span>
-            </button>
+            <span className="text-[10px] font-bold text-slate-500 uppercase">
+              {ambientType !== 'none' ? `Активен: ${ambientType}` : 'Выключен'}
+            </span>
           </div>
 
-          {/* Add Track Form */}
-          {isAddTrackOpen && (
-            <form onSubmit={handleAddTrack} className="p-3 bg-[#FAF7F2] border-[1.5px] border-[#18181B] rounded-xl space-y-2">
-              <input
-                type="text"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="Название трека (например: Grand Escape)"
-                className="w-full px-3 py-1.5 bg-white border border-[#18181B] rounded-lg text-xs outline-none"
-                required
-              />
-              <input
-                type="text"
-                value={newArtist}
-                onChange={(e) => setNewArtist(e.target.value)}
-                placeholder="Исполнитель (например: RADWIMPS)"
-                className="w-full px-3 py-1.5 bg-white border border-[#18181B] rounded-lg text-xs outline-none"
-              />
-              <input
-                type="url"
-                value={newUrl}
-                onChange={(e) => setNewUrl(e.target.value)}
-                placeholder="Прямая ссылка на аудио (MP3 / Vercel CDN url)"
-                className="w-full px-3 py-1.5 bg-white border border-[#18181B] rounded-lg text-xs outline-none"
-                required
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAddTrackOpen(false)}
-                  className="px-3 py-1 text-xs text-slate-500 hover:text-black cursor-pointer"
-                >
-                  Отмена
-                </button>
-                <button
-                  type="submit"
-                  className="px-3 py-1 bg-[#FFE873] text-[#18181B] font-bold text-xs rounded-lg border border-[#18181B] shadow-xs cursor-pointer"
-                >
-                  Сохранить трек
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* Tracks List */}
-          <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
-            {playlist.map((track, idx) => {
-              const isCurrent = idx === currentIndex;
-
+          <div className="grid grid-cols-5 gap-1.5">
+            {[
+              { id: 'none', label: 'Выкл', icon: '⛔' },
+              { id: 'rain', label: 'Дождь', icon: '🌧️' },
+              { id: 'waves', label: 'Волны', icon: '🌊' },
+              { id: 'forest', label: 'Лес', icon: '🌲' },
+              { id: 'whitenoise', label: 'Фокус', icon: '💨' },
+            ].map((amb) => {
+              const isSelected = ambientType === amb.id;
               return (
-                <div
-                  key={track.id}
+                <button
+                  key={amb.id}
                   onClick={() => {
                     playClickSound();
-                    setCurrentIndex(idx);
-                    setIsPlaying(true);
+                    setAmbientType(amb.id as any);
                   }}
-                  className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 cursor-pointer transition-all ${
-                    isCurrent
-                      ? 'bg-[#E8DCFF] border-[#18181B] shadow-[1.5px_1.5px_0px_#18181B]'
-                      : 'bg-[#FAF7F2] border-slate-200 hover:border-[#18181B]'
+                  className={`py-2 px-1 rounded-xl border-[1.5px] border-[#18181B] flex flex-col items-center justify-center gap-1 text-[10px] font-bold transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-[#FFE873] shadow-[1.5px_1.5px_0px_#18181B] -translate-y-0.5'
+                      : 'bg-white hover:bg-slate-100'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="text-xs font-bold font-mono-num text-slate-400 w-4 text-center shrink-0">
-                      {idx + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-[#18181B] truncate">{track.title}</p>
-                      <p className="text-[10px] text-slate-500 truncate">{track.artist}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[10px] font-bold font-mono-num text-slate-500">{track.duration}</span>
-                    <button
-                      onClick={(e) => handleDeleteTrack(track.id, e)}
-                      title="Удалить"
-                      className="w-5 h-5 rounded flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                </div>
+                  <span className="text-sm">{amb.icon}</span>
+                  <span className="text-[#18181B]">{amb.label}</span>
+                </button>
               );
             })}
+          </div>
+
+          {ambientType !== 'none' && (
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-[10px] font-bold text-slate-500 shrink-0">Громкость фона:</span>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={ambientVolume}
+                onChange={(e) => setAmbientVolume(Number(e.target.value))}
+                className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#18181B]"
+              />
+              <span className="text-[10px] font-mono-num font-bold text-slate-600">
+                {Math.round(ambientVolume * 100)}%
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tracklist Drawer */}
+      {isTracklistOpen && (
+        <div className="space-y-2.5 pt-1">
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Поиск по названию или исполнителю..."
+              className="w-full pl-8 pr-3 py-2 bg-[#FAF7F2] border border-[#18181B] rounded-xl text-xs outline-none font-medium"
+            />
+          </div>
+
+          {/* Tracks List */}
+          <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+            {filteredPlaylist.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-4">
+                Треков не найдено. Нажмите «Обновить» для загрузки с Vercel.
+              </p>
+            ) : (
+              filteredPlaylist.map((track, idx) => {
+                const originalIndex = playlist.findIndex((t) => t.id === track.id);
+                const isCurrent = originalIndex === currentIndex;
+
+                return (
+                  <div
+                    key={track.id || idx}
+                    onClick={() => {
+                      playClickSound();
+                      setCurrentIndex(originalIndex);
+                      setIsPlaying(true);
+                    }}
+                    className={`p-3 rounded-xl border-[1.5px] border-[#18181B] flex items-center justify-between gap-2.5 cursor-pointer transition-all ${
+                      isCurrent
+                        ? 'bg-[#E8DCFF] shadow-[2px_2px_0px_#18181B] -translate-y-0.5'
+                        : 'bg-[#FAF7F2] hover:bg-slate-100 shadow-[1px_1px_0px_#18181B]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className={`w-6 h-6 rounded-lg border border-[#18181B] flex items-center justify-center text-xs font-bold font-mono-num shrink-0 ${
+                          isCurrent ? 'bg-[#FFE873] text-[#18181B]' : 'bg-white text-slate-500'
+                        }`}
+                      >
+                        {isCurrent && isPlaying ? '▶' : originalIndex + 1}
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className={`text-xs font-bold truncate ${isCurrent ? 'text-[#18181B]' : 'text-slate-800'}`}>
+                          {track.title}
+                        </p>
+                        <p className="text-[10px] text-slate-500 truncate">{track.artist}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[10px] font-bold font-mono-num text-slate-500">{track.duration}</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       )}

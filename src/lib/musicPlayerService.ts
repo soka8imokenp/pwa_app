@@ -29,6 +29,11 @@ class MusicPlayerService {
 
   constructor() {
     if (typeof window !== 'undefined') {
+      // Expose global methods for native Android BroadcastReceiver
+      (window as any).__sumireTogglePlay = () => this.togglePlay();
+      (window as any).__sumireNextTrack = () => this.nextTrack();
+      (window as any).__sumirePrevTrack = () => this.prevTrack();
+
       const saved = localStorage.getItem('kairo_custom_tracks');
       if (saved) {
         try {
@@ -65,6 +70,7 @@ class MusicPlayerService {
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'playing';
       }
+      this.syncNativeNotification();
       this.notify();
     });
 
@@ -73,13 +79,33 @@ class MusicPlayerService {
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'paused';
       }
+      this.syncNativeNotification();
       this.notify();
     });
 
     return audio;
   }
 
+  private syncNativeNotification() {
+    if (typeof window !== 'undefined') {
+      const nativeNotification = (window as any).AndroidMediaNotification;
+      if (nativeNotification && this.state.currentTrack) {
+        try {
+          nativeNotification.updateMedia(
+            this.state.currentTrack.title || 'Daily Sumire',
+            this.state.currentTrack.artist || 'Sumire Music',
+            this.state.isPlaying
+          );
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }
+
   private updateMediaSession(track: Track) {
+    this.syncNativeNotification();
+
     if ('mediaSession' in navigator) {
       const origin = typeof window !== 'undefined' ? window.location.origin : '';
       const cover = track.coverUrl?.startsWith('http')
@@ -122,6 +148,9 @@ class MusicPlayerService {
             this.state.isPlaying = false;
             if ('mediaSession' in navigator) {
               navigator.mediaSession.playbackState = 'none';
+            }
+            if ((window as any).AndroidMediaNotification) {
+              (window as any).AndroidMediaNotification.clearMedia();
             }
             this.notify();
           }
@@ -224,6 +253,7 @@ class MusicPlayerService {
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'paused';
       }
+      this.syncNativeNotification();
       this.notify();
     } else {
       audio.play().then(() => {
@@ -246,6 +276,7 @@ class MusicPlayerService {
       this.audio.currentTime = 0;
       this.audio.play();
       this.state.isPlaying = true;
+      this.syncNativeNotification();
       this.notify();
       return;
     }

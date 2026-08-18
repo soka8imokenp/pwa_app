@@ -1,23 +1,54 @@
 package com.kairo.planner;
 
+import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.View;
 import android.view.WindowInsetsController;
 import android.webkit.CookieManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+    private static final String CHANNEL_ID = "daily_sumire_music_channel";
+    private static final int NOTIFICATION_ID = 2026;
+
+    public static final String ACTION_PREV = "com.kairo.planner.ACTION_PREV";
+    public static final String ACTION_PLAY_PAUSE = "com.kairo.planner.ACTION_PLAY_PAUSE";
+    public static final String ACTION_NEXT = "com.kairo.planner.ACTION_NEXT";
+
+    private MediaSessionCompat mediaSession;
+    private NotificationManager notificationManager;
+    private MediaReceiver mediaReceiver;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         applyLightSystemBars();
-        configureWebViewForSpotify();
+        configureWebView();
+        initMediaSession();
+        requestNotificationPermission();
     }
 
     @Override
@@ -34,7 +65,31 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
-    private void configureWebViewForSpotify() {
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        try {
+            if (mediaReceiver != null) {
+                unregisterReceiver(mediaReceiver);
+            }
+            if (mediaSession != null) {
+                mediaSession.release();
+            }
+            if (notificationManager != null) {
+                notificationManager.cancel(NOTIFICATION_ID);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private void requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
+            }
+        }
+    }
+
+    private void configureWebView() {
         try {
             if (getBridge() != null && getBridge().getWebView() != null) {
                 WebView webView = getBridge().getWebView();
@@ -47,7 +102,6 @@ public class MainActivity extends BridgeActivity {
                 settings.setAllowContentAccess(true);
                 settings.setAllowFileAccess(true);
 
-                // Make Spotify identify this as standard Chrome browser rather than restricted Webview
                 String ua = settings.getUserAgentString();
                 if (ua != null) {
                     settings.setUserAgentString(ua.replace("; wv", "").replace("Version/4.0 ", ""));
@@ -56,8 +110,167 @@ public class MainActivity extends BridgeActivity {
                 CookieManager cookieManager = CookieManager.getInstance();
                 cookieManager.setAcceptCookie(true);
                 cookieManager.setAcceptThirdPartyCookies(webView, true);
+
+                // Add Javascript Interface for Native Lock Screen & Notification Control
+                webView.addJavascriptInterface(new MediaJsInterface(), "AndroidMediaNotification");
             }
-        } catch (Exception ignored) {
+        } catch (Exception ignored) {}
+    }
+
+    private void initMediaSession() {
+        try {
+            notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel channel = new NotificationChannel(
+                        CHANNEL_ID,
+                        "Daily Sumire Music Playback",
+                        NotificationManager.IMPORTANCE_LOW
+                );
+                channel.setDescription("Shows music controls on lock screen and notification shade");
+                channel.setShowBadge(false);
+                channel.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+                if (notificationManager != null) {
+                    notificationManager.createNotificationChannel(channel);
+                }
+            }
+
+            mediaSession = new MediaSessionCompat(this, "DailySumireMedia");
+            mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+            mediaSession.setActive(true);
+
+            mediaReceiver = new MediaReceiver();
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(ACTION_PREV);
+            filter.addAction(ACTION_PLAY_PAUSE);
+            filter.addAction(ACTION_NEXT);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(mediaReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(mediaReceiver, filter);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public void showMediaNotification(String title, String artist, boolean isPlaying) {
+        try {
+            if (notificationManager == null || mediaSession == null) return;
+
+            // Update MediaSession state
+            PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
+                    .setActions(
+                            PlaybackStateCompat.ACTION_PLAY |
+                            PlaybackStateCompat.ACTION_PAUSE |
+                            PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
+                            PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                    )
+                    .setState(
+                            isPlaying ? PlaybackStateCompat.STATE_PLAYING : PlaybackStateCompat.STATE_PAUSED,
+                            PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                            1.0f
+                    );
+            mediaSession.setPlaybackState(stateBuilder.build());
+
+            MediaMetadataCompat.Builder metaBuilder = new MediaMetadataCompat.Builder()
+                    .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
+                    .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
+                    .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "Daily Sumire");
+            mediaSession.setMetadata(metaBuilder.build());
+
+            // Notification Intents
+            Intent openAppIntent = new Intent(this, MainActivity.class);
+            PendingIntent openAppPendingIntent = PendingIntent.getActivity(
+                    this, 0, openAppIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+
+            Intent prevIntent = new Intent(ACTION_PREV);
+            PendingIntent prevPendingIntent = PendingIntent.getBroadcast(
+                    this, 1, prevIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+
+            Intent playPauseIntent = new Intent(ACTION_PLAY_PAUSE);
+            PendingIntent playPausePendingIntent = PendingIntent.getBroadcast(
+                    this, 2, playPauseIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+
+            Intent nextIntent = new Intent(ACTION_NEXT);
+            PendingIntent nextPendingIntent = PendingIntent.getBroadcast(
+                    this, 3, nextIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+
+            Bitmap iconBitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
+
+            int playPauseIcon = isPlaying ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play;
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setContentTitle(title)
+                    .setContentText(artist)
+                    .setSubText("Daily Sumire Music")
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setLargeIcon(iconBitmap)
+                    .setContentIntent(openAppPendingIntent)
+                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                    .setPriority(NotificationCompat.PRIORITY_LOW)
+                    .setOngoing(isPlaying)
+                    .setOnlyAlertOnce(true)
+                    .addAction(android.R.drawable.ic_media_previous, "Prev", prevPendingIntent)
+                    .addAction(playPauseIcon, isPlaying ? "Pause" : "Play", playPausePendingIntent)
+                    .addAction(android.R.drawable.ic_media_next, "Next", nextPendingIntent)
+                    .setStyle(
+                            new androidx.media.app.NotificationCompat.MediaStyle()
+                                    .setMediaSession(mediaSession.getSessionToken())
+                                    .setShowActionsInCompactView(0, 1, 2)
+                    );
+
+            notificationManager.notify(NOTIFICATION_ID, builder.build());
+        } catch (Exception ignored) {}
+    }
+
+    public void cancelMediaNotification() {
+        try {
+            if (notificationManager != null) {
+                notificationManager.cancel(NOTIFICATION_ID);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public class MediaJsInterface {
+        @JavascriptInterface
+        public void updateMedia(String title, String artist, boolean isPlaying) {
+            runOnUiThread(() -> showMediaNotification(title, artist, isPlaying));
+        }
+
+        @JavascriptInterface
+        public void clearMedia() {
+            runOnUiThread(() -> cancelMediaNotification());
+        }
+    }
+
+    public class MediaReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action == null) return;
+
+            runOnUiThread(() -> {
+                try {
+                    if (getBridge() != null && getBridge().getWebView() != null) {
+                        WebView webView = getBridge().getWebView();
+                        if (ACTION_PLAY_PAUSE.equals(action)) {
+                            webView.evaluateJavascript("window.__sumireTogglePlay && window.__sumireTogglePlay();", null);
+                        } else if (ACTION_PREV.equals(action)) {
+                            webView.evaluateJavascript("window.__sumirePrevTrack && window.__sumirePrevTrack();", null);
+                        } else if (ACTION_NEXT.equals(action)) {
+                            webView.evaluateJavascript("window.__sumireNextTrack && window.__sumireNextTrack();", null);
+                        }
+                    }
+                } catch (Exception ignored) {}
+            });
         }
     }
 
@@ -90,7 +303,6 @@ public class MainActivity extends BridgeActivity {
                 }
                 decorView.setSystemUiVisibility(flags);
             }
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
     }
 }

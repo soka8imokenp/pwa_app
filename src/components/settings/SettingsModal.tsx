@@ -355,7 +355,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
                   Daily Sumire
                 </h4>
-                <span className="text-[10px] text-slate-500 font-bold">Version v1.3.0 (Build 10)</span>
+                <span className="text-[10px] text-slate-500 font-bold">Version v1.3.1 (Build 11)</span>
               </div>
             </div>
 
@@ -371,8 +371,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   if (onShowUpdateModal) {
                     onShowUpdateModal(updateInfo);
                   }
-                } else {
+                } else if (updateInfo) {
                   setUpdateStatus('You have the latest version!');
+                  if (onShowUpdateModal) {
+                    onShowUpdateModal(updateInfo);
+                  }
+                } else {
+                  setUpdateStatus('Latest version confirmed.');
                   setTimeout(() => setUpdateStatus(null), 3500);
                 }
               }}
@@ -381,6 +386,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             >
               <RotateCcw className={`w-3 h-3 ${updateChecking ? 'animate-spin' : ''}`} />
               <span>{updateChecking ? 'Checking...' : 'Check Updates'}</span>
+            </button>
+          </div>
+
+          <div className="pt-1 flex gap-2">
+            <button
+              onClick={() => {
+                playClickSound();
+                window.open('https://github.com/soka8imokenp/pwa_app/releases/download/latest/Daily-Sumire-app-debug.apk', '_system');
+              }}
+              className="w-full py-2 px-3 rounded-xl bg-[#E8DCFF] hover:bg-[#DDD0F8] border-[1.5px] border-[#18181B] text-xs font-bold text-[#18181B] flex items-center justify-center gap-1.5 shadow-[1px_1px_0px_#18181B] cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download Latest APK (Direct)</span>
             </button>
           </div>
 

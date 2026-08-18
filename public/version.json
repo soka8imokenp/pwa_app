@@ -1,13 +1,13 @@
 {
-  "version": "1.3.0",
-  "buildNumber": 10,
+  "version": "1.3.1",
+  "buildNumber": 11,
   "releaseDate": "2026-08-18",
   "changelog": [
-    "In-App Music Player connected to Vercel Music CDN",
-    "Zen Desk Stand Mode with live Now Playing display",
-    "Telegram-style smooth gradient & blur on navigation",
-    "Persistent audio engine without 30s restart bugs",
-    "In-App APK Auto-Updater"
+    "Native Android Lock Screen Media Player (like Spotify)",
+    "Notification Shade playback controls (Play/Pause, Next, Prev)",
+    "Background continuous playback with screen off",
+    "Telegram-style smooth gradient blur on navigation",
+    "Persistent audio engine without restart bugs"
   ],
   "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/latest/Daily-Sumire-app-debug.apk"
 }

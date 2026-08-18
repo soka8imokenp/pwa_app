@@ -52,6 +52,7 @@ class MusicPlayerService {
     audio.addEventListener('timeupdate', () => {
       this.state.currentTime = audio.currentTime;
       this.state.duration = audio.duration || 0;
+      this.updatePositionState();
       this.notify();
     });
 
@@ -61,11 +62,17 @@ class MusicPlayerService {
 
     audio.addEventListener('play', () => {
       this.state.isPlaying = true;
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing';
+      }
       this.notify();
     });
 
     audio.addEventListener('pause', () => {
       this.state.isPlaying = false;
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'paused';
+      }
       this.notify();
     });
 
@@ -74,20 +81,70 @@ class MusicPlayerService {
 
   private updateMediaSession(track: Track) {
     if ('mediaSession' in navigator) {
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const cover = track.coverUrl?.startsWith('http')
+        ? track.coverUrl
+        : `${origin}${track.coverUrl?.startsWith('/') ? '' : '/'}${track.coverUrl || 'icon-192x192.png'}`;
+
       navigator.mediaSession.metadata = new MediaMetadata({
         title: track.title,
         artist: track.artist,
         album: 'Daily Sumire',
         artwork: [
-          { src: track.coverUrl || '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: cover, sizes: '192x192', type: 'image/png' },
+          { src: `${origin}/icon-512x512.png`, sizes: '512x512', type: 'image/png' },
         ],
       });
+
+      navigator.mediaSession.playbackState = this.state.isPlaying ? 'playing' : 'paused';
 
       navigator.mediaSession.setActionHandler('play', () => this.togglePlay());
       navigator.mediaSession.setActionHandler('pause', () => this.togglePlay());
       navigator.mediaSession.setActionHandler('previoustrack', () => this.prevTrack());
       navigator.mediaSession.setActionHandler('nexttrack', () => this.nextTrack());
+
+      try {
+        navigator.mediaSession.setActionHandler('seekto', (details) => {
+          if (details.seekTime != null) {
+            this.seek(details.seekTime);
+          }
+        });
+        navigator.mediaSession.setActionHandler('seekforward', (details) => {
+          this.seek(Math.min(this.state.duration, this.state.currentTime + (details.seekOffset || 10)));
+        });
+        navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+          this.seek(Math.max(0, this.state.currentTime - (details.seekOffset || 10)));
+        });
+        navigator.mediaSession.setActionHandler('stop', () => {
+          if (this.audio) {
+            this.audio.pause();
+            this.audio.currentTime = 0;
+            this.state.isPlaying = false;
+            if ('mediaSession' in navigator) {
+              navigator.mediaSession.playbackState = 'none';
+            }
+            this.notify();
+          }
+        });
+      } catch {
+        // action handlers not supported on some older engines
+      }
+    }
+  }
+
+  private updatePositionState() {
+    if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+      if (this.state.duration > 0 && !isNaN(this.state.duration)) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: Math.max(0, this.state.duration),
+            playbackRate: 1,
+            position: Math.min(this.state.duration, Math.max(0, this.state.currentTime)),
+          });
+        } catch {
+          // ignore position error
+        }
+      }
     }
   }
 
@@ -164,6 +221,9 @@ class MusicPlayerService {
     if (this.state.isPlaying) {
       audio.pause();
       this.state.isPlaying = false;
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'paused';
+      }
       this.notify();
     } else {
       audio.play().then(() => {
@@ -211,6 +271,7 @@ class MusicPlayerService {
     if (this.audio) {
       this.audio.currentTime = time;
       this.state.currentTime = time;
+      this.updatePositionState();
       this.notify();
     }
   }

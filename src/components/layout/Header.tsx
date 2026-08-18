@@ -35,10 +35,10 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-2.5">
           <button
             onClick={onOpenSettings}
-            className="w-9 h-9 rounded-xl bg-[#FFE873] border-[1.75px] border-[#18181B] flex items-center justify-center font-bold text-sm shadow-[1.5px_1.5px_0px_#18181B] shrink-0 cursor-pointer active:translate-y-0.5 active:shadow-none transition-all"
+            className="w-9 h-9 rounded-xl bg-[#FFE873] border-[1.75px] border-[#18181B] flex items-center justify-center font-bold text-sm shadow-[1.5px_1.5px_0px_#18181B] shrink-0 cursor-pointer active:translate-y-0.5 active:shadow-none transition-all overflow-hidden p-0.5"
             title="Settings & Profile"
           >
-            ⚡
+            <img src="/icon-192x192.png" alt="Sumire" className="w-full h-full object-cover rounded-[9px]" />
           </button>
 
           <div>

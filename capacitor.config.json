@@ -1,6 +1,6 @@
 {
   "appId": "com.kairo.planner",
-  "appName": "KAIRO Planner",
+  "appName": "Sumire Planner",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {

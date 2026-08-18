@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">KAIRO Planner</string>
-    <string name="title_activity_main">KAIRO Planner</string>
-    <string name="package_name">com.kairo.planner</string>
-    <string name="custom_url_scheme">com.kairo.planner</string>
+    <string name="app_name">Sumire Planner</string>
+    <string name="title_activity_main">Sumire Planner</string>
+    <string name="package_name">com.sumire.planner</string>
+    <string name="custom_url_scheme">com.sumire.planner</string>
 </resources>

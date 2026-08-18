@@ -25,7 +25,6 @@ import {
   resetAndSeedDatabase,
 } from '../../lib/exportImport';
 import { playSuccessChime, playClickSound } from '../../lib/sound';
-import { checkForAppUpdate, AppVersionInfo } from '../../lib/updaterService';
 import type { UserProfile } from '../auth/AuthContainer';
 
 interface SettingsModalProps {
@@ -38,7 +37,6 @@ interface SettingsModalProps {
   onDataChanged: () => void;
   currentUser?: UserProfile | null;
   onLogout?: () => void;
-  onShowUpdateModal?: (info: AppVersionInfo) => void;
 }
 
 const THEME_ACCENTS = [
@@ -56,7 +54,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onDataChanged,
   currentUser,
   onLogout,
-  onShowUpdateModal,
 }) => {
   const [feedback, setFeedback] = useState<{ text: string; success: boolean } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -344,70 +341,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* 4. App Version & In-App Updates */}
-        <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#FFE873] border border-[#18181B] flex items-center justify-center font-bold text-xs shadow-xs">
-                ⚡
-              </div>
-              <div>
-                <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
-                  Daily Sumire
-                </h4>
-                <span className="text-[10px] text-slate-500 font-bold">Version v1.3.1 (Build 11)</span>
-              </div>
+        {/* 4. App Version */}
+        <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#FFE873] border border-[#18181B] flex items-center justify-center font-bold text-xs shadow-xs">
+              ⚡
             </div>
-
-            <button
-              onClick={async () => {
-                playClickSound();
-                setUpdateChecking(true);
-                setUpdateStatus('Checking for updates...');
-                const { hasUpdate, updateInfo } = await checkForAppUpdate();
-                setUpdateChecking(false);
-                if (hasUpdate && updateInfo) {
-                  setUpdateStatus(`New update v${updateInfo.version} found!`);
-                  if (onShowUpdateModal) {
-                    onShowUpdateModal(updateInfo);
-                  }
-                } else if (updateInfo) {
-                  setUpdateStatus('You have the latest version!');
-                  if (onShowUpdateModal) {
-                    onShowUpdateModal(updateInfo);
-                  }
-                } else {
-                  setUpdateStatus('Latest version confirmed.');
-                  setTimeout(() => setUpdateStatus(null), 3500);
-                }
-              }}
-              disabled={updateChecking}
-              className="py-1.5 px-3 rounded-xl bg-[#FFE873] hover:bg-[#FED7AA] border-[1.5px] border-[#18181B] text-xs font-bold text-[#18181B] shadow-[1px_1px_0px_#18181B] active:translate-y-0.5 cursor-pointer transition-all flex items-center gap-1.5"
-            >
-              <RotateCcw className={`w-3 h-3 ${updateChecking ? 'animate-spin' : ''}`} />
-              <span>{updateChecking ? 'Checking...' : 'Check Updates'}</span>
-            </button>
+            <div>
+              <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
+                Daily Sumire
+              </h4>
+              <span className="text-[10px] text-slate-500 font-bold">Version v1.3.1 (Latest)</span>
+            </div>
           </div>
 
-          <div className="pt-1 flex gap-2">
-            <button
-              onClick={() => {
-                playClickSound();
-                window.open('https://github.com/soka8imokenp/pwa_app/releases/download/latest/Daily-Sumire-app-debug.apk', '_system');
-              }}
-              className="w-full py-2 px-3 rounded-xl bg-[#E8DCFF] hover:bg-[#DDD0F8] border-[1.5px] border-[#18181B] text-xs font-bold text-[#18181B] flex items-center justify-center gap-1.5 shadow-[1px_1px_0px_#18181B] cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Download Latest APK (Direct)</span>
-            </button>
-          </div>
-
-          {updateStatus && (
-            <div className="p-2 bg-[#FAF7F2] border border-[#18181B] rounded-xl flex items-center gap-1.5 text-xs font-bold text-[#18181B]">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>{updateStatus}</span>
-            </div>
-          )}
+          <span className="px-2.5 py-1 rounded-full bg-[#D1FBE4] border border-[#065F46]/30 text-[10px] font-bold text-[#065F46]">
+            Up to date ✓
+          </span>
         </div>
 
       </div>

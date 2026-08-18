@@ -15,6 +15,7 @@ import { playClickSound, playTimerFinishAlarm, playSuccessChime } from '../../li
 import { playAmbientSound, stopAmbientSound, AmbientSoundType } from '../../lib/ambientSound';
 import { sendLocalNotification, requestNotificationPermission } from '../../lib/notifications';
 import { ZenFullscreenTimer } from '../focus/ZenFullscreenTimer';
+import { SpotifyFocusPlayer } from '../focus/SpotifyFocusPlayer';
 import confetti from 'canvas-confetti';
 
 interface FocusPageProps {
@@ -259,7 +260,10 @@ export const FocusPage: React.FC<FocusPageProps> = ({
         </div>
       </div>
 
-      {/* 3. Ambient Soundscapes */}
+      {/* 3. Integrated Spotify & Lo-Fi Focus Music Lounge */}
+      <SpotifyFocusPlayer />
+
+      {/* 4. Ambient Soundscapes */}
       <div className="neo-card p-4 bg-white space-y-2.5">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold font-display text-slate-500 uppercase tracking-wider">

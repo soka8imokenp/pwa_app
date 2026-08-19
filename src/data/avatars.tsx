@@ -11,32 +11,15 @@ export interface AvatarOption {
 export const AVATAR_OPTIONS: AvatarOption[] = [
   {
     id: 'sumire-scout',
-    name: 'Sumire Scout',
-    subtitle: 'Official Mascot',
+    name: 'Sumire Fern',
+    subtitle: 'Official Stare',
     bg: '#E8DCFF',
     renderSvg: (className = 'w-full h-full') => (
-      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-        {/* Background Circle */}
-        <circle cx="50" cy="50" r="46" fill="#E8DCFF" stroke="#18181B" strokeWidth="4" />
-        {/* Rabbit Ears */}
-        <ellipse cx="36" cy="24" rx="8" ry="20" fill="#FFFFFF" stroke="#18181B" strokeWidth="3" />
-        <ellipse cx="36" cy="24" rx="4" ry="12" fill="#FED7AA" />
-        <ellipse cx="64" cy="24" rx="8" ry="20" fill="#FFFFFF" stroke="#18181B" strokeWidth="3" />
-        <ellipse cx="64" cy="24" rx="4" ry="12" fill="#FED7AA" />
-        {/* Head */}
-        <circle cx="50" cy="58" r="28" fill="#FFFFFF" stroke="#18181B" strokeWidth="3.5" />
-        {/* Lavender Hair Bangs */}
-        <path d="M26 50 Q36 34 50 36 Q64 34 74 50 Q66 44 50 44 Q34 44 26 50 Z" fill="#C084FC" stroke="#18181B" strokeWidth="2.5" />
-        {/* Fern Deadpan Eyes */}
-        <rect x="36" y="52" width="8" height="3.5" rx="1.5" fill="#18181B" />
-        <rect x="56" y="52" width="8" height="3.5" rx="1.5" fill="#18181B" />
-        {/* Tiny Nose & Mouth */}
-        <circle cx="50" cy="62" r="1.5" fill="#18181B" />
-        <path d="M47 67 Q50 69 53 67" stroke="#18181B" strokeWidth="2" strokeLinecap="round" />
-        {/* Blush */}
-        <ellipse cx="32" cy="62" rx="4" ry="2" fill="#FCA5A5" opacity="0.7" />
-        <ellipse cx="68" cy="62" rx="4" ry="2" fill="#FCA5A5" opacity="0.7" />
-      </svg>
+      <img
+        src="/sumire-avatar.png"
+        alt="Sumire"
+        className={`${className} object-cover rounded-xl border border-[#18181B]`}
+      />
     ),
   },
   {

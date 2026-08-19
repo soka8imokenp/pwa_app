@@ -11,7 +11,7 @@ import {
   Activity,
   Archive,
   Crown,
-  Sparkles,
+  Layers,
 } from 'lucide-react';
 import type { Task } from '../../types';
 import { playTaskCheckSound, playClickSound, playSuccessChime } from '../../lib/sound';
@@ -98,7 +98,7 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
       case 'learn':
         return <BookOpen className="w-3.5 h-3.5" />;
       default:
-        return <Sparkles className="w-3.5 h-3.5" />;
+        return <Layers className="w-3.5 h-3.5" />;
     }
   };
 

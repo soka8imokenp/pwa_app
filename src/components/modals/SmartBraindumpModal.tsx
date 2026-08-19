@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Mic, MicOff, Check, X, ArrowRight, Wand2, Plus, Code, Palette, BookOpen, Activity, Crown } from 'lucide-react';
+import { Mic, MicOff, Check, X, ArrowRight, Wand2, Plus, Code, Palette, BookOpen, Activity, Crown } from 'lucide-react';
 import type { Task } from '../../types';
 import { startVoiceDictation, stopVoiceDictation, isSpeechRecognitionSupported } from '../../lib/speechRecognition';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
@@ -128,7 +128,7 @@ export const SmartBraindumpModal: React.FC<SmartBraindumpModalProps> = ({
         <div className="flex items-center justify-between pb-1 border-b border-[#18181B]/15">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-full bg-[#FEF08A] border-[1.75px] border-[#18181B] flex items-center justify-center shadow-2xs">
-              <Sparkles className="w-5 h-5 text-amber-950 stroke-[2.25]" />
+              <Wand2 className="w-5 h-5 text-amber-950 stroke-[2.25]" />
             </div>
             <div>
               <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#18181B]">

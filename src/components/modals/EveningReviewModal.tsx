@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Sparkles, Trophy, CheckCircle2, Flame, Clock, Target, ArrowRight, X, Heart } from 'lucide-react';
+import { Trophy, CheckCircle2, Flame, Clock, Target, ArrowRight, X, Heart } from 'lucide-react';
 import type { Task, HabitWithStats, FocusSession } from '../../types';
 import { playSuccessChime, playClickSound } from '../../lib/sound';
 import confetti from 'canvas-confetti';
@@ -75,7 +75,7 @@ export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
             Daily Wrap-Up • {selectedDate}
           </span>
           <h2 className="text-xl font-black font-display text-[#18181B] mt-2">
-            Fantastic Effort Today! ✨
+            Fantastic Effort Today!
           </h2>
           <p className="text-xs font-semibold text-slate-500 max-w-xs mx-auto mt-1">
             You've built strong momentum towards your long-term goals.

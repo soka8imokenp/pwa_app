@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PlusCircle, Star, Code, Palette, BookOpen, Activity, FileText, Sparkles, X, Check } from 'lucide-react';
+import { PlusCircle, Star, Code, Palette, BookOpen, Activity, FileText, Layers, X, Check } from 'lucide-react';
 import type { Task } from '../../types';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 
@@ -57,7 +57,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
     { id: 'learn' as const, label: 'Learning', icon: <BookOpen className="w-3.5 h-3.5 stroke-[2.25]" /> },
     { id: 'health' as const, label: 'Health', icon: <Activity className="w-3.5 h-3.5 stroke-[2.25]" /> },
     { id: 'admin' as const, label: 'Admin & Ops', icon: <FileText className="w-3.5 h-3.5 stroke-[2.25]" /> },
-    { id: 'general' as const, label: 'General', icon: <Sparkles className="w-3.5 h-3.5 stroke-[2.25]" /> },
+    { id: 'general' as const, label: 'General', icon: <Layers className="w-3.5 h-3.5 stroke-[2.25]" /> },
   ];
 
   return (

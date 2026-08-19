@@ -12,7 +12,7 @@ import {
   Play,
   ArrowDown,
   Clock,
-  Sparkles,
+  Layers,
   Mic,
   MicOff,
   Wand2,
@@ -21,6 +21,7 @@ import {
 import type { Task, FocusSession, HabitLog } from '../../types';
 import { playTaskCheckSound, playSuccessChime, playClickSound } from '../../lib/sound';
 import { startVoiceDictation, stopVoiceDictation, isSpeechRecognitionSupported } from '../../lib/speechRecognition';
+import { DailyMoodAndNote } from '../planner/DailyMoodAndNote';
 
 import { LottiePlayer } from '../common/LottiePlayer';
 import stressManagementAnimation from '../../assets/stress-management.json';
@@ -130,7 +131,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
       case 'learn':
         return <BookOpen className="w-3.5 h-3.5" />;
       default:
-        return <Sparkles className="w-3.5 h-3.5" />;
+        return <Layers className="w-3.5 h-3.5" />;
     }
   };
 
@@ -159,6 +160,9 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
           </span>
         </div>
       </div>
+
+      {/* Daily Mood & Reflection */}
+      <DailyMoodAndNote selectedDate={selectedDate} />
 
       {/* Stress Management Lottie Centerpiece Decoration */}
       <div className="w-full flex justify-center items-center py-2 select-none pointer-events-none">

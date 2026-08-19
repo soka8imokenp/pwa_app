@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Zap, Sparkles, Check } from 'lucide-react';
+import { Play, Pause, RotateCcw, Zap, Check } from 'lucide-react';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import confetti from 'canvas-confetti';
 
@@ -74,7 +74,7 @@ export const MiniFocusRing: React.FC<MiniFocusRingProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-[#BEF264] border border-[#18181B] flex items-center justify-center text-xs shadow-2xs">
-            ⚡
+            <Zap className="w-4 h-4 text-[#18181B] stroke-[2.25]" />
           </div>
           <div>
             <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">

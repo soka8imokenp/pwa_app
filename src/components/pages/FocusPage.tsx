@@ -3,7 +3,7 @@ import {
   Play,
   Pause,
   RotateCcw,
-  Sparkles,
+  Target,
   Volume2,
   VolumeX,
   Timer as TimerIcon,
@@ -214,7 +214,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
         {/* Linked Task Selector */}
         {selectedTask ? (
           <div className="px-3 py-1 bg-[#E8DCFF] border-[1.5px] border-[#18181B] rounded-full text-xs font-bold text-[#18181B] flex items-center gap-1.5 shadow-[1px_1px_0px_#18181B]">
-            <Sparkles className="w-3.5 h-3.5" />
+            <Target className="w-3.5 h-3.5" />
             <span className="truncate max-w-[200px]">{selectedTask.title}</span>
             <button onClick={onClearSelectedTask} className="hover:opacity-75 font-black ml-1">×</button>
           </div>

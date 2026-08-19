@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, Droplets, BookOpen, Activity, Moon, Zap, Target, Sparkles, Heart, Check, X } from 'lucide-react';
+import { Flame, Droplets, BookOpen, Activity, Moon, Zap, Target, Heart, Check, X } from 'lucide-react';
 import type { Habit } from '../../types';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Flame } from 'lucide-react';
+import { TrendingUp, Flame } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 
 export interface DayActivity {
@@ -37,12 +37,11 @@ export const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-[#E9D5FF] border border-[#18181B] flex items-center justify-center text-xs shadow-2xs">
-            📊
+            <TrendingUp className="w-4 h-4 text-[#18181B] stroke-[2.25]" />
           </div>
           <div>
-            <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B] flex items-center gap-1">
+            <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
               Weekly Momentum
-              <Sparkles className="w-3 h-3 text-purple-700 fill-purple-300" />
             </h3>
             <p className="text-[10px] font-semibold text-slate-500">
               {avgCompletion}% average daily score

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { QrCode, Copy, Check, X, Share2, Sparkles, Link2 } from 'lucide-react';
+import { QrCode, Copy, Check, X, Share2, Link2 } from 'lucide-react';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import confetti from 'canvas-confetti';
 

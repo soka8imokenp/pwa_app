@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StickyNote, Copy, Trash2, Check, X, Sparkles, FileText } from 'lucide-react';
+import { StickyNote, Copy, Trash2, Check, X, FileText } from 'lucide-react';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import confetti from 'canvas-confetti';
 

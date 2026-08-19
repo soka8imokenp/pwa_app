@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { format, subDays, parseISO } from 'date-fns';
 import {
-  Sparkles,
   Trophy,
   Flame,
   Clock,

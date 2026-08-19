@@ -13,9 +13,9 @@ import {
   Database,
   Palette,
   RotateCcw,
-  Sparkles,
   Check,
   X,
+  Zap,
   ArrowUpCircle,
 } from 'lucide-react';
 import {
@@ -345,7 +345,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#FFE873] border border-[#18181B] flex items-center justify-center font-bold text-xs shadow-xs">
-              ⚡
+              <Zap className="w-4 h-4 text-[#18181B] stroke-[2.25]" />
             </div>
             <div>
               <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">

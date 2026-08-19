@@ -1,5 +1,5 @@
 import React from 'react';
-import { Flame, Plus, Trash2, Sparkles } from 'lucide-react';
+import { Flame, Plus, Trash2, Target } from 'lucide-react';
 import type { HabitWithStats } from '../../types';
 import { BrutalCard } from '../common/BrutalCard';
 import { BrutalButton } from '../common/BrutalButton';
@@ -76,7 +76,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
       <div className="space-y-3">
         {habits.length === 0 ? (
           <div className="p-8 text-center bg-white/60 dark:bg-[#1A172B]/60 border-2 border-dashed border-[#1E1B4B]/30 rounded-2xl">
-            <Sparkles className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+            <Target className="w-8 h-8 text-purple-400 mx-auto mb-2" />
             <p className="text-sm font-black text-slate-800 dark:text-purple-100">
               No habits created yet!
             </p>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ListTodo, Plus, ArrowUpCircle, Trash2, Check, Sparkles } from 'lucide-react';
+import { ListTodo, Plus, ArrowUpCircle, Trash2, Check, Layers } from 'lucide-react';
 import type { Task } from '../../types';
 import { BrutalCard } from '../common/BrutalCard';
 import { BrutalButton } from '../common/BrutalButton';
@@ -115,7 +115,7 @@ export const TaskBacklog: React.FC<TaskBacklogProps> = ({
       <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
         {filteredTasks.length === 0 ? (
           <div className="p-8 text-center border-2 border-dashed border-[#1E1B4B]/20 dark:border-purple-300/20 rounded-2xl">
-            <Sparkles className="w-6 h-6 text-purple-400 mx-auto mb-2 opacity-60" />
+            <Layers className="w-6 h-6 text-purple-400 mx-auto mb-2 opacity-60" />
             <p className="text-xs font-bold text-slate-500 dark:text-purple-300">
               No tasks found in backlog. Use quick add above to queue one!
             </p>

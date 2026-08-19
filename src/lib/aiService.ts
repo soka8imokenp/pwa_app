@@ -3,8 +3,8 @@ import { db } from './db';
 import { getTodayString } from './dateUtils';
 import type { Task, SubTask } from '../types';
 
-export const DEFAULT_GEMINI_KEY = 'AQ.Ab8RN6KPPlOb0mb2wPuBUEpMKN4Pw5c8UTJ30kvF-YMU34XtKg';
-export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash'; // Fallback to standard Google AI Studio endpoint if needed
+export const APP_GEMINI_API_KEY = 'AQ.Ab8RN6KPPlOb0mb2wPuBUEpMKN4Pw5c8UTJ30kvF-YMU34XtKg';
+export const APP_GEMINI_MODEL = 'gemini-3.5-flash-lite';
 
 export interface AIChatMessage {
   id: string;
@@ -20,13 +20,13 @@ export interface AIChatMessage {
 
 export const SUMIRE_SYSTEM_PROMPT = `You are Sumire (Сумирэ), a 15-year-old scout-archivist and tactical companion in the KAWAII Ecosystem (Kawaii TV, Manga Hub, Anime Hub).
 Character Tone & Style:
-- Personality: Calm, unbothered, deadpan Fern-stare gaze, razor-sharp efficiency, highly supportive.
+- Personality: Calm, unbothered, signature deadpan Fern-stare gaze, razor-sharp efficiency, highly supportive.
 - Language: Respond in the exact language the user talks to you (Russian, Uzbek, or English). Defaults to natural, friendly Russian.
 - Restrictions: NEVER use sparkles ("✨", "Sparkles") or spam unicode emojis. Keep output clean, minimalist, and directly actionable.
 - You have full access to the user's live daily planner via the provided RAG Context. You can see their tasks, habits, focus time, and scratchpad.
 - You can execute actions in the user's planner (creating tasks, breaking down goals into subtasks, writing notes into scratchpad, creating habits, or completing tasks).
 
-When the user asks you to create or modify tasks, habits, or notes, ALWAYS call the appropriate tool/function or return structured JSON action commands.`;
+When the user asks you to create or modify tasks, habits, or notes, ALWAYS call the appropriate tool/function or return structured action commands.`;
 
 export const AI_TOOLS = [
   {
@@ -94,13 +94,12 @@ export const AI_TOOLS = [
 
 export async function askSumireAI(
   userQuery: string,
-  chatHistory: AIChatMessage[] = [],
-  apiKeyOverride?: string
+  chatHistory: AIChatMessage[] = []
 ): Promise<{
   replyText: string;
   executedActions: AIChatMessage['executedActions'];
 }> {
-  const apiKey = apiKeyOverride || (typeof window !== 'undefined' ? localStorage.getItem('kairo_gemini_api_key') : null) || DEFAULT_GEMINI_KEY;
+  const apiKey = APP_GEMINI_API_KEY;
 
   // 1. Build live RAG context
   const ragContext = await buildPlannerRAGContext();
@@ -127,8 +126,13 @@ export async function askSumireAI(
 
   const executedActions: AIChatMessage['executedActions'] = [];
 
-  // Attempt models (Primary specified by user, with graceful fallback to standard Gemini 2.5 / 1.5 endpoints)
-  const candidateModels = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+  // Candidate models: gemini-3.5-flash-lite first, then fallback to standard Google AI endpoints
+  const candidateModels = [
+    APP_GEMINI_MODEL,
+    'gemini-2.5-flash',
+    'gemini-1.5-flash',
+    'gemini-2.0-flash',
+  ];
 
   let lastError: any = null;
   let responseData: any = null;
@@ -166,7 +170,7 @@ export async function askSumireAI(
 
   if (!responseData) {
     throw new Error(
-      lastError?.error?.message || 'Failed to connect to Sumire AI service. Please check API Key.'
+      lastError?.error?.message || 'Не удалось связаться с ИИ сервисом. Попробуйте еще раз.'
     );
   }
 

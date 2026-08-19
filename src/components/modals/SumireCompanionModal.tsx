@@ -4,14 +4,12 @@ import {
   Mic,
   MicOff,
   Send,
-  Bot,
   CheckCircle2,
   ListTodo,
   StickyNote,
   Zap,
   Target,
   Layers,
-  Key,
 } from 'lucide-react';
 import { askSumireAI, AIChatMessage } from '../../lib/aiService';
 import { startVoiceDictation, stopVoiceDictation, isSpeechRecognitionSupported } from '../../lib/speechRecognition';
@@ -40,13 +38,6 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [customKeyOpen, setCustomKeyOpen] = useState(false);
-  const [customKey, setCustomKey] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('kairo_gemini_api_key') || '';
-    }
-    return '';
-  });
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
@@ -75,7 +66,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
     setIsLoading(true);
 
     try {
-      const response = await askSumireAI(text, messages, customKey || undefined);
+      const response = await askSumireAI(text, messages);
 
       const assistantMsg: AIChatMessage = {
         id: `sumire_${Date.now()}`,
@@ -105,7 +96,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
         {
           id: `err_${Date.now()}`,
           role: 'assistant',
-          content: `Ошибка: ${err.message || 'Не удалось связаться с моделью. Проверьте API ключ.'}`,
+          content: `Ошибка: ${err.message || 'Не удалось связаться с моделью.'}`,
           timestamp: Date.now(),
         },
       ]);
@@ -140,15 +131,6 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
     }
   };
 
-  const handleSaveCustomKey = () => {
-    playClickSound();
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('kairo_gemini_api_key', customKey.trim());
-      setCustomKeyOpen(false);
-      playSuccessChime();
-    }
-  };
-
   const QUICK_PROMPTS = [
     'Что у меня в приоритете на сегодня?',
     'Разбей мою задачу на 4 подшага',
@@ -178,20 +160,12 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
                 </span>
               </div>
               <p className="text-[10px] font-bold text-slate-400">
-                Gemini 2.5 Flash • Live Planner Aware
+                Gemini 3.5 Flash Lite • Live Planner Aware
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setCustomKeyOpen(!customKeyOpen)}
-              title="API Key Settings"
-              className="w-8 h-8 rounded-xl bg-white hover:bg-slate-100 border-[1.5px] border-[#18181B] flex items-center justify-center text-slate-700 cursor-pointer shadow-2xs"
-            >
-              <Key className="w-3.5 h-3.5" />
-            </button>
-
             <button
               onClick={() => {
                 playClickSound();
@@ -203,31 +177,6 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
             </button>
           </div>
         </div>
-
-        {/* API Key Drawer (Collapsible) */}
-        {customKeyOpen && (
-          <div className="p-3 bg-[#FEF08A] border-b-[1.75px] border-[#18181B] space-y-2 text-xs shrink-0 animate-in slide-in-from-top duration-150">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-[#18181B]">Gemini API Key Override:</span>
-              <span className="text-[10px] text-slate-600">Saved locally on device</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="password"
-                value={customKey}
-                onChange={(e) => setCustomKey(e.target.value)}
-                placeholder="AIzaSy..."
-                className="flex-1 px-3 py-1.5 bg-white border-[1.5px] border-[#18181B] rounded-xl text-xs font-mono outline-none"
-              />
-              <button
-                onClick={handleSaveCustomKey}
-                className="px-3 py-1.5 bg-[#18181B] text-white font-bold rounded-xl text-xs cursor-pointer"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Messages List Area */}
         <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-[#FAF7F2]/40">

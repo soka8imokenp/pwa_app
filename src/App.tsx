@@ -17,6 +17,8 @@ import { EveningReviewModal } from './components/modals/EveningReviewModal';
 import { SumireCompanionModal } from './components/modals/SumireCompanionModal';
 import { MenuModal } from './components/modals/MenuModal';
 import { AuthContainer, UserProfile } from './components/auth/AuthContainer';
+import { InAppNotificationToast } from './components/common/InAppNotificationToast';
+import { initNotificationSystem } from './lib/notifications';
 import { usePlannerData } from './hooks/usePlannerData';
 import { getTodayString } from './lib/dateUtils';
 import { isSoundMuted, setSoundMuted, playClickSound } from './lib/sound';
@@ -54,6 +56,27 @@ export function App() {
 
   // Focus Timer active selection
   const [focusSelectedTask, setFocusSelectedTask] = useState<Task | null>(null);
+
+  // Initialize notification deep-linking system
+  useEffect(() => {
+    initNotificationSystem((targetTab, extra) => {
+      if (targetTab) {
+        setActiveTab(targetTab);
+        if (extra?.taskId) {
+          // If task id is provided, optionally highlight or select
+        }
+      }
+    });
+
+    const handleWebNavigate = (e: any) => {
+      if (e.detail?.tab) {
+        setActiveTab(e.detail.tab);
+      }
+    };
+
+    window.addEventListener('sumire:navigate', handleWebNavigate);
+    return () => window.removeEventListener('sumire:navigate', handleWebNavigate);
+  }, []);
 
   // Planner Data Hook (IndexedDB / Dexie.js)
   const {
@@ -130,6 +153,9 @@ export function App() {
       {/* Mobile Screen Frame */}
       <div className="w-full max-w-md min-h-screen flex flex-col relative px-3 sm:px-0 z-10">
         
+        {/* In-App Floating Toast Notification */}
+        <InAppNotificationToast onNavigate={(tab) => setActiveTab(tab)} />
+
         {/* Mobile Top Header with User Greeting */}
         <Header
           streakCount={overallStreak}

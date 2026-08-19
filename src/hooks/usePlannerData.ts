@@ -4,6 +4,7 @@ import { db, seedDemoDataIfEmpty } from '../lib/db';
 import type { Task, Habit, HabitLog, FocusSession, HabitWithStats, DayOverviewStats } from '../types';
 import { calculateHabitStats } from '../lib/streaks';
 import { triggerTwoWaySync } from '../lib/syncEngine';
+import { sendLocalNotification } from '../lib/notifications';
 
 export function usePlannerData(selectedDate: string) {
   // Ensure database is initialized with initial sample data on first load and trigger sync
@@ -78,11 +79,16 @@ export function usePlannerData(selectedDate: string) {
 
   // 6. Database Action Handlers
   const addTask = async (task: Omit<Task, 'id' | 'createdAt'>) => {
-    await db.tasks.add({
+    const id = await db.tasks.add({
       ...task,
       createdAt: Date.now(),
     });
     triggerTwoWaySync();
+    sendLocalNotification(
+      'Task Scheduled',
+      `"${task.title}" saved to ${task.isPriority ? 'Top Priorities' : 'Backlog'}`,
+      { tab: task.isPriority ? 'priorities' : 'backlog', taskId: Number(id) }
+    );
   };
 
   const toggleTaskComplete = async (task: Task) => {
@@ -120,12 +126,17 @@ export function usePlannerData(selectedDate: string) {
   };
 
   const addHabit = async (habit: Omit<Habit, 'id' | 'createdAt' | 'archived'>) => {
-    await db.habits.add({
+    const id = await db.habits.add({
       ...habit,
       archived: false,
       createdAt: Date.now(),
     });
     triggerTwoWaySync();
+    sendLocalNotification(
+      'Habit Created',
+      `"${habit.title}" added to daily habits streak tracker`,
+      { tab: 'habits', habitId: Number(id) }
+    );
   };
 
   const deleteHabit = async (habitId: number) => {

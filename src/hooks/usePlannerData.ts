@@ -162,6 +162,11 @@ export function usePlannerData(selectedDate: string) {
     triggerTwoWaySync();
   };
 
+  const deleteFocusSession = async (sessionId: number) => {
+    await db.focusSessions.delete(sessionId);
+    triggerTwoWaySync();
+  };
+
   const addLink = async (link: Omit<import('../types').LinkItem, 'id' | 'createdAt'>) => {
     await db.links.add({
       ...link,
@@ -215,6 +220,7 @@ export function usePlannerData(selectedDate: string) {
     deleteHabit,
     toggleHabitLog,
     logFocusSession,
+    deleteFocusSession,
     addLink,
     deleteLink,
     incrementLinkClicks,

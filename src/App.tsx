@@ -79,6 +79,7 @@ export function App() {
     deleteHabit,
     toggleHabitLog,
     logFocusSession,
+    deleteFocusSession,
     addLink,
     deleteLink,
     incrementLinkClicks,
@@ -215,6 +216,7 @@ export function App() {
               selectedTask={focusSelectedTask}
               onClearSelectedTask={() => setFocusSelectedTask(null)}
               onLogFocusSession={logFocusSession}
+              onDeleteFocusSession={deleteFocusSession}
               todaysSessions={todaysFocusSessions}
               selectedDate={selectedDate}
             />

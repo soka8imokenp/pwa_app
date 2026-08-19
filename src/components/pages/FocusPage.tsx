@@ -4,15 +4,12 @@ import {
   Pause,
   RotateCcw,
   Target,
-  Volume2,
-  VolumeX,
-  Timer as TimerIcon,
   Maximize2,
   CheckCircle2,
+  Clock,
 } from 'lucide-react';
 import type { Task, FocusSession } from '../../types';
 import { playClickSound, playTimerFinishAlarm, playSuccessChime } from '../../lib/sound';
-import { playAmbientSound, stopAmbientSound, AmbientSoundType } from '../../lib/ambientSound';
 import { sendLocalNotification, requestNotificationPermission } from '../../lib/notifications';
 import { ZenFullscreenTimer } from '../focus/ZenFullscreenTimer';
 import { InAppMusicPlayer } from '../focus/InAppMusicPlayer';
@@ -27,12 +24,7 @@ interface FocusPageProps {
   selectedDate: string;
 }
 
-const AMBIENT_PRESETS: { id: AmbientSoundType; label: string; icon: string }[] = [
-  { id: 'rain', label: 'Rain', icon: '🌧️' },
-  { id: 'waves', label: 'Waves', icon: '🌊' },
-  { id: 'binaural', label: 'Flow', icon: '🧠' },
-  { id: 'whitenoise', label: 'White', icon: '⚪' },
-];
+const PRESET_MINUTES = [15, 25, 45, 60];
 
 export const FocusPage: React.FC<FocusPageProps> = ({
   activeTasks,
@@ -42,13 +34,13 @@ export const FocusPage: React.FC<FocusPageProps> = ({
   todaysSessions,
   selectedDate,
 }) => {
-  const [mode, setMode] = useState<'pomodoro' | 'deepwork' | 'break' | 'stopwatch'>('pomodoro');
+  const [mode, setMode] = useState<'pomodoro' | 'break' | 'stopwatch'>('pomodoro');
+  const [customMinutes, setCustomMinutes] = useState<number>(25);
   const [isRunning, setIsRunning] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(25 * 60);
   const [stopwatchSeconds, setStopwatchSeconds] = useState(0);
   const [linkedTaskId, setLinkedTaskId] = useState<number | undefined>(selectedTask?.id);
   const [isZenModeOpen, setIsZenModeOpen] = useState(false);
-  const [activeSound, setActiveSound] = useState<AmbientSoundType>('none');
 
   useEffect(() => {
     if (selectedTask?.id) {
@@ -56,17 +48,12 @@ export const FocusPage: React.FC<FocusPageProps> = ({
     }
   }, [selectedTask]);
 
-  const initialDurationForMode = (m: typeof mode) => {
-    switch (m) {
-      case 'pomodoro':
-        return 25 * 60;
-      case 'deepwork':
-        return 50 * 60;
-      case 'break':
-        return 5 * 60;
-      case 'stopwatch':
-        return 0;
-    }
+  const handleSelectPreset = (mins: number) => {
+    playClickSound();
+    setIsRunning(false);
+    setMode('pomodoro');
+    setCustomMinutes(mins);
+    setSecondsLeft(mins * 60);
   };
 
   const handleModeChange = (newMode: typeof mode) => {
@@ -74,8 +61,10 @@ export const FocusPage: React.FC<FocusPageProps> = ({
     setMode(newMode);
     if (newMode === 'stopwatch') {
       setStopwatchSeconds(0);
+    } else if (newMode === 'break') {
+      setSecondsLeft(5 * 60);
     } else {
-      setSecondsLeft(initialDurationForMode(newMode));
+      setSecondsLeft(customMinutes * 60);
     }
     playClickSound();
   };
@@ -110,25 +99,26 @@ export const FocusPage: React.FC<FocusPageProps> = ({
     setIsRunning(false);
     playTimerFinishAlarm();
 
-    const durationMins = mode === 'pomodoro' ? 25 : mode === 'deepwork' ? 50 : 5;
+    const durationMins = mode === 'break' ? 5 : mode === 'stopwatch' ? Math.round(stopwatchSeconds / 60) : customMinutes;
     const taskObj = activeTasks.find((t) => t.id === linkedTaskId);
 
     onLogFocusSession({
       taskId: linkedTaskId || undefined,
       taskTitle: taskObj?.title || `${mode === 'break' ? 'Break' : 'Focus'} Session`,
-      durationMinutes: durationMins,
+      durationMinutes: durationMins || 1,
       mode: mode === 'break' ? 'pomodoro' : mode,
       date: selectedDate,
     });
 
     sendLocalNotification(
-      '⚡ Focus Session Finished!',
-      `Awesome job! You completed a ${durationMins}m focus session.`
+      'Focus Session Finished',
+      `Great job! You completed ${durationMins}m of dedicated focus.`
     );
 
+    playSuccessChime();
     confetti({
-      particleCount: 80,
-      spread: 70,
+      particleCount: 70,
+      spread: 60,
       origin: { y: 0.6 },
       colors: ['#FFE873', '#E8DCFF', '#D1FBE4'],
     });
@@ -147,19 +137,10 @@ export const FocusPage: React.FC<FocusPageProps> = ({
     setIsRunning(false);
     if (mode === 'stopwatch') {
       setStopwatchSeconds(0);
+    } else if (mode === 'break') {
+      setSecondsLeft(5 * 60);
     } else {
-      setSecondsLeft(initialDurationForMode(mode));
-    }
-  };
-
-  const handleToggleSound = (soundId: AmbientSoundType) => {
-    playClickSound();
-    if (activeSound === soundId) {
-      stopAmbientSound();
-      setActiveSound('none');
-    } else {
-      playAmbientSound(soundId, 0.4);
-      setActiveSound(soundId);
+      setSecondsLeft(customMinutes * 60);
     }
   };
 
@@ -178,15 +159,14 @@ export const FocusPage: React.FC<FocusPageProps> = ({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 p-1 bg-white border-[1.75px] border-[#18181B] rounded-xl shadow-[1.5px_1.5px_0px_#18181B]">
           {[
-            { id: 'pomodoro', label: '25m Focus' },
-            { id: 'deepwork', label: '50m Deep' },
-            { id: 'break', label: '5m Break' },
+            { id: 'pomodoro', label: 'Focus Flow' },
+            { id: 'break', label: 'Rest Break' },
             { id: 'stopwatch', label: 'Stopwatch' },
           ].map((m) => (
             <button
               key={m.id}
               onClick={() => handleModeChange(m.id as any)}
-              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 mode === m.id
                   ? 'bg-[#FFE873] text-[#18181B] border-[1.25px] border-[#18181B] shadow-[1px_1px_0px_#18181B]'
                   : 'text-slate-500 hover:text-[#18181B]'
@@ -209,8 +189,8 @@ export const FocusPage: React.FC<FocusPageProps> = ({
         </button>
       </div>
 
-      {/* 2. Main Glowing Timer Card */}
-      <div className="neo-card p-8 bg-white flex flex-col items-center justify-center text-center space-y-6">
+      {/* 2. Main Timer Card */}
+      <div className="neo-card p-6 bg-white flex flex-col items-center justify-center text-center space-y-5">
         {/* Linked Task Selector */}
         {selectedTask ? (
           <div className="px-3 py-1 bg-[#E8DCFF] border-[1.5px] border-[#18181B] rounded-full text-xs font-bold text-[#18181B] flex items-center gap-1.5 shadow-[1px_1px_0px_#18181B]">
@@ -219,8 +199,8 @@ export const FocusPage: React.FC<FocusPageProps> = ({
             <button onClick={onClearSelectedTask} className="hover:opacity-75 font-black ml-1">×</button>
           </div>
         ) : (
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-            {mode === 'break' ? 'Rest & Recharge' : 'Deep Focus Mode'}
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest font-display">
+            {mode === 'break' ? 'Rest & Recharge' : 'Sumire Focus Mode'}
           </span>
         )}
 
@@ -229,8 +209,28 @@ export const FocusPage: React.FC<FocusPageProps> = ({
           {displayTime}
         </div>
 
+        {/* Quick Duration Preset Chips (15m, 25m, 45m, 60m) */}
+        {mode === 'pomodoro' && (
+          <div className="flex items-center gap-1.5 bg-[#FAF7F2] p-1.5 rounded-2xl border-[1.5px] border-[#18181B]">
+            <Clock className="w-3.5 h-3.5 text-slate-400 ml-1.5 mr-0.5" />
+            {PRESET_MINUTES.map((mins) => (
+              <button
+                key={mins}
+                onClick={() => handleSelectPreset(mins)}
+                className={`px-2.5 py-1 text-xs font-bold font-mono-num rounded-xl transition-all cursor-pointer ${
+                  customMinutes === mins
+                    ? 'bg-[#FFE873] border border-[#18181B] text-[#18181B] shadow-[1px_1px_0px_#18181B]'
+                    : 'text-slate-500 hover:text-[#18181B]'
+                }`}
+              >
+                {mins}m
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Primary Controls */}
-        <div className="flex items-center gap-3 pt-2">
+        <div className="flex items-center gap-3 pt-1">
           <button
             onClick={handleTogglePlay}
             className={`px-8 py-3 rounded-xl border-[2px] border-[#18181B] flex items-center gap-2 font-bold text-sm shadow-[2px_2px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer ${
@@ -308,11 +308,11 @@ export const FocusPage: React.FC<FocusPageProps> = ({
           isRunning={isRunning}
           formattedTime={displayTime}
           taskTitle={activeTasks.find((t) => t.id === linkedTaskId)?.title}
-          activeSound={activeSound}
+          activeSound="none"
           onTogglePlay={handleTogglePlay}
           onReset={handleReset}
           onComplete={handleTimerComplete}
-          onToggleSound={handleToggleSound}
+          onToggleSound={() => {}}
           onClose={() => setIsZenModeOpen(false)}
         />
       )}

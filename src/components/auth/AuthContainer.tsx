@@ -8,10 +8,12 @@ import {
   Mail,
   User,
   ShieldCheck,
-  Zap,
-  Smile,
-  Flame,
+  ShieldAlert,
+  Shield,
+  KeyRound,
+  AlertCircle,
   CheckCircle2,
+  Smile,
 } from 'lucide-react';
 import rabbitAnimation from '../../assets/rabbit-hi.json';
 import { LottiePlayer } from '../common/LottiePlayer';
@@ -62,10 +64,40 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const getPasswordStrength = (pwd: string) => {
-    if (!pwd) return { label: 'Empty', color: 'bg-slate-200', width: '0%', joke: 'Секретный шифр еще не введен' };
-    if (pwd.length < 4) return { label: 'Too short', color: 'bg-rose-400', width: '30%', joke: 'Слишком коротко, взломает даже хомяк 🐹' };
-    if (pwd.length < 8) return { label: 'Good', color: 'bg-[#FFE873]', width: '65%', joke: 'Неплохо, но Сумирэ советует подлиннее 🛡️' };
-    return { label: 'Archive Grade', color: 'bg-[#86EFAC]', width: '100%', joke: 'Броня архива! Никто не пройдет 🏰' };
+    if (!pwd) {
+      return {
+        label: 'Empty',
+        color: 'bg-slate-200',
+        width: '0%',
+        text: 'Секретный шифр еще не введен',
+        icon: <Lock className="w-3.5 h-3.5 text-slate-400 inline mr-1" />,
+      };
+    }
+    if (pwd.length < 4) {
+      return {
+        label: 'Too short',
+        color: 'bg-rose-400',
+        width: '30%',
+        text: 'Слишком коротко для надежной защиты',
+        icon: <ShieldAlert className="w-3.5 h-3.5 text-rose-600 inline mr-1" />,
+      };
+    }
+    if (pwd.length < 8) {
+      return {
+        label: 'Good',
+        color: 'bg-[#FFE873]',
+        width: '65%',
+        text: 'Неплохо, но Сумирэ советует более надежный шифр',
+        icon: <Shield className="w-3.5 h-3.5 text-amber-600 inline mr-1" />,
+      };
+    }
+    return {
+      label: 'Archive Grade',
+      color: 'bg-[#86EFAC]',
+      width: '100%',
+      text: 'Броня архива! Сертифицированная защита',
+      icon: <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 inline mr-1" />,
+    };
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -246,23 +278,39 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
           </span>
         </div>
 
-        <div className="px-2.5 py-1 bg-[#E8DCFF] border border-[#18181B] rounded-xl text-[10px] font-bold text-[#18181B] shadow-2xs">
-          🔒 Secure Pass
+        <div className="px-2.5 py-1 bg-[#E8DCFF] border border-[#18181B] rounded-xl text-[10px] font-bold text-[#18181B] shadow-2xs flex items-center gap-1.5">
+          <Lock className="w-3 h-3 text-[#18181B] stroke-[2.5]" />
+          <span>Secure Pass</span>
         </div>
       </div>
 
       {/* Main Interactive Card */}
       <div className="flex-1 flex flex-col items-center justify-center my-4 z-10 w-full">
         
-        {/* Animated Mascot Stage with Funny Speech Balloon */}
+        {/* Animated Mascot Stage with Reaction Badge */}
         <div className="relative w-44 h-44 sm:w-48 sm:h-48 flex items-center justify-center mb-2">
           {/* Outer Podium Ring */}
           <div className="absolute inset-0 rounded-full border-[2px] border-[#18181B] bg-white shadow-[3px_3px_0px_#18181B]" />
           <div className="absolute inset-2 rounded-full bg-gradient-to-tr from-[#FAF7F2] to-[#E8DCFF] border border-[#18181B]/30" />
 
-          {/* Humorous Reaction Badge */}
-          <div className="absolute -top-3 -right-2 px-2.5 py-1 bg-[#FFE873] border-[1.5px] border-[#18181B] rounded-xl text-[9px] font-black uppercase text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] animate-bounce">
-            {isPasswordFocused ? '👀 Я не подглядываю!' : mode === 'login' ? '🔑 Авторизация' : '✨ Новый разведчик'}
+          {/* Reaction Badge with Lucide Icons */}
+          <div className="absolute -top-3 -right-2 px-2.5 py-1 bg-[#FFE873] border-[1.5px] border-[#18181B] rounded-xl text-[9px] font-black uppercase text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] flex items-center gap-1">
+            {isPasswordFocused ? (
+              <>
+                <Eye className="w-3 h-3 text-purple-950 stroke-[2.5]" />
+                <span>Не подглядываю</span>
+              </>
+            ) : mode === 'login' ? (
+              <>
+                <KeyRound className="w-3 h-3 text-amber-950 stroke-[2.5]" />
+                <span>Авторизация</span>
+              </>
+            ) : (
+              <>
+                <ShieldCheck className="w-3 h-3 text-emerald-950 stroke-[2.5]" />
+                <span>Новый разведчик</span>
+              </>
+            )}
           </div>
 
           <div className="relative z-10 w-full h-full p-2 flex items-center justify-center">
@@ -305,8 +353,9 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
 
         {/* Error Notification Toast */}
         {errorMsg && (
-          <div className="w-full mb-3 p-3 bg-[#FFE4E6] border-[1.75px] border-[#18181B] rounded-2xl text-xs font-bold text-rose-950 shadow-[2px_2px_0px_#18181B] animate-in fade-in duration-150 text-center">
-            ⚠️ {errorMsg}
+          <div className="w-full mb-3 p-3 bg-[#FFE4E6] border-[1.75px] border-[#18181B] rounded-2xl text-xs font-bold text-rose-950 shadow-[2px_2px_0px_#18181B] animate-in fade-in duration-150 flex items-center justify-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-900 shrink-0 stroke-[2.25]" />
+            <span>{errorMsg}</span>
           </div>
         )}
 
@@ -391,7 +440,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
               onClick={handleQuickGuest}
               className="w-full py-2.5 px-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border-[1.5px] border-[#18181B] text-xs font-bold shadow-2xs cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
             >
-              <Smile className="w-4 h-4 text-amber-600" />
+              <Smile className="w-4 h-4 text-amber-600 stroke-[2.25]" />
               <span>Быстрый гостевой вход (Scout Guest)</span>
             </button>
           </form>
@@ -543,7 +592,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
               />
             </div>
 
-            {/* Humorous Password Strength Meter */}
+            {/* Lucide Password Strength Meter */}
             <div className="p-2.5 bg-[#FAF7F2] border border-[#18181B]/20 rounded-xl space-y-1">
               <div className="flex items-center justify-between text-[9px] font-bold text-slate-500">
                 <span>Надежность шифра:</span>
@@ -552,7 +601,10 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
               <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden border border-[#18181B]/20">
                 <div className={`h-full transition-all duration-300 ${strength.color}`} style={{ width: strength.width }} />
               </div>
-              <p className="text-[9px] font-medium text-slate-500 italic">{strength.joke}</p>
+              <p className="text-[9px] font-medium text-slate-600 flex items-center">
+                {strength.icon}
+                <span>{strength.text}</span>
+              </p>
             </div>
 
             {/* Complete Button */}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, Flame } from 'lucide-react';
+import { TrendingUp, Flame, Target, Clock } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 
 export interface DayActivity {
@@ -65,9 +65,15 @@ export const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({
               {activeTooltipDay.dayShort}, Day {activeTooltipDay.dayNumber}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-[11px] font-bold font-mono-num text-purple-900">
-            <span>🎯 {activeTooltipDay.completionRate}% Done</span>
-            <span>⏱️ {activeTooltipDay.focusMinutes}m</span>
+          <div className="flex items-center gap-3 text-[11px] font-bold font-mono-num text-purple-900">
+            <span className="flex items-center gap-1">
+              <Target className="w-3 h-3 text-purple-700 stroke-[2.25]" />
+              {activeTooltipDay.completionRate}% Done
+            </span>
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3 text-purple-700 stroke-[2.25]" />
+              {activeTooltipDay.focusMinutes}m
+            </span>
           </div>
         </div>
       ) : null}

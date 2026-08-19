@@ -190,8 +190,9 @@ export const InAppMusicPlayer: React.FC = () => {
         ) : (
           <div className="py-2 text-center">
             <p className="text-xs font-bold text-slate-600">No tracks loaded yet</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">
-              Push .mp3 files to Vercel and tap 🔄
+            <p className="text-[10px] text-slate-400 mt-0.5 flex items-center justify-center gap-1">
+              <span>Push .mp3 files to Vercel and tap</span>
+              <RefreshCw className="w-3 h-3 text-slate-500 inline stroke-[2.25]" />
             </p>
           </div>
         )}
@@ -297,8 +298,9 @@ export const InAppMusicPlayer: React.FC = () => {
           {/* Tracks List */}
           <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1 py-0.5">
             {filteredPlaylist.length === 0 ? (
-              <p className="text-xs text-slate-400 text-center py-4">
-                No tracks found. Upload .mp3 to Vercel and tap 🔄
+              <p className="text-xs text-slate-400 text-center py-4 flex items-center justify-center gap-1">
+                <span>No tracks found. Upload .mp3 to Vercel and tap</span>
+                <RefreshCw className="w-3 h-3 text-slate-400 inline" />
               </p>
             ) : (
               filteredPlaylist.map((track) => {
@@ -324,7 +326,11 @@ export const InAppMusicPlayer: React.FC = () => {
                           isCurrent ? 'bg-[#FFE873] text-[#18181B]' : 'bg-[#FAF7F2] text-slate-500'
                         }`}
                       >
-                        {isCurrent && isPlaying ? '▶' : originalIndex + 1}
+                        {isCurrent && isPlaying ? (
+                          <Play className="w-3 h-3 fill-[#18181B] stroke-[#18181B]" />
+                        ) : (
+                          originalIndex + 1
+                        )}
                       </div>
 
                       <div className="min-w-0">

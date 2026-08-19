@@ -1,5 +1,5 @@
 import React from 'react';
-import { Flame, Plus, Trash2, Target } from 'lucide-react';
+import { Flame, Plus, Trash2, Target, Zap, Check } from 'lucide-react';
 import type { HabitWithStats } from '../../types';
 import { BrutalCard } from '../common/BrutalCard';
 import { BrutalButton } from '../common/BrutalButton';
@@ -97,10 +97,10 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                 {/* Left Info */}
                 <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className="w-10 h-10 rounded-xl border-2 border-[#1E1B4B] flex items-center justify-center text-lg shrink-0 shadow-[2px_2px_0px_#1E1B4B]"
+                    className="w-10 h-10 rounded-xl border-2 border-[#1E1B4B] flex items-center justify-center shrink-0 shadow-[2px_2px_0px_#1E1B4B]"
                     style={{ backgroundColor: habit.color || '#E9D5FF' }}
                   >
-                    {habit.icon || '⚡'}
+                    <Zap className="w-5 h-5 text-[#18181B] stroke-[2.25]" />
                   </div>
 
                   <div className="min-w-0">
@@ -141,7 +141,11 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                         >
                           <span className="text-[8px] font-extrabold uppercase">{dayLetter}</span>
                           <span className="text-[10px] leading-none">
-                            {log.completed ? '✓' : '•'}
+                            {log.completed ? (
+                              <Check className="w-2.5 h-2.5 stroke-[3] inline" />
+                            ) : (
+                              '•'
+                            )}
                           </span>
                         </button>
                       );

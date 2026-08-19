@@ -20,6 +20,7 @@ import {
   Key,
   Bot,
   ArrowUpCircle,
+  ExternalLink,
 } from 'lucide-react';
 import {
   exportDatabaseToJson,
@@ -355,7 +356,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 rel="noreferrer"
                 className="text-[10px] font-bold text-purple-700 hover:underline flex items-center gap-1"
               >
-                Получить бесплатный ключ ↗
+                <span>Получить бесплатный ключ</span>
+                <ExternalLink className="w-3 h-3 stroke-[2.25]" />
               </a>
             </div>
           </div>
@@ -386,12 +388,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               playClickSound();
               onToggleSound();
             }}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-black border-[1.5px] border-[#18181B] transition-all cursor-pointer ${isSoundMuted
+            className={`px-3.5 py-1.5 rounded-full text-xs font-black border-[1.5px] border-[#18181B] transition-all cursor-pointer flex items-center gap-1.5 ${isSoundMuted
                 ? 'bg-slate-100 text-slate-500'
                 : 'bg-[#BEF264] text-[#18181B] shadow-2xs'
               }`}
           >
-            {isSoundMuted ? 'Muted' : 'Active 🔊'}
+            {isSoundMuted ? (
+              <span>Muted</span>
+            ) : (
+              <>
+                <span>Active</span>
+                <Volume2 className="w-3.5 h-3.5 stroke-[2.25]" />
+              </>
+            )}
           </button>
         </div>
 
@@ -504,8 +513,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          <span className="px-2.5 py-1 rounded-full bg-[#D1FBE4] border border-[#065F46]/30 text-[10px] font-bold text-[#065F46]">
-            Up to date ✓
+          <span className="px-2.5 py-1 rounded-full bg-[#D1FBE4] border border-[#065F46]/30 text-[10px] font-bold text-[#065F46] flex items-center gap-1">
+            <span>Up to date</span>
+            <Check className="w-3 h-3 stroke-[2.5]" />
           </span>
         </div>
 

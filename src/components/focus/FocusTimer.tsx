@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, CheckCircle2, Clock, Zap, Coffee, Flame } from 'lucide-react';
+import { Play, Pause, RotateCcw, CheckCircle2, Clock, Zap, Coffee, Flame, Target, X } from 'lucide-react';
 import { BrutalCard } from '../common/BrutalCard';
 import { BrutalButton } from '../common/BrutalButton';
 import { BrutalBadge } from '../common/BrutalBadge';
@@ -206,17 +206,18 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
         <div className="mb-3">
           {currentTask ? (
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FAF5FF] dark:bg-[#2A1D45] border-2 border-[#1E1B4B] rounded-xl">
+              <Target className="w-3.5 h-3.5 text-purple-700 dark:text-purple-300 stroke-[2.5]" />
               <span className="text-[11px] font-black text-purple-950 dark:text-purple-200 truncate max-w-[200px]">
-                🎯 {currentTask.title}
+                {currentTask.title}
               </span>
               <button
                 onClick={() => {
                   setLinkedTaskId(undefined);
                   onClearSelectedTask();
                 }}
-                className="text-xs font-bold text-slate-500 hover:text-rose-600"
+                className="p-0.5 text-slate-500 hover:text-rose-600 cursor-pointer"
               >
-                ✕
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
@@ -228,7 +229,7 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
               <option value="">Link to task (Optional)</option>
               {activeTasks.map((t) => (
                 <option key={t.id} value={t.id}>
-                  {t.isPriority ? '★ ' : ''}
+                  {t.isPriority ? '[Priority] ' : ''}
                   {t.title}
                 </option>
               ))}
@@ -242,8 +243,15 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
         </div>
 
         {/* Progress status */}
-        <div className="text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-purple-300 mb-6">
-          {isRunning ? '⚡ Session in progress...' : 'Ready to begin'}
+        <div className="text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-purple-300 mb-6 flex items-center justify-center gap-1.5">
+          {isRunning ? (
+            <>
+              <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-400 stroke-[2]" />
+              <span>Session in progress...</span>
+            </>
+          ) : (
+            <span>Ready to begin</span>
+          )}
         </div>
 
         {/* Controls */}

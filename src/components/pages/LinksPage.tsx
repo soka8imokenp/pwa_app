@@ -7,12 +7,14 @@ import {
   Search,
   Check,
   Globe,
-  Coffee,
-  Play,
-  Music,
-  Code,
   Link2,
   QrCode,
+  Tv,
+  BookOpen,
+  Film,
+  Bot,
+  Library,
+  Compass,
 } from 'lucide-react';
 import type { LinkItem } from '../../types';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
@@ -26,6 +28,80 @@ interface LinksPageProps {
   onIncrementClicks: (id: number) => Promise<any>;
 }
 
+interface EcosystemService {
+  id: string;
+  title: string;
+  badge: string;
+  description: string;
+  url: string;
+  icon: React.ReactNode;
+  bg: string;
+  borderColor: string;
+}
+
+const ECOSYSTEM_SERVICES: EcosystemService[] = [
+  {
+    id: 'tv',
+    title: 'Kawaii TV',
+    badge: 'Watch Party & Streams',
+    description: 'Anime streaming, sync rooms & creator tiers',
+    url: 'https://tv.kawaii.uz',
+    icon: <Tv className="w-5 h-5 text-purple-900 stroke-[2.25]" />,
+    bg: 'bg-[#E8DCFF]',
+    borderColor: 'border-[#18181B]',
+  },
+  {
+    id: 'manga',
+    title: 'Manga Hub',
+    badge: 'Reader & Novels',
+    description: 'Manga, light novels, webtoons & translations',
+    url: 'https://manga.kawaii.uz',
+    icon: <BookOpen className="w-5 h-5 text-amber-900 stroke-[2.25]" />,
+    bg: 'bg-[#FEF08A]',
+    borderColor: 'border-[#18181B]',
+  },
+  {
+    id: 'anime',
+    title: 'Anime Hub',
+    badge: 'Catalog & Dubs',
+    description: 'Release calendar, anime database & dub studios',
+    url: 'https://anime.kawaii.uz',
+    icon: <Film className="w-5 h-5 text-emerald-900 stroke-[2.25]" />,
+    bg: 'bg-[#D1FBE4]',
+    borderColor: 'border-[#18181B]',
+  },
+  {
+    id: 'bot',
+    title: 'Kawaii Bot',
+    badge: 'Assistant & Tools',
+    description: 'Telegram bot assistant, release alerts & automation',
+    url: 'https://bot.kawaii.uz',
+    icon: <Bot className="w-5 h-5 text-sky-900 stroke-[2.25]" />,
+    bg: 'bg-[#BAE6FD]',
+    borderColor: 'border-[#18181B]',
+  },
+  {
+    id: 'wiki',
+    title: 'Kawaii Wiki',
+    badge: 'Knowledge Base',
+    description: 'Community guides, archive & anime encyclopaedia',
+    url: 'https://wiki.kawaii.uz',
+    icon: <Library className="w-5 h-5 text-orange-900 stroke-[2.25]" />,
+    bg: 'bg-[#FED7AA]',
+    borderColor: 'border-[#18181B]',
+  },
+  {
+    id: 'portal',
+    title: 'Kawaii.uz',
+    badge: 'Central Portal',
+    description: 'Home of the anime community & ecosystem hub',
+    url: 'https://kawaii.uz',
+    icon: <Compass className="w-5 h-5 text-purple-900 stroke-[2.25]" />,
+    bg: 'bg-[#FAF7F2]',
+    borderColor: 'border-[#18181B]',
+  },
+];
+
 export const LinksPage: React.FC<LinksPageProps> = ({
   links,
   onAddLink,
@@ -34,31 +110,39 @@ export const LinksPage: React.FC<LinksPageProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [copiedEcosystemId, setCopiedEcosystemId] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isQrOpen, setIsQrOpen] = useState(false);
 
-  // Form State
+  // Form State for Custom Link
   const [newTitle, setNewTitle] = useState('');
   const [newUrl, setNewUrl] = useState('');
   const [newColor, setNewColor] = useState('#FFE873');
 
-  const filteredLinks = links.filter((l) =>
+  const filteredCustomLinks = links.filter((l) =>
     l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     l.url.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleOpenLink = (link: LinkItem) => {
+  const filteredEcosystem = ECOSYSTEM_SERVICES.filter((s) =>
+    s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.badge.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleOpenUrl = (url: string, id?: number) => {
     playClickSound();
-    if (link.id) {
-      onIncrementClicks(link.id);
+    if (id) {
+      onIncrementClicks(id);
     }
-    window.open(link.url, '_blank', 'noopener,noreferrer');
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  const handleCopyLink = (e: React.MouseEvent, link: LinkItem) => {
+  const handleCopyLink = (e: React.MouseEvent, url: string, customId?: number, ecoId?: string) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(link.url);
-    if (link.id) setCopiedId(link.id);
+    navigator.clipboard.writeText(url);
+    if (customId) setCopiedId(customId);
+    if (ecoId) setCopiedEcosystemId(ecoId);
     playSuccessChime();
     confetti({
       particleCount: 50,
@@ -66,7 +150,10 @@ export const LinksPage: React.FC<LinksPageProps> = ({
       origin: { y: 0.6 },
       colors: ['#FFE873', '#E8DCFF', '#D1FBE4'],
     });
-    setTimeout(() => setCopiedId(null), 2000);
+    setTimeout(() => {
+      setCopiedId(null);
+      setCopiedEcosystemId(null);
+    }, 2000);
   };
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
@@ -94,15 +181,15 @@ export const LinksPage: React.FC<LinksPageProps> = ({
   };
 
   return (
-    <div className="w-full space-y-4 pb-20 font-body select-none">
+    <div className="w-full space-y-5 pb-20 font-body select-none">
       {/* 1. Header Card */}
       <div className="neo-card p-4 bg-white flex items-center justify-between gap-3">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-            Bio Hub & Bookmarks
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block font-display">
+            Kawaii Ecosystem
           </span>
           <h2 className="text-base font-bold font-display text-[#18181B] mt-0.5">
-            {links.length} Saved Links
+            Portals & Hub
           </h2>
         </div>
 
@@ -112,7 +199,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
               playClickSound();
               setIsQrOpen(true);
             }}
-            className="w-8 h-8 rounded-lg bg-[#E8DCFF] hover:bg-[#D8C4FF] border-[1.5px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-[#E8DCFF] hover:bg-[#D8C4FF] border-[1.5px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] cursor-pointer"
             title="Generate QR Code"
           >
             <QrCode className="w-4 h-4" />
@@ -131,151 +218,231 @@ export const LinksPage: React.FC<LinksPageProps> = ({
         </div>
       </div>
 
-      {/* Add Link Form Collapsible */}
-      {isAddOpen && (
-        <form onSubmit={handleCreateSubmit} className="neo-card p-4 bg-white space-y-3">
-          <h3 className="text-xs font-bold font-display text-[#18181B] uppercase tracking-wider">
-            Create New Link
-          </h3>
-
-          <div className="space-y-2">
-            <input
-              type="text"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Link Title (e.g. My GitHub)"
-              className="w-full px-3.5 py-2 bg-white border-[1.75px] border-[#18181B] rounded-xl text-xs font-medium text-[#18181B] placeholder:text-slate-400 focus:outline-none"
-            />
-            <input
-              type="text"
-              value={newUrl}
-              onChange={(e) => setNewUrl(e.target.value)}
-              placeholder="https://..."
-              className="w-full px-3.5 py-2 bg-white border-[1.75px] border-[#18181B] rounded-xl text-xs font-medium text-[#18181B] placeholder:text-slate-400 focus:outline-none"
-            />
-          </div>
-
-          <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center gap-1.5">
-              {['#FFE873', '#E8DCFF', '#D1FBE4', '#FED7AA', '#BAE6FD'].map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setNewColor(c)}
-                  className={`w-6 h-6 rounded-lg border-[1.5px] border-[#18181B] transition-all cursor-pointer ${
-                    newColor === c ? 'scale-110 shadow-[1px_1px_0px_#18181B]' : 'opacity-70'
-                  }`}
-                  style={{ backgroundColor: c }}
-                />
-              ))}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setIsAddOpen(false)}
-                className="px-3 py-1.5 text-xs text-slate-500 font-bold hover:underline cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-1.5 bg-[#FFE873] neo-btn text-xs text-[#18181B] cursor-pointer"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </form>
-      )}
-
-      {/* 2. Search */}
+      {/* Search Input */}
       <div className="relative">
         <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search saved links..."
+          placeholder="Search ecosystem services & links..."
           className="w-full pl-10 pr-4 py-2 bg-white border-[1.75px] border-[#18181B] rounded-xl text-xs font-medium text-[#18181B] placeholder:text-slate-400 shadow-[1.5px_1.5px_0px_#18181B] focus:outline-none"
         />
       </div>
 
-      {/* 3. Links List */}
-      <div className="space-y-2">
-        {filteredLinks.length === 0 ? (
-          <div className="neo-card p-8 text-center bg-white border-dashed space-y-2">
-            <Globe className="w-8 h-8 text-slate-300 mx-auto" />
-            <h4 className="text-xs font-bold font-display text-slate-500">
-              No links saved yet
-            </h4>
-          </div>
-        ) : (
-          filteredLinks.map((link) => (
+      {/* 2. Official Ecosystem Grid */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-display">
+            Official Services
+          </span>
+          <span className="text-[10px] font-bold text-slate-400">
+            {filteredEcosystem.length} Platforms
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {filteredEcosystem.map((service) => (
             <div
-              key={link.id}
-              onClick={() => handleOpenLink(link)}
-              className="neo-card p-3.5 bg-white flex items-center justify-between gap-3 transition-all hover:-translate-y-0.5 cursor-pointer"
+              key={service.id}
+              onClick={() => handleOpenUrl(service.url)}
+              className="neo-card p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] flex flex-col justify-between gap-3 cursor-pointer hover:-translate-y-0.5 transition-all"
             >
-              <div className="flex items-center gap-3 min-w-0">
-                <div
-                  className="w-9 h-9 rounded-xl border-[1.5px] border-[#18181B] flex items-center justify-center shrink-0 shadow-[1px_1px_0px_#18181B]"
-                  style={{ backgroundColor: link.iconBg || '#FFE873' }}
-                >
-                  <Link2 className="w-4 h-4 text-[#18181B]" />
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className={`w-9 h-9 rounded-xl border-[1.5px] ${service.borderColor} ${service.bg} flex items-center justify-center shrink-0 shadow-[1px_1px_0px_#18181B]`}
+                  >
+                    {service.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-bold text-[#18181B] leading-tight">
+                      {service.title}
+                    </h3>
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tight block mt-0.5">
+                      {service.badge}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="min-w-0">
-                  <h3 className="text-xs sm:text-sm font-bold text-[#18181B] truncate">
-                    {link.title}
-                  </h3>
-                  <span className="text-[10px] text-slate-400 truncate block">
-                    {link.url.replace(/^https?:\/\//, '')}
-                  </span>
+                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={(e) => handleCopyLink(e, service.url, undefined, service.id)}
+                    title="Copy URL"
+                    className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-slate-100 border border-slate-200 hover:border-[#18181B] flex items-center justify-center text-slate-600 cursor-pointer"
+                  >
+                    {copiedEcosystemId === service.id ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleOpenUrl(service.url)}
+                    title="Open Service"
+                    className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-slate-100 border border-slate-200 hover:border-[#18181B] flex items-center justify-center text-slate-600 cursor-pointer"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                <button
-                  onClick={(e) => handleCopyLink(e, link)}
-                  title="Copy URL"
-                  className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-slate-100 border border-slate-200 hover:border-[#18181B] flex items-center justify-center text-slate-600 cursor-pointer"
-                >
-                  {copiedId === link.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                </button>
+              <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                {service.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
 
-                <button
-                  onClick={() => handleOpenLink(link)}
-                  title="Open Link"
-                  className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-slate-100 border border-slate-200 hover:border-[#18181B] flex items-center justify-center text-slate-600 cursor-pointer"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </button>
+      {/* 3. Custom Personal Bookmarks */}
+      <div className="space-y-2.5 pt-2">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-display">
+            Personal Bookmarks
+          </span>
+          <span className="text-[10px] font-bold text-slate-400">
+            {filteredCustomLinks.length} Saved
+          </span>
+        </div>
 
-                {link.id && (
+        {/* Add Link Form Collapsible */}
+        {isAddOpen && (
+          <form onSubmit={handleCreateSubmit} className="neo-card p-4 bg-white space-y-3">
+            <h3 className="text-xs font-bold font-display text-[#18181B] uppercase tracking-wider">
+              Create New Bookmark
+            </h3>
+
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="Bookmark Title (e.g. My GitHub)"
+                className="w-full px-3.5 py-2 bg-white border-[1.75px] border-[#18181B] rounded-xl text-xs font-medium text-[#18181B] placeholder:text-slate-400 focus:outline-none"
+              />
+              <input
+                type="text"
+                value={newUrl}
+                onChange={(e) => setNewUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full px-3.5 py-2 bg-white border-[1.75px] border-[#18181B] rounded-xl text-xs font-medium text-[#18181B] placeholder:text-slate-400 focus:outline-none"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-1.5">
+                {['#FFE873', '#E8DCFF', '#D1FBE4', '#FED7AA', '#BAE6FD'].map((c) => (
                   <button
-                    onClick={() => {
-                      playClickSound();
-                      onDeleteLink(link.id!);
-                    }}
-                    title="Delete"
-                    className="w-7 h-7 rounded-lg bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-400 flex items-center justify-center text-slate-400 hover:text-rose-600 cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
+                    key={c}
+                    type="button"
+                    onClick={() => setNewColor(c)}
+                    className={`w-6 h-6 rounded-lg border-[1.5px] border-[#18181B] transition-all cursor-pointer ${
+                      newColor === c ? 'scale-110 shadow-[1px_1px_0px_#18181B]' : 'opacity-70'
+                    }`}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddOpen(false)}
+                  className="px-3 py-1.5 text-xs text-slate-500 font-bold hover:underline cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-[#FFE873] neo-btn text-xs text-[#18181B] cursor-pointer"
+                >
+                  Save
+                </button>
               </div>
             </div>
-          ))
+          </form>
         )}
+
+        {/* Links List */}
+        <div className="space-y-2">
+          {filteredCustomLinks.length === 0 ? (
+            <div className="neo-card p-6 text-center bg-white border-dashed space-y-1.5">
+              <Globe className="w-6 h-6 text-slate-300 mx-auto" />
+              <h4 className="text-xs font-bold font-display text-slate-500">
+                No personal links yet
+              </h4>
+              <p className="text-[10px] text-slate-400">
+                Tap «Add Link» above to pin your favorite tools or sites
+              </p>
+            </div>
+          ) : (
+            filteredCustomLinks.map((link) => (
+              <div
+                key={link.id}
+                onClick={() => handleOpenUrl(link.url, link.id)}
+                className="neo-card p-3 bg-white flex items-center justify-between gap-3 transition-all hover:-translate-y-0.5 cursor-pointer"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className="w-8 h-8 rounded-xl border-[1.5px] border-[#18181B] flex items-center justify-center shrink-0 shadow-[1px_1px_0px_#18181B]"
+                    style={{ backgroundColor: link.iconBg || '#FFE873' }}
+                  >
+                    <Link2 className="w-4 h-4 text-[#18181B]" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <h3 className="text-xs sm:text-sm font-bold text-[#18181B] truncate">
+                      {link.title}
+                    </h3>
+                    <span className="text-[10px] text-slate-400 truncate block">
+                      {link.url.replace(/^https?:\/\//, '')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={(e) => handleCopyLink(e, link.url, link.id)}
+                    title="Copy URL"
+                    className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-slate-100 border border-slate-200 hover:border-[#18181B] flex items-center justify-center text-slate-600 cursor-pointer"
+                  >
+                    {copiedId === link.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+
+                  <button
+                    onClick={() => handleOpenUrl(link.url, link.id)}
+                    title="Open Link"
+                    className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-slate-100 border border-slate-200 hover:border-[#18181B] flex items-center justify-center text-slate-600 cursor-pointer"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
+
+                  {link.id && (
+                    <button
+                      onClick={() => {
+                        playClickSound();
+                        onDeleteLink(link.id!);
+                      }}
+                      title="Delete"
+                      className="w-7 h-7 rounded-lg bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-400 flex items-center justify-center text-slate-400 hover:text-rose-600 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {isQrOpen && (
         <QRCodeModal
           isOpen={isQrOpen}
           onClose={() => setIsQrOpen(false)}
-          hubUrl={typeof window !== 'undefined' ? window.location.href : 'https://kairo.app'}
-          linksCount={links.length}
+          hubUrl={typeof window !== 'undefined' ? window.location.href : 'https://kawaii.uz'}
+          linksCount={links.length + ECOSYSTEM_SERVICES.length}
         />
       )}
     </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckSquare, Inbox, Zap, Timer, BarChart3, Link2 } from 'lucide-react';
+import { CheckSquare, Inbox, Zap, Timer, BarChart3, Compass } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 
 export type TabView = 'priorities' | 'backlog' | 'habits' | 'focus' | 'stats' | 'links';
@@ -22,7 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'habits', label: 'Habits', icon: Zap, activeBg: '#D1FBE4' },
   { id: 'focus', label: 'Focus', icon: Timer, activeBg: '#FED7AA' },
   { id: 'stats', label: 'Stats', icon: BarChart3, activeBg: '#BAE6FD' },
-  { id: 'links', label: 'Links', icon: Link2, activeBg: '#FCE7F3' },
+  { id: 'links', label: 'Hub', icon: Compass, activeBg: '#FCE7F3' },
 ];
 
 export const BottomNav: React.FC<BottomNavProps> = ({

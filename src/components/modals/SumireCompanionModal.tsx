@@ -176,8 +176,23 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
         {/* Modal Top Header */}
         <div className="flex items-center justify-between pb-3 border-b border-[#18181B]/15 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-full bg-[#E8DCFF] border-[1.75px] border-[#18181B] flex items-center justify-center shadow-xs overflow-hidden shrink-0">
-              <img src="/sumire-avatar.png" alt="Sumire" className="w-full h-full object-cover rounded-full" />
+            <div className="w-10 h-10 rounded-2xl bg-[#E8DCFF] border-[1.75px] border-[#18181B] flex items-center justify-center shadow-xs overflow-hidden p-0.5 shrink-0">
+              <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                <circle cx="50" cy="50" r="46" fill="#E8DCFF" stroke="#18181B" strokeWidth="4" />
+                <ellipse cx="38" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#18181B" strokeWidth="3" />
+                <ellipse cx="38" cy="26" rx="3.5" ry="11" fill="#FCA5A5" />
+                <ellipse cx="62" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#18181B" strokeWidth="3" />
+                <ellipse cx="62" cy="26" rx="3.5" ry="11" fill="#FCA5A5" />
+                <circle cx="50" cy="56" r="28" fill="#FFFFFF" stroke="#18181B" strokeWidth="3" />
+                <ellipse cx="40" cy="52" rx="4" ry="5" fill="#18181B" />
+                <circle cx="39" cy="50" r="1.5" fill="#FFFFFF" />
+                <ellipse cx="60" cy="52" rx="4" ry="5" fill="#18181B" />
+                <circle cx="59" cy="50" r="1.5" fill="#FFFFFF" />
+                <ellipse cx="50" cy="59" rx="2.5" ry="1.8" fill="#F472B6" />
+                <path d="M47 62 Q50 65 53 62" stroke="#18181B" strokeWidth="2" strokeLinecap="round" />
+                <ellipse cx="34" cy="58" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.8" />
+                <ellipse cx="66" cy="58" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.8" />
+              </svg>
             </div>
 
             <div>

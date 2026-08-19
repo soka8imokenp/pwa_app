@@ -103,9 +103,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             className="flex-1 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer hover:bg-slate-50 border-[1.5px] border-transparent text-slate-500 active:scale-95"
             title="Sumire Companion"
           >
-            <div className="w-5 h-5 rounded-full overflow-hidden border border-[#18181B] bg-[#E8DCFF] flex items-center justify-center shrink-0 shadow-2xs">
-              <img src="/sumire-avatar.png" alt="Sumire" className="w-full h-full object-cover" />
-            </div>
+            <MessageSquareText className="w-4 h-4 stroke-[2] text-slate-500" />
             <span className="text-[10px] mt-0.5 tracking-tight leading-none font-medium text-slate-500">
               Sumire
             </span>

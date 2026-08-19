@@ -10,16 +10,32 @@ export interface AvatarOption {
 
 export const AVATAR_OPTIONS: AvatarOption[] = [
   {
-    id: 'sumire-scout',
-    name: 'Sumire Fern',
-    subtitle: 'Official Stare',
+    id: 'bunny-scout',
+    name: 'Bunny Scout',
+    subtitle: 'Official Mascot',
     bg: '#E8DCFF',
     renderSvg: (className = 'w-full h-full') => (
-      <img
-        src="/sumire-avatar.png"
-        alt="Sumire"
-        className={`${className} object-cover rounded-xl border border-[#18181B]`}
-      />
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+        <circle cx="50" cy="50" r="46" fill="#E8DCFF" stroke="#18181B" strokeWidth="4" />
+        {/* Bunny Ears */}
+        <ellipse cx="38" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#18181B" strokeWidth="3" />
+        <ellipse cx="38" cy="26" rx="3.5" ry="11" fill="#FCA5A5" />
+        <ellipse cx="62" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#18181B" strokeWidth="3" />
+        <ellipse cx="62" cy="26" rx="3.5" ry="11" fill="#FCA5A5" />
+        {/* Head */}
+        <circle cx="50" cy="56" r="28" fill="#FFFFFF" stroke="#18181B" strokeWidth="3" />
+        {/* Cute Eyes */}
+        <ellipse cx="40" cy="52" rx="4" ry="5" fill="#18181B" />
+        <circle cx="39" cy="50" r="1.5" fill="#FFFFFF" />
+        <ellipse cx="60" cy="52" rx="4" ry="5" fill="#18181B" />
+        <circle cx="59" cy="50" r="1.5" fill="#FFFFFF" />
+        {/* Nose & Mouth */}
+        <ellipse cx="50" cy="59" rx="2.5" ry="1.8" fill="#F472B6" />
+        <path d="M47 62 Q50 65 53 62" stroke="#18181B" strokeWidth="2" strokeLinecap="round" />
+        {/* Cheeks */}
+        <ellipse cx="34" cy="58" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.8" />
+        <ellipse cx="66" cy="58" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.8" />
+      </svg>
     ),
   },
   {

@@ -216,12 +216,13 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       <div className="flex-1 flex flex-col items-center justify-center my-3 z-10 w-full">
         
         {/* Mascot Circle */}
-        <div className="w-28 h-28 flex items-center justify-center mb-3">
-          <div className="w-full h-full rounded-full border-[2.5px] border-[#18181B] bg-white shadow-[3px_3px_0px_#18181B] overflow-hidden flex items-center justify-center">
-            <img
-              src="/sumire-avatar.png"
-              alt="Sumire"
-              className="w-full h-full object-cover"
+        <div className="w-32 h-32 flex items-center justify-center mb-3">
+          <div className="w-full h-full rounded-full border-[2px] border-[#18181B] bg-white shadow-[2.5px_2.5px_0px_#18181B] p-2 flex items-center justify-center">
+            <LottiePlayer
+              animationData={rabbitAnimation}
+              loop={true}
+              autoplay={true}
+              className="w-full h-full object-contain"
             />
           </div>
         </div>

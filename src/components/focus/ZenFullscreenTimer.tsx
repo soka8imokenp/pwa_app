@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Minimize2, Target, Check, Hourglass, Music2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, Minimize2, Target, Check, Hourglass, Music2, AlertCircle } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 import { AmbientSoundType } from '../../lib/ambientSound';
 import { musicPlayer, MusicPlayerState } from '../../lib/musicPlayerService';
@@ -9,6 +9,7 @@ interface ZenFullscreenTimerProps {
   onClose: () => void;
   formattedTime: string;
   isRunning: boolean;
+  elapsedFocusSeconds?: number;
   onTogglePlay: () => void;
   onReset: () => void;
   onComplete: () => void;
@@ -23,6 +24,7 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
   onClose,
   formattedTime,
   isRunning,
+  elapsedFocusSeconds = 0,
   onTogglePlay,
   onReset,
   onComplete,
@@ -30,6 +32,7 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
   mode,
 }) => {
   const [playerState, setPlayerState] = useState<MusicPlayerState>(() => musicPlayer.getState());
+  const [pausedSeconds, setPausedSeconds] = useState(0);
 
   useEffect(() => {
     const unsubscribe = musicPlayer.subscribe((state) => {
@@ -38,9 +41,30 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
     return unsubscribe;
   }, []);
 
+  // Track pause time in RED when paused after starting
+  useEffect(() => {
+    let pauseInterval: any = null;
+
+    if (!isRunning && elapsedFocusSeconds > 0) {
+      pauseInterval = setInterval(() => {
+        setPausedSeconds((prev) => prev + 1);
+      }, 1000);
+    } else if (isRunning) {
+      setPausedSeconds(0);
+    }
+
+    return () => clearInterval(pauseInterval);
+  }, [isRunning, elapsedFocusSeconds]);
+
   const { currentTrack, isPlaying: isMusicPlaying } = playerState;
 
   if (!isOpen) return null;
+
+  const formatPauseTime = (secs: number) => {
+    const mins = Math.floor(secs / 60);
+    const remainder = secs % 60;
+    return `${mins.toString().padStart(2, '0')}:${remainder.toString().padStart(2, '0')}`;
+  };
 
   return (
     <div className="fixed inset-0 z-[100] bg-[#FAF7F2] flex flex-col justify-between px-6 pt-[calc(env(safe-area-inset-top,0px)+20px)] pb-[calc(env(safe-area-inset-bottom,0px)+28px)] select-none font-body animate-in fade-in duration-200">
@@ -89,14 +113,22 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
             {formattedTime}
           </h1>
 
-          <div className="inline-block">
+          <div className="flex flex-col items-center justify-center gap-2">
             <span className="text-xs font-black uppercase tracking-widest text-[#18181B] bg-[#FFE873] px-3.5 py-1 rounded-full border-[1.5px] border-[#18181B] shadow-[1px_1px_0px_#18181B] inline-block">
-              {isRunning ? 'Flow Active' : 'Paused'} • {mode.toUpperCase()}
+              {isRunning ? 'Flow Active' : 'Session Paused'} • {mode.toUpperCase()}
             </span>
+
+            {/* Red Paused Time Counter */}
+            {!isRunning && elapsedFocusSeconds > 0 && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 border-[1.5px] border-rose-500 rounded-full text-xs font-black font-mono-num text-rose-600 shadow-[1px_1px_0px_#E11D48] animate-in fade-in zoom-in-95 duration-150">
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                <span>Paused: {formatPauseTime(pausedSeconds)}</span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Now Playing Live Mini Player Pill (Syncs automatically with musicPlayer) */}
+        {/* Now Playing Live Mini Player Pill */}
         {currentTrack && (
           <button
             onClick={() => {
@@ -159,8 +191,8 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
 
         <button
           onClick={onComplete}
-          title="Complete Session"
-          className="w-12 h-12 rounded-2xl bg-[#E8DCFF] hover:bg-[#DDD0F8] border-[2px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[2.5px_2.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0"
+          title="Complete & Log Session"
+          className="w-12 h-12 rounded-2xl bg-[#D1FBE4] hover:bg-[#B7F4D1] border-[2px] border-[#18181B] flex items-center justify-center text-emerald-950 shadow-[2.5px_2.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0"
         >
           <Check className="w-5 h-5 stroke-[3]" />
         </button>

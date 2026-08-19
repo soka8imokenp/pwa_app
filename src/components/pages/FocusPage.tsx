@@ -10,7 +10,7 @@ import {
   Timer,
   Save,
   Trash2,
-  Square,
+  AlertCircle,
 } from 'lucide-react';
 import type { Task, FocusSession } from '../../types';
 import { playClickSound, playTimerFinishAlarm, playSuccessChime } from '../../lib/sound';
@@ -47,6 +47,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
   const [secondsLeft, setSecondsLeft] = useState(25 * 60);
   const [stopwatchSeconds, setStopwatchSeconds] = useState(0);
   const [elapsedFocusSeconds, setElapsedFocusSeconds] = useState(0);
+  const [pausedSeconds, setPausedSeconds] = useState(0);
   
   // Custom Focus Goal Title
   const [goalTitle, setGoalTitle] = useState<string>(selectedTask?.title || '');
@@ -62,6 +63,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
     playClickSound();
     setIsRunning(false);
     setElapsedFocusSeconds(0);
+    setPausedSeconds(0);
     if (mode === 'pomodoro') {
       setCustomMinutes(mins);
       setSecondsLeft(mins * 60);
@@ -75,6 +77,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
     playClickSound();
     setIsRunning(false);
     setElapsedFocusSeconds(0);
+    setPausedSeconds(0);
     setMode(newMode);
     if (newMode === 'stopwatch') {
       setStopwatchSeconds(0);
@@ -85,7 +88,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
     }
   };
 
-  // Timer Tick Interval with Precise Elapsed Seconds Counting
+  // Timer Tick Interval
   useEffect(() => {
     let interval: any = null;
 
@@ -110,6 +113,21 @@ export const FocusPage: React.FC<FocusPageProps> = ({
 
     return () => clearInterval(interval);
   }, [isRunning, mode]);
+
+  // Pause Duration Counter in Red
+  useEffect(() => {
+    let pauseInterval: any = null;
+
+    if (!isRunning && elapsedFocusSeconds > 0) {
+      pauseInterval = setInterval(() => {
+        setPausedSeconds((prev) => prev + 1);
+      }, 1000);
+    } else if (isRunning) {
+      setPausedSeconds(0);
+    }
+
+    return () => clearInterval(pauseInterval);
+  }, [isRunning, elapsedFocusSeconds]);
 
   const handleTimerComplete = async () => {
     setIsRunning(false);
@@ -136,7 +154,8 @@ export const FocusPage: React.FC<FocusPageProps> = ({
 
     sendLocalNotification(
       'Focus Session Complete',
-      `Logged ${actualMinutes}m on "${titleToSave}".`
+      `Logged ${actualMinutes}m on "${titleToSave}".`,
+      { tab: 'focus' }
     );
 
     playSuccessChime();
@@ -148,6 +167,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
     });
 
     setElapsedFocusSeconds(0);
+    setPausedSeconds(0);
   };
 
   // Save / Stop Early with Real Actual Elapsed Time
@@ -155,7 +175,6 @@ export const FocusPage: React.FC<FocusPageProps> = ({
     playClickSound();
     setIsRunning(false);
 
-    // Calculate actual elapsed minutes spent
     const actualMinutes =
       mode === 'stopwatch'
         ? Math.max(1, Math.round(stopwatchSeconds / 60))
@@ -172,6 +191,12 @@ export const FocusPage: React.FC<FocusPageProps> = ({
       mode: mode === 'break' ? 'pomodoro' : mode,
       date: selectedDate,
     });
+
+    sendLocalNotification(
+      'Session Saved',
+      `Saved ${actualMinutes}m on "${titleToSave}".`,
+      { tab: 'focus' }
+    );
 
     playSuccessChime();
     confetti({
@@ -196,6 +221,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
     playClickSound();
     setIsRunning(false);
     setElapsedFocusSeconds(0);
+    setPausedSeconds(0);
     if (mode === 'stopwatch') {
       setStopwatchSeconds(0);
     } else if (mode === 'break') {
@@ -219,6 +245,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
 
   const displayTime = mode === 'stopwatch' ? formatTime(stopwatchSeconds) : formatTime(secondsLeft);
   const totalFocusTodayMins = todaysSessions.reduce((acc, s) => acc + s.durationMinutes, 0);
+  const currentElapsedMinutes = Math.max(1, Math.round(elapsedFocusSeconds / 60));
 
   return (
     <div className="w-full space-y-3.5 pb-24 font-body select-none">
@@ -302,20 +329,28 @@ export const FocusPage: React.FC<FocusPageProps> = ({
           </div>
         </div>
 
-        {/* Large Digits Display */}
-        <div className="py-2 text-center">
+        {/* Large Digits Display & Status Indicator */}
+        <div className="py-2 text-center space-y-1.5">
           <div className="text-6xl sm:text-7xl font-black font-display font-mono-num text-[#18181B] tracking-tight">
             {displayTime}
           </div>
-          <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mt-1">
+
+          <div className="flex items-center justify-center gap-2">
             {isRunning ? (
-              <span className="text-emerald-700 font-bold">
-                Active • {Math.max(1, Math.round(elapsedFocusSeconds / 60))}m elapsed
+              <span className="px-3 py-1 bg-emerald-50 border border-emerald-500 rounded-full text-[10px] font-black font-mono-num text-emerald-700 shadow-2xs">
+                Active • {currentElapsedMinutes}m elapsed
               </span>
+            ) : elapsedFocusSeconds > 0 ? (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 border-[1.5px] border-rose-500 rounded-full text-xs font-black font-mono-num text-rose-600 shadow-[1px_1px_0px_#E11D48] animate-in fade-in zoom-in-95 duration-150">
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                <span>Paused: {formatTime(pausedSeconds)}</span>
+              </div>
             ) : (
-              'Ready'
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                Ready
+              </span>
             )}
-          </span>
+          </div>
         </div>
 
         {/* Duration Preset Chips (Without Clock Icon) */}
@@ -340,7 +375,50 @@ export const FocusPage: React.FC<FocusPageProps> = ({
           </div>
         )}
 
-        {/* Controls Bar: Start / Pause + Stop/Log + Reset */}
+        {/* Interactive Pause Prompt Banner (Asks whether to save result or resume) */}
+        {!isRunning && elapsedFocusSeconds >= 10 && (
+          <div className="p-3 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-2.5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black font-display text-[#18181B]">
+                Session Paused ({currentElapsedMinutes}m elapsed)
+              </span>
+              <span className="text-[10px] font-bold text-slate-500">
+                Save result to database?
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleStopAndLogSession}
+                className="flex-1 py-2 px-3 rounded-xl bg-[#D1FBE4] hover:bg-[#B7F4D1] border-[1.5px] border-[#18181B] text-xs font-black text-emerald-950 shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer active:translate-y-0.5"
+              >
+                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                <span>Save & Log ({currentElapsedMinutes}m)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleTogglePlay}
+                className="py-2 px-3.5 rounded-xl bg-[#FFE873] hover:bg-[#FED7AA] border-[1.5px] border-[#18181B] text-xs font-black text-[#18181B] shadow-2xs flex items-center justify-center gap-1 cursor-pointer active:translate-y-0.5"
+              >
+                <Play className="w-3.5 h-3.5 fill-[#18181B]" />
+                <span>Resume</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleReset}
+                title="Discard session"
+                className="w-8 h-8 rounded-xl bg-white hover:bg-rose-50 border-[1.5px] border-[#18181B] flex items-center justify-center text-slate-400 hover:text-rose-600 shadow-2xs cursor-pointer active:translate-y-0.5"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Primary Controls Bar: Start / Pause + Reset + Complete & Log Checkmark */}
         <div className="flex items-center justify-center gap-2 pt-2 border-t border-[#18181B]/15">
           {/* Start / Pause Button */}
           <button
@@ -357,30 +435,27 @@ export const FocusPage: React.FC<FocusPageProps> = ({
             ) : (
               <>
                 <Play className="w-4 h-4 fill-[#18181B]" />
-                <span>Start Focus</span>
+                <span>{elapsedFocusSeconds > 0 ? 'Resume' : 'Start Focus'}</span>
               </>
             )}
           </button>
-
-          {/* Stop & Log Session with Actual Elapsed Time */}
-          {elapsedFocusSeconds >= 30 && (
-            <button
-              onClick={handleStopAndLogSession}
-              title={`Finish & Log ${Math.max(1, Math.round(elapsedFocusSeconds / 60))}m to Database`}
-              className="px-4 py-3 rounded-2xl bg-[#D1FBE4] hover:bg-[#B7F4D1] border-[1.75px] border-[#18181B] flex items-center justify-center gap-1.5 text-xs font-black text-emerald-950 shadow-[2px_2px_0px_#18181B] active:translate-y-0.5 cursor-pointer animate-in fade-in zoom-in-95"
-            >
-              <Save className="w-4 h-4 stroke-[2.25]" />
-              <span>Log {Math.max(1, Math.round(elapsedFocusSeconds / 60))}m</span>
-            </button>
-          )}
 
           {/* Reset Button */}
           <button
             onClick={handleReset}
             title="Reset Timer"
-            className="w-11 h-11 rounded-2xl bg-white hover:bg-slate-100 border-[1.75px] border-[#18181B] flex items-center justify-center text-slate-700 shadow-[2px_2px_0px_#18181B] active:translate-y-0.5 cursor-pointer"
+            className="w-11 h-11 rounded-2xl bg-white hover:bg-slate-100 border-[1.75px] border-[#18181B] flex items-center justify-center text-slate-700 shadow-[2px_2px_0px_#18181B] active:translate-y-0.5 cursor-pointer shrink-0"
           >
             <RotateCcw className="w-4 h-4 stroke-[2.25]" />
+          </button>
+
+          {/* Complete & Log Session Checkmark Button */}
+          <button
+            onClick={handleStopAndLogSession}
+            title={`Complete & Log Session (${currentElapsedMinutes}m)`}
+            className="w-11 h-11 rounded-2xl bg-[#D1FBE4] hover:bg-[#B7F4D1] border-[1.75px] border-[#18181B] flex items-center justify-center text-emerald-950 shadow-[2px_2px_0px_#18181B] active:translate-y-0.5 cursor-pointer shrink-0"
+          >
+            <Check className="w-5 h-5 stroke-[3]" />
           </button>
         </div>
 
@@ -453,6 +528,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
           isOpen={isZenModeOpen}
           mode={mode}
           isRunning={isRunning}
+          elapsedFocusSeconds={elapsedFocusSeconds}
           formattedTime={displayTime}
           taskTitle={goalTitle || selectedTask?.title}
           activeSound="none"

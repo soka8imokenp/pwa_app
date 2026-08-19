@@ -1,10 +1,22 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, ArrowRight, ArrowLeft, Check, Lock, Mail, User, ShieldCheck } from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  ArrowRight,
+  ArrowLeft,
+  Lock,
+  Mail,
+  User,
+  ShieldCheck,
+  Zap,
+  Smile,
+  Flame,
+  CheckCircle2,
+} from 'lucide-react';
 import rabbitAnimation from '../../assets/rabbit-hi.json';
 import { LottiePlayer } from '../common/LottiePlayer';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import confetti from 'canvas-confetti';
-
 import { authApi, setAuthToken } from '../../lib/api';
 
 export interface UserProfile {
@@ -24,8 +36,9 @@ type AuthMode = 'login' | 'register-step1' | 'register-step2' | 'forgot-password
 export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) => {
   const [mode, setMode] = useState<AuthMode>('login');
   const [isLoading, setIsLoading] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
-  // Form States
+  // Login form state
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -41,25 +54,31 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Forgot Password
+  // Forgot password
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSubmitted, setForgotSubmitted] = useState(false);
 
   // Error feedback
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const getPasswordStrength = (pwd: string) => {
+    if (!pwd) return { label: 'Empty', color: 'bg-slate-200', width: '0%', joke: 'Секретный шифр еще не введен' };
+    if (pwd.length < 4) return { label: 'Too short', color: 'bg-rose-400', width: '30%', joke: 'Слишком коротко, взломает даже хомяк 🐹' };
+    if (pwd.length < 8) return { label: 'Good', color: 'bg-[#FFE873]', width: '65%', joke: 'Неплохо, но Сумирэ советует подлиннее 🛡️' };
+    return { label: 'Archive Grade', color: 'bg-[#86EFAC]', width: '100%', joke: 'Броня архива! Никто не пройдет 🏰' };
+  };
+
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
     if (!loginIdentifier.trim() || !loginPassword.trim()) {
-      setErrorMsg('Please enter your username and password.');
+      setErrorMsg('Введите логин и пароль.');
       return;
     }
 
     setIsLoading(true);
     try {
-      // Try backend authentication
       const emailToUse = loginIdentifier.includes('@') ? loginIdentifier : `${loginIdentifier}@kairo.app`;
       const res = await authApi.login({
         email: emailToUse,
@@ -71,18 +90,17 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
 
       playSuccessChime();
       confetti({
-        particleCount: 60,
-        spread: 60,
+        particleCount: 70,
+        spread: 65,
         origin: { y: 0.6 },
-        colors: ['#C084FC', '#BEF264', '#FED7AA'],
+        colors: ['#FFE873', '#E8DCFF', '#D1FBE4', '#FED7AA'],
       });
 
       onLoginSuccess(res.user);
     } catch (err: any) {
-      // If server is offline or local fallback
       console.warn('Backend login notice:', err.message);
       
-      // Fallback guest login for offline mode
+      // Fallback guest login
       const user: UserProfile = {
         firstName: loginIdentifier,
         lastName: '',
@@ -97,17 +115,36 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     }
   };
 
+  const handleQuickGuest = () => {
+    playClickSound();
+    const guestUser: UserProfile = {
+      firstName: 'Scout',
+      lastName: 'Archivist',
+      email: 'scout@kawaii.uz',
+      username: 'scout_archivist',
+    };
+    localStorage.setItem('kairo_auth_user', JSON.stringify(guestUser));
+    playSuccessChime();
+    confetti({
+      particleCount: 50,
+      spread: 60,
+      origin: { y: 0.6 },
+      colors: ['#FFE873', '#E8DCFF', '#BAE6FD'],
+    });
+    onLoginSuccess(guestUser);
+  };
+
   const handleRegisterStep1 = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      setErrorMsg('Please fill in your first name, last name, and email.');
+      setErrorMsg('Пожалуйста, заполните имя, фамилию и email.');
       return;
     }
 
     if (!email.includes('@')) {
-      setErrorMsg('Please enter a valid email address.');
+      setErrorMsg('Введите корректный адрес электронной почты.');
       return;
     }
 
@@ -120,17 +157,17 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     setErrorMsg(null);
 
     if (!username.trim() || !password.trim() || !confirmPassword.trim()) {
-      setErrorMsg('Please fill in all fields.');
+      setErrorMsg('Пожалуйста, заполните все поля.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMsg('Passwords do not match. Please try again.');
+      setErrorMsg('Пароли не совпадают. Проверьте внимательно!');
       return;
     }
 
     if (password.length < 4) {
-      setErrorMsg('Password must be at least 4 characters long.');
+      setErrorMsg('Пароль должен быть минимум 4 символа.');
       return;
     }
 
@@ -152,12 +189,11 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
         particleCount: 80,
         spread: 70,
         origin: { y: 0.5 },
-        colors: ['#C084FC', '#BEF264', '#FED7AA', '#38BDF8'],
+        colors: ['#FFE873', '#E8DCFF', '#D1FBE4', '#FED7AA'],
       });
 
       onLoginSuccess(res.user);
     } catch (err: any) {
-      // If server error, fallback to local registration
       const user: UserProfile = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -177,7 +213,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     setErrorMsg(null);
 
     if (!forgotEmail.trim() || !forgotEmail.includes('@')) {
-      setErrorMsg('Please enter a valid email address.');
+      setErrorMsg('Введите корректный email для восстановления доступа.');
       return;
     }
 
@@ -192,38 +228,43 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     setMode(next);
   };
 
+  const strength = getPasswordStrength(mode === 'login' ? loginPassword : password);
+
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#18181B] flex flex-col justify-between px-6 py-6 max-w-md mx-auto select-none font-body relative overflow-hidden bg-subtle-grid">
+    <div className="min-h-screen bg-[#FAF7F2] text-[#18181B] flex flex-col justify-between px-4 sm:px-6 py-6 max-w-md mx-auto select-none font-body relative overflow-hidden bg-subtle-grid">
       
-      {/* 1. Atmospheric Ambient Gradient Orbs in Background */}
-      <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full bg-[#E9D5FF]/50 blur-3xl -z-10 pointer-events-none animate-glow" />
-      <div className="absolute bottom-10 -left-12 w-64 h-64 rounded-full bg-[#FED7AA]/35 blur-3xl -z-10 pointer-events-none" />
-      <div className="absolute bottom-12 -right-12 w-56 h-56 rounded-full bg-[#BEF264]/25 blur-3xl -z-10 pointer-events-none" />
+      {/* Background Neo-Brutalist Ambient Accents */}
+      <div className="absolute -top-16 -left-16 w-60 h-60 rounded-full bg-[#FFE873]/30 blur-2xl pointer-events-none" />
+      <div className="absolute -bottom-16 -right-16 w-64 h-64 rounded-full bg-[#E8DCFF]/40 blur-2xl pointer-events-none" />
 
-      {/* Decorative Geometric Marks */}
-      <div className="absolute top-10 left-6 text-slate-300 font-black text-sm pointer-events-none select-none">
-        ✦
-      </div>
-      <div className="absolute top-12 right-6 text-slate-300 font-black text-sm pointer-events-none select-none">
-        ✦
-      </div>
-      <div className="absolute bottom-28 left-5 text-slate-300 font-extrabold text-sm pointer-events-none select-none">
-        + + +
-      </div>
-      <div className="absolute bottom-32 right-6 text-slate-300 font-extrabold text-sm pointer-events-none select-none">
-        ★ ★
+      {/* Top Brand Pill & Fun Status */}
+      <div className="w-full flex items-center justify-between z-10">
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-white border-[1.5px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B]">
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 border border-[#18181B] animate-pulse" />
+          <span className="text-[11px] font-black tracking-wider uppercase font-display text-[#18181B]">
+            Daily Sumire • Archive Gate
+          </span>
+        </div>
+
+        <div className="px-2.5 py-1 bg-[#E8DCFF] border border-[#18181B] rounded-xl text-[10px] font-bold text-[#18181B] shadow-2xs">
+          🔒 Secure Pass
+        </div>
       </div>
 
-      {/* 2. Main Content Container */}
-      <div className="flex-1 flex flex-col items-center justify-center pt-1 relative z-10 w-full">
+      {/* Main Interactive Card */}
+      <div className="flex-1 flex flex-col items-center justify-center my-4 z-10 w-full">
         
-        {/* Enlarged Layered Rabbit Mascot Stage */}
-        <div className="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center mb-2">
-          {/* Outer dashed ring */}
-          <div className="absolute inset-0 rounded-full border-[1.5px] border-dashed border-[#18181B]/20 bg-white/45 backdrop-blur-xs" />
-          {/* Inner pastel podium */}
-          <div className="absolute inset-3 rounded-full bg-gradient-to-tr from-[#F3E8FF] to-[#E9D5FF] border-[1.5px] border-[#18181B]/35 shadow-xs flex items-center justify-center" />
-          
+        {/* Animated Mascot Stage with Funny Speech Balloon */}
+        <div className="relative w-44 h-44 sm:w-48 sm:h-48 flex items-center justify-center mb-2">
+          {/* Outer Podium Ring */}
+          <div className="absolute inset-0 rounded-full border-[2px] border-[#18181B] bg-white shadow-[3px_3px_0px_#18181B]" />
+          <div className="absolute inset-2 rounded-full bg-gradient-to-tr from-[#FAF7F2] to-[#E8DCFF] border border-[#18181B]/30" />
+
+          {/* Humorous Reaction Badge */}
+          <div className="absolute -top-3 -right-2 px-2.5 py-1 bg-[#FFE873] border-[1.5px] border-[#18181B] rounded-xl text-[9px] font-black uppercase text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] animate-bounce">
+            {isPasswordFocused ? '👀 Я не подглядываю!' : mode === 'login' ? '🔑 Авторизация' : '✨ Новый разведчик'}
+          </div>
+
           <div className="relative z-10 w-full h-full p-2 flex items-center justify-center">
             <LottiePlayer
               animationData={rabbitAnimation}
@@ -234,9 +275,37 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
           </div>
         </div>
 
-        {/* Error Toast */}
+        {/* Playful Segmented Mode Selector Switch */}
+        {mode !== 'forgot-password' && (
+          <div className="w-full bg-[#18181B]/5 p-1 border-[1.75px] border-[#18181B] rounded-2xl flex items-center mb-4 shadow-[2px_2px_0px_#18181B]">
+            <button
+              type="button"
+              onClick={() => switchMode('login')}
+              className={`flex-1 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
+                mode === 'login'
+                  ? 'bg-[#FFE873] text-[#18181B] border-[1.5px] border-[#18181B] shadow-[1.5px_1.5px_0px_#18181B]'
+                  : 'text-slate-600 hover:text-[#18181B]'
+              }`}
+            >
+              Войти (Sign In)
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMode('register-step1')}
+              className={`flex-1 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
+                mode.startsWith('register')
+                  ? 'bg-[#E8DCFF] text-[#18181B] border-[1.5px] border-[#18181B] shadow-[1.5px_1.5px_0px_#18181B]'
+                  : 'text-slate-600 hover:text-[#18181B]'
+              }`}
+            >
+              Регистрация
+            </button>
+          </div>
+        )}
+
+        {/* Error Notification Toast */}
         {errorMsg && (
-          <div className="w-full mb-3 p-3 bg-[#FFE4E6] border-[1.5px] border-[#18181B] rounded-2xl text-xs font-bold text-rose-950 shadow-[1.5px_1.5px_0px_#18181B] animate-in fade-in duration-150 text-center">
+          <div className="w-full mb-3 p-3 bg-[#FFE4E6] border-[1.75px] border-[#18181B] rounded-2xl text-xs font-bold text-rose-950 shadow-[2px_2px_0px_#18181B] animate-in fade-in duration-150 text-center">
             ⚠️ {errorMsg}
           </div>
         )}
@@ -246,61 +315,60 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
         {/* =================================================== */}
         {mode === 'login' && (
           <form onSubmit={handleLoginSubmit} className="w-full space-y-3.5">
-            <div className="text-center mb-3">
-              <h1 className="text-3xl font-extrabold font-display text-[#18181B] tracking-tight">
-                Sign In
-              </h1>
-              <p className="text-xs font-medium text-slate-500 mt-1">
-                Plan your day and track your daily habits
-              </p>
-            </div>
-
-            {/* Username Field */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#18181B] mb-1.5 px-1">
-                Username
+            
+            {/* Username Input Panel */}
+            <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] focus-within:shadow-[3px_3px_0px_#18181B] transition-all">
+              <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                Логин или Email
               </label>
-              <div className="relative">
-                <User className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#E8DCFF] border border-[#18181B] flex items-center justify-center shrink-0 shadow-2xs">
+                  <User className="w-4 h-4 text-purple-950 stroke-[2.25]" />
+                </div>
                 <input
                   type="text"
                   required
                   value={loginIdentifier}
                   onChange={(e) => setLoginIdentifier(e.target.value)}
-                  placeholder="Enter your username"
-                  className="w-full pl-11 pr-4 py-3.5 bg-white text-xs font-semibold soft-input placeholder:text-slate-400"
+                  placeholder="scout_alex или email"
+                  className="flex-1 text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
                 />
               </div>
             </div>
 
-            {/* Password Field */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5 px-1">
-                <label className="text-xs font-bold uppercase tracking-wider text-[#18181B]">
-                  Password
+            {/* Password Input Panel */}
+            <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] focus-within:shadow-[3px_3px_0px_#18181B] transition-all">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                  Пароль доступа
                 </label>
                 <button
                   type="button"
                   onClick={() => switchMode('forgot-password')}
-                  className="text-xs font-bold text-purple-700 hover:text-purple-950 hover:underline cursor-pointer"
+                  className="text-[10px] font-bold text-purple-700 hover:underline cursor-pointer"
                 >
-                  Forgot password?
+                  Забыли пароль?
                 </button>
               </div>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#FFE873] border border-[#18181B] flex items-center justify-center shrink-0 shadow-2xs">
+                  <Lock className="w-4 h-4 text-amber-950 stroke-[2.25]" />
+                </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={loginPassword}
+                  onFocus={() => setIsPasswordFocused(true)}
+                  onBlur={() => setIsPasswordFocused(false)}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-11 pr-11 py-3.5 bg-white text-xs font-semibold soft-input placeholder:text-slate-400"
+                  className="flex-1 text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#18181B] cursor-pointer"
+                  className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -310,41 +378,44 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full py-4 px-4 rounded-2xl bg-[#C084FC] hover:bg-[#B366FA] text-[#18181B] border-[1.5px] border-[#18181B] font-extrabold font-display text-sm shadow-[2.5px_2.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2 mt-3"
+              disabled={isLoading}
+              className="w-full py-3.5 px-4 rounded-2xl bg-[#FFE873] hover:bg-[#FED7AA] text-[#18181B] border-[1.75px] border-[#18181B] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#18181B] active:translate-y-0.5 active:shadow-[1px_1px_0px_#18181B] transition-all cursor-pointer flex items-center justify-center gap-2"
             >
-              <span>Sign In</span>
+              <span>{isLoading ? 'Проверка...' : 'Открыть Архив'}</span>
               <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+            </button>
+
+            {/* Quick Guest Access Pill */}
+            <button
+              type="button"
+              onClick={handleQuickGuest}
+              className="w-full py-2.5 px-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border-[1.5px] border-[#18181B] text-xs font-bold shadow-2xs cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
+            >
+              <Smile className="w-4 h-4 text-amber-600" />
+              <span>Быстрый гостевой вход (Scout Guest)</span>
             </button>
           </form>
         )}
 
         {/* =================================================== */}
-        {/* B. REGISTER STEP 1 (Personal Details) */}
+        {/* B. REGISTER STEP 1 (Personal) */}
         {/* =================================================== */}
         {mode === 'register-step1' && (
-          <form onSubmit={handleRegisterStep1} className="w-full space-y-3.5">
-            <div className="text-center mb-3">
-              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 bg-[#E9D5FF] border-[1.25px] border-[#18181B] rounded-full text-[10px] font-bold uppercase text-purple-900 mb-1.5">
-                <span>Step 1 of 2 • Personal</span>
-              </div>
-              <h1 className="text-3xl font-extrabold font-display text-[#18181B] tracking-tight">
-                Create Account
-              </h1>
-              <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                Let's set up your profile
-              </p>
+          <form onSubmit={handleRegisterStep1} className="w-full space-y-3">
+            
+            {/* Step Header */}
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 bg-[#E8DCFF] px-2.5 py-0.5 rounded-full border border-[#18181B]">
+                Шаг 1 из 2 • Кто вы?
+              </span>
+              <span className="text-[10px] font-bold text-slate-400">50% готово</span>
             </div>
 
-            {/* Progress Bar */}
-            <div className="w-full bg-white border-[1.25px] border-[#18181B] h-2.5 rounded-full overflow-hidden mb-3 p-0.5">
-              <div className="w-1/2 h-full bg-[#C084FC] rounded-full" />
-            </div>
-
-            {/* First & Last Name */}
-            <div className="grid grid-cols-2 gap-2.5">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#18181B] mb-1.5 px-1">
-                  First Name
+            {/* First & Last Name Grid */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-3 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B]">
+                <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">
+                  Имя
                 </label>
                 <input
                   type="text"
@@ -352,39 +423,42 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
                   autoFocus
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Alex"
-                  className="w-full px-3.5 py-3.5 bg-white text-xs font-semibold soft-input placeholder:text-slate-400"
+                  placeholder="Алекс"
+                  className="w-full text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#18181B] mb-1.5 px-1">
-                  Last Name
+
+              <div className="p-3 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B]">
+                <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">
+                  Фамилия
                 </label>
                 <input
                   type="text"
                   required
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Smith"
-                  className="w-full px-3.5 py-3.5 bg-white text-xs font-semibold soft-input placeholder:text-slate-400"
+                  placeholder="Смирнов"
+                  className="w-full text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
                 />
               </div>
             </div>
 
-            {/* Email Field */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#18181B] mb-1.5 px-1">
-                Email Address
+            {/* Email Input Panel */}
+            <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B]">
+              <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                Электронная почта
               </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#BAE6FD] border border-[#18181B] flex items-center justify-center shrink-0 shadow-2xs">
+                  <Mail className="w-4 h-4 text-sky-950 stroke-[2.25]" />
+                </div>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="alex.smith@gmail.com"
-                  className="w-full pl-11 pr-4 py-3.5 bg-white text-xs font-semibold soft-input placeholder:text-slate-400"
+                  placeholder="scout.alex@kawaii.uz"
+                  className="flex-1 text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
                 />
               </div>
             </div>
@@ -392,9 +466,9 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             {/* Continue Button */}
             <button
               type="submit"
-              className="w-full py-4 px-4 rounded-2xl bg-[#C084FC] hover:bg-[#B366FA] text-[#18181B] border-[1.5px] border-[#18181B] font-extrabold font-display text-sm shadow-[2.5px_2.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2 mt-3"
+              className="w-full py-3.5 px-4 rounded-2xl bg-[#E8DCFF] hover:bg-[#D8C4FF] text-[#18181B] border-[1.75px] border-[#18181B] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#18181B] active:translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
             >
-              <span>Continue to Security</span>
+              <span>Далее: Задать шифр доступа</span>
               <ArrowRight className="w-4 h-4 stroke-[2.5]" />
             </button>
           </form>
@@ -404,219 +478,172 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
         {/* C. REGISTER STEP 2 (Security) */}
         {/* =================================================== */}
         {mode === 'register-step2' && (
-          <form onSubmit={handleRegisterStep2} className="w-full space-y-3.5">
-            <div className="text-center mb-3">
-              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 bg-[#BEF264] border-[1.25px] border-[#18181B] rounded-full text-[10px] font-bold uppercase text-[#18181B] mb-1.5">
-                <ShieldCheck className="w-3 h-3 text-[#18181B]" />
-                <span>Step 2 of 2 • Security</span>
-              </div>
-              <h1 className="text-3xl font-extrabold font-display text-[#18181B] tracking-tight">
-                Set Password
-              </h1>
-              <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                Choose a secure username and password
-              </p>
+          <form onSubmit={handleRegisterStep2} className="w-full space-y-3">
+            
+            {/* Step Header */}
+            <div className="flex items-center justify-between px-1">
+              <button
+                type="button"
+                onClick={() => setMode('register-step1')}
+                className="text-[10px] font-bold text-slate-500 hover:text-[#18181B] flex items-center gap-1 cursor-pointer"
+              >
+                <ArrowLeft className="w-3 h-3" /> Назад к профилю
+              </button>
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-[#D1FBE4] px-2.5 py-0.5 rounded-full border border-[#18181B]">
+                Шаг 2 из 2 • Шифр
+              </span>
             </div>
 
-            {/* Progress Bar (Full) */}
-            <div className="w-full bg-white border-[1.25px] border-[#18181B] h-2.5 rounded-full overflow-hidden mb-3 p-0.5">
-              <div className="w-full h-full bg-[#BEF264] rounded-full" />
-            </div>
-
-            {/* Username Field */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#18181B] mb-1.5 px-1">
-                Username
+            {/* Username Input Panel */}
+            <div className="p-3 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B]">
+              <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">
+                Никнейм в Архиве
               </label>
-              <div className="relative">
-                <User className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-slate-400">@</span>
                 <input
                   type="text"
                   required
                   autoFocus
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="alex_pro"
-                  className="w-full pl-11 pr-4 py-3.5 bg-white text-xs font-semibold soft-input placeholder:text-slate-400"
+                  placeholder="scout_master"
+                  className="flex-1 text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
                 />
               </div>
             </div>
 
             {/* Password Field */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#18181B] mb-1.5 px-1">
-                Password
+            <div className="p-3 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B]">
+              <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">
+                Пароль
               </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 4 characters"
-                  className="w-full pl-11 pr-11 py-3.5 bg-white text-xs font-semibold soft-input placeholder:text-slate-400"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#18181B] cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Минимум 4 символа"
+                className="w-full text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
+              />
             </div>
 
             {/* Confirm Password Field */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#18181B] mb-1.5 px-1">
-                Confirm Password
+            <div className="p-3 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B]">
+              <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">
+                Подтверждение пароля
               </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat your password"
-                  className="w-full pl-11 pr-11 py-3.5 bg-white text-xs font-semibold soft-input placeholder:text-slate-400"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#18181B] cursor-pointer"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Повторите пароль"
+                className="w-full text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
+              />
+            </div>
+
+            {/* Humorous Password Strength Meter */}
+            <div className="p-2.5 bg-[#FAF7F2] border border-[#18181B]/20 rounded-xl space-y-1">
+              <div className="flex items-center justify-between text-[9px] font-bold text-slate-500">
+                <span>Надежность шифра:</span>
+                <span className="font-black text-[#18181B]">{strength.label}</span>
               </div>
+              <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden border border-[#18181B]/20">
+                <div className={`h-full transition-all duration-300 ${strength.color}`} style={{ width: strength.width }} />
+              </div>
+              <p className="text-[9px] font-medium text-slate-500 italic">{strength.joke}</p>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-2.5 pt-1">
-              <button
-                type="button"
-                onClick={() => switchMode('register-step1')}
-                className="w-14 h-14 rounded-2xl bg-white hover:bg-slate-50 border-[1.5px] border-[#18181B] flex items-center justify-center shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 cursor-pointer shrink-0"
-                title="Back to step 1"
-              >
-                <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
-              </button>
-
-              <button
-                type="submit"
-                className="flex-1 py-4 px-4 rounded-2xl bg-[#C084FC] hover:bg-[#B366FA] text-[#18181B] border-[1.5px] border-[#18181B] font-extrabold font-display text-sm shadow-[2.5px_2.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
-              >
-                <span>Complete Sign Up</span>
-                <Check className="w-4 h-4 stroke-[3]" />
-              </button>
-            </div>
+            {/* Complete Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3.5 px-4 rounded-2xl bg-[#D1FBE4] hover:bg-[#B7F4D1] text-[#18181B] border-[1.75px] border-[#18181B] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#18181B] active:translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span>{isLoading ? 'Создаем...' : 'Завершить регистрацию'}</span>
+              <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
+            </button>
           </form>
         )}
 
         {/* =================================================== */}
-        {/* D. FORGOT PASSWORD VIEW */}
+        {/* D. FORGOT PASSWORD */}
         {/* =================================================== */}
         {mode === 'forgot-password' && (
-          <div className="w-full space-y-4">
-            <div className="text-center mb-4">
-              <h1 className="text-3xl font-extrabold font-display text-[#18181B] tracking-tight">
-                Reset Password
-              </h1>
-              <p className="text-xs font-semibold text-slate-500 mt-1">
-                Enter your email address to receive reset instructions
-              </p>
-            </div>
-
+          <div className="w-full space-y-3">
             {forgotSubmitted ? (
-              <div className="p-6 bg-[#F2FCE2] border-[1.5px] border-[#18181B] rounded-3xl text-center space-y-3 shadow-[2px_2px_0px_#18181B]">
-                <div className="w-12 h-12 rounded-full bg-[#BEF264] border border-[#18181B] flex items-center justify-center mx-auto text-xl shadow-xs">
-                  📬
+              <div className="p-5 bg-white border-[2px] border-[#18181B] rounded-2xl shadow-[3px_3px_0px_#18181B] text-center space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-[#D1FBE4] border-[1.75px] border-[#18181B] flex items-center justify-center mx-auto shadow-2xs">
+                  <CheckCircle2 className="w-6 h-6 text-emerald-800 stroke-[2.5]" />
                 </div>
-                <h2 className="text-base font-extrabold font-display text-[#18181B]">
-                  Check your inbox!
-                </h2>
-                <p className="text-xs font-medium text-slate-600">
-                  Password reset instructions have been sent to{' '}
-                  <span className="font-bold text-[#18181B]">{forgotEmail}</span>.
+                <h3 className="text-sm font-black font-display text-[#18181B]">
+                  Служба архива оповещена!
+                </h3>
+                <p className="text-xs text-slate-600 font-medium">
+                  Если аккаунт <b>{forgotEmail}</b> существует, Сумирэ отправила временный ключ доступа.
                 </p>
                 <button
                   type="button"
                   onClick={() => switchMode('login')}
-                  className="w-full py-3.5 px-4 rounded-2xl bg-white hover:bg-slate-50 border-[1.5px] border-[#18181B] font-bold text-xs shadow-[1.5px_1.5px_0px_#18181B] cursor-pointer"
+                  className="w-full py-2.5 bg-[#FFE873] border-[1.5px] border-[#18181B] rounded-xl text-xs font-bold text-[#18181B] shadow-2xs cursor-pointer"
                 >
-                  Return to Sign In
+                  Вернуться ко входу
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleForgotSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[#18181B] mb-1.5 px-1">
-                    Email Address
+              <form onSubmit={handleForgotSubmit} className="w-full space-y-3">
+                <div className="text-center mb-2">
+                  <h2 className="text-sm font-black font-display uppercase tracking-wider text-[#18181B]">
+                    Восстановление доступа
+                  </h2>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    Забыли ключ? Сумирэ проверит записи в архиве.
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B]">
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">
+                    Ваш Email
                   </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="email"
-                      required
-                      autoFocus
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
-                      placeholder="mail@example.com"
-                      className="w-full pl-11 pr-4 py-3.5 bg-white text-xs font-semibold soft-input placeholder:text-slate-400"
-                    />
-                  </div>
+                  <input
+                    type="email"
+                    required
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="scout.alex@kawaii.uz"
+                    className="w-full text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
+                  />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-4 px-4 rounded-2xl bg-[#C084FC] hover:bg-[#B366FA] text-[#18181B] border-[1.5px] border-[#18181B] font-extrabold font-display text-sm shadow-[2.5px_2.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-3 px-4 rounded-2xl bg-[#FFE873] hover:bg-[#FED7AA] text-[#18181B] border-[1.75px] border-[#18181B] font-black text-xs uppercase shadow-[2.5px_2.5px_0px_#18181B] cursor-pointer"
                 >
-                  <span>Send Reset Link</span>
+                  Отправить запрос
                 </button>
 
-                <div className="text-center pt-2">
-                  <button
-                    type="button"
-                    onClick={() => switchMode('login')}
-                    className="text-xs font-bold text-slate-600 hover:text-[#18181B] underline cursor-pointer inline-flex items-center gap-1.5"
-                  >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    <span>Back to Sign In</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => switchMode('login')}
+                  className="w-full py-2 text-xs font-bold text-slate-500 hover:text-[#18181B] cursor-pointer"
+                >
+                  ← Отмена, я вспомнил пароль
+                </button>
               </form>
             )}
           </div>
         )}
+
       </div>
 
-      {/* Footer Switch */}
-      <div className="pt-5 pb-2 text-center relative z-10">
-        {mode === 'login' ? (
-          <p className="text-xs font-medium text-slate-500">
-            Don't have an account?{' '}
-            <button
-              type="button"
-              onClick={() => switchMode('register-step1')}
-              className="font-bold text-[#18181B] underline decoration-[#C084FC] decoration-2 cursor-pointer hover:text-purple-900"
-            >
-              Create account
-            </button>
-          </p>
-        ) : mode.startsWith('register') ? (
-          <p className="text-xs font-medium text-slate-500">
-            Already have an account?{' '}
-            <button
-              type="button"
-              onClick={() => switchMode('login')}
-              className="font-bold text-[#18181B] underline decoration-[#C084FC] decoration-2 cursor-pointer hover:text-purple-900"
-            >
-              Sign In
-            </button>
-          </p>
-        ) : null}
+      {/* Bottom Footer Credits */}
+      <div className="w-full text-center z-10 pt-2 border-t border-[#18181B]/10">
+        <p className="text-[10px] font-bold text-slate-400">
+          KAWAII Scout Archive System • Safe & Encrypted
+        </p>
       </div>
+
     </div>
   );
 };

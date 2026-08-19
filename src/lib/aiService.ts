@@ -3,8 +3,14 @@ import { db } from './db';
 import { getTodayString } from './dateUtils';
 import type { Task, SubTask } from '../types';
 
-export const APP_GEMINI_API_KEY = 'AQ.Ab8RN6KPPlOb0mb2wPuBUEpMKN4Pw5c8UTJ30kvF-YMU34XtKg';
 export const APP_GEMINI_MODEL = 'gemini-3.5-flash-lite';
+
+export function getStoredGeminiApiKey(): string {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('kairo_gemini_api_key')?.trim() || '';
+  }
+  return '';
+}
 
 export interface AIChatMessage {
   id: string;
@@ -94,12 +100,19 @@ export const AI_TOOLS = [
 
 export async function askSumireAI(
   userQuery: string,
-  chatHistory: AIChatMessage[] = []
+  chatHistory: AIChatMessage[] = [],
+  apiKeyOverride?: string
 ): Promise<{
   replyText: string;
   executedActions: AIChatMessage['executedActions'];
 }> {
-  const apiKey = APP_GEMINI_API_KEY;
+  const apiKey = (apiKeyOverride || getStoredGeminiApiKey()).trim();
+
+  if (!apiKey) {
+    throw new Error(
+      'Пожалуйста, укажите ваш Google Gemini API ключ в Настройках (Settings).'
+    );
+  }
 
   // 1. Build live RAG context
   const ragContext = await buildPlannerRAGContext();
@@ -170,7 +183,7 @@ export async function askSumireAI(
 
   if (!responseData) {
     throw new Error(
-      lastError?.error?.message || 'Не удалось связаться с ИИ сервисом. Попробуйте еще раз.'
+      lastError?.error?.message || 'Не удалось связаться с Gemini API. Проверьте правильность API ключа в Настройках.'
     );
   }
 

@@ -17,6 +17,8 @@ import {
   X,
   Zap,
   Smile,
+  Key,
+  Bot,
   ArrowUpCircle,
 } from 'lucide-react';
 import {
@@ -66,9 +68,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }
     return 'sumire-scout';
   });
+  const [geminiKeyInput, setGeminiKeyInput] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('kairo_gemini_api_key') || '';
+    }
+    return '';
+  });
+  const [showKeyText, setShowKeyText] = useState(false);
   const [updateChecking, setUpdateChecking] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSaveGeminiKey = () => {
+    playClickSound();
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kairo_gemini_api_key', geminiKeyInput.trim());
+      playSuccessChime();
+      setFeedback({ text: 'Gemini API ключ успешно сохранен!', success: true });
+    }
+  };
 
   const handleSelectAvatar = (id: string) => {
     playClickSound();
@@ -275,7 +293,75 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* 3. Audio & Haptic Feedback Capsule */}
+        {/* 3. Gemini AI API Key Capsule */}
+        <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-[#E8DCFF] border border-[#18181B] flex items-center justify-center shadow-xs">
+                <Bot className="w-4 h-4 text-purple-950 stroke-[2.25]" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
+                  Gemini AI API Key
+                </h4>
+                <p className="text-[10px] text-slate-500 font-bold">
+                  Model: gemini-3.5-flash-lite
+                </p>
+              </div>
+            </div>
+
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#18181B] ${
+              geminiKeyInput.trim()
+                ? 'bg-[#D1FBE4] text-[#065F46]'
+                : 'bg-[#FEF08A] text-amber-900'
+            }`}>
+              {geminiKeyInput.trim() ? 'Configured' : 'Not Set'}
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  type={showKeyText ? 'text' : 'password'}
+                  value={geminiKeyInput}
+                  onChange={(e) => setGeminiKeyInput(e.target.value)}
+                  placeholder="Вставьте ключ из Google AI Studio..."
+                  className="w-full pl-8 pr-3 py-2 bg-[#FAF7F2] border-[1.5px] border-[#18181B] rounded-xl text-xs font-mono outline-none text-[#18181B]"
+                />
+                <Key className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSaveGeminiKey}
+                className="px-3.5 py-2 bg-[#BEF264] hover:bg-lime-300 border-[1.5px] border-[#18181B] rounded-xl text-xs font-black text-[#18181B] shadow-2xs cursor-pointer active:translate-y-0.5 transition-all shrink-0"
+              >
+                Save
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between px-1">
+              <button
+                type="button"
+                onClick={() => setShowKeyText(!showKeyText)}
+                className="text-[10px] font-bold text-slate-500 hover:text-[#18181B] cursor-pointer"
+              >
+                {showKeyText ? 'Скрыть символы' : 'Показать ключ'}
+              </button>
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noreferrer"
+                className="text-[10px] font-bold text-purple-700 hover:underline flex items-center gap-1"
+              >
+                Получить бесплатный ключ ↗
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. Audio & Haptic Feedback Capsule */}
         <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-[2rem] flex items-center justify-between shadow-[2px_2px_0px_#18181B]">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-full bg-[#E9D5FF] border border-[#18181B] flex items-center justify-center text-xs">

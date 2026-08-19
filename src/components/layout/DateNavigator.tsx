@@ -37,40 +37,50 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
   };
 
   return (
-    <div className="w-full neo-card p-3 sm:p-4 mb-4">
-      {/* Top row: Date Switcher & Jump to Today */}
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={handlePrevDay}
-            className="w-8 h-8 rounded-lg bg-[#FAF7F2] hover:bg-slate-100 border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
-            aria-label="Previous day"
-          >
-            <ChevronLeft className="w-4 h-4 stroke-[2.25]" />
-          </button>
+    <div className="w-full neo-card p-3 sm:p-4 mb-4 select-none font-body">
+      {/* Top row: Perfectly Centered Date Switcher */}
+      <div className="flex items-center justify-center gap-2 mb-3 relative">
+        <button
+          onClick={handlePrevDay}
+          className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0"
+          aria-label="Previous day"
+        >
+          <ChevronLeft className="w-4 h-4 stroke-[2.25]" />
+        </button>
 
-          <div className="px-3 py-1 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-xl flex items-center gap-2 shadow-[1px_1px_0px_#18181B]">
-            <span className="text-xs sm:text-sm font-bold font-display text-[#18181B]">
-              {formatDisplayDate(selectedDate)}
-            </span>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-              • {getRelativeDayLabel(selectedDate)}
-            </span>
-          </div>
-
-          <button
-            onClick={handleNextDay}
-            className="w-8 h-8 rounded-lg bg-[#FAF7F2] hover:bg-slate-100 border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
-            aria-label="Next day"
+        {/* Centered Date Badge */}
+        <div
+          onClick={handleToday}
+          className="px-3.5 py-1.5 bg-[#FAF7F2] hover:bg-slate-100 border-[1.75px] border-[#18181B] rounded-xl flex items-center justify-center gap-2 shadow-[1px_1px_0px_#18181B] cursor-pointer transition-all"
+          title="Click to jump to Today"
+        >
+          <span className="text-xs sm:text-sm font-bold font-display text-[#18181B] tracking-tight">
+            {formatDisplayDate(selectedDate)}
+          </span>
+          <span
+            className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+              isTodaySelected
+                ? 'bg-[#FFE873] text-[#18181B] border border-[#18181B]'
+                : 'text-slate-600 bg-slate-200/70'
+            }`}
           >
-            <ChevronRight className="w-4 h-4 stroke-[2.25]" />
-          </button>
+            {getRelativeDayLabel(selectedDate)}
+          </span>
         </div>
 
+        <button
+          onClick={handleNextDay}
+          className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0"
+          aria-label="Next day"
+        >
+          <ChevronRight className="w-4 h-4 stroke-[2.25]" />
+        </button>
+
+        {/* Jump to Today Button (Absolute right so it does not offset the center) */}
         {!isTodaySelected && (
           <button
             onClick={handleToday}
-            className="px-2.5 py-1 text-xs font-bold neo-btn bg-[#FFE873] text-[#18181B] cursor-pointer"
+            className="hidden sm:block absolute right-0 px-2.5 py-1 text-xs font-bold neo-btn bg-[#FFE873] text-[#18181B] cursor-pointer shadow-[1px_1px_0px_#18181B]"
           >
             Today
           </button>

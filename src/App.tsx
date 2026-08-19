@@ -9,12 +9,13 @@ import { HabitsPage } from './components/pages/HabitsPage';
 import { FocusPage } from './components/pages/FocusPage';
 import { StatsPage } from './components/pages/StatsPage';
 import { LinksPage } from './components/pages/LinksPage';
-import { SumirePage } from './components/pages/SumirePage';
 import { AddTaskModal } from './components/planner/AddTaskModal';
 import { AddHabitModal } from './components/habits/AddHabitModal';
 import { SettingsModal } from './components/settings/SettingsModal';
 import { SmartBraindumpModal } from './components/modals/SmartBraindumpModal';
 import { EveningReviewModal } from './components/modals/EveningReviewModal';
+import { SumireCompanionModal } from './components/modals/SumireCompanionModal';
+import { MenuModal } from './components/modals/MenuModal';
 import { AuthContainer, UserProfile } from './components/auth/AuthContainer';
 import { usePlannerData } from './hooks/usePlannerData';
 import { getTodayString } from './lib/dateUtils';
@@ -48,6 +49,8 @@ export function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBraindumpOpen, setIsBraindumpOpen] = useState(false);
   const [isEveningReviewOpen, setIsEveningReviewOpen] = useState(false);
+  const [isSumireOpen, setIsSumireOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Focus Timer active selection
   const [focusSelectedTask, setFocusSelectedTask] = useState<Task | null>(null);
@@ -217,10 +220,6 @@ export function App() {
             />
           )}
 
-          {activeTab === 'sumire' && (
-            <SumirePage />
-          )}
-
           {activeTab === 'stats' && (
             <StatsPage
               tasks={allTasks}
@@ -235,10 +234,11 @@ export function App() {
         <BottomNav
           activeTab={activeTab}
           onChangeTab={setActiveTab}
-          onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenSumire={() => setIsSumireOpen(true)}
+          onOpenMenu={() => setIsMenuOpen(true)}
         />
 
-        {/* Modals & Drawers */}
+        {/* Modals & Panels */}
         <AddTaskModal
           isOpen={isAddTaskOpen}
           onClose={() => setIsAddTaskOpen(false)}
@@ -269,6 +269,19 @@ export function App() {
           habits={habitsWithStats}
           todaysSessions={todaysFocusSessions}
           selectedDate={selectedDate}
+        />
+
+        <SumireCompanionModal
+          isOpen={isSumireOpen}
+          onClose={() => setIsSumireOpen(false)}
+        />
+
+        <MenuModal
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+          activeTab={activeTab}
+          onSelectTab={setActiveTab}
+          onOpenSettings={() => setIsSettingsOpen(true)}
         />
 
         <SettingsModal

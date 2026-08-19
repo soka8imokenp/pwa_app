@@ -154,7 +154,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#18181B]/40 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
       <div className="w-full max-w-md bg-white border-[2px] border-[#18181B] rounded-[2.5rem] shadow-[4px_4px_0px_#18181B] p-5 space-y-4 max-h-[90vh] overflow-y-auto">
-        
+
         {/* Modal Top Header */}
         <div className="flex items-center justify-between pb-1 border-b border-[#18181B]/15">
           <div className="flex items-center gap-2.5">
@@ -185,11 +185,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         {/* Feedback Alert */}
         {feedback && (
           <div
-            className={`p-3 rounded-2xl border-[1.75px] flex items-center gap-2.5 text-xs font-bold ${
-              feedback.success
+            className={`p-3 rounded-2xl border-[1.75px] flex items-center gap-2.5 text-xs font-bold ${feedback.success
                 ? 'bg-[#ECFCCB] text-lime-950 border-[#18181B] shadow-2xs'
                 : 'bg-[#FFE4E6] text-rose-950 border-[#18181B] shadow-2xs'
-            }`}
+              }`}
           >
             {feedback.success ? (
               <CheckCircle2 className="w-4 h-4 text-lime-700 stroke-[2.5] shrink-0" />
@@ -257,11 +256,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   key={avatar.id}
                   type="button"
                   onClick={() => handleSelectAvatar(avatar.id)}
-                  className={`p-1.5 rounded-2xl border-[1.75px] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-                    isSelected
+                  className={`p-1.5 rounded-2xl border-[1.75px] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${isSelected
                       ? 'border-[#18181B] shadow-[2px_2px_0px_#18181B] scale-105 ring-2 ring-[#FFE873]'
                       : 'border-slate-200 hover:border-[#18181B] opacity-80 hover:opacity-100'
-                  }`}
+                    }`}
                   style={{ backgroundColor: avatar.bg }}
                   title={avatar.name}
                 >
@@ -302,11 +300,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               playClickSound();
               onToggleSound();
             }}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-black border-[1.5px] border-[#18181B] transition-all cursor-pointer ${
-              isSoundMuted
+            className={`px-3.5 py-1.5 rounded-full text-xs font-black border-[1.5px] border-[#18181B] transition-all cursor-pointer ${isSoundMuted
                 ? 'bg-slate-100 text-slate-500'
                 : 'bg-[#BEF264] text-[#18181B] shadow-2xs'
-            }`}
+              }`}
           >
             {isSoundMuted ? 'Muted' : 'Active 🔊'}
           </button>
@@ -334,11 +331,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   playClickSound();
                   setSelectedAccent(accent.id);
                 }}
-                className={`py-2 px-1 rounded-2xl border-[1.5px] text-center transition-all cursor-pointer flex flex-col items-center gap-1 ${
-                  selectedAccent === accent.id
+                className={`py-2 px-1 rounded-2xl border-[1.5px] text-center transition-all cursor-pointer flex flex-col items-center gap-1 ${selectedAccent === accent.id
                     ? 'border-[#18181B] shadow-[2px_2px_0px_#18181B] scale-105'
                     : 'border-slate-200 hover:border-[#18181B]'
-                }`}
+                  }`}
                 style={{ backgroundColor: accent.bg }}
               >
                 <div className="w-3 h-3 rounded-full bg-[#18181B]/80 flex items-center justify-center">

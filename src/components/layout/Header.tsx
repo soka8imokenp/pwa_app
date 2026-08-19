@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, Settings } from 'lucide-react';
+import { Flame, Settings, Bot } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 import { getAvatarById } from '../../data/avatars';
 
@@ -7,12 +7,14 @@ interface HeaderProps {
   streakCount: number;
   userName?: string;
   onOpenSettings: () => void;
+  onOpenCompanion?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   streakCount,
   userName = 'Alex',
   onOpenSettings,
+  onOpenCompanion,
 }) => {
   const [avatarId, setAvatarId] = useState<string>('sumire-scout');
 
@@ -55,8 +57,23 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Right: Streak & Settings */}
+        {/* Right: AI Companion, Streak & Settings */}
         <div className="flex items-center gap-2">
+          {/* Sumire AI Companion Button */}
+          {onOpenCompanion && (
+            <button
+              onClick={() => {
+                playClickSound();
+                onOpenCompanion();
+              }}
+              title="Sumire AI Companion"
+              className="w-8 h-8 rounded-xl bg-[#E8DCFF] hover:bg-[#D8C4FF] border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer relative"
+            >
+              <Bot className="w-4 h-4 text-purple-950 stroke-[2.25]" />
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#10B981] border border-[#18181B] animate-pulse" />
+            </button>
+          )}
+
           {/* Flame Streak Pill */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FFE873] border-[1.75px] border-[#18181B] rounded-full shadow-[1.5px_1.5px_0px_#18181B]">
             <Flame className="w-3.5 h-3.5 text-amber-700 fill-amber-500 stroke-[2]" />
@@ -72,7 +89,7 @@ export const Header: React.FC<HeaderProps> = ({
               onOpenSettings();
             }}
             title="Settings"
-            className="w-8 h-8 rounded-xl bg-[#E8DCFF] hover:bg-[#D8C4FF] border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-white hover:bg-slate-100 border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
           >
             <Settings className="w-4 h-4 text-[#18181B] stroke-[2]" />
           </button>

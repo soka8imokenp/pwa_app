@@ -394,7 +394,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
                 className="flex-1 py-2 px-3 rounded-xl bg-[#D1FBE4] hover:bg-[#B7F4D1] border-[1.5px] border-[#18181B] text-xs font-black text-emerald-950 shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer active:translate-y-0.5"
               >
                 <Check className="w-3.5 h-3.5 stroke-[3]" />
-                <span>Save & Log ({currentElapsedMinutes}m)</span>
+                <span>Save</span>
               </button>
 
               <button

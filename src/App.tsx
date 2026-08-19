@@ -71,6 +71,7 @@ export function App() {
     addTask,
     bulkAddTasks,
     toggleTaskComplete,
+    toggleSubTaskComplete,
     promoteTaskToPriority,
     demoteTaskToBacklog,
     deleteTask,
@@ -156,6 +157,7 @@ export function App() {
               allTasks={allTasks}
               focusSessions={allFocusSessions}
               onToggleComplete={toggleTaskComplete}
+              onToggleSubTaskComplete={toggleSubTaskComplete}
               onDemoteToBacklog={demoteTaskToBacklog}
               onDeleteTask={deleteTask}
               onOpenAddTask={handleOpenAddTask}

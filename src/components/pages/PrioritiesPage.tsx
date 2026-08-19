@@ -21,6 +21,8 @@ import { playTaskCheckSound, playSuccessChime, playClickSound } from '../../lib/
 import { startVoiceDictation, stopVoiceDictation, isSpeechRecognitionSupported } from '../../lib/speechRecognition';
 import { DailyMoodAndNote } from '../planner/DailyMoodAndNote';
 import { QuickScratchpadCard } from '../scratchpad/QuickScratchpadCard';
+import { LottiePlayer } from '../common/LottiePlayer';
+import stressManagementAnimation from '../../assets/stress-management.json';
 
 interface PrioritiesPageProps {
   selectedDate: string;
@@ -30,6 +32,7 @@ interface PrioritiesPageProps {
   focusSessions?: FocusSession[];
   habitLogs?: HabitLog[];
   onToggleComplete: (task: Task) => void;
+  onToggleSubTaskComplete?: (taskId: number, subTaskId: string) => void;
   onDemoteToBacklog: (task: Task) => void;
   onDeleteTask: (taskId: number) => void;
   onOpenAddTask: (prioritySlotIndex?: number) => void;
@@ -42,6 +45,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
   selectedDate,
   priorityTasks,
   onToggleComplete,
+  onToggleSubTaskComplete,
   onDemoteToBacklog,
   onOpenAddTask,
   onStartFocus,
@@ -68,6 +72,12 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
         });
       }
     }
+  };
+
+  const handleSubTaskClick = (taskId?: number, subTaskId?: string) => {
+    if (!taskId || !subTaskId || !onToggleSubTaskComplete) return;
+    playTaskCheckSound();
+    onToggleSubTaskComplete(taskId, subTaskId);
   };
 
   const handleQuickAdd = async (e: React.FormEvent) => {
@@ -158,7 +168,19 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
       {/* 2. Compact Daily Mood & Micro-Note */}
       <DailyMoodAndNote selectedDate={selectedDate} />
 
-      {/* 3. Top 3 Priorities Section */}
+      {/* 3. Decorative Lottie Centerpiece Banner */}
+      <div className="w-full flex items-center justify-center py-1 select-none pointer-events-none">
+        <div className="w-40 h-40 flex items-center justify-center">
+          <LottiePlayer
+            animationData={stressManagementAnimation}
+            loop={true}
+            autoplay={true}
+            className="w-full h-full object-contain"
+          />
+        </div>
+      </div>
+
+      {/* 4. Top 3 Priorities Section */}
       <div className="space-y-2.5">
         <div className="flex items-center justify-between px-1">
           <span className="text-xs font-black font-display uppercase tracking-wider text-slate-500">
@@ -238,19 +260,24 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                 </button>
               </div>
 
-              {/* Subtasks Checklist (if any) */}
+              {/* Subtasks Checklist (Interactive) */}
               {task.subtasks && task.subtasks.length > 0 && (
-                <div className="p-2 bg-[#FAF7F2] border border-[#18181B]/15 rounded-xl space-y-1.5">
+                <div className="p-2.5 bg-[#FAF7F2] border border-[#18181B]/15 rounded-xl space-y-1.5">
                   <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                    <span>Subtasks</span>
+                    <span>Checklist</span>
                     <span>
                       {task.subtasks.filter((s) => s.isCompleted).length}/{task.subtasks.length}
                     </span>
                   </div>
                   {task.subtasks.map((st) => (
-                    <div key={st.id} className="flex items-center gap-2 text-xs font-medium text-slate-700">
+                    <button
+                      key={st.id}
+                      type="button"
+                      onClick={() => handleSubTaskClick(task.id, st.id)}
+                      className="w-full flex items-center gap-2 text-xs font-medium text-slate-700 text-left hover:bg-white/80 p-1 rounded-lg transition-colors cursor-pointer"
+                    >
                       <div
-                        className={`w-3.5 h-3.5 rounded border border-[#18181B] flex items-center justify-center shrink-0 ${
+                        className={`w-4 h-4 rounded border border-[#18181B] flex items-center justify-center shrink-0 ${
                           st.isCompleted ? 'bg-[#18181B] text-white' : 'bg-white'
                         }`}
                       >
@@ -259,7 +286,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                       <span className={`truncate ${st.isCompleted ? 'line-through text-slate-400' : ''}`}>
                         {st.title}
                       </span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
@@ -299,7 +326,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
         )}
       </div>
 
-      {/* 4. Minimalist Quick Add Input */}
+      {/* 5. Minimalist Quick Add Input */}
       <form onSubmit={handleQuickAdd} className="flex items-center gap-2 pt-1">
         <div className="relative flex-1">
           <input
@@ -329,7 +356,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
         </button>
       </form>
 
-      {/* 5. Bottom Quick Scratchpad Card */}
+      {/* 6. Bottom Quick Scratchpad Card */}
       <div className="pt-2">
         <QuickScratchpadCard />
       </div>

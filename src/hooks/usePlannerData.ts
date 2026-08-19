@@ -91,6 +91,16 @@ export function usePlannerData(selectedDate: string) {
     triggerTwoWaySync();
   };
 
+  const toggleSubTaskComplete = async (taskId: number, subTaskId: string) => {
+    const task = await db.tasks.get(taskId);
+    if (!task || !task.subtasks) return;
+    const updatedSubtasks = task.subtasks.map((st) =>
+      st.id === subTaskId ? { ...st, isCompleted: !st.isCompleted } : st
+    );
+    await db.tasks.update(taskId, { subtasks: updatedSubtasks });
+    triggerTwoWaySync();
+  };
+
   const promoteTaskToPriority = async (task: Task) => {
     if (!task.id) return;
     if (priorityTasks.length >= 3) return;
@@ -197,6 +207,7 @@ export function usePlannerData(selectedDate: string) {
     addTask,
     bulkAddTasks,
     toggleTaskComplete,
+    toggleSubTaskComplete,
     promoteTaskToPriority,
     demoteTaskToBacklog,
     deleteTask,

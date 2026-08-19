@@ -17,11 +17,14 @@ import {
   MicOff,
   Wand2,
   Trophy,
+  Repeat,
+  CheckSquare,
 } from 'lucide-react';
 import type { Task, FocusSession, HabitLog } from '../../types';
 import { playTaskCheckSound, playSuccessChime, playClickSound } from '../../lib/sound';
 import { startVoiceDictation, stopVoiceDictation, isSpeechRecognitionSupported } from '../../lib/speechRecognition';
 import { DailyMoodAndNote } from '../planner/DailyMoodAndNote';
+import { QuickScratchpadCard } from '../scratchpad/QuickScratchpadCard';
 
 import { LottiePlayer } from '../common/LottiePlayer';
 import stressManagementAnimation from '../../assets/stress-management.json';
@@ -207,14 +210,49 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
             </div>
           </div>
 
-          {/* Task Title */}
-          <h3
-            className={`text-base sm:text-lg font-bold font-display text-[#18181B] leading-snug mb-4 ${
-              primaryTask.isCompleted ? 'line-through text-slate-400' : ''
-            }`}
-          >
-            {primaryTask.title}
-          </h3>
+          {/* Task Title & Badges */}
+          <div className="mb-3 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <h3
+                className={`text-base sm:text-lg font-bold font-display text-[#18181B] leading-snug ${
+                  primaryTask.isCompleted ? 'line-through text-slate-400' : ''
+                }`}
+              >
+                {primaryTask.title}
+              </h3>
+              {primaryTask.isRecurring && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#BEF264] border border-[#18181B] text-[9px] font-bold text-[#18181B] shrink-0 shadow-2xs">
+                  <Repeat className="w-2.5 h-2.5" /> Routine
+                </span>
+              )}
+            </div>
+
+            {/* Subtasks checklist */}
+            {primaryTask.subtasks && primaryTask.subtasks.length > 0 && (
+              <div className="p-2.5 bg-[#FAF7F2] border border-[#18181B]/20 rounded-xl space-y-1.5">
+                <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 font-display uppercase tracking-wider">
+                  <span>Checklist</span>
+                  <span>
+                    {primaryTask.subtasks.filter((s) => s.isCompleted).length}/{primaryTask.subtasks.length}
+                  </span>
+                </div>
+                {primaryTask.subtasks.map((st) => (
+                  <div key={st.id} className="flex items-center gap-2 text-xs font-medium text-slate-700">
+                    <div
+                      className={`w-3.5 h-3.5 rounded border border-[#18181B] flex items-center justify-center shrink-0 ${
+                        st.isCompleted ? 'bg-[#18181B] text-white' : 'bg-white'
+                      }`}
+                    >
+                      {st.isCompleted && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                    </div>
+                    <span className={`truncate ${st.isCompleted ? 'line-through text-slate-400' : ''}`}>
+                      {st.title}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Actions: Start Focus + Mark Completed */}
           <div className="flex items-center justify-between gap-3 pt-2 border-t border-slate-100">
@@ -400,6 +438,9 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
             </button>
           )}
         </div>
+
+        {/* 5. Dedicated Quick Scratchpad Panel */}
+        <QuickScratchpadCard />
       </div>
     </div>
   );

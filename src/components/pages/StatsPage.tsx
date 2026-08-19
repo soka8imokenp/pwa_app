@@ -1,19 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { format, subDays, parseISO } from 'date-fns';
+import { subDays, parseISO } from 'date-fns';
 import {
   Trophy,
   Flame,
   Clock,
-  Zap,
-  TrendingUp,
   CheckCircle2,
   Share2,
-  Award,
   Crown,
-  Check,
 } from 'lucide-react';
 import type { Task, HabitLog, FocusSession } from '../../types';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
+import { ActivityHeatmap } from '../analytics/ActivityHeatmap';
 import confetti from 'canvas-confetti';
 
 interface StatsPageProps {
@@ -29,6 +26,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
   tasks,
   habitLogs,
   focusSessions,
+  onSelectDate,
 }) => {
   const [timeframe, setTimeframe] = useState<Timeframe>('30d');
   const [copiedShare, setCopiedShare] = useState(false);
@@ -55,7 +53,6 @@ export const StatsPage: React.FC<StatsPageProps> = ({
 
   const totalTasksDone = filteredTasks.filter((t) => t.isCompleted).length;
   const totalTasksCount = filteredTasks.length;
-  const taskCompletionRate = totalTasksCount > 0 ? Math.round((totalTasksDone / totalTasksCount) * 100) : 0;
   const totalHabitChecks = filteredHabitLogs.filter((l) => l.completed).length;
   const totalFocusMinutes = filteredFocusSessions.reduce((acc, s) => acc + s.durationMinutes, 0);
   const totalFocusHours = (totalFocusMinutes / 60).toFixed(1);
@@ -75,7 +72,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
       colors: ['#FFE873', '#E8DCFF', '#D1FBE4'],
     });
 
-    const shareText = `⚡ KAIRO Planner Stats: Level ${currentLevel} • ${totalTasksDone} Tasks Done • ${totalFocusHours}h Deep Focus!`;
+    const shareText = `Daily Sumire Stats: Level ${currentLevel} • ${totalTasksDone} Tasks Done • ${totalFocusHours}h Deep Focus!`;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(shareText);
       setCopiedShare(true);
@@ -159,7 +156,15 @@ export const StatsPage: React.FC<StatsPageProps> = ({
         </div>
       </div>
 
-      {/* 3. Timeframe Filter Selector */}
+      {/* 3. 28-Day Consistency Heatmap Grid */}
+      <ActivityHeatmap
+        tasks={tasks}
+        habitLogs={habitLogs}
+        focusSessions={focusSessions}
+        onSelectDate={onSelectDate}
+      />
+
+      {/* 4. Timeframe Filter Selector */}
       <div className="flex items-center justify-between px-1">
         <span className="text-xs font-bold font-display text-slate-500 uppercase tracking-wider">
           Time Period
@@ -184,7 +189,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
         </div>
       </div>
 
-      {/* 4. Achievements & Badges */}
+      {/* 5. Achievements & Badges */}
       <div className="neo-card p-5 bg-white space-y-3">
         <div className="flex items-center gap-2">
           <Trophy className="w-4 h-4 text-amber-500" />

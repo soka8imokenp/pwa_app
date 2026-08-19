@@ -1,3 +1,9 @@
+export interface SubTask {
+  id: string;
+  title: string;
+  isCompleted: boolean;
+}
+
 export interface Task {
   id?: number;
   title: string;
@@ -7,6 +13,9 @@ export interface Task {
   createdAt: number;
   category?: 'code' | 'design' | 'health' | 'learn' | 'admin' | 'general';
   estimatedMinutes?: number;
+  subtasks?: SubTask[];
+  isRecurring?: boolean;
+  recurringDays?: string[];
 }
 
 export interface Habit {

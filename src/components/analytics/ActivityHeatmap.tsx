@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { format, subDays } from 'date-fns';
-import { BarChart3 } from 'lucide-react';
-import { BrutalCard } from '../common/BrutalCard';
+import { format, subDays, eachDayOfInterval, isSameDay, parseISO } from 'date-fns';
+import { Calendar, Check, Clock, Flame } from 'lucide-react';
 import type { Task, HabitLog, FocusSession } from '../../types';
+import { playClickSound } from '../../lib/sound';
 
 interface ActivityHeatmapProps {
   tasks: Task[];
@@ -17,169 +17,137 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
   focusSessions,
   onSelectDate,
 }) => {
-  const [hoveredCell, setHoveredCell] = useState<{
-    date: string;
-    tasksCount: number;
-    habitsCount: number;
-    focusMinutes: number;
-    score: number;
-  } | null>(null);
-
-  // Generate data for past 105 days (15 weeks of 7 days)
-  const totalDays = 105;
-  const daysData = Array.from({ length: totalDays }).map((_, i) => {
-    const d = subDays(new Date(), totalDays - 1 - i);
-    const dateStr = format(d, 'yyyy-MM-dd');
-
-    const completedTasks = tasks.filter((t) => t.date === dateStr && t.isCompleted).length;
-    const completedHabits = habitLogs.filter((l) => l.date === dateStr && l.completed).length;
-    const focusMins = focusSessions
-      .filter((s) => s.date === dateStr)
-      .reduce((acc, s) => acc + s.durationMinutes, 0);
-
-    // Activity score: tasks*2 + habits*1.5 + (focusMins/15)
-    const rawScore = completedTasks * 2 + completedHabits * 1.5 + focusMins / 15;
-
-    let level = 0;
-    if (rawScore > 0) level = 1;
-    if (rawScore >= 3) level = 2;
-    if (rawScore >= 6) level = 3;
-    if (rawScore >= 9) level = 4;
-
-    return {
-      dateStr,
-      dayNumber: format(d, 'd'),
-      month: format(d, 'MMM'),
-      dayOfWeek: d.getDay(),
-      completedTasks,
-      completedHabits,
-      focusMins,
-      rawScore,
-      level,
-    };
+  const today = new Date();
+  const days = eachDayOfInterval({
+    start: subDays(today, 27), // 4 full weeks (28 days)
+    end: today,
   });
 
-  const getCellColor = (level: number) => {
-    switch (level) {
-      case 1:
-        return 'bg-[#E9D5FF] dark:bg-[#432375] border-[#1E1B4B]/40 dark:border-purple-400/40';
-      case 2:
-        return 'bg-[#C084FC] dark:bg-[#7E22CE] border-[#1E1B4B] dark:border-purple-300 shadow-[1px_1px_0px_#1E1B4B]';
-      case 3:
-        return 'bg-[#BEF264] dark:bg-[#84CC16] border-[#1E1B4B] dark:border-lime-300 shadow-[1.5px_1.5px_0px_#1E1B4B]';
-      case 4:
-        return 'bg-[#FACC15] dark:bg-[#EAB308] border-[#1E1B4B] dark:border-yellow-200 shadow-[2px_2px_0px_#1E1B4B]';
-      default:
-        return 'bg-white/80 dark:bg-[#1E1830] border-[#1E1B4B]/20 dark:border-purple-400/20';
-    }
+  const [selectedDayInfo, setSelectedDayInfo] = useState<{
+    dateStr: string;
+    tasksDone: number;
+    focusMins: number;
+    habitsDone: number;
+  } | null>(null);
+
+  const getDayStats = (day: Date) => {
+    const dateStr = format(day, 'yyyy-MM-dd');
+    const dayTasks = tasks.filter((t) => t.date === dateStr && t.isCompleted);
+    const dayHabits = habitLogs.filter((l) => l.date === dateStr && l.completed);
+    const dayFocus = focusSessions.filter((s) => s.date === dateStr);
+    const focusMins = dayFocus.reduce((acc, s) => acc + s.durationMinutes, 0);
+
+    const score = dayTasks.length * 2 + dayHabits.length + Math.round(focusMins / 15);
+    return {
+      dateStr,
+      tasksDone: dayTasks.length,
+      habitsDone: dayHabits.length,
+      focusMins,
+      score,
+    };
   };
 
-  const totalFocusHours = (
-    focusSessions.reduce((acc, s) => acc + s.durationMinutes, 0) / 60
-  ).toFixed(1);
-  const totalTasksCompleted = tasks.filter((t) => t.isCompleted).length;
-  const totalHabitCompletions = habitLogs.filter((l) => l.completed).length;
+  const handleTileClick = (day: Date) => {
+    playClickSound();
+    const stats = getDayStats(day);
+    setSelectedDayInfo(stats);
+    onSelectDate(stats.dateStr);
+  };
+
+  const getColorClass = (score: number) => {
+    if (score === 0) return 'bg-[#FAF7F2] border-slate-200 text-slate-400';
+    if (score <= 2) return 'bg-[#E8DCFF] border-[#C084FC] text-purple-900';
+    if (score <= 5) return 'bg-[#BEF264] border-[#65A30D] text-emerald-950 font-bold';
+    return 'bg-[#FFE873] border-[#CA8A04] text-amber-950 font-black shadow-2xs';
+  };
 
   return (
-    <BrutalCard variant="milk" className="space-y-4">
+    <div className="neo-card p-4 bg-white space-y-3 font-body select-none">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b-2 border-[#1E1B4B]/10 dark:border-purple-300/15">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-[#E0F2FE] dark:bg-[#13304A] border-2 border-[#1E1B4B] dark:border-sky-400 rounded-xl shadow-[2px_2px_0px_#1E1B4B]">
-            <BarChart3 className="w-5 h-5 text-sky-950 dark:text-sky-100" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-[#E8DCFF] border-[1.5px] border-[#18181B] flex items-center justify-center shadow-[1px_1px_0px_#18181B]">
+            <Calendar className="w-4 h-4 text-[#18181B] stroke-[2.25]" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-slate-900 dark:text-purple-50 tracking-tight">
-              Activity Progression Heatmap
+            <h3 className="text-xs font-bold font-display uppercase tracking-wider text-[#18181B]">
+              Activity Heatmap
             </h3>
-            <p className="text-xs font-bold text-slate-600 dark:text-purple-300">
-              GitHub-style quantifiable consistency over 15 weeks
-            </p>
+            <span className="text-[10px] text-slate-500 font-bold">
+              Last 4 Weeks Consistency
+            </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold text-slate-500 dark:text-purple-300">Less</span>
-          <div className="flex gap-1">
-            {[0, 1, 2, 3, 4].map((lvl) => (
-              <div
-                key={lvl}
-                className={`w-3.5 h-3.5 rounded-sm border ${getCellColor(lvl)}`}
-              />
-            ))}
-          </div>
-          <span className="text-[11px] font-bold text-slate-500 dark:text-purple-300">More</span>
+        {/* Legend */}
+        <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400">
+          <span>Less</span>
+          <div className="w-3 h-3 rounded bg-[#FAF7F2] border border-slate-200" />
+          <div className="w-3 h-3 rounded bg-[#E8DCFF] border border-[#C084FC]" />
+          <div className="w-3 h-3 rounded bg-[#BEF264] border border-[#65A30D]" />
+          <div className="w-3 h-3 rounded bg-[#FFE873] border border-[#CA8A04]" />
+          <span>More</span>
         </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="p-3 bg-[#FAF5FF] dark:bg-[#1E1733] border-2 border-[#1E1B4B] dark:border-purple-300 rounded-2xl shadow-[2px_2px_0px_#1E1B4B]">
-          <span className="text-[10px] font-extrabold uppercase text-purple-900 dark:text-purple-300 block">
-            Tasks Done
-          </span>
-          <span className="text-xl font-black text-slate-950 dark:text-purple-50 font-mono-num">
-            {totalTasksCompleted}
-          </span>
-        </div>
-        <div className="p-3 bg-[#ECFCCB] dark:bg-[#1B2F13] border-2 border-[#1E1B4B] dark:border-lime-400 rounded-2xl shadow-[2px_2px_0px_#1E1B4B]">
-          <span className="text-[10px] font-extrabold uppercase text-lime-950 dark:text-lime-300 block">
-            Habit Checks
-          </span>
-          <span className="text-xl font-black text-slate-950 dark:text-lime-50 font-mono-num">
-            {totalHabitCompletions}
-          </span>
-        </div>
-        <div className="p-3 bg-[#FFEDD5] dark:bg-[#341B0E] border-2 border-[#1E1B4B] dark:border-orange-400 rounded-2xl shadow-[2px_2px_0px_#1E1B4B]">
-          <span className="text-[10px] font-extrabold uppercase text-orange-950 dark:text-orange-300 block">
-            Total Focus
-          </span>
-          <span className="text-xl font-black text-slate-950 dark:text-orange-50 font-mono-num">
-            {totalFocusHours}h
-          </span>
-        </div>
-      </div>
+      {/* Grid 7 columns x 4 rows */}
+      <div className="grid grid-cols-7 gap-1.5 pt-1">
+        {days.map((day) => {
+          const stats = getDayStats(day);
+          const isCurrent = isSameDay(day, today);
+          const isSelected = selectedDayInfo?.dateStr === stats.dateStr;
 
-      {/* Heatmap Grid */}
-      <div className="overflow-x-auto pb-2">
-        <div className="inline-grid grid-rows-7 grid-flow-col gap-1.5 p-2 bg-[#FAF7F2] dark:bg-[#151224] border-2 border-[#1E1B4B] dark:border-purple-300/40 rounded-2xl min-w-[620px]">
-          {daysData.map((day) => (
+          return (
             <button
-              key={day.dateStr}
-              onClick={() => onSelectDate(day.dateStr)}
-              onMouseEnter={() =>
-                setHoveredCell({
-                  date: day.dateStr,
-                  tasksCount: day.completedTasks,
-                  habitsCount: day.completedHabits,
-                  focusMinutes: day.focusMins,
-                  score: Math.round(day.rawScore * 10) / 10,
-                })
-              }
-              onMouseLeave={() => setHoveredCell(null)}
-              className={`w-4.5 h-4.5 rounded-md border transition-transform hover:scale-130 cursor-pointer ${getCellColor(
-                day.level
-              )}`}
-              aria-label={`Date ${day.dateStr}`}
-            />
-          ))}
-        </div>
+              key={stats.dateStr}
+              type="button"
+              onClick={() => handleTileClick(day)}
+              className={`h-9 rounded-xl border-[1.5px] flex flex-col items-center justify-center transition-all cursor-pointer ${getColorClass(
+                stats.score
+              )} ${
+                isSelected
+                  ? 'ring-2 ring-[#18181B] scale-105 shadow-[1.5px_1.5px_0px_#18181B]'
+                  : isCurrent
+                  ? 'border-[#18181B] border-dashed'
+                  : ''
+              }`}
+              title={`${stats.dateStr}: ${stats.tasksDone} tasks, ${stats.focusMins}m focus`}
+            >
+              <span className="text-[10px] font-mono-num font-bold leading-none">
+                {format(day, 'd')}
+              </span>
+              <span className="text-[8px] font-bold uppercase tracking-tighter opacity-70 leading-none mt-0.5">
+                {format(day, 'EEE')[0]}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Tooltip Bar */}
-      <div className="h-6 flex items-center justify-between text-xs font-bold text-slate-700 dark:text-purple-200 px-2">
-        {hoveredCell ? (
-          <span>
-            🗓️ <span className="font-black">{hoveredCell.date}</span>: {hoveredCell.tasksCount} tasks,{' '}
-            {hoveredCell.habitsCount} habits, {hoveredCell.focusMinutes}m focus (Score:{' '}
-            {hoveredCell.score})
-          </span>
-        ) : (
-          <span className="text-slate-400 dark:text-purple-400">
-            Hover over any square to see quantifiable day breakdown
-          </span>
-        )}
-      </div>
-    </BrutalCard>
+      {/* Selected Day Detail Popover */}
+      {selectedDayInfo && (
+        <div className="p-3 bg-[#FAF7F2] border-[1.5px] border-[#18181B] rounded-2xl flex items-center justify-between text-xs animate-in fade-in">
+          <div>
+            <span className="text-[10px] font-bold font-display uppercase tracking-wider text-slate-500 block">
+              {selectedDayInfo.dateStr} Summary
+            </span>
+            <div className="flex items-center gap-3 mt-1 font-bold text-[#18181B]">
+              <span className="flex items-center gap-1">
+                <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+                {selectedDayInfo.tasksDone} Tasks
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5 text-purple-600 stroke-[2.5]" />
+                {selectedDayInfo.focusMins}m Focus
+              </span>
+              <span className="flex items-center gap-1">
+                <Flame className="w-3.5 h-3.5 text-amber-600 stroke-[2.5]" />
+                {selectedDayInfo.habitsDone} Habits
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };

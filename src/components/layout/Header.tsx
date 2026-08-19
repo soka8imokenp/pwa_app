@@ -1,31 +1,18 @@
 import React from 'react';
-import { Volume2, VolumeX, Flame, Settings, StickyNote } from 'lucide-react';
-import { isSoundMuted, setSoundMuted, playClickSound } from '../../lib/sound';
+import { Flame, Settings } from 'lucide-react';
+import { playClickSound } from '../../lib/sound';
 
 interface HeaderProps {
   streakCount: number;
   userName?: string;
   onOpenSettings: () => void;
-  onOpenScratchpad?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   streakCount,
   userName = 'Alex',
   onOpenSettings,
-  onOpenScratchpad,
 }) => {
-  const [muted, setMuted] = React.useState(isSoundMuted());
-
-  const handleToggleSound = () => {
-    const next = !muted;
-    setMuted(next);
-    setSoundMuted(next);
-    if (!next) {
-      playClickSound();
-    }
-  };
-
   const firstName = userName.split(' ')[0] || 'Friend';
 
   return (
@@ -51,53 +38,26 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Right: Streak & Clean Actions */}
+        {/* Right: Streak & Settings */}
         <div className="flex items-center gap-2">
-          {/* Quick Scratchpad */}
-          {onOpenScratchpad && (
-            <button
-              onClick={() => {
-                playClickSound();
-                onOpenScratchpad();
-              }}
-              title="Quick Notes"
-              className="w-8 h-8 rounded-lg bg-white hover:bg-slate-50 border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
-            >
-              <StickyNote className="w-3.5 h-3.5 stroke-[2]" />
-            </button>
-          )}
-
           {/* Flame Streak Pill */}
-          <div className="flex items-center gap-1 px-2.5 py-1 bg-[#FFE873] border-[1.75px] border-[#18181B] rounded-full shadow-[1.5px_1.5px_0px_#18181B]">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FFE873] border-[1.75px] border-[#18181B] rounded-full shadow-[1.5px_1.5px_0px_#18181B]">
             <Flame className="w-3.5 h-3.5 text-amber-700 fill-amber-500 stroke-[2]" />
             <span className="text-xs font-bold font-display text-[#18181B] font-mono-num">
               {streakCount}d
             </span>
           </div>
 
-          {/* Sound Toggle */}
-          <button
-            onClick={handleToggleSound}
-            title={muted ? 'Unmute' : 'Mute'}
-            className="w-8 h-8 rounded-lg bg-white border-[1.75px] border-[#18181B] flex items-center justify-center shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
-          >
-            {muted ? (
-              <VolumeX className="w-3.5 h-3.5 text-slate-400 stroke-[2]" />
-            ) : (
-              <Volume2 className="w-3.5 h-3.5 text-[#18181B] stroke-[2]" />
-            )}
-          </button>
-
-          {/* Settings */}
+          {/* Settings Button */}
           <button
             onClick={() => {
               playClickSound();
               onOpenSettings();
             }}
             title="Settings"
-            className="w-8 h-8 rounded-lg bg-[#E8DCFF] hover:bg-[#D8C4FF] border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-[#E8DCFF] hover:bg-[#D8C4FF] border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
           >
-            <Settings className="w-3.5 h-3.5 text-[#18181B] stroke-[2]" />
+            <Settings className="w-4 h-4 text-[#18181B] stroke-[2]" />
           </button>
         </div>
       </div>

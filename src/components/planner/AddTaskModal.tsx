@@ -1,6 +1,20 @@
 import React, { useState } from 'react';
-import { PlusCircle, Star, Code, Palette, BookOpen, Activity, FileText, Layers, X, Check } from 'lucide-react';
-import type { Task } from '../../types';
+import {
+  PlusCircle,
+  Star,
+  Code,
+  Palette,
+  BookOpen,
+  Activity,
+  FileText,
+  Layers,
+  X,
+  Check,
+  Plus,
+  Trash2,
+  Repeat,
+} from 'lucide-react';
+import type { Task, SubTask } from '../../types';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 
 interface AddTaskModalProps {
@@ -24,14 +38,39 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   const [isPriority, setIsPriority] = useState(defaultPriority);
   const [category, setCategory] = useState<Task['category']>('code');
   const [estimatedMinutes, setEstimatedMinutes] = useState<number>(30);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [subtasks, setSubtasks] = useState<SubTask[]>([]);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
 
   React.useEffect(() => {
     if (isOpen) {
       setIsPriority(defaultPriority);
+      setSubtasks([]);
+      setNewSubtaskTitle('');
+      setIsRecurring(false);
     }
   }, [isOpen, defaultPriority]);
 
   if (!isOpen) return null;
+
+  const handleAddSubtask = () => {
+    if (!newSubtaskTitle.trim()) return;
+    playClickSound();
+    setSubtasks([
+      ...subtasks,
+      {
+        id: Date.now().toString(),
+        title: newSubtaskTitle.trim(),
+        isCompleted: false,
+      },
+    ]);
+    setNewSubtaskTitle('');
+  };
+
+  const handleRemoveSubtask = (id: string) => {
+    playClickSound();
+    setSubtasks(subtasks.filter((s) => s.id !== id));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,9 +84,12 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
       date: defaultDate,
       category,
       estimatedMinutes: Number(estimatedMinutes) || undefined,
+      subtasks: subtasks.length > 0 ? subtasks : undefined,
+      isRecurring,
     });
 
     setTitle('');
+    setSubtasks([]);
     onClose();
   };
 
@@ -95,47 +137,66 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
           {/* Title */}
           <div>
             <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
-              Task Outcome / Goal
+              Task Title
             </label>
             <input
               type="text"
               required
-              autoFocus
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Implement PWA offline sync & testing"
+              placeholder="e.g. Implement WebSockets in Rust"
               className="w-full px-4 py-2.5 bg-[#FAF7F2] text-xs font-bold rounded-2xl border-[1.75px] border-[#18181B] outline-none placeholder:text-slate-400 shadow-2xs"
             />
           </div>
 
-          {/* Priority Toggle */}
-          <div
-            onClick={() => {
-              if (canAddPriority) {
-                playClickSound();
-                setIsPriority(!isPriority);
-              }
-            }}
-            className={`p-3 rounded-2xl border-[1.75px] transition-all cursor-pointer flex items-center justify-between shadow-2xs ${
-              isPriority
-                ? 'bg-[#FEF08A] border-[#18181B]'
-                : 'bg-[#FAF7F2] border-[#18181B]/20'
-            } ${!canAddPriority ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <div className="flex items-center gap-2.5">
-              <Star className={`w-4 h-4 ${isPriority ? 'text-amber-700 fill-amber-500' : 'text-slate-400'}`} />
-              <div>
-                <span className="text-xs font-black text-[#18181B] block">
-                  Top-3 Priority Slot
-                </span>
-                <span className="text-[10px] font-semibold text-slate-500">
-                  {canAddPriority ? 'Counts towards primary daily focus outcomes' : 'All 3 priority slots filled'}
-                </span>
-              </div>
-            </div>
+          {/* Subtasks (Checklists) */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-black uppercase tracking-wider text-slate-700">
+              Subtasks / Steps ({subtasks.length})
+            </label>
 
-            <div className={`w-5 h-5 rounded-md border border-[#18181B] flex items-center justify-center ${isPriority ? 'bg-[#BEF264]' : 'bg-white'}`}>
-              {isPriority && <Check className="w-3 h-3 text-[#18181B] stroke-[3]" />}
+            {subtasks.length > 0 && (
+              <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+                {subtasks.map((st) => (
+                  <div
+                    key={st.id}
+                    className="p-2 bg-[#FAF7F2] border border-[#18181B]/20 rounded-xl flex items-center justify-between gap-2 text-xs"
+                  >
+                    <span className="font-bold text-[#18181B] truncate">{st.title}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSubtask(st.id)}
+                      className="text-slate-400 hover:text-rose-600 cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center gap-1.5">
+              <input
+                type="text"
+                value={newSubtaskTitle}
+                onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddSubtask();
+                  }
+                }}
+                placeholder="Add checklist step..."
+                className="flex-1 px-3 py-1.5 bg-[#FAF7F2] text-xs font-medium rounded-xl border border-[#18181B]/30 outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleAddSubtask}
+                disabled={!newSubtaskTitle.trim()}
+                className="p-1.5 rounded-xl bg-white border border-[#18181B] text-[#18181B] cursor-pointer disabled:opacity-40"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
@@ -153,59 +214,101 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                     playClickSound();
                     setCategory(c.id);
                   }}
-                  className={`py-2 px-2 rounded-xl border-[1.5px] text-[11px] font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  className={`py-2 px-2 rounded-2xl border-[1.5px] flex items-center justify-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
                     category === c.id
-                      ? 'bg-[#C084FC] text-[#18181B] border-[#18181B] shadow-2xs'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-[#18181B]'
+                      ? 'bg-[#FFE873] border-[#18181B] text-[#18181B] shadow-2xs'
+                      : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400'
                   }`}
                 >
                   {c.icon}
-                  <span className="truncate">{c.label}</span>
+                  <span className="text-[10px] tracking-tight">{c.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Estimated Duration */}
-          <div>
-            <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
-              Estimated Focus Time
-            </label>
-            <div className="flex items-center gap-1.5">
-              {[15, 25, 45, 60, 90].map((mins) => (
-                <button
-                  key={mins}
-                  type="button"
-                  onClick={() => {
-                    playClickSound();
-                    setEstimatedMinutes(mins);
-                  }}
-                  className={`flex-1 py-1.5 rounded-xl border-[1.5px] text-xs font-black font-mono-num transition-all cursor-pointer ${
-                    estimatedMinutes === mins
-                      ? 'bg-[#BEF264] text-[#18181B] border-[#18181B] shadow-2xs'
-                      : 'bg-white text-slate-500 border-slate-200 hover:border-[#18181B]'
-                  }`}
-                >
-                  {mins}m
-                </button>
-              ))}
+          {/* Estimated Time & Priority & Recurring */}
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            {/* Time */}
+            <div>
+              <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+                Estimate
+              </label>
+              <select
+                value={estimatedMinutes}
+                onChange={(e) => setEstimatedMinutes(Number(e.target.value))}
+                className="w-full px-3 py-2 bg-[#FAF7F2] text-xs font-bold rounded-2xl border-[1.75px] border-[#18181B] outline-none shadow-2xs cursor-pointer"
+              >
+                <option value={15}>15 Minutes</option>
+                <option value={25}>25 Minutes</option>
+                <option value={45}>45 Minutes</option>
+                <option value={60}>60 Minutes</option>
+                <option value={90}>90 Minutes</option>
+                <option value={120}>2 Hours</option>
+              </select>
+            </div>
+
+            {/* Recurring Daily Toggle */}
+            <div>
+              <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+                Routine
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  playClickSound();
+                  setIsRecurring(!isRecurring);
+                }}
+                className={`w-full py-2 px-3 rounded-2xl border-[1.75px] border-[#18181B] text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  isRecurring
+                    ? 'bg-[#BEF264] text-[#18181B] shadow-2xs'
+                    : 'bg-[#FAF7F2] text-slate-500'
+                }`}
+              >
+                <Repeat className="w-3.5 h-3.5" />
+                <span>{isRecurring ? 'Repeats Daily' : 'One-time'}</span>
+              </button>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="pt-2 flex gap-2 justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-full border border-slate-300 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
+          {/* Priority Toggle Checkbox */}
+          {canAddPriority && (
+            <div
+              onClick={() => {
+                playClickSound();
+                setIsPriority(!isPriority);
+              }}
+              className={`p-3 rounded-2xl border-[1.75px] border-[#18181B] flex items-center justify-between cursor-pointer transition-all ${
+                isPriority
+                  ? 'bg-[#FEF08A] shadow-2xs'
+                  : 'bg-[#FAF7F2] hover:bg-slate-50'
+              }`}
             >
-              Cancel
-            </button>
+              <div className="flex items-center gap-2">
+                <Star className={`w-4 h-4 ${isPriority ? 'text-amber-700 fill-amber-400' : 'text-slate-400'}`} />
+                <div>
+                  <h4 className="text-xs font-bold text-[#18181B]">Set as Top Focus Priority</h4>
+                  <p className="text-[9px] text-slate-500 font-medium">Elevate to top 3 slots for today</p>
+                </div>
+              </div>
+
+              <div
+                className={`w-5 h-5 rounded-lg border-[1.5px] border-[#18181B] flex items-center justify-center ${
+                  isPriority ? 'bg-[#18181B] text-white' : 'bg-white'
+                }`}
+              >
+                {isPriority && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+              </div>
+            </div>
+          )}
+
+          {/* Submit */}
+          <div className="pt-2">
             <button
               type="submit"
-              className="px-5 py-2 rounded-full bg-[#BEF264] hover:bg-[#A3E635] text-[#18181B] border-[1.5px] border-[#18181B] text-xs font-black shadow-xs active:translate-y-0.5 cursor-pointer"
+              className="w-full py-3 bg-[#FFE873] hover:bg-[#FED7AA] border-[2px] border-[#18181B] rounded-2xl font-black font-display uppercase tracking-wider text-xs text-[#18181B] shadow-[2px_2px_0px_#18181B] active:translate-y-0.5 active:shadow-none cursor-pointer transition-all"
             >
-              Save Quest
+              Create Task
             </button>
           </div>
         </form>

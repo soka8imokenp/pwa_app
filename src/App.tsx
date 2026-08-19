@@ -14,7 +14,6 @@ import { AddHabitModal } from './components/habits/AddHabitModal';
 import { SettingsModal } from './components/settings/SettingsModal';
 import { SmartBraindumpModal } from './components/modals/SmartBraindumpModal';
 import { EveningReviewModal } from './components/modals/EveningReviewModal';
-import { QuickScratchpadModal } from './components/scratchpad/QuickScratchpadModal';
 import { AuthContainer, UserProfile } from './components/auth/AuthContainer';
 import { usePlannerData } from './hooks/usePlannerData';
 import { getTodayString } from './lib/dateUtils';
@@ -48,7 +47,6 @@ export function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBraindumpOpen, setIsBraindumpOpen] = useState(false);
   const [isEveningReviewOpen, setIsEveningReviewOpen] = useState(false);
-  const [isScratchpadOpen, setIsScratchpadOpen] = useState(false);
 
   // Focus Timer active selection
   const [focusSelectedTask, setFocusSelectedTask] = useState<Task | null>(null);
@@ -131,7 +129,6 @@ export function App() {
           streakCount={overallStreak}
           userName={displayName}
           onOpenSettings={() => setIsSettingsOpen(true)}
-          onOpenScratchpad={() => setIsScratchpadOpen(true)}
         />
 
         {/* Date Navigator Strip for Daily Views */}
@@ -266,11 +263,6 @@ export function App() {
           habits={habitsWithStats}
           todaysSessions={todaysFocusSessions}
           selectedDate={selectedDate}
-        />
-
-        <QuickScratchpadModal
-          isOpen={isScratchpadOpen}
-          onClose={() => setIsScratchpadOpen(false)}
         />
 
         <SettingsModal

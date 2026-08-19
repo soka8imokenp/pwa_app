@@ -12,6 +12,8 @@ import {
   Archive,
   Crown,
   Layers,
+  Repeat,
+  CheckSquare,
 } from 'lucide-react';
 import type { Task } from '../../types';
 import { playTaskCheckSound, playClickSound, playSuccessChime } from '../../lib/sound';
@@ -227,18 +229,33 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
                 </button>
 
                 <div className="min-w-0">
-                  <span
-                    className={`text-xs sm:text-sm font-bold block truncate text-[#18181B] ${
-                      task.isCompleted ? 'line-through text-slate-400' : ''
-                    }`}
-                  >
-                    {task.title}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`text-xs sm:text-sm font-bold block truncate text-[#18181B] ${
+                        task.isCompleted ? 'line-through text-slate-400' : ''
+                      }`}
+                    >
+                      {task.title}
+                    </span>
+                    {task.isRecurring && (
+                      <span title="Daily Routine">
+                        <Repeat className="w-3 h-3 text-purple-600 shrink-0" />
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase">
                       {getCategoryIcon(task.category)}
                       {task.category || 'general'}
                     </span>
+                    {task.subtasks && task.subtasks.length > 0 && (
+                      <>
+                        <span className="text-[10px] text-slate-300">•</span>
+                        <span className="text-[10px] font-bold text-slate-600">
+                          {task.subtasks.filter((s) => s.isCompleted).length}/{task.subtasks.length} steps
+                        </span>
+                      </>
+                    )}
                     <span className="text-[10px] text-slate-300">•</span>
                     <span className="text-[10px] text-slate-500 font-mono-num">
                       {task.estimatedMinutes || 30}m

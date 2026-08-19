@@ -38,11 +38,10 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-2.5">
           <button
             onClick={onOpenSettings}
-            className="w-10 h-10 rounded-2xl border-[1.75px] border-[#18181B] flex items-center justify-center shadow-[1.5px_1.5px_0px_#18181B] shrink-0 cursor-pointer active:translate-y-0.5 active:shadow-none transition-all p-0.5"
-            style={{ backgroundColor: activeAvatar.bg }}
+            className="w-10 h-10 rounded-full border-[1.75px] border-[#18181B] flex items-center justify-center shadow-[1.5px_1.5px_0px_#18181B] shrink-0 cursor-pointer active:translate-y-0.5 active:shadow-none transition-all overflow-hidden bg-white"
             title="Settings & Profile"
           >
-            {activeAvatar.renderSvg('w-full h-full')}
+            <img src="/sumire-avatar.png" alt="Sumire" className="w-full h-full object-cover rounded-full" />
           </button>
 
           <div>

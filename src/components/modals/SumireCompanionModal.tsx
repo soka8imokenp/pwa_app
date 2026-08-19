@@ -176,8 +176,8 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
         {/* Modal Top Header */}
         <div className="flex items-center justify-between pb-3 border-b border-[#18181B]/15 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-[#E8DCFF] border-[1.75px] border-[#18181B] flex items-center justify-center shadow-xs overflow-hidden p-0.5 shrink-0">
-              <img src="/sumire-avatar.png" alt="Sumire" className="w-full h-full object-cover rounded-[10px]" />
+            <div className="w-10 h-10 rounded-full bg-[#E8DCFF] border-[1.75px] border-[#18181B] flex items-center justify-center shadow-xs overflow-hidden shrink-0">
+              <img src="/sumire-avatar.png" alt="Sumire" className="w-full h-full object-cover rounded-full" />
             </div>
 
             <div>

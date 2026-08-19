@@ -5,11 +5,8 @@ import {
   MicOff,
   Send,
   CheckCircle2,
-  ListTodo,
-  StickyNote,
-  Zap,
-  Target,
-  Layers,
+  Image as ImageIcon,
+  Paperclip,
 } from 'lucide-react';
 import { askSumireAI, AIChatMessage } from '../../lib/aiService';
 import { startVoiceDictation, stopVoiceDictation, isSpeechRecognitionSupported } from '../../lib/speechRecognition';
@@ -31,15 +28,17 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
     {
       id: 'welcome',
       role: 'assistant',
-      content: 'Привет. Я вижу все твои задачи, привычки и заметки на сегодня. Чем помочь? Могу составить план, разбить задачу на подшаги или записать мысль в блокнот по голосу.',
+      content: 'Привет. У меня много работы в архиве, так что давай сразу по делу. Я вижу все твои задачи, привычки и блокнот на сегодня. Чем помочь? Можешь прикрепить фото заметок, надиктовать голосом или попросить раскидать план.',
       timestamp: Date.now(),
     },
   ]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [attachedImage, setAttachedImage] = useState<{ base64Data: string; mimeType: string; previewUrl: string } | null>(null);
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -49,24 +48,51 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
 
   if (!isOpen) return null;
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64Data = result.split(',')[1];
+      setAttachedImage({
+        base64Data,
+        mimeType: file.type || 'image/jpeg',
+        previewUrl: result,
+      });
+      playClickSound();
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
   const handleSendMessage = async (textToSend: string) => {
     const text = textToSend.trim();
-    if (!text || isLoading) return;
+    if ((!text && !attachedImage) || isLoading) return;
 
     playClickSound();
+    const currentAttachment = attachedImage;
+
     const userMsg: AIChatMessage = {
       id: `user_${Date.now()}`,
       role: 'user',
-      content: text,
+      content: text || 'Посмотри прикрепленное изображение:',
+      imagePreview: currentAttachment?.previewUrl,
       timestamp: Date.now(),
     };
 
     setMessages((prev) => [...prev, userMsg]);
     setInputText('');
+    setAttachedImage(null);
     setIsLoading(true);
 
     try {
-      const response = await askSumireAI(text, messages);
+      const response = await askSumireAI(
+        text,
+        messages,
+        currentAttachment ? { base64Data: currentAttachment.base64Data, mimeType: currentAttachment.mimeType } : undefined
+      );
 
       const assistantMsg: AIChatMessage = {
         id: `sumire_${Date.now()}`,
@@ -96,7 +122,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
         {
           id: `err_${Date.now()}`,
           role: 'assistant',
-          content: `Ошибка: ${err.message || 'Не удалось связаться с моделью.'}`,
+          content: `${err.message || 'Не удалось выполнить запрос.'}`,
           timestamp: Date.now(),
         },
       ]);
@@ -150,32 +176,24 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
             </div>
 
             <div>
-              <div className="flex items-center gap-1.5">
-                <h3 className="text-xs sm:text-sm font-black font-display uppercase tracking-wider text-[#18181B]">
-                  Sumire AI Companion
-                </h3>
-                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#D1FBE4] border border-[#065F46]/30 text-[9px] font-bold text-[#065F46]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
-                  RAG Active
-                </span>
-              </div>
+              <h3 className="text-xs sm:text-sm font-black font-display uppercase tracking-wider text-[#18181B]">
+                Sumire Companion
+              </h3>
               <p className="text-[10px] font-bold text-slate-400">
-                Gemini 3.5 Flash Lite • Live Planner Aware
+                Scout-Archivist • Kawaii Archive
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => {
-                playClickSound();
-                onClose();
-              }}
-              className="w-8 h-8 rounded-xl bg-white hover:bg-slate-100 border-[1.5px] border-[#18181B] flex items-center justify-center text-slate-600 hover:text-[#18181B] cursor-pointer shadow-2xs active:scale-95"
-            >
-              <X className="w-4 h-4 stroke-[2.5]" />
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              playClickSound();
+              onClose();
+            }}
+            className="w-8 h-8 rounded-xl bg-white hover:bg-slate-100 border-[1.5px] border-[#18181B] flex items-center justify-center text-slate-600 hover:text-[#18181B] cursor-pointer shadow-2xs active:scale-95 transition-all"
+          >
+            <X className="w-4 h-4 stroke-[2.5]" />
+          </button>
         </div>
 
         {/* Messages List Area */}
@@ -192,6 +210,13 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
                     : 'bg-white text-slate-800 rounded-tl-xs shadow-[2px_2px_0px_#18181B]'
                 }`}
               >
+                {/* User Attached Image Preview in Chat */}
+                {msg.imagePreview && (
+                  <div className="mb-2 rounded-xl overflow-hidden border border-[#18181B] max-h-48">
+                    <img src={msg.imagePreview} alt="Attached" className="w-full h-full object-cover" />
+                  </div>
+                )}
+
                 <p className="whitespace-pre-wrap">{msg.content}</p>
 
                 {/* Executed Action Pills */}
@@ -243,7 +268,26 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
           ))}
         </div>
 
-        {/* Input Bar with Voice Button */}
+        {/* Attached Image Thumbnail Bar */}
+        {attachedImage && (
+          <div className="px-4 py-2 bg-[#FEF08A] border-t border-[#18181B]/20 flex items-center justify-between shrink-0 animate-in slide-in-from-bottom duration-150">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#18181B]">
+                <img src={attachedImage.previewUrl} alt="Preview" className="w-full h-full object-cover" />
+              </div>
+              <span className="text-[11px] font-bold text-[#18181B]">Картинка прикреплена к анализу</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAttachedImage(null)}
+              className="w-6 h-6 rounded-full bg-white border border-[#18181B] flex items-center justify-center text-slate-700 cursor-pointer hover:bg-rose-100"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* Input Bar with Image & Voice Buttons */}
         <div className="p-3 bg-white border-t-[1.75px] border-[#18181B] shrink-0">
           <form
             onSubmit={(e) => {
@@ -252,6 +296,25 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
             }}
             className="flex items-center gap-2"
           >
+            {/* Hidden File Input for Image Analysis */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageSelect}
+            />
+
+            {/* Image Attachment Button */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              title="Прикрепить картинку / фото заметок"
+              className="w-10 h-10 rounded-2xl bg-[#FAF7F2] hover:bg-slate-100 border-[1.75px] border-[#18181B] flex items-center justify-center text-slate-700 shrink-0 shadow-[1.5px_1.5px_0px_#18181B] cursor-pointer active:translate-y-0.5 transition-all"
+            >
+              <ImageIcon className="w-4 h-4 stroke-[2.25]" />
+            </button>
+
             {/* Voice Dictation Button */}
             <button
               type="button"
@@ -276,7 +339,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
 
             <button
               type="submit"
-              disabled={!inputText.trim() || isLoading}
+              disabled={(!inputText.trim() && !attachedImage) || isLoading}
               className="w-10 h-10 rounded-2xl bg-[#FFE873] hover:bg-[#FED7AA] disabled:opacity-50 border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shrink-0 shadow-[1.5px_1.5px_0px_#18181B] cursor-pointer active:translate-y-0.5"
             >
               <Send className="w-4 h-4 stroke-[2.25]" />

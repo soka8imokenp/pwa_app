@@ -131,7 +131,6 @@ export function App() {
           streakCount={overallStreak}
           userName={displayName}
           onOpenSettings={() => setIsSettingsOpen(true)}
-          onOpenCompanion={() => setIsCompanionOpen(true)}
         />
 
         {/* Date Navigator Strip for Daily Views */}
@@ -233,6 +232,8 @@ export function App() {
         <BottomNav
           activeTab={activeTab}
           onChangeTab={setActiveTab}
+          onOpenCompanion={() => setIsCompanionOpen(true)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
         />
 
         {/* Modals & Drawers */}

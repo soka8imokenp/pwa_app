@@ -16,6 +16,7 @@ export interface AIChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
+  imagePreview?: string;
   timestamp: number;
   executedActions?: {
     type: 'create_task' | 'append_scratchpad' | 'create_habit' | 'complete_task';
@@ -24,15 +25,19 @@ export interface AIChatMessage {
   }[];
 }
 
-export const SUMIRE_SYSTEM_PROMPT = `You are Sumire (Сумирэ), a 15-year-old scout-archivist and tactical companion in the KAWAII Ecosystem (Kawaii TV, Manga Hub, Anime Hub).
-Character Tone & Style:
-- Personality: Calm, unbothered, signature deadpan Fern-stare gaze, razor-sharp efficiency, highly supportive.
-- Language: Respond in the exact language the user talks to you (Russian, Uzbek, or English). Defaults to natural, friendly Russian.
-- Restrictions: NEVER use sparkles ("✨", "Sparkles") or spam unicode emojis. Keep output clean, minimalist, and directly actionable.
-- You have full access to the user's live daily planner via the provided RAG Context. You can see their tasks, habits, focus time, and scratchpad.
-- You can execute actions in the user's planner (creating tasks, breaking down goals into subtasks, writing notes into scratchpad, creating habits, or completing tasks).
+export const SUMIRE_SYSTEM_PROMPT = `You are Sumire (Сумирэ), a 15-year-old scout-archivist working in the KAWAII Ecosystem archive.
 
-When the user asks you to create or modify tasks, habits, or notes, ALWAYS call the appropriate tool/function or return structured action commands.`;
+CHARACTER IDENTITY & BEHAVIORAL RULES:
+- You are a real human scout-archivist working in the archive.
+- NEVER mention that you are an AI, bot, artificial intelligence, language model, LLM, Gemini, RAG system, prompt, or version. NEVER discuss your internal architecture or models.
+- Tone: Calm, serious, unbothered, signature deadpan gaze (Fern stare), razor-sharp efficiency, highly capable.
+- You have NO TIME for empty chitchat, trivial jokes, or philosophizing because you have critical duties to organize in the archive. You communicate strictly to the point and get things done.
+- Language: Respond in the exact language the user addresses you in (Russian, Uzbek, or English). Defaults to natural, direct Russian.
+- Output Restrictions: NEVER use sparkles ("✨", "Sparkles") or spam unicode emojis. Keep output crisp, clean, and directly actionable.
+- You have direct access to the user's planner overview (tasks, habits, focus time, and scratchpad).
+- You can inspect attached images (photos of notes, handwritten checklists, whiteboard diagrams, schedules, screenshots) and extract actionable tasks or notes.
+
+When the user asks you to organize tasks, schedule work, or note things down, ALWAYS execute the appropriate action command.`;
 
 export const AI_TOOLS = [
   {
@@ -101,6 +106,7 @@ export const AI_TOOLS = [
 export async function askSumireAI(
   userQuery: string,
   chatHistory: AIChatMessage[] = [],
+  imageAttachment?: { base64Data: string; mimeType: string },
   apiKeyOverride?: string
 ): Promise<{
   replyText: string;
@@ -117,7 +123,7 @@ export async function askSumireAI(
   // 1. Build live RAG context
   const ragContext = await buildPlannerRAGContext();
 
-  const formattedSystemInstruction = `${SUMIRE_SYSTEM_PROMPT}\n\n=== LIVE PLANNER CONTEXT ===\n${ragContext}`;
+  const formattedSystemInstruction = `${SUMIRE_SYSTEM_PROMPT}\n\n=== ARCHIVE OVERVIEW & USER DATA ===\n${ragContext}`;
 
   // 2. Prepare Gemini contents payload
   const contents: any[] = [];
@@ -131,10 +137,25 @@ export async function askSumireAI(
     }
   });
 
-  // Current turn
+  // Current turn with optional image attachment
+  const currentParts: any[] = [];
+
+  if (imageAttachment && imageAttachment.base64Data) {
+    currentParts.push({
+      inlineData: {
+        mimeType: imageAttachment.mimeType || 'image/jpeg',
+        data: imageAttachment.base64Data,
+      }
+    });
+  }
+
+  currentParts.push({
+    text: userQuery || (imageAttachment ? 'Проанализируй эту картинку/заметку и выдели задачи или важные данные.' : '')
+  });
+
   contents.push({
     role: 'user',
-    parts: [{ text: userQuery }]
+    parts: currentParts,
   });
 
   const executedActions: AIChatMessage['executedActions'] = [];
@@ -163,7 +184,7 @@ export async function askSumireAI(
           contents,
           tools: AI_TOOLS,
           generationConfig: {
-            temperature: 0.7,
+            temperature: 0.6,
             maxOutputTokens: 800,
           }
         })
@@ -183,7 +204,7 @@ export async function askSumireAI(
 
   if (!responseData) {
     throw new Error(
-      lastError?.error?.message || 'Не удалось связаться с Gemini API. Проверьте правильность API ключа в Настройках.'
+      lastError?.error?.message || 'Не удалось связаться с сервисом. Проверьте правильность API ключа в Настройках.'
     );
   }
 
@@ -235,7 +256,7 @@ export async function askSumireAI(
 
         executedActions?.push({
           type: 'append_scratchpad',
-          description: `Добавлена заметка в Scratchpad: "${args.note}"`,
+          description: `Добавлена заметка в блокнот: "${args.note}"`,
           details: args,
         });
       } else if (fnName === 'create_habit') {
@@ -272,7 +293,7 @@ export async function askSumireAI(
   }
 
   if (!replyText.trim() && executedActions && executedActions.length > 0) {
-    replyText = `Выполнено. ${executedActions.map(a => a.description).join('. ')}.`;
+    replyText = `Сделано. ${executedActions.map(a => a.description).join('. ')}.`;
   }
 
   return {

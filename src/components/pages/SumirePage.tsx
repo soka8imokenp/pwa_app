@@ -6,9 +6,8 @@ import {
   CheckCircle2,
   Image as ImageIcon,
   X,
-  Bot,
-  Database,
-  Compass,
+  RotateCcw,
+  Sparkles,
 } from 'lucide-react';
 import { askSumireAI, AIChatMessage } from '../../lib/aiService';
 import { startVoiceDictation, stopVoiceDictation, isSpeechRecognitionSupported } from '../../lib/speechRecognition';
@@ -39,6 +38,18 @@ export const SumirePage: React.FC<SumirePageProps> = ({ onDataChanged }) => {
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const handleClearHistory = () => {
+    playClickSound();
+    setMessages([
+      {
+        id: 'welcome_reset',
+        role: 'assistant',
+        content: 'История очищена. Чем помочь по текущим задачам или архиву?',
+        timestamp: Date.now(),
+      },
+    ]);
+  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -157,11 +168,11 @@ export const SumirePage: React.FC<SumirePageProps> = ({ onDataChanged }) => {
   ];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] select-none font-body pb-14">
+    <div className="flex flex-col h-[calc(100vh-140px)] select-none font-body pb-24">
       {/* Top Sumire Archive Header Card */}
-      <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] flex items-center justify-between shrink-0 mb-3">
+      <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] flex items-center justify-between shrink-0 mb-2">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-[#E8DCFF] border-[1.75px] border-[#18181B] flex items-center justify-center shadow-xs overflow-hidden p-0.5 shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-[#E8DCFF] border-[1.75px] border-[#18181B] flex items-center justify-center shadow-xs overflow-hidden p-0.5 shrink-0">
             <img src="/sumire-avatar.png" alt="Sumire" className="w-full h-full object-cover rounded-[10px]" />
           </div>
 
@@ -180,9 +191,13 @@ export const SumirePage: React.FC<SumirePageProps> = ({ onDataChanged }) => {
           </div>
         </div>
 
-        <div className="w-8 h-8 rounded-xl bg-[#FAF7F2] border border-[#18181B] flex items-center justify-center text-slate-700 shadow-2xs">
-          <Database className="w-4 h-4" />
-        </div>
+        <button
+          onClick={handleClearHistory}
+          title="Очистить диалог"
+          className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-rose-50 border border-[#18181B] flex items-center justify-center text-slate-600 hover:text-rose-700 shadow-2xs active:scale-95 transition-all cursor-pointer"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+        </button>
       </div>
 
       {/* Messages Stream Container */}

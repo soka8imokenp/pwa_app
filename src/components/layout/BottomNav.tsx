@@ -11,6 +11,7 @@ import {
   X,
   MessageSquareText,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 
@@ -56,124 +57,146 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         }}
       />
 
-      {/* Seamless Neo-Brutalist Bottom Sheet Menu */}
+      {/* Full-Height Right-Side Sliding Menu Drawer */}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 z-50 flex flex-col justify-end p-3 sm:p-4 bg-[#18181B]/40 backdrop-blur-xs select-none animate-in fade-in duration-150 font-body"
+          className="fixed inset-0 z-[100] flex justify-end bg-[#18181B]/50 backdrop-blur-xs select-none animate-in fade-in duration-200 font-body"
           onClick={() => setIsMenuOpen(false)}
         >
           <div
-            className="w-full max-w-md mx-auto bg-white border-[2px] border-[#18181B] rounded-[2.5rem] shadow-[4px_4px_0px_#18181B] p-5 space-y-3 mb-16 animate-in slide-in-from-bottom duration-200"
+            className="w-4/5 max-w-sm h-full bg-[#FAF7F2] border-l-[2px] border-[#18181B] shadow-[-6px_0px_0px_#18181B] p-5 flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-250"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Sheet Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-[#18181B]/15">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[#BAE6FD] border border-[#18181B] flex items-center justify-center shadow-2xs">
-                  <LayoutGrid className="w-4 h-4 text-[#18181B] stroke-[2.25]" />
+            {/* Top Section */}
+            <div className="space-y-4">
+              {/* Drawer Top Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-[#18181B]/15">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-[#FFE873] border-[1.75px] border-[#18181B] flex items-center justify-center shadow-xs overflow-hidden p-0.5">
+                    <img src="/sumire-avatar.png" alt="Sumire" className="w-full h-full object-cover rounded-[10px]" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black font-display text-[#18181B] tracking-tight leading-tight">
+                      Daily Sumire
+                    </h3>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      Archive Navigation
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
-                    Archive & Features
-                  </h3>
-                  <p className="text-[10px] font-bold text-slate-400">
-                    Additional tools and portal links
-                  </p>
-                </div>
+
+                <button
+                  onClick={() => setIsMenuOpen(false)}
+                  className="w-8 h-8 rounded-xl bg-white hover:bg-slate-100 border-[1.5px] border-[#18181B] flex items-center justify-center text-slate-700 cursor-pointer shadow-2xs active:scale-95 transition-all"
+                >
+                  <X className="w-4 h-4 stroke-[2.5]" />
+                </button>
               </div>
-              <button
-                onClick={() => setIsMenuOpen(false)}
-                className="w-7 h-7 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border border-[#18181B] flex items-center justify-center text-slate-700 cursor-pointer shadow-2xs active:scale-95"
-              >
-                <X className="w-3.5 h-3.5 stroke-[2.5]" />
-              </button>
+
+              {/* Navigation Group 1: Planner & Archive */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block px-1">
+                  Archive & Workload
+                </span>
+
+                {/* Backlog */}
+                <button
+                  onClick={() => handleTabClick('backlog')}
+                  className={`w-full p-3 rounded-2xl border-[1.75px] flex items-center justify-between transition-all cursor-pointer text-left ${
+                    activeTab === 'backlog'
+                      ? 'bg-[#E8DCFF] border-[#18181B] shadow-[2px_2px_0px_#18181B]'
+                      : 'bg-white hover:bg-purple-50/50 border-slate-200 hover:border-[#18181B] shadow-2xs'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-[#E8DCFF] border border-[#18181B] flex items-center justify-center shadow-2xs shrink-0">
+                      <Inbox className="w-4 h-4 text-purple-950 stroke-[2.25]" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-[#18181B]">Backlog</h4>
+                      <p className="text-[10px] text-slate-500 font-medium">Unfinished tasks & raw ideas</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+
+                {/* Stats */}
+                <button
+                  onClick={() => handleTabClick('stats')}
+                  className={`w-full p-3 rounded-2xl border-[1.75px] flex items-center justify-between transition-all cursor-pointer text-left ${
+                    activeTab === 'stats'
+                      ? 'bg-[#BAE6FD] border-[#18181B] shadow-[2px_2px_0px_#18181B]'
+                      : 'bg-white hover:bg-sky-50/50 border-slate-200 hover:border-[#18181B] shadow-2xs'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-[#BAE6FD] border border-[#18181B] flex items-center justify-center shadow-2xs shrink-0">
+                      <BarChart3 className="w-4 h-4 text-sky-950 stroke-[2.25]" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-[#18181B]">Productivity Stats</h4>
+                      <p className="text-[10px] text-slate-500 font-medium">28-day heatmap & deep work</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+
+                {/* Kawaii Hub */}
+                <button
+                  onClick={() => handleTabClick('links')}
+                  className={`w-full p-3 rounded-2xl border-[1.75px] flex items-center justify-between transition-all cursor-pointer text-left ${
+                    activeTab === 'links'
+                      ? 'bg-[#FCE7F3] border-[#18181B] shadow-[2px_2px_0px_#18181B]'
+                      : 'bg-white hover:bg-pink-50/50 border-slate-200 hover:border-[#18181B] shadow-2xs'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-[#FCE7F3] border border-[#18181B] flex items-center justify-center shadow-2xs shrink-0">
+                      <Compass className="w-4 h-4 text-pink-950 stroke-[2.25]" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-[#18181B]">Kawaii Hub</h4>
+                      <p className="text-[10px] text-slate-500 font-medium">TV, Manga, Anime & Bot</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+              </div>
+
+              {/* Navigation Group 2: System */}
+              <div className="space-y-1.5 pt-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block px-1">
+                  Preferences
+                </span>
+
+                {/* Settings */}
+                <button
+                  onClick={() => {
+                    playClickSound();
+                    setIsMenuOpen(false);
+                    onOpenSettings();
+                  }}
+                  className="w-full p-3 rounded-2xl bg-white hover:bg-amber-50 border-[1.75px] border-slate-200 hover:border-[#18181B] flex items-center justify-between transition-all cursor-pointer text-left shadow-2xs"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-[#FFE873] border border-[#18181B] flex items-center justify-center shadow-2xs shrink-0">
+                      <Settings className="w-4 h-4 text-amber-950 stroke-[2.25]" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-[#18181B]">Settings</h4>
+                      <p className="text-[10px] text-slate-500 font-medium">API Keys, Accents & Backup</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+              </div>
             </div>
 
-            {/* Polished Menu Rows */}
-            <div className="space-y-2 pt-1">
-              {/* Backlog */}
-              <button
-                onClick={() => handleTabClick('backlog')}
-                className={`w-full p-3 rounded-2xl border-[1.75px] flex items-center justify-between transition-all cursor-pointer text-left ${
-                  activeTab === 'backlog'
-                    ? 'bg-[#E8DCFF] border-[#18181B] shadow-[2px_2px_0px_#18181B]'
-                    : 'bg-[#FAF7F2] hover:bg-slate-100 border-slate-200 hover:border-[#18181B]'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-white border border-[#18181B] flex items-center justify-center shadow-2xs shrink-0">
-                    <Inbox className="w-4 h-4 text-purple-900 stroke-[2]" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-black text-[#18181B]">Backlog</h4>
-                    <p className="text-[10px] text-slate-500 font-medium">Unfinished tasks & raw ideas</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
-              </button>
-
-              {/* Stats */}
-              <button
-                onClick={() => handleTabClick('stats')}
-                className={`w-full p-3 rounded-2xl border-[1.75px] flex items-center justify-between transition-all cursor-pointer text-left ${
-                  activeTab === 'stats'
-                    ? 'bg-[#BAE6FD] border-[#18181B] shadow-[2px_2px_0px_#18181B]'
-                    : 'bg-[#FAF7F2] hover:bg-slate-100 border-slate-200 hover:border-[#18181B]'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-white border border-[#18181B] flex items-center justify-center shadow-2xs shrink-0">
-                    <BarChart3 className="w-4 h-4 text-sky-900 stroke-[2]" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-black text-[#18181B]">Productivity Stats</h4>
-                    <p className="text-[10px] text-slate-500 font-medium">28-day heatmap & deep work</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
-              </button>
-
-              {/* Kawaii Hub */}
-              <button
-                onClick={() => handleTabClick('links')}
-                className={`w-full p-3 rounded-2xl border-[1.75px] flex items-center justify-between transition-all cursor-pointer text-left ${
-                  activeTab === 'links'
-                    ? 'bg-[#FCE7F3] border-[#18181B] shadow-[2px_2px_0px_#18181B]'
-                    : 'bg-[#FAF7F2] hover:bg-slate-100 border-slate-200 hover:border-[#18181B]'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-white border border-[#18181B] flex items-center justify-center shadow-2xs shrink-0">
-                    <Compass className="w-4 h-4 text-pink-900 stroke-[2]" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-black text-[#18181B]">Kawaii Ecosystem Hub</h4>
-                    <p className="text-[10px] text-slate-500 font-medium">TV, Manga, Anime & Bot</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
-              </button>
-
-              {/* Settings */}
-              <button
-                onClick={() => {
-                  playClickSound();
-                  setIsMenuOpen(false);
-                  onOpenSettings();
-                }}
-                className="w-full p-3 rounded-2xl bg-[#FAF7F2] hover:bg-amber-50 border-[1.75px] border-slate-200 hover:border-[#18181B] flex items-center justify-between transition-all cursor-pointer text-left"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-white border border-[#18181B] flex items-center justify-center shadow-2xs shrink-0">
-                    <Settings className="w-4 h-4 text-amber-900 stroke-[2]" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-black text-[#18181B]">Settings</h4>
-                    <p className="text-[10px] text-slate-500 font-medium">API Keys, Theme colors & Backup</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
-              </button>
+            {/* Bottom Footer Info */}
+            <div className="pt-4 border-t border-[#18181B]/15 text-center space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 block">
+                Daily Sumire v2.4 • KAWAII Ecosystem
+              </span>
             </div>
           </div>
         </div>

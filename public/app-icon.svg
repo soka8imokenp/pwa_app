@@ -1,52 +1,45 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Minimalist Neo-Brutalist Cream Canvas -->
-  <rect width="512" height="512" fill="#FAF7F2"/>
-  
-  <!-- Outer Neo-Brutalist Rounded Squircle Frame -->
-  <rect x="36" y="36" width="440" height="440" rx="96" fill="#FFE873" stroke="#18181B" stroke-width="16"/>
-  <rect x="52" y="52" width="408" height="408" rx="80" fill="#FAF7F2" stroke="#18181B" stroke-width="6"/>
+  <!-- Minimalist Neo-Brutalist Background Canvas -->
+  <rect width="512" height="512" fill="#FFE873"/>
+  <rect x="24" y="24" width="464" height="464" rx="88" fill="#FAF7F2" stroke="#18181B" stroke-width="16"/>
 
-  <!-- Minimalist Geometric Rabbit Ears -->
+  <!-- Minimalist Japanese Vector Bunny Ears -->
   <!-- Left Ear -->
-  <g transform="rotate(-8 200 160)">
-    <rect x="160" y="70" width="56" height="150" rx="28" fill="#E8DCFF" stroke="#18181B" stroke-width="12"/>
-    <rect x="174" y="95" width="28" height="95" rx="14" fill="#FED7AA" stroke="#18181B" stroke-width="6"/>
+  <g transform="rotate(-6 210 170)">
+    <rect x="180" y="80" width="52" height="155" rx="26" fill="#E8DCFF" stroke="#18181B" stroke-width="12"/>
+    <rect x="194" y="105" width="24" height="95" rx="12" fill="#FED7AA" stroke="#18181B" stroke-width="5"/>
   </g>
   <!-- Right Ear -->
-  <g transform="rotate(8 312 160)">
-    <rect x="296" y="70" width="56" height="150" rx="28" fill="#E8DCFF" stroke="#18181B" stroke-width="12"/>
-    <rect x="310" y="95" width="28" height="95" rx="14" fill="#FED7AA" stroke="#18181B" stroke-width="6"/>
+  <g transform="rotate(6 302 170)">
+    <rect x="280" y="80" width="52" height="155" rx="26" fill="#E8DCFF" stroke="#18181B" stroke-width="12"/>
+    <rect x="294" y="105" width="24" height="95" rx="12" fill="#FED7AA" stroke="#18181B" stroke-width="5"/>
   </g>
 
-  <!-- Minimalist Head / Face Container -->
-  <rect x="136" y="195" width="240" height="210" rx="60" fill="#FFFFFF" stroke="#18181B" stroke-width="14"/>
+  <!-- Minimalist Head Container -->
+  <rect x="146" y="205" width="220" height="195" rx="56" fill="#FFFFFF" stroke="#18181B" stroke-width="14"/>
 
-  <!-- Lavender Bangs Header Cap -->
-  <path d="M136 260 C160 210 352 210 376 260 C340 235 305 265 285 240 C265 270 240 270 220 240 C200 265 168 235 136 260 Z" fill="#C084FC" stroke="#18181B" stroke-width="10"/>
+  <!-- Lavender Bangs Cap -->
+  <path d="M146 265 C170 220 342 220 366 265 C336 240 305 268 285 244 C265 272 245 272 225 244 C205 268 174 240 146 265 Z" fill="#C084FC" stroke="#18181B" stroke-width="10"/>
 
-  <!-- Iconic Deadpan Fern Eyes (Minimalist Neo-Brutalist Geometry) -->
+  <!-- Ultra-Minimalist Fern Deadpan Gaze -->
   <!-- Left Eye -->
   <g>
-    <path d="M175 295 Q205 280 232 295" stroke="#18181B" stroke-width="10" stroke-linecap="round"/>
-    <ellipse cx="203" cy="308" rx="15" ry="14" fill="#10B981" stroke="#18181B" stroke-width="6"/>
-    <circle cx="203" cy="308" rx="7" fill="#064E3B"/>
-    <circle cx="199" cy="303" r="3" fill="#FFFFFF"/>
-    <path d="M185 318 Q203 324 220 318" stroke="#18181B" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M182 300 Q206 288 230 300" stroke="#18181B" stroke-width="9" stroke-linecap="round"/>
+    <rect x="196" y="306" width="16" height="12" rx="6" fill="#10B981" stroke="#18181B" stroke-width="4.5"/>
+    <circle cx="202" cy="310" r="2.5" fill="#FFFFFF"/>
   </g>
 
   <!-- Right Eye -->
   <g>
-    <path d="M280 295 Q307 280 337 295" stroke="#18181B" stroke-width="10" stroke-linecap="round"/>
-    <ellipse cx="309" cy="308" rx="15" ry="14" fill="#10B981" stroke="#18181B" stroke-width="6"/>
-    <circle cx="309" cy="308" rx="7" fill="#064E3B"/>
-    <circle cx="305" cy="303" r="3" fill="#FFFFFF"/>
-    <path d="M292 318 Q309 324 327 318" stroke="#18181B" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M282 300 Q306 288 330 300" stroke="#18181B" stroke-width="9" stroke-linecap="round"/>
+    <rect x="300" y="306" width="16" height="12" rx="6" fill="#10B981" stroke="#18181B" stroke-width="4.5"/>
+    <circle cx="306" cy="310" r="2.5" fill="#FFFFFF"/>
   </g>
 
   <!-- Minimalist Line Mouth -->
-  <line x1="242" y1="350" x2="270" y2="350" stroke="#18181B" stroke-width="6" stroke-linecap="round"/>
+  <line x1="246" y1="352" x2="266" y2="352" stroke="#18181B" stroke-width="5.5" stroke-linecap="round"/>
 
-  <!-- Soft Pink Blush Dots -->
-  <circle cx="168" cy="326" r="10" fill="#FCA5A5" opacity="0.6"/>
-  <circle cx="344" cy="326" r="10" fill="#FCA5A5" opacity="0.6"/>
+  <!-- Soft Blush -->
+  <ellipse cx="174" cy="328" rx="10" ry="6" fill="#FCA5A5" opacity="0.6"/>
+  <ellipse cx="338" cy="328" rx="10" ry="6" fill="#FCA5A5" opacity="0.6"/>
 </svg>

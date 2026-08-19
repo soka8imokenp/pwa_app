@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Flame, Settings } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
+import { getAvatarById } from '../../data/avatars';
 
 interface HeaderProps {
   streakCount: number;
@@ -13,6 +14,21 @@ export const Header: React.FC<HeaderProps> = ({
   userName = 'Alex',
   onOpenSettings,
 }) => {
+  const [avatarId, setAvatarId] = useState<string>('sumire-scout');
+
+  useEffect(() => {
+    const updateAvatar = () => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('kairo_selected_avatar');
+        if (saved) setAvatarId(saved);
+      }
+    };
+    updateAvatar();
+    window.addEventListener('storage', updateAvatar);
+    return () => window.removeEventListener('storage', updateAvatar);
+  }, []);
+
+  const activeAvatar = getAvatarById(avatarId);
   const firstName = userName.split(' ')[0] || 'Friend';
 
   return (
@@ -22,10 +38,11 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-2.5">
           <button
             onClick={onOpenSettings}
-            className="w-9 h-9 rounded-xl bg-[#FFE873] border-[1.75px] border-[#18181B] flex items-center justify-center font-bold text-sm shadow-[1.5px_1.5px_0px_#18181B] shrink-0 cursor-pointer active:translate-y-0.5 active:shadow-none transition-all overflow-hidden p-0.5"
+            className="w-10 h-10 rounded-2xl border-[1.75px] border-[#18181B] flex items-center justify-center shadow-[1.5px_1.5px_0px_#18181B] shrink-0 cursor-pointer active:translate-y-0.5 active:shadow-none transition-all p-0.5"
+            style={{ backgroundColor: activeAvatar.bg }}
             title="Settings & Profile"
           >
-            <img src="/icon-192x192.png" alt="Sumire" className="w-full h-full object-cover rounded-[9px]" />
+            {activeAvatar.renderSvg('w-full h-full')}
           </button>
 
           <div>

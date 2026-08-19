@@ -16,6 +16,7 @@ import {
   Check,
   X,
   Zap,
+  Smile,
   ArrowUpCircle,
 } from 'lucide-react';
 import {
@@ -25,6 +26,7 @@ import {
   resetAndSeedDatabase,
 } from '../../lib/exportImport';
 import { playSuccessChime, playClickSound } from '../../lib/sound';
+import { AVATAR_OPTIONS, getAvatarById } from '../../data/avatars';
 import type { UserProfile } from '../auth/AuthContainer';
 
 interface SettingsModalProps {
@@ -58,9 +60,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [feedback, setFeedback] = useState<{ text: string; success: boolean } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedAccent, setSelectedAccent] = useState('lilac');
+  const [selectedAvatar, setSelectedAvatar] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('kairo_selected_avatar') || 'sumire-scout';
+    }
+    return 'sumire-scout';
+  });
   const [updateChecking, setUpdateChecking] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSelectAvatar = (id: string) => {
+    playClickSound();
+    setSelectedAvatar(id);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kairo_selected_avatar', id);
+      window.dispatchEvent(new Event('storage'));
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -210,7 +227,57 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         )}
 
-        {/* 2. Audio & Haptic Feedback Capsule */}
+        {/* 2. Funny Vector Mascot Avatars Grid */}
+        <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-[#FFE873] border border-[#18181B] flex items-center justify-center shadow-xs">
+                <Smile className="w-4 h-4 text-[#18181B] stroke-[2.25]" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
+                  Mascot Avatar
+                </h4>
+                <p className="text-[10px] text-slate-500 font-bold">
+                  Funny vector character avatars
+                </p>
+              </div>
+            </div>
+
+            <span className="text-[10px] font-bold text-purple-800 bg-[#E8DCFF] px-2 py-0.5 rounded-full border border-[#18181B]">
+              {getAvatarById(selectedAvatar).name}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-4 gap-2 pt-1">
+            {AVATAR_OPTIONS.map((avatar) => {
+              const isSelected = selectedAvatar === avatar.id;
+              return (
+                <button
+                  key={avatar.id}
+                  type="button"
+                  onClick={() => handleSelectAvatar(avatar.id)}
+                  className={`p-1.5 rounded-2xl border-[1.75px] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                    isSelected
+                      ? 'border-[#18181B] shadow-[2px_2px_0px_#18181B] scale-105 ring-2 ring-[#FFE873]'
+                      : 'border-slate-200 hover:border-[#18181B] opacity-80 hover:opacity-100'
+                  }`}
+                  style={{ backgroundColor: avatar.bg }}
+                  title={avatar.name}
+                >
+                  <div className="w-10 h-10">
+                    {avatar.renderSvg('w-full h-full')}
+                  </div>
+                  <span className="text-[9px] font-black text-[#18181B] truncate w-full text-center leading-tight">
+                    {avatar.name.split(' ')[0]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 3. Audio & Haptic Feedback Capsule */}
         <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-[2rem] flex items-center justify-between shadow-[2px_2px_0px_#18181B]">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-full bg-[#E9D5FF] border border-[#18181B] flex items-center justify-center text-xs">

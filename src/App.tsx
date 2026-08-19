@@ -16,9 +16,11 @@ import { SmartBraindumpModal } from './components/modals/SmartBraindumpModal';
 import { EveningReviewModal } from './components/modals/EveningReviewModal';
 import { SumireCompanionModal } from './components/modals/SumireCompanionModal';
 import { MenuModal } from './components/modals/MenuModal';
+import { AppUpdateModal } from './components/modals/AppUpdateModal';
 import { AuthContainer, UserProfile } from './components/auth/AuthContainer';
 import { InAppNotificationToast } from './components/common/InAppNotificationToast';
 import { initNotificationSystem } from './lib/notifications';
+import { checkForTelegramUpdate, AppUpdateInfo } from './lib/telegramUpdater';
 import { usePlannerData } from './hooks/usePlannerData';
 import { getTodayString } from './lib/dateUtils';
 import { isSoundMuted, setSoundMuted, playClickSound } from './lib/sound';
@@ -53,11 +55,12 @@ export function App() {
   const [isEveningReviewOpen, setIsEveningReviewOpen] = useState(false);
   const [isSumireOpen, setIsSumireOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [availableUpdate, setAvailableUpdate] = useState<AppUpdateInfo | null>(null);
 
   // Focus Timer active selection
   const [focusSelectedTask, setFocusSelectedTask] = useState<Task | null>(null);
 
-  // Initialize notification deep-linking system
+  // Initialize notification deep-linking system & check for Telegram APK updates
   useEffect(() => {
     initNotificationSystem((targetTab, extra) => {
       if (targetTab) {
@@ -75,6 +78,14 @@ export function App() {
     };
 
     window.addEventListener('sumire:navigate', handleWebNavigate);
+
+    // Auto-check for updates from Telegram group
+    checkForTelegramUpdate().then((update) => {
+      if (update && update.hasUpdate) {
+        setAvailableUpdate(update);
+      }
+    });
+
     return () => window.removeEventListener('sumire:navigate', handleWebNavigate);
   }, []);
 
@@ -322,7 +333,17 @@ export function App() {
           onDataChanged={() => {}}
           currentUser={currentUser}
           onLogout={handleLogout}
+          onShowUpdateModal={(info) => setAvailableUpdate(info)}
         />
+
+        {/* Telegram Auto-Update Modal */}
+        {availableUpdate && (
+          <AppUpdateModal
+            isOpen={Boolean(availableUpdate)}
+            onClose={() => setAvailableUpdate(null)}
+            updateInfo={availableUpdate}
+          />
+        )}
       </div>
     </div>
   );

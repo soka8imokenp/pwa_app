@@ -21,6 +21,7 @@ import {
   Bot,
   ArrowUpCircle,
   ExternalLink,
+  RefreshCw,
 } from 'lucide-react';
 import {
   exportDatabaseToJson,
@@ -31,6 +32,7 @@ import {
 import { playSuccessChime, playClickSound } from '../../lib/sound';
 import { AVATAR_OPTIONS, getAvatarById } from '../../data/avatars';
 import type { UserProfile } from '../auth/AuthContainer';
+import { checkForTelegramUpdate, CURRENT_APP_VERSION, AppUpdateInfo } from '../../lib/telegramUpdater';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -42,6 +44,7 @@ interface SettingsModalProps {
   onDataChanged: () => void;
   currentUser?: UserProfile | null;
   onLogout?: () => void;
+  onShowUpdateModal?: (info: AppUpdateInfo) => void;
 }
 
 const THEME_ACCENTS = [
@@ -59,6 +62,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onDataChanged,
   currentUser,
   onLogout,
+  onShowUpdateModal,
 }) => {
   const [feedback, setFeedback] = useState<{ text: string; success: boolean } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -86,6 +90,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       localStorage.setItem('kairo_gemini_api_key', geminiKeyInput.trim());
       playSuccessChime();
       setFeedback({ text: 'Gemini API ключ успешно сохранен!', success: true });
+    }
+  };
+
+  const handleCheckTelegramUpdate = async () => {
+    playClickSound();
+    setUpdateChecking(true);
+    setUpdateStatus(null);
+    try {
+      const update = await checkForTelegramUpdate();
+      if (update && update.hasUpdate) {
+        if (onShowUpdateModal) {
+          onShowUpdateModal(update);
+        } else {
+          window.open(update.downloadUrl, '_blank');
+        }
+      } else {
+        playSuccessChime();
+        setUpdateStatus('Latest version installed!');
+      }
+    } catch {
+      setUpdateStatus('Could not reach Telegram.');
+    } finally {
+      setUpdateChecking(false);
     }
   };
 
@@ -499,24 +526,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* 4. App Version */}
-        <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#FFE873] border border-[#18181B] flex items-center justify-center font-bold text-xs shadow-xs">
-              <Zap className="w-4 h-4 text-[#18181B] stroke-[2.25]" />
+        {/* 4. App Version & Telegram Updater */}
+        <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-[#FFE873] border border-[#18181B] flex items-center justify-center font-bold text-xs shadow-xs">
+                <Zap className="w-4 h-4 text-[#18181B] stroke-[2.25]" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
+                  Daily Sumire
+                </h4>
+                <span className="text-[10px] text-slate-500 font-bold">Version {CURRENT_APP_VERSION}</span>
+              </div>
             </div>
-            <div>
-              <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
-                Daily Sumire
-              </h4>
-              <span className="text-[10px] text-slate-500 font-bold">Version v1.3.1 (Latest)</span>
-            </div>
+
+            <button
+              onClick={handleCheckTelegramUpdate}
+              disabled={updateChecking}
+              className="px-3 py-1.5 rounded-full bg-[#FAF7F2] hover:bg-[#E8DCFF] border border-[#18181B] text-[10px] font-black text-[#18181B] flex items-center gap-1.5 shadow-2xs cursor-pointer active:translate-y-0.5 transition-all"
+            >
+              <RefreshCw className={`w-3 h-3 ${updateChecking ? 'animate-spin' : ''}`} />
+              <span>{updateChecking ? 'Checking...' : 'Check Updates'}</span>
+            </button>
           </div>
 
-          <span className="px-2.5 py-1 rounded-full bg-[#D1FBE4] border border-[#065F46]/30 text-[10px] font-bold text-[#065F46] flex items-center gap-1">
-            <span>Up to date</span>
-            <Check className="w-3 h-3 stroke-[2.5]" />
-          </span>
+          {updateStatus && (
+            <div className="p-2 bg-[#D1FBE4] border border-[#065F46]/30 rounded-xl text-[10px] font-bold text-[#065F46] text-center">
+              {updateStatus}
+            </div>
+          )}
         </div>
 
       </div>

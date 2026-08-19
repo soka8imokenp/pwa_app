@@ -1,81 +1,52 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Neo-Brutalist Base Canvas -->
+  <!-- Minimalist Neo-Brutalist Cream Canvas -->
   <rect width="512" height="512" fill="#FAF7F2"/>
   
-  <!-- Outer Badge Ring (Neo-Brutalist Soft Lilac) -->
-  <circle cx="256" cy="256" r="236" fill="#E8DCFF" stroke="#18181B" stroke-width="16"/>
-  <circle cx="256" cy="256" r="216" fill="#FAF7F2" stroke="#18181B" stroke-width="6" stroke-dasharray="12 12"/>
+  <!-- Outer Neo-Brutalist Rounded Squircle Frame -->
+  <rect x="36" y="36" width="440" height="440" rx="96" fill="#FFE873" stroke="#18181B" stroke-width="16"/>
+  <rect x="52" y="52" width="408" height="408" rx="80" fill="#FAF7F2" stroke="#18181B" stroke-width="6"/>
 
-  <!-- Subtle Neo-Brutalist Shadow Pill Behind Head -->
-  <ellipse cx="256" cy="410" rx="140" ry="36" fill="#FFE873" stroke="#18181B" stroke-width="8"/>
-
-  <!-- Rabbit Ears -->
+  <!-- Minimalist Geometric Rabbit Ears -->
   <!-- Left Ear -->
-  <g transform="rotate(-10 180 140)">
-    <ellipse cx="180" cy="140" rx="42" ry="110" fill="#FFFFFF" stroke="#18181B" stroke-width="12"/>
-    <ellipse cx="180" cy="145" rx="22" ry="75" fill="#FED7AA" stroke="#18181B" stroke-width="6"/>
+  <g transform="rotate(-8 200 160)">
+    <rect x="160" y="70" width="56" height="150" rx="28" fill="#E8DCFF" stroke="#18181B" stroke-width="12"/>
+    <rect x="174" y="95" width="28" height="95" rx="14" fill="#FED7AA" stroke="#18181B" stroke-width="6"/>
   </g>
   <!-- Right Ear -->
-  <g transform="rotate(10 332 140)">
-    <ellipse cx="332" cy="140" rx="42" ry="110" fill="#FFFFFF" stroke="#18181B" stroke-width="12"/>
-    <ellipse cx="332" cy="145" rx="22" ry="75" fill="#FED7AA" stroke="#18181B" stroke-width="6"/>
+  <g transform="rotate(8 312 160)">
+    <rect x="296" y="70" width="56" height="150" rx="28" fill="#E8DCFF" stroke="#18181B" stroke-width="12"/>
+    <rect x="310" y="95" width="28" height="95" rx="14" fill="#FED7AA" stroke="#18181B" stroke-width="6"/>
   </g>
 
-  <!-- Tactical Collar / Jumpsuit Shoulders -->
-  <path d="M120 460 C140 380 200 370 256 370 C312 370 372 380 392 460 Z" fill="#18181B" stroke="#18181B" stroke-width="12"/>
-  <path d="M210 370 L256 420 L302 370 Z" fill="#A855F7" stroke="#18181B" stroke-width="8"/>
-  <circle cx="256" cy="400" r="8" fill="#BEF264" stroke="#18181B" stroke-width="4"/>
+  <!-- Minimalist Head / Face Container -->
+  <rect x="136" y="195" width="240" height="210" rx="60" fill="#FFFFFF" stroke="#18181B" stroke-width="14"/>
 
-  <!-- Head Base -->
-  <circle cx="256" cy="300" r="125" fill="#FFFBEB" stroke="#18181B" stroke-width="12"/>
+  <!-- Lavender Bangs Header Cap -->
+  <path d="M136 260 C160 210 352 210 376 260 C340 235 305 265 285 240 C265 270 240 270 220 240 C200 265 168 235 136 260 Z" fill="#C084FC" stroke="#18181B" stroke-width="10"/>
 
-  <!-- Lavender Hair Back & Side Locks -->
-  <path d="M130 280 C110 340 120 410 150 440 C170 410 160 350 165 310 Z" fill="#C084FC" stroke="#18181B" stroke-width="10"/>
-  <path d="M382 280 C402 340 392 410 362 440 C342 410 352 350 347 310 Z" fill="#C084FC" stroke="#18181B" stroke-width="10"/>
-
-  <!-- Lavender Hair Bangs (Sumire Style) -->
-  <path d="M136 260 C160 175 352 175 376 260 C340 230 310 270 290 240 C270 285 242 285 222 240 C202 270 172 230 136 260 Z" fill="#C084FC" stroke="#18181B" stroke-width="12"/>
-
-  <!-- Hair Highlights (Neo-Brutalist Block Style) -->
-  <path d="M180 205 Q220 195 245 205" stroke="#E9D5FF" stroke-width="8" stroke-linecap="round"/>
-  <path d="M267 205 Q292 195 332 205" stroke="#E9D5FF" stroke-width="8" stroke-linecap="round"/>
-
-  <!-- Fern Deadpan Eyes (Signature Calm / Unbothered Stare) -->
+  <!-- Iconic Deadpan Fern Eyes (Minimalist Neo-Brutalist Geometry) -->
   <!-- Left Eye -->
   <g>
-    <!-- Upper Heavy Eyelash Line -->
-    <path d="M172 290 Q205 272 234 290" stroke="#18181B" stroke-width="10" stroke-linecap="round"/>
-    <!-- Emerald Iris -->
-    <ellipse cx="203" cy="305" rx="20" ry="18" fill="#10B981" stroke="#18181B" stroke-width="6"/>
-    <!-- Pupil & Reflection -->
-    <ellipse cx="203" cy="305" rx="10" ry="12" fill="#064E3B"/>
-    <circle cx="198" cy="299" r="4.5" fill="#FFFFFF"/>
-    <!-- Lower Eyelash -->
-    <path d="M184 318 Q203 325 224 318" stroke="#18181B" stroke-width="5" stroke-linecap="round"/>
+    <path d="M175 295 Q205 280 232 295" stroke="#18181B" stroke-width="10" stroke-linecap="round"/>
+    <ellipse cx="203" cy="308" rx="15" ry="14" fill="#10B981" stroke="#18181B" stroke-width="6"/>
+    <circle cx="203" cy="308" rx="7" fill="#064E3B"/>
+    <circle cx="199" cy="303" r="3" fill="#FFFFFF"/>
+    <path d="M185 318 Q203 324 220 318" stroke="#18181B" stroke-width="4.5" stroke-linecap="round"/>
   </g>
 
   <!-- Right Eye -->
   <g>
-    <!-- Upper Heavy Eyelash Line -->
-    <path d="M278 290 Q307 272 340 290" stroke="#18181B" stroke-width="10" stroke-linecap="round"/>
-    <!-- Emerald Iris -->
-    <ellipse cx="309" cy="305" rx="20" ry="18" fill="#10B981" stroke="#18181B" stroke-width="6"/>
-    <!-- Pupil & Reflection -->
-    <ellipse cx="309" cy="305" rx="10" ry="12" fill="#064E3B"/>
-    <circle cx="304" cy="299" r="4.5" fill="#FFFFFF"/>
-    <!-- Lower Eyelash -->
-    <path d="M288 318 Q309 325 328 318" stroke="#18181B" stroke-width="5" stroke-linecap="round"/>
+    <path d="M280 295 Q307 280 337 295" stroke="#18181B" stroke-width="10" stroke-linecap="round"/>
+    <ellipse cx="309" cy="308" rx="15" ry="14" fill="#10B981" stroke="#18181B" stroke-width="6"/>
+    <circle cx="309" cy="308" rx="7" fill="#064E3B"/>
+    <circle cx="305" cy="303" r="3" fill="#FFFFFF"/>
+    <path d="M292 318 Q309 324 327 318" stroke="#18181B" stroke-width="4.5" stroke-linecap="round"/>
   </g>
 
-  <!-- Eyebrows (Calm / Slightly Narrowed) -->
-  <path d="M178 266 Q205 258 230 268" stroke="#7E22CE" stroke-width="6" stroke-linecap="round"/>
-  <path d="M282 268 Q307 258 334 266" stroke="#7E22CE" stroke-width="6" stroke-linecap="round"/>
+  <!-- Minimalist Line Mouth -->
+  <line x1="242" y1="350" x2="270" y2="350" stroke="#18181B" stroke-width="6" stroke-linecap="round"/>
 
-  <!-- Minimalist Nose & Line Mouth -->
-  <circle cx="256" cy="330" r="3" fill="#18181B"/>
-  <path d="M244 350 L268 350" stroke="#18181B" stroke-width="6" stroke-linecap="round"/>
-
-  <!-- Soft Pink Blush -->
-  <ellipse cx="168" cy="326" rx="14" ry="7" fill="#F43F5E" opacity="0.4"/>
-  <ellipse cx="344" cy="326" rx="14" ry="7" fill="#F43F5E" opacity="0.4"/>
+  <!-- Soft Pink Blush Dots -->
+  <circle cx="168" cy="326" r="10" fill="#FCA5A5" opacity="0.6"/>
+  <circle cx="344" cy="326" r="10" fill="#FCA5A5" opacity="0.6"/>
 </svg>

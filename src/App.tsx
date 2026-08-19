@@ -9,12 +9,12 @@ import { HabitsPage } from './components/pages/HabitsPage';
 import { FocusPage } from './components/pages/FocusPage';
 import { StatsPage } from './components/pages/StatsPage';
 import { LinksPage } from './components/pages/LinksPage';
+import { SumirePage } from './components/pages/SumirePage';
 import { AddTaskModal } from './components/planner/AddTaskModal';
 import { AddHabitModal } from './components/habits/AddHabitModal';
 import { SettingsModal } from './components/settings/SettingsModal';
 import { SmartBraindumpModal } from './components/modals/SmartBraindumpModal';
 import { EveningReviewModal } from './components/modals/EveningReviewModal';
-import { SumireCompanionModal } from './components/modals/SumireCompanionModal';
 import { AuthContainer, UserProfile } from './components/auth/AuthContainer';
 import { usePlannerData } from './hooks/usePlannerData';
 import { getTodayString } from './lib/dateUtils';
@@ -48,7 +48,6 @@ export function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBraindumpOpen, setIsBraindumpOpen] = useState(false);
   const [isEveningReviewOpen, setIsEveningReviewOpen] = useState(false);
-  const [isCompanionOpen, setIsCompanionOpen] = useState(false);
 
   // Focus Timer active selection
   const [focusSelectedTask, setFocusSelectedTask] = useState<Task | null>(null);
@@ -218,6 +217,10 @@ export function App() {
             />
           )}
 
+          {activeTab === 'sumire' && (
+            <SumirePage />
+          )}
+
           {activeTab === 'stats' && (
             <StatsPage
               tasks={allTasks}
@@ -232,7 +235,6 @@ export function App() {
         <BottomNav
           activeTab={activeTab}
           onChangeTab={setActiveTab}
-          onOpenCompanion={() => setIsCompanionOpen(true)}
           onOpenSettings={() => setIsSettingsOpen(true)}
         />
 
@@ -267,11 +269,6 @@ export function App() {
           habits={habitsWithStats}
           todaysSessions={todaysFocusSessions}
           selectedDate={selectedDate}
-        />
-
-        <SumireCompanionModal
-          isOpen={isCompanionOpen}
-          onClose={() => setIsCompanionOpen(false)}
         />
 
         <SettingsModal

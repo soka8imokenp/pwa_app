@@ -162,8 +162,6 @@ export function App() {
               onStartFocus={handleStartFocus}
               onLogFocusSession={logFocusSession}
               onQuickCreateTask={addTask}
-              onOpenSmartBraindump={() => setIsBraindumpOpen(true)}
-              onOpenEveningReview={() => setIsEveningReviewOpen(true)}
             />
           )}
 

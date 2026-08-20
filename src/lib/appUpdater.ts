@@ -46,18 +46,26 @@ export async function checkForAppUpdate(customUrl?: string): Promise<AppUpdateIn
   if (!baseUrl) return null;
 
   try {
-    const endpoint = baseUrl.endsWith('/version.json') || baseUrl.endsWith('/api/update')
-      ? baseUrl
-      : `${baseUrl.replace(/\/$/, '')}/version.json`;
-
-    const res = await fetch(endpoint, {
+    const rootUrl = baseUrl.replace(/\/version\.json$/, '').replace(/\/api\/update$/, '').replace(/\/$/, '');
+    
+    // 1. Try dynamic /api/update endpoint first (which automatically scans for any .apk)
+    let res = await fetch(`${rootUrl}/api/update`, {
       method: 'GET',
       headers: { 'Accept': 'application/json' },
       cache: 'no-cache',
-    });
+    }).catch(() => null);
 
-    if (!res.ok) {
-      console.warn('Updater fetch returned HTTP', res.status);
+    // 2. Fallback to /version.json static file
+    if (!res || !res.ok) {
+      res = await fetch(`${rootUrl}/version.json`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-cache',
+      }).catch(() => null);
+    }
+
+    if (!res || !res.ok) {
+      console.warn('Updater fetch returned error or unreachable');
       return null;
     }
 

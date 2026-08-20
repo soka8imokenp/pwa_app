@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import {
   formatDisplayDate,
   getRelativeDayLabel,
@@ -14,11 +14,13 @@ interface DateNavigatorProps {
   selectedDate: string;
   onSelectDate: (date: string) => void;
   stats: DayOverviewStats;
+  onOpenCalendar?: () => void;
 }
 
 export const DateNavigator: React.FC<DateNavigatorProps> = ({
   selectedDate,
   onSelectDate,
+  onOpenCalendar,
 }) => {
   const isTodaySelected = selectedDate === getTodayString();
   const weekDays = getWeekDaysForDate(selectedDate);
@@ -36,55 +38,75 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
     onSelectDate(getTodayString());
   };
 
+  const handleCalendarClick = () => {
+    playClickSound();
+    if (onOpenCalendar) {
+      onOpenCalendar();
+    }
+  };
+
   return (
     <div className="w-full neo-card p-3 sm:p-4 mb-4 select-none font-body">
-      {/* Top row: Perfectly Centered Date Switcher */}
-      <div className="flex items-center justify-center gap-2 mb-3 relative">
-        <button
-          onClick={handlePrevDay}
-          className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0"
-          aria-label="Previous day"
-        >
-          <ChevronLeft className="w-4 h-4 stroke-[2.25]" />
-        </button>
-
-        {/* Centered Date Badge */}
-        <div
-          onClick={handleToday}
-          className="px-3.5 py-1.5 bg-[#FAF7F2] hover:bg-slate-100 border-[1.75px] border-[#18181B] rounded-xl flex items-center justify-center gap-2 shadow-[1px_1px_0px_#18181B] cursor-pointer transition-all"
-          title="Click to jump to Today"
-        >
-          <span className="text-xs sm:text-sm font-bold font-display text-[#18181B] tracking-tight">
-            {formatDisplayDate(selectedDate)}
-          </span>
-          <span
-            className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
-              isTodaySelected
-                ? 'bg-[#FFE873] text-[#18181B] border border-[#18181B]'
-                : 'text-slate-600 bg-slate-200/70'
-            }`}
+      {/* Top row: Centered Date Switcher + Calendar Modal Trigger */}
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={handlePrevDay}
+            className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0"
+            aria-label="Previous day"
           >
-            {getRelativeDayLabel(selectedDate)}
-          </span>
+            <ChevronLeft className="w-4 h-4 stroke-[2.25]" />
+          </button>
+
+          {/* Centered Date Badge (Click to open Calendar Planner) */}
+          <button
+            onClick={handleCalendarClick}
+            className="px-3 py-1.5 bg-[#FAF7F2] hover:bg-[#FFE873] border-[1.75px] border-[#18181B] rounded-xl flex items-center gap-2 shadow-[1px_1px_0px_#18181B] cursor-pointer transition-all active:translate-y-0.5"
+            title="Open Calendar Planner"
+          >
+            <Calendar className="w-3.5 h-3.5 text-[#18181B] stroke-[2.5]" />
+            <span className="text-xs sm:text-sm font-bold font-display text-[#18181B] tracking-tight">
+              {formatDisplayDate(selectedDate)}
+            </span>
+            <span
+              className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
+                isTodaySelected
+                  ? 'bg-[#FFE873] text-[#18181B] border border-[#18181B]'
+                  : 'text-slate-600 bg-slate-200/70'
+              }`}
+            >
+              {getRelativeDayLabel(selectedDate)}
+            </span>
+          </button>
+
+          <button
+            onClick={handleNextDay}
+            className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0"
+            aria-label="Next day"
+          >
+            <ChevronRight className="w-4 h-4 stroke-[2.25]" />
+          </button>
         </div>
 
-        <button
-          onClick={handleNextDay}
-          className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0"
-          aria-label="Next day"
-        >
-          <ChevronRight className="w-4 h-4 stroke-[2.25]" />
-        </button>
+        {/* Right side: Open Full Calendar / Today Jump Button */}
+        <div className="flex items-center gap-1.5">
+          {!isTodaySelected && (
+            <button
+              onClick={handleToday}
+              className="px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wider neo-btn bg-[#FAF7F2] hover:bg-[#FFE873] text-[#18181B] cursor-pointer shadow-[1px_1px_0px_#18181B]"
+            >
+              Today
+            </button>
+          )}
 
-        {/* Jump to Today Button (Absolute right so it does not offset the center) */}
-        {!isTodaySelected && (
           <button
-            onClick={handleToday}
-            className="hidden sm:block absolute right-0 px-2.5 py-1 text-xs font-bold neo-btn bg-[#FFE873] text-[#18181B] cursor-pointer shadow-[1px_1px_0px_#18181B]"
+            onClick={handleCalendarClick}
+            className="w-8 h-8 rounded-xl bg-[#E8DCFF] hover:bg-[#d4c0fc] border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] active:translate-y-0.5 cursor-pointer transition-all"
+            title="Open Full Calendar"
           >
-            Today
+            <Calendar className="w-4 h-4 stroke-[2.25]" />
           </button>
-        )}
+        </div>
       </div>
 
       {/* Week Days Strip */}

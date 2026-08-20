@@ -17,6 +17,7 @@ import { EveningReviewModal } from './components/modals/EveningReviewModal';
 import { SumireCompanionModal } from './components/modals/SumireCompanionModal';
 import { MenuModal } from './components/modals/MenuModal';
 import { AppUpdateModal } from './components/modals/AppUpdateModal';
+import { CalendarPlannerModal } from './components/modals/CalendarPlannerModal';
 import { AuthContainer, UserProfile } from './components/auth/AuthContainer';
 import { initNotificationSystem } from './lib/notifications';
 import { checkForTelegramUpdate, AppUpdateInfo } from './lib/telegramUpdater';
@@ -54,6 +55,7 @@ export function App() {
   const [isEveningReviewOpen, setIsEveningReviewOpen] = useState(false);
   const [isSumireOpen, setIsSumireOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [availableUpdate, setAvailableUpdate] = useState<AppUpdateInfo | null>(null);
 
   // Focus Timer active selection
@@ -177,6 +179,7 @@ export function App() {
               selectedDate={selectedDate}
               onSelectDate={setSelectedDate}
               stats={dayStats}
+              onOpenCalendar={() => setIsCalendarOpen(true)}
             />
           </div>
         )}
@@ -340,6 +343,21 @@ export function App() {
             updateInfo={availableUpdate}
           />
         )}
+
+        {/* Calendar & Multi-Event Day Planner Modal */}
+        <CalendarPlannerModal
+          isOpen={isCalendarOpen}
+          onClose={() => setIsCalendarOpen(false)}
+          selectedDate={selectedDate}
+          onSelectDate={(date) => {
+            setSelectedDate(date);
+            setActiveTab('priorities');
+          }}
+          allTasks={allTasks}
+          onAddTask={addTask}
+          onToggleTask={toggleTaskComplete}
+          onDeleteTask={deleteTask}
+        />
       </div>
     </div>
   );

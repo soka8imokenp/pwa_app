@@ -13,6 +13,8 @@ import {
   Plus,
   Trash2,
   Repeat,
+  Clock,
+  ChevronDown,
 } from 'lucide-react';
 import type { Task, SubTask } from '../../types';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
@@ -38,9 +40,20 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   const [isPriority, setIsPriority] = useState(defaultPriority);
   const [category, setCategory] = useState<Task['category']>('code');
   const [estimatedMinutes, setEstimatedMinutes] = useState<number>(30);
+  const [isEstimateDropdownOpen, setIsEstimateDropdownOpen] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
   const [subtasks, setSubtasks] = useState<SubTask[]>([]);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+
+  const ESTIMATE_OPTIONS = [
+    { value: 15, label: '15 Minutes' },
+    { value: 25, label: '25 Minutes (Pomodoro)' },
+    { value: 30, label: '30 Minutes' },
+    { value: 45, label: '45 Minutes' },
+    { value: 60, label: '60 Minutes (1 Hour)' },
+    { value: 90, label: '90 Minutes (1.5h)' },
+    { value: 120, label: '120 Minutes (2 Hours)' },
+  ];
 
   React.useEffect(() => {
     if (isOpen) {
@@ -48,6 +61,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
       setSubtasks([]);
       setNewSubtaskTitle('');
       setIsRecurring(false);
+      setIsEstimateDropdownOpen(false);
     }
   }, [isOpen, defaultPriority]);
 
@@ -227,25 +241,63 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
             </div>
           </div>
 
-          {/* Estimated Time & Priority & Recurring */}
+          {/* Estimated Time & Routine Toggle */}
           <div className="grid grid-cols-2 gap-2 pt-1">
-            {/* Time */}
-            <div>
+            {/* Custom Neo-Brutalist Estimate Dropdown */}
+            <div className="relative">
               <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
                 Estimate
               </label>
-              <select
-                value={estimatedMinutes}
-                onChange={(e) => setEstimatedMinutes(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-[#FAF7F2] text-xs font-bold rounded-2xl border-[1.75px] border-[#18181B] outline-none shadow-2xs cursor-pointer"
+              
+              <button
+                type="button"
+                onClick={() => {
+                  playClickSound();
+                  setIsEstimateDropdownOpen(!isEstimateDropdownOpen);
+                }}
+                className="w-full px-3 py-2 bg-[#FAF7F2] hover:bg-white text-xs font-bold rounded-2xl border-[1.75px] border-[#18181B] flex items-center justify-between shadow-2xs cursor-pointer active:translate-y-0.5 transition-all text-[#18181B]"
               >
-                <option value={15}>15 Minutes</option>
-                <option value={25}>25 Minutes</option>
-                <option value={45}>45 Minutes</option>
-                <option value={60}>60 Minutes</option>
-                <option value={90}>90 Minutes</option>
-                <option value={120}>2 Hours</option>
-              </select>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Clock className="w-3.5 h-3.5 text-purple-700 shrink-0 stroke-[2.25]" />
+                  <span className="truncate font-mono-num text-[11px]">
+                    {ESTIMATE_OPTIONS.find((o) => o.value === estimatedMinutes)?.label || `${estimatedMinutes}m`}
+                  </span>
+                </div>
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-500 shrink-0 transition-transform ${isEstimateDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Custom Dropdown Menu */}
+              {isEstimateDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-20"
+                    onClick={() => setIsEstimateDropdownOpen(false)}
+                  />
+                  <div className="absolute left-0 right-0 bottom-full mb-1.5 z-30 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[3px_3px_0px_#18181B] p-1.5 space-y-1 max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
+                    {ESTIMATE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          playClickSound();
+                          setEstimatedMinutes(opt.value);
+                          setIsEstimateDropdownOpen(false);
+                        }}
+                        className={`w-full px-2.5 py-1.5 rounded-xl text-[11px] font-bold flex items-center justify-between transition-all cursor-pointer ${
+                          estimatedMinutes === opt.value
+                            ? 'bg-[#FFE873] text-[#18181B] border border-[#18181B] shadow-2xs'
+                            : 'hover:bg-[#FAF7F2] text-slate-700'
+                        }`}
+                      >
+                        <span className="font-mono-num">{opt.label}</span>
+                        {estimatedMinutes === opt.value && (
+                          <Check className="w-3 h-3 stroke-[2.5] text-[#18181B]" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Recurring Daily Toggle */}

@@ -321,7 +321,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
               className="w-full py-3.5 px-4 rounded-2xl bg-[#2CE68D] hover:bg-[#20C075] text-[#18181B] border-[2px] border-[#18181B] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <PackageCheck className="w-4 h-4 stroke-[2.5]" />
-              <span>Install APK Now</span>
+              <span>Install</span>
             </button>
           )}
 

@@ -10,11 +10,19 @@
       "accounts.spotify.com",
       "*.spotify.com",
       "*.scdn.co",
-      "*.spotifycdn.com"
+      "*.spotifycdn.com",
+      "github.com",
+      "*.github.com",
+      "*.githubusercontent.com"
     ]
   },
   "android": {
     "backgroundColor": "#FAF7F2",
     "allowMixedContent": true
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
   }
 }

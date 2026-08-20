@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import {
   Download,
   X,
-  ExternalLink,
   Sparkles,
   CheckCircle2,
   FileDown,
   Loader2,
   AlertCircle,
   PackageCheck,
+  RotateCcw,
 } from 'lucide-react';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
@@ -33,7 +33,6 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
   const [downloadedMb, setDownloadedMb] = useState<string>('0.0');
   const [totalMb, setTotalMb] = useState<string>(updateInfo.fileSizeMb || '7.3 MB');
   const [downloadedBlobUrl, setDownloadedBlobUrl] = useState<string | null>(null);
-  const [resolvedApkUrl, setResolvedApkUrl] = useState<string>(updateInfo.downloadUrl);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -58,34 +57,15 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
     setErrorMsg(null);
 
     try {
-      let targetUrl = updateInfo.downloadUrl;
-      let response = await fetch(targetUrl, {
+      const targetUrl = updateInfo.downloadUrl;
+      const response = await fetch(targetUrl, {
         method: 'GET',
         cache: 'no-cache',
       });
 
-      // Candidate fallback if 404
-      if (!response.ok && targetUrl.includes('Daily-Sumire-latest.apk')) {
-        const altUrl = targetUrl.replace('Daily-Sumire-latest.apk', 'Daily-Sumire-app-debug.apk');
-        const altRes = await fetch(altUrl, { method: 'GET', cache: 'no-cache' });
-        if (altRes.ok) {
-          response = altRes;
-          targetUrl = altUrl;
-        }
-      } else if (!response.ok && targetUrl.includes('Daily-Sumire-app-debug.apk')) {
-        const altUrl = targetUrl.replace('Daily-Sumire-app-debug.apk', 'Daily-Sumire-latest.apk');
-        const altRes = await fetch(altUrl, { method: 'GET', cache: 'no-cache' });
-        if (altRes.ok) {
-          response = altRes;
-          targetUrl = altUrl;
-        }
-      }
-
       if (!response.ok) {
         throw new Error(`Server returned HTTP ${response.status}`);
       }
-
-      setResolvedApkUrl(targetUrl);
 
       const contentLength = response.headers.get('content-length');
       const totalBytes = contentLength ? parseInt(contentLength, 10) : 0;
@@ -138,8 +118,8 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
         colors: ['#2CE68D', '#FFE873', '#18181B'],
       });
     } catch (err: any) {
-      console.warn('In-app stream download error, falling back:', err);
-      setErrorMsg(err.message || 'Direct stream download failed');
+      console.warn('In-app stream download error:', err);
+      setErrorMsg(err.message || 'Download interrupted. Tap below to retry.');
       setDownloadStatus('error');
     }
   };
@@ -148,35 +128,19 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
     playSuccessChime();
     try {
       if (Capacitor.isNativePlatform()) {
-        // Native Android: Open direct APK URL in system browser to trigger package installer
+        // Native Android: Trigger package installer
         await Browser.open({
-          url: resolvedApkUrl || updateInfo.downloadUrl,
+          url: updateInfo.downloadUrl,
           windowName: '_system',
         });
       } else if (downloadedBlobUrl) {
         triggerBlobDownload(downloadedBlobUrl, updateInfo.fileName);
       } else {
-        window.location.href = resolvedApkUrl || updateInfo.downloadUrl;
+        window.location.href = updateInfo.downloadUrl;
       }
     } catch (err) {
-      console.warn('Browser.open fallback to location.href:', err);
-      window.location.href = resolvedApkUrl || updateInfo.downloadUrl;
-    }
-  };
-
-  const handleOpenBrowserFallback = async () => {
-    playClickSound();
-    try {
-      if (Capacitor.isNativePlatform()) {
-        await Browser.open({
-          url: resolvedApkUrl || updateInfo.downloadUrl,
-          windowName: '_system',
-        });
-      } else {
-        window.open(resolvedApkUrl || updateInfo.downloadUrl, '_blank');
-      }
-    } catch {
-      window.location.href = resolvedApkUrl || updateInfo.downloadUrl;
+      console.warn('Installer trigger error:', err);
+      window.location.href = updateInfo.downloadUrl;
     }
   };
 
@@ -299,10 +263,10 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
           <div className="p-3 bg-[#FEE2E2] border-[1.5px] border-[#DC2626] rounded-2xl text-left space-y-1 text-[10px] text-[#991B1B]">
             <div className="flex items-center gap-1 font-black">
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-              <span>Direct Download Notice</span>
+              <span>Download Interrupted</span>
             </div>
             <p className="leading-tight text-slate-700">
-              {errorMsg || 'Could not stream download inside WebView. Please use browser download below.'}
+              {errorMsg || 'Connection error. Tap Retry Download below.'}
             </p>
           </div>
         )}
@@ -341,11 +305,11 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
 
           {downloadStatus === 'error' && (
             <button
-              onClick={handleOpenBrowserFallback}
+              onClick={handleStartInAppDownload}
               className="w-full py-3.5 px-4 rounded-2xl bg-[#FFE873] hover:bg-[#FED7AA] text-[#18181B] border-[2px] border-[#18181B] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
             >
-              <ExternalLink className="w-4 h-4 stroke-[2.5]" />
-              <span>Open in Browser to Download</span>
+              <RotateCcw className="w-4 h-4 stroke-[2.5]" />
+              <span>Retry Download</span>
             </button>
           )}
         </div>

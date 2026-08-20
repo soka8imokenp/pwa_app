@@ -41,6 +41,23 @@ export function isVersionNewer(remote: string, local: string): boolean {
 }
 
 /**
+ * Extracts a valid version string like "v1.4.6" from GitHub release metadata
+ */
+export function extractVersionString(data: any): string {
+  if (!data) return '';
+  if (data.tag_name && data.tag_name.toLowerCase() !== 'latest') {
+    return data.tag_name.startsWith('v') ? data.tag_name : `v${data.tag_name}`;
+  }
+  if (data.name) {
+    const match = data.name.match(/v?(\d+\.\d+(\.\d+)?)/i);
+    if (match) {
+      return match[0].startsWith('v') ? match[0] : `v${match[0]}`;
+    }
+  }
+  return data.tag_name || '';
+}
+
+/**
  * Checks public GitHub Releases API for the latest release
  */
 export async function checkForAppUpdate(): Promise<AppUpdateInfo | null> {
@@ -57,10 +74,11 @@ export async function checkForAppUpdate(): Promise<AppUpdateInfo | null> {
     }
 
     const data = await res.json();
-    if (!data || (!data.tag_name && !data.name)) return null;
+    if (!data) return null;
 
-    const rawTag = data.tag_name || data.name;
-    const remoteVersion = rawTag.startsWith('v') ? rawTag : `v${rawTag}`;
+    const remoteVersion = extractVersionString(data);
+    if (!remoteVersion) return null;
+
     const isNewer = isVersionNewer(remoteVersion, CURRENT_APP_VERSION);
 
     // Find APK asset

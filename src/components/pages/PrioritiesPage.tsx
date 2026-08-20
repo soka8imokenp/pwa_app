@@ -347,7 +347,10 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
 
       {/* 6. Bottom Quick Scratchpad Card */}
       <div className="pt-2">
-        <QuickScratchpadCard />
+        <QuickScratchpadCard
+          selectedDate={selectedDate}
+          onQuickCreateTask={onQuickCreateTask}
+        />
       </div>
 
     </div>

@@ -11,7 +11,7 @@ export interface AppUpdateInfo {
   publishedAt: number;
 }
 
-export const CURRENT_APP_VERSION = 'v1.4.0';
+export const CURRENT_APP_VERSION = 'v1.4.4';
 export const GITHUB_REPO = 'soka8imokenp/pwa_app';
 
 /**

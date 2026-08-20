@@ -11,7 +11,9 @@ export interface AppUpdateInfo {
   publishedAt: number;
 }
 
-export const CURRENT_APP_VERSION = 'v1.4.4';
+import pkg from '../../package.json';
+
+export const CURRENT_APP_VERSION = pkg.version.startsWith('v') ? pkg.version : `v${pkg.version}`;
 export const GITHUB_REPO = 'soka8imokenp/pwa_app';
 
 /**

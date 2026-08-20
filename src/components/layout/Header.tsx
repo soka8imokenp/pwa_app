@@ -7,12 +7,14 @@ interface HeaderProps {
   streakCount: number;
   userName?: string;
   onOpenSettings: () => void;
+  onOpenStreak?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   streakCount,
   userName = 'Alex',
   onOpenSettings,
+  onOpenStreak,
 }) => {
   const [avatarId, setAvatarId] = useState<string>('sumire-scout');
 
@@ -57,13 +59,20 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right: Streak & Settings */}
         <div className="flex items-center gap-2">
-          {/* Flame Streak Pill */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FFE873] border-[1.75px] border-[#18181B] rounded-full shadow-[1.5px_1.5px_0px_#18181B]">
+          {/* Flame Streak Pill (Click to open Duolingo Streak screen) */}
+          <button
+            onClick={() => {
+              playClickSound();
+              if (onOpenStreak) onOpenStreak();
+            }}
+            title="View Daily Streak"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FFE873] hover:bg-[#FED7AA] border-[1.75px] border-[#18181B] rounded-full shadow-[1.5px_1.5px_0px_#18181B] cursor-pointer active:translate-y-0.5 transition-all"
+          >
             <Flame className="w-3.5 h-3.5 text-amber-700 fill-amber-500 stroke-[2]" />
             <span className="text-xs font-bold font-display text-[#18181B] font-mono-num">
               {streakCount}d
             </span>
-          </div>
+          </button>
 
           {/* Settings Button */}
           <button

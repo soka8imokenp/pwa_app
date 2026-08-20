@@ -18,6 +18,7 @@ import { SumireCompanionModal } from './components/modals/SumireCompanionModal';
 import { MenuModal } from './components/modals/MenuModal';
 import { AppUpdateModal } from './components/modals/AppUpdateModal';
 import { CalendarPlannerModal } from './components/modals/CalendarPlannerModal';
+import { DuolingoStreakModal } from './components/modals/DuolingoStreakModal';
 import { AuthContainer, UserProfile } from './components/auth/AuthContainer';
 import { initNotificationSystem } from './lib/notifications';
 import { checkForTelegramUpdate, AppUpdateInfo } from './lib/telegramUpdater';
@@ -56,12 +57,13 @@ export function App() {
   const [isSumireOpen, setIsSumireOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isStreakModalOpen, setIsStreakModalOpen] = useState(false);
   const [availableUpdate, setAvailableUpdate] = useState<AppUpdateInfo | null>(null);
 
   // Focus Timer active selection
   const [focusSelectedTask, setFocusSelectedTask] = useState<Task | null>(null);
 
-  // Initialize notification deep-linking system & check for Telegram APK updates
+  // Initialize notification deep-linking system & check for Telegram APK updates & daily streak greeting
   useEffect(() => {
     initNotificationSystem((targetTab, extra) => {
       if (targetTab) {
@@ -86,6 +88,19 @@ export function App() {
         setAvailableUpdate(update);
       }
     });
+
+    // Check if streak greeting was shown today; if not, greet user with Duolingo streak screen!
+    if (typeof window !== 'undefined') {
+      const todayStr = getTodayString();
+      const lastGreetingDate = localStorage.getItem('kairo_last_streak_greeting_date');
+      if (lastGreetingDate !== todayStr) {
+        const timer = setTimeout(() => {
+          setIsStreakModalOpen(true);
+          localStorage.setItem('kairo_last_streak_greeting_date', todayStr);
+        }, 800);
+        return () => clearTimeout(timer);
+      }
+    }
 
     return () => window.removeEventListener('sumire:navigate', handleWebNavigate);
   }, []);
@@ -165,11 +180,12 @@ export function App() {
       {/* Mobile Screen Frame */}
       <div className="w-full max-w-md min-h-screen flex flex-col relative px-3 sm:px-0 z-10">
         
-        {/* Mobile Top Header with User Greeting */}
+        {/* Mobile Top Header with User Greeting & Streak Modal Trigger */}
         <Header
           streakCount={overallStreak}
           userName={displayName}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenStreak={() => setIsStreakModalOpen(true)}
         />
 
         {/* Date Navigator Strip for Daily Views */}
@@ -357,6 +373,13 @@ export function App() {
           onAddTask={addTask}
           onToggleTask={toggleTaskComplete}
           onDeleteTask={deleteTask}
+        />
+
+        {/* Duolingo-style Streak Greeting Modal */}
+        <DuolingoStreakModal
+          isOpen={isStreakModalOpen}
+          onClose={() => setIsStreakModalOpen(false)}
+          streakCount={overallStreak}
         />
       </div>
     </div>

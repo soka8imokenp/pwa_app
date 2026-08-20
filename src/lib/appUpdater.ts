@@ -1,5 +1,5 @@
 // Official GitHub Releases Auto-Updater Service for Daily Sumire
-// Checks for new APK releases directly from GitHub Releases API
+// Checks for new APK releases directly from GitHub Releases API with Raw Fallback
 
 export interface AppUpdateInfo {
   hasUpdate: boolean;
@@ -58,54 +58,83 @@ export function extractVersionString(data: any): string {
 }
 
 /**
- * Checks public GitHub Releases API for the latest release
+ * Checks public GitHub Releases API for the latest release.
+ * Falls back to raw.githubusercontent.com if api.github.com is rate-limited.
  */
 export async function checkForAppUpdate(): Promise<AppUpdateInfo | null> {
+  const timestamp = Date.now();
+
+  // Method 1: Try GitHub Releases API
   try {
-    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest?_t=${timestamp}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/vnd.github.v3+json',
       },
     });
 
-    if (!res.ok) {
-      return null;
+    if (res.ok) {
+      const data = await res.json();
+      if (data) {
+        const remoteVersion = extractVersionString(data);
+        if (remoteVersion) {
+          const isNewer = isVersionNewer(remoteVersion, CURRENT_APP_VERSION);
+          const assets: any[] = data.assets || [];
+          const apkAsset =
+            assets.find((a) => a.name?.toLowerCase().includes('sumire') && a.name?.toLowerCase().endsWith('.apk')) ||
+            assets.find((a) => a.name?.toLowerCase().endsWith('.apk')) ||
+            assets[0];
+
+          const downloadUrl = apkAsset?.browser_download_url ||
+            `https://github.com/${GITHUB_REPO}/releases/latest/download/Daily-Sumire-app-debug.apk`;
+
+          const sizeMb = apkAsset?.size
+            ? (apkAsset.size / (1024 * 1024)).toFixed(1) + ' MB'
+            : '7.3 MB';
+
+          return {
+            hasUpdate: isNewer,
+            version: remoteVersion,
+            fileName: apkAsset?.name || 'Daily-Sumire-app-debug.apk',
+            fileSizeMb: sizeMb,
+            downloadUrl,
+            releaseNotes: data.body || 'New updates and performance improvements.',
+            publishedAt: data.published_at ? new Date(data.published_at).getTime() : Date.now(),
+          };
+        }
+      }
     }
-
-    const data = await res.json();
-    if (!data) return null;
-
-    const remoteVersion = extractVersionString(data);
-    if (!remoteVersion) return null;
-
-    const isNewer = isVersionNewer(remoteVersion, CURRENT_APP_VERSION);
-
-    // Find APK asset
-    const assets: any[] = data.assets || [];
-    const apkAsset =
-      assets.find((a) => a.name?.toLowerCase().includes('sumire') && a.name?.toLowerCase().endsWith('.apk')) ||
-      assets.find((a) => a.name?.toLowerCase().endsWith('.apk')) ||
-      assets[0];
-
-    if (!apkAsset || !apkAsset.browser_download_url) {
-      return null;
-    }
-
-    const sizeMb = apkAsset.size
-      ? (apkAsset.size / (1024 * 1024)).toFixed(1) + ' MB'
-      : '7.3 MB';
-
-    return {
-      hasUpdate: isNewer,
-      version: remoteVersion,
-      fileName: apkAsset.name || 'Daily-Sumire-app-debug.apk',
-      fileSizeMb: sizeMb,
-      downloadUrl: apkAsset.browser_download_url,
-      releaseNotes: data.body || 'New updates and performance improvements.',
-      publishedAt: data.published_at ? new Date(data.published_at).getTime() : Date.now(),
-    };
   } catch (err) {
-    return null;
+    console.warn('GitHub API check failed, trying raw fallback:', err);
   }
+
+  // Method 2: Fallback to raw repository package.json (immune to GitHub API rate limits)
+  try {
+    const rawRes = await fetch(
+      `https://raw.githubusercontent.com/${GITHUB_REPO}/main/package.json?_t=${timestamp}`,
+      { cache: 'no-cache' }
+    );
+
+    if (rawRes.ok) {
+      const rawPkg = await rawRes.json();
+      if (rawPkg && rawPkg.version) {
+        const rawVer = rawPkg.version.startsWith('v') ? rawPkg.version : `v${rawPkg.version}`;
+        const isNewer = isVersionNewer(rawVer, CURRENT_APP_VERSION);
+
+        return {
+          hasUpdate: isNewer,
+          version: rawVer,
+          fileName: 'Daily-Sumire-app-debug.apk',
+          fileSizeMb: '7.3 MB',
+          downloadUrl: `https://github.com/${GITHUB_REPO}/releases/latest/download/Daily-Sumire-app-debug.apk`,
+          releaseNotes: 'New updates and improvements.',
+          publishedAt: Date.now(),
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('Raw fallback check failed:', err);
+  }
+
+  return null;
 }

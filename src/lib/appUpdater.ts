@@ -1,5 +1,5 @@
-// Direct Vercel CDN Auto-Updater Service for Daily Sumire
-// Connects to the Vercel distribution server for instant update checks & downloads
+// GitHub Releases & Vercel CDN Auto-Updater Service for Daily Sumire
+// Automatically checks for new APK releases directly from GitHub Releases and Vercel CDN
 
 export interface AppUpdateInfo {
   hasUpdate: boolean;
@@ -12,6 +12,7 @@ export interface AppUpdateInfo {
 }
 
 export const CURRENT_APP_VERSION = 'v1.4.0';
+export const GITHUB_REPO = 'soka8imokenp/pwa_app';
 export const VERCEL_UPDATER_URL = 'https://sumiredaily-updater.vercel.app';
 
 /**
@@ -39,23 +40,64 @@ export function isVersionNewer(remote: string, local: string): boolean {
 }
 
 /**
- * Checks Vercel CDN endpoint for the newest release metadata
+ * Checks GitHub Releases API first, with fallback to Vercel CDN
  */
 export async function checkForAppUpdate(customUrl?: string): Promise<AppUpdateInfo | null> {
+  // 1. Primary: Check public GitHub Releases API
+  try {
+    const ghRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+      },
+      cache: 'no-cache',
+    });
+
+    if (ghRes.ok) {
+      const ghData = await ghRes.json();
+      if (ghData && (ghData.tag_name || ghData.name)) {
+        const rawTag = ghData.tag_name || ghData.name;
+        const remoteVersion = rawTag.startsWith('v') ? rawTag : `v${rawTag}`;
+        const isNewer = isVersionNewer(remoteVersion, CURRENT_APP_VERSION);
+
+        // Find APK in release assets
+        const assets: any[] = ghData.assets || [];
+        const apkAsset = assets.find((a) => a.name?.toLowerCase().endsWith('.apk')) || assets[0];
+
+        if (apkAsset && apkAsset.browser_download_url) {
+          const sizeMb = apkAsset.size
+            ? (apkAsset.size / (1024 * 1024)).toFixed(1) + ' MB'
+            : '7.3 MB';
+
+          return {
+            hasUpdate: isNewer,
+            version: remoteVersion,
+            fileName: apkAsset.name || 'Daily-Sumire-app-debug.apk',
+            fileSizeMb: sizeMb,
+            downloadUrl: apkAsset.browser_download_url,
+            releaseNotes: ghData.body || 'New updates and performance improvements.',
+            publishedAt: ghData.published_at ? new Date(ghData.published_at).getTime() : Date.now(),
+          };
+        }
+      }
+    }
+  } catch (ghErr) {
+    console.warn('GitHub releases check failed, trying Vercel fallback:', ghErr);
+  }
+
+  // 2. Fallback: Check Vercel CDN distribution server
   const baseUrl = customUrl || (typeof window !== 'undefined' ? localStorage.getItem('kairo_updater_url') : '') || VERCEL_UPDATER_URL;
   if (!baseUrl) return null;
 
   try {
     const rootUrl = baseUrl.replace(/\/version\.json$/, '').replace(/\/api\/update$/, '').replace(/\/$/, '');
     
-    // 1. Try dynamic /api/update endpoint first (which automatically scans for any .apk)
     let res = await fetch(`${rootUrl}/api/update`, {
       method: 'GET',
       headers: { 'Accept': 'application/json' },
       cache: 'no-cache',
     }).catch(() => null);
 
-    // 2. Fallback to /version.json static file
     if (!res || !res.ok) {
       res = await fetch(`${rootUrl}/version.json`, {
         method: 'GET',
@@ -65,7 +107,6 @@ export async function checkForAppUpdate(customUrl?: string): Promise<AppUpdateIn
     }
 
     if (!res || !res.ok) {
-      console.warn('Updater fetch returned error or unreachable');
       return null;
     }
 
@@ -77,7 +118,6 @@ export async function checkForAppUpdate(customUrl?: string): Promise<AppUpdateIn
 
     let downloadUrl = data.downloadUrl || data.fileName || '/Daily-Sumire-app-debug.apk';
     if (!downloadUrl.startsWith('http')) {
-      const rootUrl = baseUrl.replace(/\/version\.json$/, '').replace(/\/api\/update$/, '').replace(/\/$/, '');
       downloadUrl = `${rootUrl}/${downloadUrl.replace(/^\//, '')}`;
     }
 
@@ -85,7 +125,7 @@ export async function checkForAppUpdate(customUrl?: string): Promise<AppUpdateIn
       hasUpdate: isNewer,
       version: remoteVersion,
       fileName: data.fileName || 'Daily-Sumire-app-debug.apk',
-      fileSizeMb: data.fileSize || data.fileSizeMb || '7.3 MB',
+      fileSizeMb: data.fileSizeMb || data.fileSize || '7.3 MB',
       downloadUrl,
       releaseNotes: data.releaseNotes || 'New updates and performance improvements.',
       publishedAt: data.publishedAt ? new Date(data.publishedAt).getTime() : Date.now(),

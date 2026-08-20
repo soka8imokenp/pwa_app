@@ -1,0 +1,11 @@
+{
+  "name": "sumiredaily-updater",
+  "version": "1.0.0",
+  "description": "Auto-update & direct APK distribution server for Daily Sumire",
+  "scripts": {
+    "start": "serve public"
+  },
+  "dependencies": {
+    "serve": "^14.2.4"
+  }
+}

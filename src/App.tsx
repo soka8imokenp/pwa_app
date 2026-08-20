@@ -82,7 +82,7 @@ export function App() {
 
     window.addEventListener('sumire:navigate', handleWebNavigate);
 
-    // Auto-check for updates from Vercel CDN
+    // Auto-check for updates from GitHub Releases
     checkForAppUpdate().then((update) => {
       if (update && update.hasUpdate) {
         setAvailableUpdate(update);

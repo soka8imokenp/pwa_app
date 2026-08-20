@@ -195,7 +195,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
                 New Update Available
               </h3>
               <p className="text-[10px] font-bold text-slate-400">
-                Official CDN Distribution
+                Official GitHub Release
               </p>
             </div>
           </div>

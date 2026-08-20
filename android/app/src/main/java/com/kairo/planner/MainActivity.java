@@ -12,11 +12,14 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.util.Base64;
 import android.view.View;
 import android.view.WindowInsetsController;
 import android.webkit.CookieManager;
@@ -26,9 +29,15 @@ import android.webkit.WebView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class MainActivity extends BridgeActivity {
     private static final String CHANNEL_ID = "daily_sumire_music_channel";
@@ -111,8 +120,9 @@ public class MainActivity extends BridgeActivity {
                 cookieManager.setAcceptCookie(true);
                 cookieManager.setAcceptThirdPartyCookies(webView, true);
 
-                // Add Javascript Interface for Native Lock Screen & Notification Control
+                // Add Javascript Interfaces for Native Lock Screen & Direct Package Installer
                 webView.addJavascriptInterface(new MediaJsInterface(), "AndroidMediaNotification");
+                webView.addJavascriptInterface(new AppInstallerJsInterface(), "AndroidAppInstaller");
             }
         } catch (Exception ignored) {}
     }
@@ -157,7 +167,6 @@ public class MainActivity extends BridgeActivity {
         try {
             if (notificationManager == null || mediaSession == null) return;
 
-            // Update MediaSession state
             PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
                     .setActions(
                             PlaybackStateCompat.ACTION_PLAY |
@@ -178,7 +187,6 @@ public class MainActivity extends BridgeActivity {
                     .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "Daily Sumire");
             mediaSession.setMetadata(metaBuilder.build());
 
-            // Notification Intents
             Intent openAppIntent = new Intent(this, MainActivity.class);
             PendingIntent openAppPendingIntent = PendingIntent.getActivity(
                     this, 0, openAppIntent,
@@ -204,7 +212,6 @@ public class MainActivity extends BridgeActivity {
             );
 
             Bitmap iconBitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
-
             int playPauseIcon = isPlaying ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play;
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -248,6 +255,113 @@ public class MainActivity extends BridgeActivity {
         @JavascriptInterface
         public void clearMedia() {
             runOnUiThread(() -> cancelMediaNotification());
+        }
+    }
+
+    public class AppInstallerJsInterface {
+        @JavascriptInterface
+        public void installApkBase64(String base64Data, String fileName) {
+            new Thread(() -> {
+                try {
+                    byte[] apkBytes = Base64.decode(base64Data, Base64.DEFAULT);
+                    File cacheDir = new File(getCacheDir(), "apk_updates");
+                    if (!cacheDir.exists()) {
+                        cacheDir.mkdirs();
+                    }
+                    File apkFile = new File(cacheDir, (fileName != null && !fileName.isEmpty()) ? fileName : "Daily-Sumire-update.apk");
+                    FileOutputStream fos = new FileOutputStream(apkFile);
+                    fos.write(apkBytes);
+                    fos.flush();
+                    fos.close();
+
+                    runOnUiThread(() -> {
+                        checkAndPromptUnknownSourcePermission();
+                        launchPackageInstaller(apkFile);
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        }
+
+        @JavascriptInterface
+        public void downloadAndInstall(String downloadUrl, String fileName) {
+            new Thread(() -> {
+                try {
+                    URL url = new URL(downloadUrl);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setInstanceFollowRedirects(true);
+                    conn.setRequestProperty("User-Agent", "DailySumireApp/1.4.0");
+                    conn.connect();
+
+                    int responseCode = conn.getResponseCode();
+                    if (responseCode == HttpURLConnection.HTTP_MOVED_TEMP ||
+                        responseCode == HttpURLConnection.HTTP_MOVED_PERM ||
+                        responseCode == 307 || responseCode == 308) {
+                        String newUrl = conn.getHeaderField("Location");
+                        if (newUrl != null && !newUrl.isEmpty()) {
+                            conn = (HttpURLConnection) new URL(newUrl).openConnection();
+                            conn.setRequestProperty("User-Agent", "DailySumireApp/1.4.0");
+                            conn.connect();
+                        }
+                    }
+
+                    File cacheDir = new File(getCacheDir(), "apk_updates");
+                    if (!cacheDir.exists()) {
+                        cacheDir.mkdirs();
+                    }
+                    File apkFile = new File(cacheDir, (fileName != null && !fileName.isEmpty()) ? fileName : "Daily-Sumire-update.apk");
+
+                    InputStream in = conn.getInputStream();
+                    FileOutputStream fos = new FileOutputStream(apkFile);
+                    byte[] buffer = new byte[8192];
+                    int bytesRead;
+                    while ((bytesRead = in.read(buffer)) != -1) {
+                        fos.write(buffer, 0, bytesRead);
+                    }
+                    fos.flush();
+                    fos.close();
+                    in.close();
+
+                    runOnUiThread(() -> {
+                        checkAndPromptUnknownSourcePermission();
+                        launchPackageInstaller(apkFile);
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        }
+    }
+
+    private void checkAndPromptUnknownSourcePermission() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (!getPackageManager().canRequestPackageInstalls()) {
+                    Intent settingsIntent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
+                    settingsIntent.setData(Uri.parse("package:" + getPackageName()));
+                    settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(settingsIntent);
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private void launchPackageInstaller(File apkFile) {
+        try {
+            Uri apkUri = FileProvider.getUriForFile(
+                    this,
+                    getPackageName() + ".fileprovider",
+                    apkFile
+            );
+
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(intent);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

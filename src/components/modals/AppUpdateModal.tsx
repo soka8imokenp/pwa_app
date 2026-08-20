@@ -10,8 +10,6 @@ import {
   PackageCheck,
   RotateCcw,
 } from 'lucide-react';
-import { Browser } from '@capacitor/browser';
-import { Capacitor } from '@capacitor/core';
 import type { AppUpdateInfo } from '../../lib/appUpdater';
 import { CURRENT_APP_VERSION } from '../../lib/appUpdater';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
@@ -23,6 +21,19 @@ interface AppUpdateModalProps {
   updateInfo: AppUpdateInfo;
 }
 
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      const base64 = result.includes(',') ? result.split(',')[1] : result;
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
   isOpen,
   onClose,
@@ -32,6 +43,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
   const [progressPercent, setProgressPercent] = useState<number>(0);
   const [downloadedMb, setDownloadedMb] = useState<string>('0.0');
   const [totalMb, setTotalMb] = useState<string>(updateInfo.fileSizeMb || '7.3 MB');
+  const [downloadedBlob, setDownloadedBlob] = useState<Blob | null>(null);
   const [downloadedBlobUrl, setDownloadedBlobUrl] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -76,6 +88,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
       if (!response.body) {
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
+        setDownloadedBlob(blob);
         setDownloadedBlobUrl(url);
         setProgressPercent(100);
         setDownloadStatus('completed');
@@ -107,6 +120,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
 
       const apkBlob = new Blob(chunks, { type: 'application/vnd.android.package-archive' });
       const apkUrl = URL.createObjectURL(apkBlob);
+      setDownloadedBlob(apkBlob);
       setDownloadedBlobUrl(apkUrl);
       setProgressPercent(100);
       setDownloadStatus('completed');
@@ -127,20 +141,23 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
   const handleInstall = async () => {
     playSuccessChime();
     try {
-      if (Capacitor.isNativePlatform()) {
-        // Native Android: Trigger package installer
-        await Browser.open({
-          url: updateInfo.downloadUrl,
-          windowName: '_system',
-        });
-      } else if (downloadedBlobUrl) {
+      const nativeInstaller = (window as any).AndroidAppInstaller;
+      if (nativeInstaller) {
+        if (downloadedBlob) {
+          const base64Data = await blobToBase64(downloadedBlob);
+          nativeInstaller.installApkBase64(base64Data, updateInfo.fileName);
+        } else {
+          nativeInstaller.downloadAndInstall(updateInfo.downloadUrl, updateInfo.fileName);
+        }
+        return;
+      }
+
+      // Web desktop fallback
+      if (downloadedBlobUrl) {
         triggerBlobDownload(downloadedBlobUrl, updateInfo.fileName);
-      } else {
-        window.location.href = updateInfo.downloadUrl;
       }
     } catch (err) {
-      console.warn('Installer trigger error:', err);
-      window.location.href = updateInfo.downloadUrl;
+      console.warn('Package installer error:', err);
     }
   };
 

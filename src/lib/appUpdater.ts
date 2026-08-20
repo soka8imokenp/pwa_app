@@ -67,7 +67,7 @@ export async function checkForAppUpdate(customUrl?: string): Promise<AppUpdateIn
     const remoteVersion = data.version.startsWith('v') ? data.version : `v${data.version}`;
     const isNewer = isVersionNewer(remoteVersion, CURRENT_APP_VERSION);
 
-    let downloadUrl = data.downloadUrl || data.fileName || '/Daily-Sumire-latest.apk';
+    let downloadUrl = data.downloadUrl || data.fileName || '/Daily-Sumire-app-debug.apk';
     if (!downloadUrl.startsWith('http')) {
       const rootUrl = baseUrl.replace(/\/version\.json$/, '').replace(/\/api\/update$/, '').replace(/\/$/, '');
       downloadUrl = `${rootUrl}/${downloadUrl.replace(/^\//, '')}`;
@@ -76,8 +76,8 @@ export async function checkForAppUpdate(customUrl?: string): Promise<AppUpdateIn
     return {
       hasUpdate: isNewer,
       version: remoteVersion,
-      fileName: data.fileName || 'Daily-Sumire-latest.apk',
-      fileSizeMb: data.fileSize || data.fileSizeMb || '7.5 MB',
+      fileName: data.fileName || 'Daily-Sumire-app-debug.apk',
+      fileSizeMb: data.fileSize || data.fileSizeMb || '7.3 MB',
       downloadUrl,
       releaseNotes: data.releaseNotes || 'New updates and performance improvements.',
       publishedAt: data.publishedAt ? new Date(data.publishedAt).getTime() : Date.now(),

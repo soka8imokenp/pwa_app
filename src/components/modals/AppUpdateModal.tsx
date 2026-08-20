@@ -61,10 +61,28 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
     setErrorMsg(null);
 
     try {
-      const response = await fetch(updateInfo.downloadUrl, {
+      let targetUrl = updateInfo.downloadUrl;
+      let response = await fetch(targetUrl, {
         method: 'GET',
         cache: 'no-cache',
       });
+
+      // If 404, check alternative APK file names (e.g. Daily-Sumire-app-debug.apk vs Daily-Sumire-latest.apk)
+      if (!response.ok && targetUrl.includes('Daily-Sumire-latest.apk')) {
+        const altUrl = targetUrl.replace('Daily-Sumire-latest.apk', 'Daily-Sumire-app-debug.apk');
+        const altRes = await fetch(altUrl, { method: 'GET', cache: 'no-cache' });
+        if (altRes.ok) {
+          response = altRes;
+          targetUrl = altUrl;
+        }
+      } else if (!response.ok && targetUrl.includes('Daily-Sumire-app-debug.apk')) {
+        const altUrl = targetUrl.replace('Daily-Sumire-app-debug.apk', 'Daily-Sumire-latest.apk');
+        const altRes = await fetch(altUrl, { method: 'GET', cache: 'no-cache' });
+        if (altRes.ok) {
+          response = altRes;
+          targetUrl = altUrl;
+        }
+      }
 
       if (!response.ok) {
         throw new Error(`Server returned HTTP ${response.status}`);

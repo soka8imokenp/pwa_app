@@ -275,7 +275,6 @@ public class MainActivity extends BridgeActivity {
                     fos.close();
 
                     runOnUiThread(() -> {
-                        checkAndPromptUnknownSourcePermission();
                         launchPackageInstaller(apkFile);
                     });
                 } catch (Exception e) {
@@ -324,7 +323,6 @@ public class MainActivity extends BridgeActivity {
                     in.close();
 
                     runOnUiThread(() -> {
-                        checkAndPromptUnknownSourcePermission();
                         launchPackageInstaller(apkFile);
                     });
                 } catch (Exception e) {
@@ -332,19 +330,6 @@ public class MainActivity extends BridgeActivity {
                 }
             }).start();
         }
-    }
-
-    private void checkAndPromptUnknownSourcePermission() {
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                if (!getPackageManager().canRequestPackageInstalls()) {
-                    Intent settingsIntent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
-                    settingsIntent.setData(Uri.parse("package:" + getPackageName()));
-                    settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(settingsIntent);
-                }
-            }
-        } catch (Exception ignored) {}
     }
 
     private void launchPackageInstaller(File apkFile) {

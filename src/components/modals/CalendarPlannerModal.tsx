@@ -300,7 +300,7 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
             {/* Quick Presets (Category & Duration Chips & Priority Star) */}
             <div className="space-y-2 pt-1">
               {/* Row 1: Categories */}
-              <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none">
+              <div className="flex items-center gap-1.5 overflow-x-auto py-1 px-1 scrollbar-none">
                 {categories.map((c) => (
                   <button
                     key={c.id}
@@ -321,12 +321,15 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
                 ))}
               </div>
 
-              {/* Row 2: Duration Chips + Priority Star */}
-              <div className="flex items-center justify-between gap-1.5 py-1">
-                <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
-                  <div className="flex items-center gap-1 px-2.5 py-1.5 bg-white border-[1.5px] border-[#18181B]/30 rounded-xl text-slate-600 shadow-2xs shrink-0">
-                    <Clock className="w-3.5 h-3.5 text-slate-700 stroke-[2.25]" />
-                  </div>
+              {/* Row 2: Clock (Left) + Duration Chips (Middle) + Star Icon (Right) */}
+              <div className="flex items-center gap-1.5 py-1 px-1">
+                {/* Clock Icon (Left) */}
+                <div className="w-8 h-8 rounded-xl bg-white border-[1.5px] border-[#18181B]/30 flex items-center justify-center text-slate-700 shadow-2xs shrink-0">
+                  <Clock className="w-4 h-4 stroke-[2.25]" />
+                </div>
+
+                {/* Middle Duration Chips */}
+                <div className="flex-1 flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 px-0.5">
                   {[
                     { val: 15, label: '15m' },
                     { val: 25, label: '25m' },
@@ -353,21 +356,21 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
                   ))}
                 </div>
 
+                {/* Star Icon (Right) */}
                 <button
                   type="button"
                   onClick={() => {
                     playClickSound();
                     setNewEventPriority(!newEventPriority);
                   }}
-                  className={`px-3 py-1.5 rounded-xl border-[1.75px] text-[10px] font-black flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
+                  className={`w-8 h-8 rounded-xl border-[1.5px] flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-2xs active:scale-95 ${
                     newEventPriority
-                      ? 'bg-[#FEF08A] border-[#18181B] text-[#18181B] shadow-2xs ring-1 ring-[#18181B]'
-                      : 'bg-white border-[#18181B]/25 text-slate-500 hover:border-[#18181B]'
+                      ? 'bg-[#FEF08A] border-[#18181B] text-amber-900 ring-1 ring-[#18181B]'
+                      : 'bg-white border-[#18181B]/30 text-slate-400 hover:border-[#18181B] hover:text-slate-600'
                   }`}
-                  title="Toggle Priority"
+                  title={newEventPriority ? 'Priority active' : 'Mark as priority'}
                 >
-                  <Star className={`w-3.5 h-3.5 ${newEventPriority ? 'text-amber-700 fill-amber-400' : 'text-slate-400'}`} />
-                  <span>Star</span>
+                  <Star className={`w-4 h-4 ${newEventPriority ? 'text-amber-700 fill-amber-400' : 'text-slate-400'}`} />
                 </button>
               </div>
             </div>

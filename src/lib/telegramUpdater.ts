@@ -1,5 +1,5 @@
-// Telegram Bot Auto-Updater Service for Daily Sumire
-// Checks for new APK releases posted in the private Telegram updates group
+// Multi-Source Auto-Updater Service for Daily Sumire
+// Supports Direct Vercel CDN Updates (Primary) and Telegram Bot Updates (Fallback)
 
 export interface AppUpdateInfo {
   hasUpdate: boolean;
@@ -14,10 +14,13 @@ export interface AppUpdateInfo {
 export const CURRENT_APP_VERSION = 'v1.3.1';
 const TG_BOT_TOKEN = '8803102733:AAGtODOAWtN4yQlG0xXSiDuChK1PcqIDq8I';
 
+// Default Vercel Updater URL (can be customized or saved in localStorage)
+export const DEFAULT_VERCEL_UPDATER_URL = '';
+
 /**
  * Parses version numbers like "v1.4.0" or "1.4" into numeric array for comparison
  */
-function parseVersion(v: string): number[] {
+export function parseVersion(v: string): number[] {
   const clean = v.replace(/[^0-9.]/g, '');
   return clean.split('.').map((n) => parseInt(n, 10) || 0);
 }
@@ -25,7 +28,7 @@ function parseVersion(v: string): number[] {
 /**
  * Returns true if remote version is strictly greater than local version
  */
-function isVersionNewer(remote: string, local: string): boolean {
+export function isVersionNewer(remote: string, local: string): boolean {
   const rParts = parseVersion(remote);
   const lParts = parseVersion(local);
 
@@ -39,11 +42,62 @@ function isVersionNewer(remote: string, local: string): boolean {
 }
 
 /**
+ * Checks Vercel CDN endpoint for the newest release metadata
+ */
+export async function checkForVercelUpdate(customUrl?: string): Promise<AppUpdateInfo | null> {
+  const baseUrl = customUrl || (typeof window !== 'undefined' ? localStorage.getItem('kairo_updater_url') : '') || DEFAULT_VERCEL_UPDATER_URL;
+  if (!baseUrl) return null;
+
+  try {
+    const endpoint = baseUrl.endsWith('/version.json') || baseUrl.endsWith('/api/update')
+      ? baseUrl
+      : `${baseUrl.replace(/\/$/, '')}/version.json`;
+
+    const res = await fetch(endpoint, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+      cache: 'no-cache',
+    });
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    if (!data || !data.version) return null;
+
+    const remoteVersion = data.version.startsWith('v') ? data.version : `v${data.version}`;
+    const isNewer = isVersionNewer(remoteVersion, CURRENT_APP_VERSION);
+
+    let downloadUrl = data.downloadUrl || data.fileName || '/Daily-Sumire-latest.apk';
+    if (!downloadUrl.startsWith('http')) {
+      const rootUrl = baseUrl.replace(/\/version\.json$/, '').replace(/\/api\/update$/, '').replace(/\/$/, '');
+      downloadUrl = `${rootUrl}/${downloadUrl.replace(/^\//, '')}`;
+    }
+
+    return {
+      hasUpdate: isNewer,
+      version: remoteVersion,
+      fileName: data.fileName || 'Daily-Sumire-latest.apk',
+      fileSizeMb: data.fileSize || data.fileSizeMb || '7.5 MB',
+      downloadUrl,
+      releaseNotes: data.releaseNotes || 'New updates and improvements.',
+      publishedAt: data.publishedAt ? new Date(data.publishedAt).getTime() : Date.now(),
+    };
+  } catch (err) {
+    console.warn('Vercel updater check failed:', err);
+    return null;
+  }
+}
+
+/**
  * Checks Telegram group for the latest APK document upload
  */
 export async function checkForTelegramUpdate(): Promise<AppUpdateInfo | null> {
+  // 1. Try Vercel CDN first if configured
+  const vercelUpdate = await checkForVercelUpdate();
+  if (vercelUpdate) return vercelUpdate;
+
   try {
-    // 1. Fetch recent updates from Telegram Bot API (last 25 updates)
+    // 2. Fallback to Telegram Bot API
     const res = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/getUpdates?offset=-25`, {
       method: 'GET',
       headers: { 'Accept': 'application/json' },
@@ -59,7 +113,6 @@ export async function checkForTelegramUpdate(): Promise<AppUpdateInfo | null> {
       return null;
     }
 
-    // 2. Iterate backwards to find the newest message with an APK or document
     const updates = data.result;
     for (let i = updates.length - 1; i >= 0; i--) {
       const u = updates[i];
@@ -73,14 +126,12 @@ export async function checkForTelegramUpdate(): Promise<AppUpdateInfo | null> {
       const isApk = fileName.toLowerCase().endsWith('.apk') || doc.mime_type === 'application/vnd.android.package-archive';
 
       if (isApk || fileName.includes('.apk')) {
-        // Extract version from file name or caption (e.g., "Daily-Sumire-v1.4.0.apk" or "v1.4")
         const caption: string = msg.caption || '';
         const versionMatch = fileName.match(/v?(\d+\.\d+(\.\d+)?)/i) || caption.match(/v?(\d+\.\d+(\.\d+)?)/i);
         const remoteVersion = versionMatch ? `v${versionMatch[1]}` : 'v1.4.0';
 
         const fileSizeMb = (doc.file_size / (1024 * 1024)).toFixed(1) + ' MB';
 
-        // 3. Resolve direct Telegram download URL for the file
         const fileRes = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/getFile?file_id=${doc.file_id}`);
         const fileData = await fileRes.json();
 
@@ -103,7 +154,7 @@ export async function checkForTelegramUpdate(): Promise<AppUpdateInfo | null> {
 
     return null;
   } catch (err) {
-    console.error('Error checking for Telegram update:', err);
+    console.error('Error checking for update:', err);
     return null;
   }
 }

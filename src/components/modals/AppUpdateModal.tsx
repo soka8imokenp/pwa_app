@@ -6,9 +6,6 @@ import {
   Sparkles,
   CheckCircle2,
   FileDown,
-  ArrowRight,
-  Copy,
-  Check,
   Loader2,
   AlertCircle,
   PackageCheck,
@@ -34,9 +31,9 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
   const [downloadStatus, setDownloadStatus] = useState<'idle' | 'downloading' | 'completed' | 'error'>('idle');
   const [progressPercent, setProgressPercent] = useState<number>(0);
   const [downloadedMb, setDownloadedMb] = useState<string>('0.0');
-  const [totalMb, setTotalMb] = useState<string>(updateInfo.fileSizeMb || '7.5 MB');
+  const [totalMb, setTotalMb] = useState<string>(updateInfo.fileSizeMb || '7.3 MB');
   const [downloadedBlobUrl, setDownloadedBlobUrl] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [resolvedApkUrl, setResolvedApkUrl] = useState<string>(updateInfo.downloadUrl);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -67,7 +64,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
         cache: 'no-cache',
       });
 
-      // If 404, check alternative APK file names (e.g. Daily-Sumire-app-debug.apk vs Daily-Sumire-latest.apk)
+      // Candidate fallback if 404
       if (!response.ok && targetUrl.includes('Daily-Sumire-latest.apk')) {
         const altUrl = targetUrl.replace('Daily-Sumire-latest.apk', 'Daily-Sumire-app-debug.apk');
         const altRes = await fetch(altUrl, { method: 'GET', cache: 'no-cache' });
@@ -88,6 +85,8 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
         throw new Error(`Server returned HTTP ${response.status}`);
       }
 
+      setResolvedApkUrl(targetUrl);
+
       const contentLength = response.headers.get('content-length');
       const totalBytes = contentLength ? parseInt(contentLength, 10) : 0;
       if (totalBytes > 0) {
@@ -95,14 +94,12 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
       }
 
       if (!response.body) {
-        // Fallback for browsers without stream reader
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
         setDownloadedBlobUrl(url);
         setProgressPercent(100);
         setDownloadStatus('completed');
         playSuccessChime();
-        triggerBlobDownload(url, updateInfo.fileName);
         return;
       }
 
@@ -123,7 +120,6 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
             const percent = Math.min(100, Math.round((receivedBytes / totalBytes) * 100));
             setProgressPercent(percent);
           } else {
-            // Simulated smooth progress if total size not provided by header
             setProgressPercent((prev) => Math.min(95, prev + 5));
           }
         }
@@ -141,13 +137,30 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
         origin: { y: 0.6 },
         colors: ['#2CE68D', '#FFE873', '#18181B'],
       });
-
-      // Automatically trigger file save
-      triggerBlobDownload(apkUrl, updateInfo.fileName);
     } catch (err: any) {
       console.warn('In-app stream download error, falling back:', err);
       setErrorMsg(err.message || 'Direct stream download failed');
       setDownloadStatus('error');
+    }
+  };
+
+  const handleInstall = async () => {
+    playSuccessChime();
+    try {
+      if (Capacitor.isNativePlatform()) {
+        // Native Android: Open direct APK URL in system browser to trigger package installer
+        await Browser.open({
+          url: resolvedApkUrl || updateInfo.downloadUrl,
+          windowName: '_system',
+        });
+      } else if (downloadedBlobUrl) {
+        triggerBlobDownload(downloadedBlobUrl, updateInfo.fileName);
+      } else {
+        window.location.href = resolvedApkUrl || updateInfo.downloadUrl;
+      }
+    } catch (err) {
+      console.warn('Browser.open fallback to location.href:', err);
+      window.location.href = resolvedApkUrl || updateInfo.downloadUrl;
     }
   };
 
@@ -156,25 +169,14 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
     try {
       if (Capacitor.isNativePlatform()) {
         await Browser.open({
-          url: updateInfo.downloadUrl,
+          url: resolvedApkUrl || updateInfo.downloadUrl,
           windowName: '_system',
         });
       } else {
-        window.open(updateInfo.downloadUrl, '_blank');
+        window.open(resolvedApkUrl || updateInfo.downloadUrl, '_blank');
       }
     } catch {
-      window.location.href = updateInfo.downloadUrl;
-    }
-  };
-
-  const handleCopyLink = async () => {
-    playClickSound();
-    try {
-      await navigator.clipboard.writeText(updateInfo.downloadUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Fallback
+      window.location.href = resolvedApkUrl || updateInfo.downloadUrl;
     }
   };
 
@@ -287,7 +289,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
               <span>Download Complete!</span>
             </div>
             <p className="text-[10px] font-bold text-emerald-800">
-              APK file is ready. Tap below to install.
+              Tap Install below to apply the update.
             </p>
           </div>
         )}
@@ -329,13 +331,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
 
           {downloadStatus === 'completed' && (
             <button
-              onClick={() => {
-                if (downloadedBlobUrl) {
-                  triggerBlobDownload(downloadedBlobUrl, updateInfo.fileName);
-                } else {
-                  handleOpenBrowserFallback();
-                }
-              }}
+              onClick={handleInstall}
               className="w-full py-3.5 px-4 rounded-2xl bg-[#2CE68D] hover:bg-[#20C075] text-[#18181B] border-[2px] border-[#18181B] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <PackageCheck className="w-4 h-4 stroke-[2.5]" />
@@ -352,38 +348,6 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
               <span>Open in Browser to Download</span>
             </button>
           )}
-
-          {/* Secondary Options */}
-          <div className="flex items-center justify-between gap-2 pt-1">
-            <button
-              type="button"
-              onClick={handleCopyLink}
-              className="flex-1 py-2 px-2 bg-[#FAF7F2] hover:bg-slate-100 border border-[#18181B]/30 rounded-xl text-[10px] font-bold text-slate-600 hover:text-[#18181B] flex items-center justify-center gap-1 cursor-pointer transition-all"
-            >
-              {copied ? (
-                <>
-                  <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
-                  <span className="text-emerald-700 font-bold">Link Copied!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3 h-3 stroke-[2]" />
-                  <span>Copy APK Link</span>
-                </>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                playClickSound();
-                onClose();
-              }}
-              className="py-2 px-3 text-[10px] font-bold text-slate-400 hover:text-[#18181B] cursor-pointer"
-            >
-              Later
-            </button>
-          </div>
         </div>
 
       </div>

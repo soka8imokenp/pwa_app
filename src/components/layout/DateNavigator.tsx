@@ -47,8 +47,8 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
 
   return (
     <div className="w-full neo-card p-3 sm:p-4 mb-4 select-none font-body">
-      {/* Top row: Centered Date Switcher + Calendar Modal Trigger */}
-      <div className="flex items-center justify-between gap-2 mb-3">
+      {/* Top row: Perfectly Centered Date Switcher + Today Jump Button */}
+      <div className="relative flex items-center justify-center mb-3">
         <div className="flex items-center gap-1.5">
           <button
             onClick={handlePrevDay}
@@ -92,7 +92,7 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
         {!isTodaySelected && (
           <button
             onClick={handleToday}
-            className="px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wider neo-btn bg-[#FAF7F2] hover:bg-[#FFE873] text-[#18181B] cursor-pointer shadow-[1px_1px_0px_#18181B]"
+            className="absolute right-0 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider neo-btn bg-[#FAF7F2] hover:bg-[#FFE873] text-[#18181B] cursor-pointer shadow-[1px_1px_0px_#18181B]"
           >
             Today
           </button>

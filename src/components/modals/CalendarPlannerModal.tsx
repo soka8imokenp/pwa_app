@@ -159,23 +159,15 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={handleJumpToday}
-              className="px-2.5 py-1 rounded-xl bg-[#FAF7F2] hover:bg-[#FFE873] border border-[#18181B] text-[10px] font-black text-[#18181B] shadow-2xs active:scale-95 transition-all cursor-pointer"
-            >
-              Today
-            </button>
-            <button
-              onClick={() => {
-                playClickSound();
-                onClose();
-              }}
-              className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border border-[#18181B] flex items-center justify-center text-slate-500 hover:text-[#18181B] shadow-2xs active:scale-95 transition-all cursor-pointer"
-            >
-              <X className="w-4 h-4 stroke-[2.5]" />
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              playClickSound();
+              onClose();
+            }}
+            className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border border-[#18181B] flex items-center justify-center text-slate-500 hover:text-[#18181B] shadow-2xs active:scale-95 transition-all cursor-pointer"
+          >
+            <X className="w-4 h-4 stroke-[2.5]" />
+          </button>
         </div>
 
         {/* Month Selector Bar */}
@@ -269,21 +261,20 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
         {/* Selected Day Schedule & Multi-Event Planner */}
         <div className="p-3.5 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-2xl space-y-3 shadow-2xs">
           
-          {/* Day Title & Count */}
+          {/* Day Title & Count + Right-aligned Today Badge */}
           <div className="flex items-center justify-between pb-2 border-b border-[#18181B]/15">
             <div>
-              <div className="flex items-center gap-1.5">
-                <h4 className="text-xs font-black font-display text-[#18181B] uppercase tracking-wider">
-                  {formatDisplayDate(activeDate)}
-                </h4>
-                <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-[#FFE873] border border-[#18181B] rounded-md shadow-2xs text-[#18181B]">
-                  {getRelativeDayLabel(activeDate)}
-                </span>
-              </div>
+              <h4 className="text-xs font-black font-display text-[#18181B] uppercase tracking-wider">
+                {formatDisplayDate(activeDate)}
+              </h4>
               <p className="text-[10px] font-bold text-slate-500 mt-0.5">
                 {activeDayTasks.length} {activeDayTasks.length === 1 ? 'event scheduled' : 'events scheduled'}
               </p>
             </div>
+
+            <span className="text-[9px] font-black uppercase px-2.5 py-1 bg-[#FFE873] border-[1.5px] border-[#18181B] rounded-xl shadow-2xs text-[#18181B]">
+              {getRelativeDayLabel(activeDate)}
+            </span>
           </div>
 
           {/* Quick Add Multiple Events Form */}
@@ -306,9 +297,10 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
               </button>
             </div>
 
-            {/* Quick Presets (Category & Estimate & Priority) */}
-            <div className="flex items-center justify-between gap-1 overflow-x-auto pb-1">
-              <div className="flex items-center gap-1 shrink-0">
+            {/* Quick Presets (Category & Duration Chips & Priority Star) */}
+            <div className="space-y-1.5 pt-0.5">
+              {/* Row 1: Categories */}
+              <div className="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-none">
                 {categories.map((c) => (
                   <button
                     key={c.id}
@@ -317,10 +309,10 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
                       playClickSound();
                       setNewEventCategory(c.id);
                     }}
-                    className={`px-2 py-1 rounded-lg border text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-xl border-[1.5px] text-[10px] font-black flex items-center gap-1 transition-all cursor-pointer ${
                       newEventCategory === c.id
-                        ? 'bg-[#E8DCFF] border-[#18181B] text-[#18181B] shadow-2xs'
-                        : 'bg-white border-slate-200 text-slate-500'
+                        ? 'bg-[#E8DCFF] border-[#18181B] text-[#18181B] shadow-2xs -translate-y-0.5'
+                        : 'bg-white border-[#18181B]/20 text-slate-600 hover:border-[#18181B] hover:bg-slate-50'
                     }`}
                   >
                     {c.icon}
@@ -329,35 +321,54 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
                 ))}
               </div>
 
-              <div className="flex items-center gap-1 shrink-0">
+              {/* Row 2: Duration Chips + Priority Star */}
+              <div className="flex items-center justify-between gap-1 pt-0.5">
+                <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+                  <div className="flex items-center gap-1 px-2 py-1 bg-white border-[1.5px] border-[#18181B]/30 rounded-xl text-slate-600 shadow-2xs">
+                    <Clock className="w-3.5 h-3.5 text-slate-700 stroke-[2.25]" />
+                  </div>
+                  {[
+                    { val: 15, label: '15m' },
+                    { val: 25, label: '25m' },
+                    { val: 30, label: '30m' },
+                    { val: 45, label: '45m' },
+                    { val: 60, label: '1h' },
+                    { val: 120, label: '2h' },
+                  ].map((dur) => (
+                    <button
+                      key={dur.val}
+                      type="button"
+                      onClick={() => {
+                        playClickSound();
+                        setNewEventEstimate(dur.val);
+                      }}
+                      className={`px-2.5 py-1 rounded-xl border-[1.5px] text-[10px] font-mono-num font-black transition-all cursor-pointer ${
+                        newEventEstimate === dur.val
+                          ? 'bg-[#FFE873] border-[#18181B] text-[#18181B] shadow-2xs -translate-y-0.5'
+                          : 'bg-white border-[#18181B]/20 text-slate-600 hover:border-[#18181B] hover:bg-slate-50'
+                      }`}
+                    >
+                      {dur.label}
+                    </button>
+                  ))}
+                </div>
+
                 <button
                   type="button"
                   onClick={() => {
                     playClickSound();
                     setNewEventPriority(!newEventPriority);
                   }}
-                  className={`p-1 rounded-lg border text-[10px] font-bold flex items-center gap-0.5 transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-xl border-[1.5px] text-[10px] font-black flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
                     newEventPriority
-                      ? 'bg-[#FEF08A] border-[#18181B] text-[#18181B] shadow-2xs'
-                      : 'bg-white border-slate-200 text-slate-400'
+                      ? 'bg-[#FEF08A] border-[#18181B] text-[#18181B] shadow-2xs -translate-y-0.5'
+                      : 'bg-white border-[#18181B]/20 text-slate-500 hover:border-[#18181B]'
                   }`}
                   title="Toggle Priority"
                 >
                   <Star className={`w-3.5 h-3.5 ${newEventPriority ? 'text-amber-700 fill-amber-400' : 'text-slate-400'}`} />
+                  <span>Star</span>
                 </button>
-
-                <select
-                  value={newEventEstimate}
-                  onChange={(e) => setNewEventEstimate(Number(e.target.value))}
-                  className="px-2 py-1 bg-white border border-[#18181B] rounded-lg text-[10px] font-bold text-[#18181B] outline-none cursor-pointer"
-                >
-                  <option value={15}>15m</option>
-                  <option value={25}>25m</option>
-                  <option value={30}>30m</option>
-                  <option value={45}>45m</option>
-                  <option value={60}>1h</option>
-                  <option value={120}>2h</option>
-                </select>
               </div>
             </div>
           </form>

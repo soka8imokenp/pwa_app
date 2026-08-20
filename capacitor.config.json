@@ -1,5 +1,5 @@
 {
-  "appId": "com.dailysumire.app",
+  "appId": "com.kairo.planner",
   "appName": "Daily Sumire",
   "webDir": "dist",
   "bundledWebRuntime": false,

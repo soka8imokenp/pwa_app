@@ -15,7 +15,6 @@ import {
   Activity,
   FileText,
   Layers,
-  ArrowRight,
   Sparkles,
 } from 'lucide-react';
 import { addMonths, subMonths, parseISO } from 'date-fns';
@@ -106,11 +105,13 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
     const today = new Date();
     setCurrentMonthDate(today);
     setActiveDate(todayStr);
+    onSelectDate(todayStr);
   };
 
   const handleSelectDay = (dateStr: string) => {
     playClickSound();
     setActiveDate(dateStr);
+    onSelectDate(dateStr);
   };
 
   const handleQuickAddEvent = (e: React.FormEvent) => {
@@ -128,12 +129,6 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
     });
 
     setNewEventTitle('');
-  };
-
-  const handleApplyAndOpenDay = () => {
-    playClickSound();
-    onSelectDate(activeDate);
-    onClose();
   };
 
   const categories = [
@@ -289,14 +284,6 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
                 {activeDayTasks.length} {activeDayTasks.length === 1 ? 'event scheduled' : 'events scheduled'}
               </p>
             </div>
-
-            <button
-              onClick={handleApplyAndOpenDay}
-              className="px-3 py-1.5 rounded-xl bg-[#18181B] text-white hover:bg-slate-800 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-2xs active:translate-y-0.5 cursor-pointer transition-all"
-            >
-              <span>Open in Planner</span>
-              <ArrowRight className="w-3 h-3 stroke-[2.5]" />
-            </button>
           </div>
 
           {/* Quick Add Multiple Events Form */}

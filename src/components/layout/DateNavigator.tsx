@@ -88,25 +88,15 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
           </button>
         </div>
 
-        {/* Right side: Open Full Calendar / Today Jump Button */}
-        <div className="flex items-center gap-1.5">
-          {!isTodaySelected && (
-            <button
-              onClick={handleToday}
-              className="px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wider neo-btn bg-[#FAF7F2] hover:bg-[#FFE873] text-[#18181B] cursor-pointer shadow-[1px_1px_0px_#18181B]"
-            >
-              Today
-            </button>
-          )}
-
+        {/* Right side: Today Jump Button */}
+        {!isTodaySelected && (
           <button
-            onClick={handleCalendarClick}
-            className="w-8 h-8 rounded-xl bg-[#E8DCFF] hover:bg-[#d4c0fc] border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] active:translate-y-0.5 cursor-pointer transition-all"
-            title="Open Full Calendar"
+            onClick={handleToday}
+            className="px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wider neo-btn bg-[#FAF7F2] hover:bg-[#FFE873] text-[#18181B] cursor-pointer shadow-[1px_1px_0px_#18181B]"
           >
-            <Calendar className="w-4 h-4 stroke-[2.25]" />
+            Today
           </button>
-        </div>
+        )}
       </div>
 
       {/* Week Days Strip */}

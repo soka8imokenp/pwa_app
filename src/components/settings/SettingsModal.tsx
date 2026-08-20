@@ -105,9 +105,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         } else {
           window.open(update.downloadUrl, '_blank');
         }
-      } else {
+      } else if (update && !update.hasUpdate) {
         playSuccessChime();
         setUpdateStatus(`You have the latest version (${CURRENT_APP_VERSION})!`);
+      } else {
+        setUpdateStatus('Could not reach update server. Check your connection or GitHub API.');
       }
     } catch {
       setUpdateStatus('Could not reach update server.');

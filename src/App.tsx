@@ -21,7 +21,7 @@ import { CalendarPlannerModal } from './components/modals/CalendarPlannerModal';
 import { DuolingoStreakModal } from './components/modals/DuolingoStreakModal';
 import { AuthContainer, UserProfile } from './components/auth/AuthContainer';
 import { initNotificationSystem } from './lib/notifications';
-import { checkForTelegramUpdate, AppUpdateInfo } from './lib/telegramUpdater';
+import { checkForAppUpdate, AppUpdateInfo } from './lib/appUpdater';
 import { usePlannerData } from './hooks/usePlannerData';
 import { getTodayString } from './lib/dateUtils';
 import { isSoundMuted, setSoundMuted, playClickSound } from './lib/sound';
@@ -82,8 +82,8 @@ export function App() {
 
     window.addEventListener('sumire:navigate', handleWebNavigate);
 
-    // Auto-check for updates from Telegram group
-    checkForTelegramUpdate().then((update) => {
+    // Auto-check for updates from Vercel CDN
+    checkForAppUpdate().then((update) => {
       if (update && update.hasUpdate) {
         setAvailableUpdate(update);
       }

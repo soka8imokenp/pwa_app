@@ -13,8 +13,8 @@ import {
 } from 'lucide-react';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
-import type { AppUpdateInfo } from '../../lib/telegramUpdater';
-import { CURRENT_APP_VERSION } from '../../lib/telegramUpdater';
+import type { AppUpdateInfo } from '../../lib/appUpdater';
+import { CURRENT_APP_VERSION } from '../../lib/appUpdater';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 
 interface AppUpdateModalProps {
@@ -90,7 +90,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
                 New Update Available
               </h3>
               <p className="text-[10px] font-bold text-slate-400">
-                Direct from Telegram Group
+                Official CDN Distribution
               </p>
             </div>
           </div>

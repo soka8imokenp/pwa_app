@@ -89,8 +89,8 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
           <X className="w-4 h-4 stroke-[2.5]" />
         </button>
 
-        {/* 1. Fire Mascot Podium with Animated Lottie Flame */}
-        <div className="w-36 h-36 rounded-full bg-[#FFE873] border-[2px] border-[#18181B] shadow-[3px_3px_0px_#18181B] p-2 flex items-center justify-center my-2 relative">
+        {/* 1. Animated Lottie Flame (Clean floating without background circle) */}
+        <div className="w-36 h-36 flex items-center justify-center my-2 relative">
           <LottiePlayer
             animationData={fireAnimation}
             loop={true}

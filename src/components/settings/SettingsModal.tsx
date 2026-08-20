@@ -32,7 +32,7 @@ import {
 import { playSuccessChime, playClickSound } from '../../lib/sound';
 import { AVATAR_OPTIONS, getAvatarById } from '../../data/avatars';
 import type { UserProfile } from '../auth/AuthContainer';
-import { checkForTelegramUpdate, CURRENT_APP_VERSION, AppUpdateInfo } from '../../lib/telegramUpdater';
+import { checkForAppUpdate, CURRENT_APP_VERSION, AppUpdateInfo } from '../../lib/appUpdater';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -93,12 +93,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   };
 
-  const handleCheckTelegramUpdate = async () => {
+  const handleCheckAppUpdate = async () => {
     playClickSound();
     setUpdateChecking(true);
     setUpdateStatus(null);
     try {
-      const update = await checkForTelegramUpdate();
+      const update = await checkForAppUpdate();
       if (update && update.hasUpdate) {
         if (onShowUpdateModal) {
           onShowUpdateModal(update);
@@ -110,7 +110,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         setUpdateStatus('Latest version installed!');
       }
     } catch {
-      setUpdateStatus('Could not reach Telegram.');
+      setUpdateStatus('Could not reach update server.');
     } finally {
       setUpdateChecking(false);
     }
@@ -526,7 +526,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* 4. App Version & Telegram Updater */}
+        {/* 4. App Version & Official Updater */}
         <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -542,7 +542,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
 
             <button
-              onClick={handleCheckTelegramUpdate}
+              onClick={handleCheckAppUpdate}
               disabled={updateChecking}
               className="px-3 py-1.5 rounded-full bg-[#FAF7F2] hover:bg-[#E8DCFF] border border-[#18181B] text-[10px] font-black text-[#18181B] flex items-center gap-1.5 shadow-2xs cursor-pointer active:translate-y-0.5 transition-all"
             >

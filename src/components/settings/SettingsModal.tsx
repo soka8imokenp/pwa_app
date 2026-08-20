@@ -107,7 +107,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         }
       } else {
         playSuccessChime();
-        setUpdateStatus('Latest version installed!');
+        setUpdateStatus(`You have the latest version (${CURRENT_APP_VERSION})!`);
       }
     } catch {
       setUpdateStatus('Could not reach update server.');

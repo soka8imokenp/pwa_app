@@ -11,7 +11,7 @@ export interface AppUpdateInfo {
   publishedAt: number;
 }
 
-export const CURRENT_APP_VERSION = 'v1.3.1';
+export const CURRENT_APP_VERSION = 'v1.4.0';
 export const VERCEL_UPDATER_URL = 'https://sumiredaily-updater.vercel.app';
 
 /**

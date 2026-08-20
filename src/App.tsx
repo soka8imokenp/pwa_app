@@ -116,6 +116,7 @@ export function App() {
     habitsWithStats,
     todaysFocusSessions,
     overallStreak,
+    activityStats,
     dayStats,
     canAddPriority,
     addTask,
@@ -380,6 +381,7 @@ export function App() {
           isOpen={isStreakModalOpen}
           onClose={() => setIsStreakModalOpen(false)}
           streakCount={overallStreak}
+          activityStats={activityStats}
         />
       </div>
     </div>

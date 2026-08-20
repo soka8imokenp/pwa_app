@@ -1,54 +1,71 @@
 import React, { useEffect } from 'react';
-import { Share2, X, Flame, Sparkles } from 'lucide-react';
+import { Share2, X, Flame, Sparkles, Target } from 'lucide-react';
 import fireAnimation from '../../assets/fire.json';
 import { LottiePlayer } from '../common/LottiePlayer';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
+import type { OverallActivityStats } from '../../lib/streaks';
 import confetti from 'canvas-confetti';
 
 interface DuolingoStreakModalProps {
   isOpen: boolean;
   onClose: () => void;
   streakCount: number;
+  activityStats?: OverallActivityStats;
 }
 
 export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
   isOpen,
   onClose,
   streakCount,
+  activityStats,
 }) => {
   useEffect(() => {
     if (isOpen) {
       playSuccessChime();
-      confetti({
-        particleCount: 40,
-        spread: 65,
-        origin: { y: 0.6 },
-        colors: ['#FFE873', '#FED7AA', '#E8DCFF', '#BEF264', '#18181B'],
-      });
+      if (streakCount > 0) {
+        confetti({
+          particleCount: 40,
+          spread: 65,
+          origin: { y: 0.6 },
+          colors: ['#FFE873', '#FED7AA', '#E8DCFF', '#BEF264', '#18181B'],
+        });
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, streakCount]);
 
   if (!isOpen) return null;
 
-  // Calculate current weekday index (0 = Sun, 1 = Mon, ..., 6 = Sat)
   const today = new Date();
   const currentDayIndex = today.getDay(); // 0 is Sunday
-  const weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  const defaultWeekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
   // Current week number in the year
   const startOfYear = new Date(today.getFullYear(), 0, 1);
   const weekNumber = Math.ceil(((today.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
 
-  // Calculate progress percentage for the week bar up to today
-  const progressPercent = Math.min(100, Math.max(14, ((currentDayIndex + 0.5) / 7) * 100));
+  const isActiveToday = activityStats ? activityStats.isActiveToday : false;
+  const weeklyDays = activityStats?.weeklyActivity || defaultWeekDays.map((d, i) => ({
+    date: '',
+    dayLabel: d,
+    active: i < currentDayIndex && streakCount > 0,
+    isToday: i === currentDayIndex,
+  }));
+
+  // Calculate progress percentage for the week
+  const completedDaysThisWeek = weeklyDays.filter((d) => d.active).length;
+  const progressPercent = Math.min(100, Math.max(streakCount > 0 ? 14 : 0, (completedDaysThisWeek / 7) * 100));
 
   const handleShare = async () => {
     playClickSound();
+    const shareText = streakCount > 0
+      ? `I'm on a ${streakCount} day streak on Daily Sumire! 🔥 Keep the momentum going!`
+      : `Starting my productivity streak on Daily Sumire! ✨`;
+
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Daily Sumire - ${streakCount} Day Streak!`,
-          text: `I'm on a ${streakCount} day streak on Daily Sumire! 🔥 Keep the momentum going!`,
+          title: `Daily Sumire - ${streakCount > 0 ? `${streakCount} Day Streak!` : 'Daily Planner'}`,
+          text: shareText,
           url: window.location.href,
         });
       } catch {
@@ -56,7 +73,7 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
       }
     } else {
       try {
-        await navigator.clipboard.writeText(`I'm on a ${streakCount} day streak on Daily Sumire! 🔥`);
+        await navigator.clipboard.writeText(shareText);
       } catch {
         // Fallback
       }
@@ -65,12 +82,14 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
 
   const handleConfirm = () => {
     playClickSound();
-    confetti({
-      particleCount: 25,
-      spread: 50,
-      origin: { y: 0.8 },
-      colors: ['#FFE873', '#FED7AA', '#18181B'],
-    });
+    if (streakCount > 0) {
+      confetti({
+        particleCount: 25,
+        spread: 50,
+        origin: { y: 0.8 },
+        colors: ['#FFE873', '#FED7AA', '#18181B'],
+      });
+    }
     onClose();
   };
 
@@ -89,23 +108,27 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
           <X className="w-4 h-4 stroke-[2.5]" />
         </button>
 
-        {/* 1. Animated Lottie Flame (Clean floating without background circle) */}
+        {/* 1. Animated Lottie Flame (Clean floating flame) */}
         <div className="w-36 h-36 flex items-center justify-center my-2 relative">
           <LottiePlayer
             animationData={fireAnimation}
             loop={true}
             autoplay={true}
-            className="w-full h-full object-contain"
+            className={`w-full h-full object-contain ${streakCount === 0 ? 'opacity-70 grayscale-[30%]' : ''}`}
           />
         </div>
 
         {/* 2. Streak Title in Our Style */}
         <div className="space-y-1 mb-4">
           <h2 className="text-2xl sm:text-3xl font-black font-display text-[#18181B] uppercase tracking-tight leading-none">
-            {streakCount} Day Streak!
+            {streakCount > 0 ? `${streakCount} Day Streak!` : 'Start Your Streak!'}
           </h2>
           <span className="inline-block px-3 py-0.5 rounded-full bg-[#E8DCFF] border border-[#18181B] text-[10px] font-black uppercase tracking-wider text-[#18181B] shadow-2xs">
-            Keep the flame alive
+            {streakCount > 0
+              ? isActiveToday
+                ? 'Streak Secured for Today! 🔥'
+                : 'Complete an activity today'
+              : 'Complete 1 activity to ignite'}
           </span>
         </div>
 
@@ -114,22 +137,19 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
           
           {/* Weekday Row */}
           <div className="grid grid-cols-7 gap-1 text-center">
-            {weekDays.map((day, idx) => {
-              const isToday = idx === currentDayIndex;
-              const isPassed = idx <= currentDayIndex;
-
+            {weeklyDays.map((day) => {
               return (
                 <div
-                  key={day}
+                  key={day.dayLabel}
                   className={`py-1 rounded-lg border text-[10px] font-black uppercase transition-all ${
-                    isToday
-                      ? 'bg-[#18181B] text-white border-[#18181B] shadow-2xs -translate-y-0.5'
-                      : isPassed
+                    day.active
                       ? 'bg-[#FFE873] text-[#18181B] border-[#18181B] shadow-2xs'
+                      : day.isToday
+                      ? 'bg-[#18181B] text-white border-[#18181B] shadow-2xs -translate-y-0.5'
                       : 'bg-white text-slate-400 border-[#18181B]/20'
                   }`}
                 >
-                  {day}
+                  {day.dayLabel}
                 </div>
               );
             })}
@@ -141,7 +161,7 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
               className="h-full bg-gradient-to-r from-[#FFE873] via-[#FED7AA] to-[#FDBA74] border-r border-[#18181B] rounded-full relative flex items-center justify-end pr-1 transition-all duration-500"
               style={{ width: `${progressPercent}%` }}
             >
-              <div className="w-1.5 h-1.5 bg-[#18181B] rounded-full shadow-2xs" />
+              {progressPercent > 0 && <div className="w-1.5 h-1.5 bg-[#18181B] rounded-full shadow-2xs" />}
             </div>
           </div>
 
@@ -158,7 +178,11 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
           {/* Divider & Motivational Subtext */}
           <div className="pt-2 border-t border-[#18181B]/15">
             <p className="text-xs font-bold text-slate-600 text-center leading-snug">
-              Complete your focus & habits today to keep your <span className="text-[#18181B] font-black">Perfect Streak</span>!
+              {streakCount > 0
+                ? isActiveToday
+                  ? "Great job! You've kept your flame burning today."
+                  : "Complete 1 task, habit, or focus session today to protect your streak!"
+                : "Complete any task, habit, or focus session today to ignite your 1-day streak!"}
             </p>
           </div>
 
@@ -181,7 +205,7 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
             className="flex-1 py-3.5 px-6 rounded-2xl bg-[#FFE873] hover:bg-[#FED7AA] border-[2px] border-[#18181B] text-[#18181B] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#18181B] active:translate-y-0.5 active:shadow-none cursor-pointer transition-all flex items-center justify-center gap-2"
           >
             <Flame className="w-4 h-4 stroke-[2.5] text-amber-800 fill-amber-500" />
-            <span>I CAN DO IT!</span>
+            <span>{streakCount > 0 ? 'I CAN DO IT!' : "LET'S GO!"}</span>
           </button>
         </div>
 

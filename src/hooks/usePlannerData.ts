@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, seedDemoDataIfEmpty } from '../lib/db';
 import type { Task, Habit, HabitLog, FocusSession, HabitWithStats, DayOverviewStats } from '../types';
-import { calculateHabitStats } from '../lib/streaks';
+import { calculateHabitStats, calculateOverallActivityStreak, OverallActivityStats } from '../lib/streaks';
 import { triggerTwoWaySync } from '../lib/syncEngine';
 import { sendLocalNotification } from '../lib/notifications';
 
@@ -43,12 +43,12 @@ export function usePlannerData(selectedDate: string) {
     return allHabits.map((habit) => calculateHabitStats(habit, allHabitLogs, selectedDate));
   }, [allHabits, allHabitLogs, selectedDate]);
 
-  // 4. Overall User Streak Fire calculation
-  const overallStreak = useMemo(() => {
-    if (habitsWithStats.length === 0) return 0;
-    const maxHabitStreak = Math.max(...habitsWithStats.map((h) => h.currentStreak), 0);
-    return Math.max(1, maxHabitStreak);
-  }, [habitsWithStats]);
+  // 4. Overall User Activity Streak calculation across Tasks, Habits & Focus
+  const activityStats: OverallActivityStats = useMemo(() => {
+    return calculateOverallActivityStreak(allTasks, allHabitLogs, allFocusSessions, selectedDate);
+  }, [allTasks, allHabitLogs, allFocusSessions, selectedDate]);
+
+  const overallStreak = activityStats.currentStreak;
 
   // 5. Day Overview Stats
   const dayStats: DayOverviewStats = useMemo(() => {
@@ -218,6 +218,7 @@ export function usePlannerData(selectedDate: string) {
     habitsWithStats,
     todaysFocusSessions,
     overallStreak,
+    activityStats,
     dayStats,
     canAddPriority: priorityTasks.length < 3,
     addTask,

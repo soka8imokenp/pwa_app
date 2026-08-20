@@ -15,27 +15,8 @@ export interface NotificationPayload {
   };
 }
 
-// In-app notification event listeners
-type InAppNotificationListener = (payload: NotificationPayload) => void;
-const inAppListeners: Set<InAppNotificationListener> = new Set();
-
-export function subscribeInAppNotifications(listener: InAppNotificationListener): () => void {
-  inAppListeners.add(listener);
-  return () => inAppListeners.delete(listener);
-}
-
-function broadcastInAppNotification(payload: NotificationPayload) {
-  inAppListeners.forEach((listener) => {
-    try {
-      listener(payload);
-    } catch (err) {
-      console.error('In-app notification listener error:', err);
-    }
-  });
-}
-
 /**
- * Initialize Notification Listeners for Android, iOS & Web
+ * Initialize Notification Listeners for Android, iOS & Web (Deep Linking)
  */
 export async function initNotificationSystem(onNavigate: (tab: TabView, extra?: any) => void) {
   if (Capacitor.isNativePlatform()) {
@@ -60,7 +41,7 @@ export async function initNotificationSystem(onNavigate: (tab: TabView, extra?: 
         vibration: true,
       });
 
-      // Listen for notification clicks from Android system tray
+      // Listen for notification clicks from Android system tray to open specific tab
       LocalNotifications.addListener('localNotificationActionPerformed', (notificationAction) => {
         const extra = notificationAction.notification.extra;
         if (extra && extra.tab) {
@@ -100,7 +81,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
 }
 
 /**
- * Send an immediate local notification & trigger in-app toast
+ * Send a phone system notification (Status bar & lockscreen)
  */
 export async function sendLocalNotification(
   title: string,
@@ -108,17 +89,8 @@ export async function sendLocalNotification(
   extra?: { tab?: TabView; taskId?: number; habitId?: number; action?: string }
 ) {
   const notificationId = Math.floor(Math.random() * 100000);
-  const payload: NotificationPayload = {
-    id: notificationId,
-    title,
-    body,
-    extra: extra || { tab: 'priorities' },
-  };
 
-  // 1. Broadcast in-app floating toast
-  broadcastInAppNotification(payload);
-
-  // 2. Native Capacitor Notification
+  // 1. Native Capacitor Notification (Android / iOS status bar)
   if (Capacitor.isNativePlatform()) {
     try {
       await LocalNotifications.schedule({
@@ -140,7 +112,7 @@ export async function sendLocalNotification(
     }
   }
 
-  // 3. Web Notification API Fallback
+  // 2. Web Notification API Fallback (Desktop / Browser)
   if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
     try {
       const notif = new Notification(title, {
@@ -153,7 +125,6 @@ export async function sendLocalNotification(
       notif.onclick = () => {
         window.focus();
         if (extra?.tab) {
-          // Trigger navigation event
           window.dispatchEvent(new CustomEvent('sumire:navigate', { detail: extra }));
         }
         notif.close();
@@ -173,7 +144,7 @@ export async function sendLocalNotification(
 }
 
 /**
- * Schedule a future reminder notification (e.g. for a specific time or habit)
+ * Schedule a future reminder notification for phone
  */
 export async function scheduleTaskReminder(
   title: string,

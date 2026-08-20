@@ -18,7 +18,6 @@ import { SumireCompanionModal } from './components/modals/SumireCompanionModal';
 import { MenuModal } from './components/modals/MenuModal';
 import { AppUpdateModal } from './components/modals/AppUpdateModal';
 import { AuthContainer, UserProfile } from './components/auth/AuthContainer';
-import { InAppNotificationToast } from './components/common/InAppNotificationToast';
 import { initNotificationSystem } from './lib/notifications';
 import { checkForTelegramUpdate, AppUpdateInfo } from './lib/telegramUpdater';
 import { usePlannerData } from './hooks/usePlannerData';
@@ -164,9 +163,6 @@ export function App() {
       {/* Mobile Screen Frame */}
       <div className="w-full max-w-md min-h-screen flex flex-col relative px-3 sm:px-0 z-10">
         
-        {/* In-App Floating Toast Notification */}
-        <InAppNotificationToast onNavigate={(tab) => setActiveTab(tab)} />
-
         {/* Mobile Top Header with User Greeting */}
         <Header
           streakCount={overallStreak}

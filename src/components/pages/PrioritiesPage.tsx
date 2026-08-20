@@ -313,17 +313,6 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
             </div>
           );
         })}
-
-        {/* Add Empty Slot Card */}
-        {priorityTasks.length < 3 && (
-          <button
-            onClick={() => onOpenAddTask(priorityTasks.length)}
-            className="w-full p-4 bg-white hover:bg-slate-50 border-[1.75px] border-dashed border-[#18181B] rounded-2xl flex items-center justify-center gap-2 cursor-pointer text-xs font-bold text-slate-600 shadow-2xs transition-all"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Add Priority #{priorityTasks.length + 1}</span>
-          </button>
-        )}
       </div>
 
       {/* 5. Minimalist Quick Add Input */}

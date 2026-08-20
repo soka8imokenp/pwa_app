@@ -217,7 +217,7 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
                   onClick={() => handleSelectDay(day.dateStr)}
                   className={`py-2 px-1 rounded-xl border flex flex-col items-center justify-center min-h-[44px] transition-all cursor-pointer relative ${
                     isCurrentDay
-                      ? 'bg-[#18181B] text-white border-[#18181B] shadow-[2px_2px_0px_#18181B] -translate-y-0.5'
+                      ? 'bg-[#18181B] text-white border-[#18181B] shadow-[2px_2px_0px_#18181B] ring-1 ring-[#18181B]'
                       : day.isToday
                       ? 'bg-[#FFE873] text-[#18181B] border-[#18181B] shadow-2xs font-black'
                       : day.isCurrentMonth
@@ -298,9 +298,9 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
             </div>
 
             {/* Quick Presets (Category & Duration Chips & Priority Star) */}
-            <div className="space-y-1.5 pt-0.5">
+            <div className="space-y-2 pt-1">
               {/* Row 1: Categories */}
-              <div className="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-none">
+              <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none">
                 {categories.map((c) => (
                   <button
                     key={c.id}
@@ -309,10 +309,10 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
                       playClickSound();
                       setNewEventCategory(c.id);
                     }}
-                    className={`px-2.5 py-1 rounded-xl border-[1.5px] text-[10px] font-black flex items-center gap-1 transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl border-[1.75px] text-[10px] font-black flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
                       newEventCategory === c.id
-                        ? 'bg-[#E8DCFF] border-[#18181B] text-[#18181B] shadow-2xs -translate-y-0.5'
-                        : 'bg-white border-[#18181B]/20 text-slate-600 hover:border-[#18181B] hover:bg-slate-50'
+                        ? 'bg-[#E8DCFF] border-[#18181B] text-[#18181B] shadow-2xs font-extrabold ring-1 ring-[#18181B]'
+                        : 'bg-white border-[#18181B]/25 text-slate-600 hover:border-[#18181B] hover:bg-slate-50'
                     }`}
                   >
                     {c.icon}
@@ -322,9 +322,9 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
               </div>
 
               {/* Row 2: Duration Chips + Priority Star */}
-              <div className="flex items-center justify-between gap-1 pt-0.5">
-                <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
-                  <div className="flex items-center gap-1 px-2 py-1 bg-white border-[1.5px] border-[#18181B]/30 rounded-xl text-slate-600 shadow-2xs">
+              <div className="flex items-center justify-between gap-1.5 py-1">
+                <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+                  <div className="flex items-center gap-1 px-2.5 py-1.5 bg-white border-[1.5px] border-[#18181B]/30 rounded-xl text-slate-600 shadow-2xs shrink-0">
                     <Clock className="w-3.5 h-3.5 text-slate-700 stroke-[2.25]" />
                   </div>
                   {[
@@ -342,10 +342,10 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
                         playClickSound();
                         setNewEventEstimate(dur.val);
                       }}
-                      className={`px-2.5 py-1 rounded-xl border-[1.5px] text-[10px] font-mono-num font-black transition-all cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-xl border-[1.75px] text-[10px] font-mono-num font-black transition-all cursor-pointer shrink-0 ${
                         newEventEstimate === dur.val
-                          ? 'bg-[#FFE873] border-[#18181B] text-[#18181B] shadow-2xs -translate-y-0.5'
-                          : 'bg-white border-[#18181B]/20 text-slate-600 hover:border-[#18181B] hover:bg-slate-50'
+                          ? 'bg-[#FFE873] border-[#18181B] text-[#18181B] shadow-2xs font-extrabold ring-1 ring-[#18181B]'
+                          : 'bg-white border-[#18181B]/25 text-slate-600 hover:border-[#18181B] hover:bg-slate-50'
                       }`}
                     >
                       {dur.label}
@@ -359,10 +359,10 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
                     playClickSound();
                     setNewEventPriority(!newEventPriority);
                   }}
-                  className={`px-2.5 py-1 rounded-xl border-[1.5px] text-[10px] font-black flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
+                  className={`px-3 py-1.5 rounded-xl border-[1.75px] text-[10px] font-black flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
                     newEventPriority
-                      ? 'bg-[#FEF08A] border-[#18181B] text-[#18181B] shadow-2xs -translate-y-0.5'
-                      : 'bg-white border-[#18181B]/20 text-slate-500 hover:border-[#18181B]'
+                      ? 'bg-[#FEF08A] border-[#18181B] text-[#18181B] shadow-2xs ring-1 ring-[#18181B]'
+                      : 'bg-white border-[#18181B]/25 text-slate-500 hover:border-[#18181B]'
                   }`}
                   title="Toggle Priority"
                 >

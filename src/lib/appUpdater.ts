@@ -68,6 +68,7 @@ export async function checkForAppUpdate(): Promise<AppUpdateInfo | null> {
   try {
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest?_t=${timestamp}`, {
       method: 'GET',
+      cache: 'no-store',
       headers: {
         'Accept': 'application/vnd.github.v3+json',
       },
@@ -112,7 +113,7 @@ export async function checkForAppUpdate(): Promise<AppUpdateInfo | null> {
   try {
     const rawRes = await fetch(
       `https://raw.githubusercontent.com/${GITHUB_REPO}/main/package.json?_t=${timestamp}`,
-      { cache: 'no-cache' }
+      { cache: 'no-store' }
     );
 
     if (rawRes.ok) {

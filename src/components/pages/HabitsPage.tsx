@@ -10,7 +10,6 @@ import {
   Moon,
   Zap,
   Target,
-  Sparkles,
   Heart,
   Coffee,
   RotateCcw,
@@ -64,9 +63,6 @@ export const renderHabitLucideIcon = (iconKey?: string) => {
     case 'coffee':
     case '☕':
       return <Coffee className="w-4 h-4 text-amber-800" />;
-    case 'sparkles':
-    case '✨':
-      return <Sparkles className="w-4 h-4 text-amber-500" />;
     case 'zap':
     case 'energy':
     case '⚡':
@@ -292,8 +288,8 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
       <div className="space-y-3">
         {totalHabits === 0 ? (
           <div className="p-6 bg-white border-[1.75px] border-dashed border-[#18181B]/30 rounded-2xl text-center space-y-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#FFE873] border-[1.5px] border-[#18181B] flex items-center justify-center mx-auto shadow-2xs">
-              <Sparkles className="w-5 h-5 text-[#18181B]" />
+            <div className="w-10 h-10 rounded-2xl bg-[#FEF08A] border-[1.5px] border-[#18181B] flex items-center justify-center mx-auto shadow-2xs">
+              <Flame className="w-5 h-5 text-amber-600 fill-amber-400" />
             </div>
             <div>
               <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">

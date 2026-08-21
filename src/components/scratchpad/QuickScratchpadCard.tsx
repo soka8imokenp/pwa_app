@@ -9,7 +9,6 @@ import {
   RotateCcw,
   Mic,
   MicOff,
-  Sparkles,
   Star,
   Send,
   Flame,
@@ -263,11 +262,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
             className="w-8 h-8 rounded-xl border-[1.5px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-2xs transition-colors"
             style={{ backgroundColor: isAllDone ? '#D1FBE4' : '#E8DCFF' }}
           >
-            {isAllDone ? (
-              <Sparkles className="w-4 h-4 text-emerald-700 stroke-[2.25]" />
-            ) : (
-              <ListChecks className="w-4 h-4 text-purple-900 stroke-[2.25]" />
-            )}
+            <ListChecks className={`w-4 h-4 stroke-[2.25] ${isAllDone ? 'text-emerald-800' : 'text-purple-900'}`} />
           </div>
 
           <div>

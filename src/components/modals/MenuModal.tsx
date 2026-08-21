@@ -8,6 +8,7 @@ import {
   Settings,
   ChevronRight,
   Moon,
+  Share2,
 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 import type { TabView } from '../layout/BottomNav';
@@ -19,6 +20,7 @@ interface MenuModalProps {
   onSelectTab: (tab: TabView) => void;
   onOpenSettings: () => void;
   onOpenEveningReview?: () => void;
+  onOpenWeeklyInfographic?: () => void;
 }
 
 export const MenuModal: React.FC<MenuModalProps> = ({
@@ -28,6 +30,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
   onSelectTab,
   onOpenSettings,
   onOpenEveningReview,
+  onOpenWeeklyInfographic,
 }) => {
   if (!isOpen) return null;
 
@@ -167,6 +170,29 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                 <div>
                   <h4 className="text-xs font-black text-[#18181B]">Evening Debrief</h4>
                   <p className="text-[10px] text-slate-500 font-medium">Daily wrap-up, score & rollover</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </button>
+          )}
+
+          {/* Weekly Infographic */}
+          {onOpenWeeklyInfographic && (
+            <button
+              onClick={() => {
+                playClickSound();
+                onClose();
+                onOpenWeeklyInfographic();
+              }}
+              className="w-full p-3.5 rounded-2xl bg-[#E8DCFF] hover:bg-[#D8C4FF] border-[1.75px] border-[#18181B] flex items-center justify-between transition-all cursor-pointer text-left shadow-2xs"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-white border border-[#18181B] flex items-center justify-center shadow-2xs shrink-0">
+                  <Share2 className="w-4 h-4 text-purple-950 stroke-[2.25]" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-[#18181B]">Weekly Infographic</h4>
+                  <p className="text-[10px] text-slate-500 font-medium">Export & share progress card</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-400" />

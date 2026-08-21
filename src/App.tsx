@@ -19,6 +19,7 @@ import { MenuModal } from './components/modals/MenuModal';
 import { AppUpdateModal } from './components/modals/AppUpdateModal';
 import { CalendarPlannerModal } from './components/modals/CalendarPlannerModal';
 import { DuolingoStreakModal } from './components/modals/DuolingoStreakModal';
+import { WeeklyInfographicModal } from './components/modals/WeeklyInfographicModal';
 import { AuthContainer, UserProfile } from './components/auth/AuthContainer';
 import { AppSplashScreen } from './components/common/AppSplashScreen';
 import { initNotificationSystem } from './lib/notifications';
@@ -60,6 +61,7 @@ export function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isStreakModalOpen, setIsStreakModalOpen] = useState(false);
+  const [isWeeklyInfographicOpen, setIsWeeklyInfographicOpen] = useState(false);
   const [availableUpdate, setAvailableUpdate] = useState<AppUpdateInfo | null>(null);
 
   // Focus Timer active selection
@@ -307,6 +309,7 @@ export function App() {
               habitLogs={allHabitLogs}
               focusSessions={allFocusSessions}
               onSelectDate={setSelectedDate}
+              onOpenInfographic={() => setIsWeeklyInfographicOpen(true)}
             />
           )}
         </main>
@@ -368,6 +371,7 @@ export function App() {
           onSelectTab={setActiveTab}
           onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenEveningReview={() => setIsEveningReviewOpen(true)}
+          onOpenWeeklyInfographic={() => setIsWeeklyInfographicOpen(true)}
         />
 
         <SettingsModal
@@ -413,6 +417,16 @@ export function App() {
           onClose={() => setIsStreakModalOpen(false)}
           streakCount={overallStreak}
           activityStats={activityStats}
+        />
+
+        {/* Weekly Infographic Export Modal */}
+        <WeeklyInfographicModal
+          isOpen={isWeeklyInfographicOpen}
+          onClose={() => setIsWeeklyInfographicOpen(false)}
+          tasks={allTasks}
+          habitLogs={allHabitLogs}
+          focusSessions={allFocusSessions}
+          userName={displayName}
         />
       </div>
     </div>

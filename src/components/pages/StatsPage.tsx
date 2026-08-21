@@ -18,6 +18,7 @@ interface StatsPageProps {
   habitLogs: HabitLog[];
   focusSessions: FocusSession[];
   onSelectDate: (dateStr: string) => void;
+  onOpenInfographic?: () => void;
 }
 
 type Timeframe = '7d' | '30d' | 'all';
@@ -27,6 +28,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
   habitLogs,
   focusSessions,
   onSelectDate,
+  onOpenInfographic,
 }) => {
   const [timeframe, setTimeframe] = useState<Timeframe>('30d');
   const [copiedShare, setCopiedShare] = useState(false);
@@ -100,11 +102,18 @@ export const StatsPage: React.FC<StatsPageProps> = ({
           </div>
 
           <button
-            onClick={handleShareCard}
-            className="px-3 py-1.5 bg-[#E8DCFF] hover:bg-[#D8C4FF] neo-btn flex items-center gap-1.5 text-xs text-[#18181B] cursor-pointer"
+            onClick={() => {
+              if (onOpenInfographic) {
+                playClickSound();
+                onOpenInfographic();
+              } else {
+                handleShareCard();
+              }
+            }}
+            className="px-3.5 py-1.5 bg-[#E8DCFF] hover:bg-[#D8C4FF] neo-btn flex items-center gap-1.5 text-xs text-[#18181B] cursor-pointer shadow-2xs active:translate-y-0.5"
           >
-            <Share2 className="w-3.5 h-3.5" />
-            <span>{copiedShare ? 'Copied!' : 'Share'}</span>
+            <Share2 className="w-3.5 h-3.5 stroke-[2.25]" />
+            <span>Weekly Card</span>
           </button>
         </div>
 

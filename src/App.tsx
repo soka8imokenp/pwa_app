@@ -20,6 +20,7 @@ import { AppUpdateModal } from './components/modals/AppUpdateModal';
 import { CalendarPlannerModal } from './components/modals/CalendarPlannerModal';
 import { DuolingoStreakModal } from './components/modals/DuolingoStreakModal';
 import { AuthContainer, UserProfile } from './components/auth/AuthContainer';
+import { AppSplashScreen } from './components/common/AppSplashScreen';
 import { initNotificationSystem } from './lib/notifications';
 import { checkForAppUpdate, AppUpdateInfo } from './lib/appUpdater';
 import { usePlannerData } from './hooks/usePlannerData';
@@ -46,6 +47,7 @@ export function App() {
   const [selectedDate, setSelectedDate] = useState(getTodayString());
   const [activeTab, setActiveTab] = useState<TabView>('priorities');
   const [soundMutedState, setSoundMutedState] = useState(isSoundMuted());
+  const [showSplash, setShowSplash] = useState(true);
 
   // Modals state
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
@@ -168,13 +170,20 @@ export function App() {
 
   // If not authenticated, render Login / Register / Forgot Password screen
   if (!currentUser) {
-    return <AuthContainer onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <>
+        {showSplash && <AppSplashScreen onFinish={() => setShowSplash(false)} />}
+        <AuthContainer onLoginSuccess={handleLoginSuccess} />
+      </>
+    );
   }
 
   const displayName = `${currentUser.firstName} ${currentUser.lastName}`.trim() || currentUser.username || 'Sam Smith';
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#18181B] flex justify-center bg-subtle-grid relative overflow-x-hidden">
+      {showSplash && <AppSplashScreen onFinish={() => setShowSplash(false)} />}
+
       {/* Dynamic Background Elements */}
       <BackgroundDecorations />
 

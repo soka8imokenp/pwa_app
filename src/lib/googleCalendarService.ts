@@ -17,8 +17,6 @@ export interface GoogleUserProfile {
   picture?: string;
 }
 
-const DEFAULT_CLIENT_ID = '985741829374-placeholder.apps.googleusercontent.com';
-
 /**
  * Storage keys
  */
@@ -85,11 +83,11 @@ export function getStoredGCalUser(): GoogleUserProfile | null {
   return null;
 }
 
-/**
- * Initiate Google OAuth 2.0 authorization popup / redirect
- */
-export function initiateGoogleOAuth(customClientId?: string): void {
-  const clientId = customClientId?.trim() || getStoredGCalClientId() || DEFAULT_CLIENT_ID;
+export function initiateGoogleOAuth(customClientId?: string): boolean {
+  const clientId = customClientId?.trim() || getStoredGCalClientId();
+  if (!clientId) {
+    return false;
+  }
   const redirectUri = window.location.origin + window.location.pathname;
   const scope = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email';
 
@@ -100,6 +98,7 @@ export function initiateGoogleOAuth(customClientId?: string): void {
   )}&response_type=token&scope=${encodeURIComponent(scope)}&prompt=consent`;
 
   window.location.href = authUrl;
+  return true;
 }
 
 /**

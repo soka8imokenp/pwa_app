@@ -149,6 +149,39 @@ export function createGoogleCalendarLink(task: Task): string {
 }
 
 /**
+ * Builds a direct 1-click Google Calendar Day Plan Link
+ */
+export function createGoogleCalendarDayPlanLink(tasks: Task[], selectedDate: string): string {
+  let startDate: Date;
+  try {
+    startDate = parseISO(selectedDate);
+  } catch {
+    startDate = new Date();
+  }
+  startDate.setHours(9, 0, 0, 0);
+  const endDate = new Date(startDate);
+  endDate.setHours(18, 0, 0, 0);
+
+  const startIso = format(startDate, "yyyyMMdd'T'HHmmss");
+  const endIso = format(endDate, "yyyyMMdd'T'HHmmss");
+
+  const title = encodeURIComponent(`Daily Sumire Schedule (${selectedDate})`);
+
+  let detailsText = `Daily Sumire Tasks for ${selectedDate}:\n\n`;
+  tasks.forEach((t) => {
+    detailsText += `${t.isPriority ? '🎯 [Priority] ' : '• '}${t.title}${t.estimatedMinutes ? ` (${t.estimatedMinutes}m)` : ''}\n`;
+    if (t.subtasks && t.subtasks.length > 0) {
+      t.subtasks.forEach((st) => {
+        detailsText += `   ${st.isCompleted ? '✓' : '○'} ${st.title}\n`;
+      });
+    }
+  });
+  detailsText += '\nManaged with Daily Sumire Planner';
+
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startIso}/${endIso}&details=${encodeURIComponent(detailsText)}`;
+}
+
+/**
  * Native Web Share API for .ics files on mobile
  */
 export async function shareIcsCalendarFile(tasks: Task[], filename?: string): Promise<boolean> {

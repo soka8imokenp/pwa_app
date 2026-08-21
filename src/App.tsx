@@ -18,6 +18,7 @@ import { SumireCompanionModal } from './components/modals/SumireCompanionModal';
 import { MenuModal } from './components/modals/MenuModal';
 import { AppUpdateModal } from './components/modals/AppUpdateModal';
 import { CalendarPlannerModal } from './components/modals/CalendarPlannerModal';
+import { CalendarExportModal } from './components/modals/CalendarExportModal';
 import { DuolingoStreakModal } from './components/modals/DuolingoStreakModal';
 import { WeeklyInfographicModal } from './components/modals/WeeklyInfographicModal';
 import { AuthContainer, UserProfile } from './components/auth/AuthContainer';
@@ -62,6 +63,7 @@ export function App() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isStreakModalOpen, setIsStreakModalOpen] = useState(false);
   const [isWeeklyInfographicOpen, setIsWeeklyInfographicOpen] = useState(false);
+  const [isCalendarExportOpen, setIsCalendarExportOpen] = useState(false);
   const [availableUpdate, setAvailableUpdate] = useState<AppUpdateInfo | null>(null);
 
   // Focus Timer active selection
@@ -372,6 +374,7 @@ export function App() {
           onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenEveningReview={() => setIsEveningReviewOpen(true)}
           onOpenWeeklyInfographic={() => setIsWeeklyInfographicOpen(true)}
+          onOpenCalendarExport={() => setIsCalendarExportOpen(true)}
         />
 
         <SettingsModal
@@ -409,6 +412,7 @@ export function App() {
           onAddTask={addTask}
           onToggleTask={toggleTaskComplete}
           onDeleteTask={deleteTask}
+          onOpenExport={() => setIsCalendarExportOpen(true)}
         />
 
         {/* Duolingo-style Streak Greeting Modal */}
@@ -427,6 +431,14 @@ export function App() {
           habitLogs={allHabitLogs}
           focusSessions={allFocusSessions}
           userName={displayName}
+        />
+
+        {/* Calendar Sync & .ics Export Modal */}
+        <CalendarExportModal
+          isOpen={isCalendarExportOpen}
+          onClose={() => setIsCalendarExportOpen(false)}
+          allTasks={allTasks}
+          selectedDate={selectedDate}
         />
       </div>
     </div>

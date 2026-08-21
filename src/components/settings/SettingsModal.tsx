@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Settings,
   Download,
@@ -23,6 +23,9 @@ import {
   ExternalLink,
   RefreshCw,
   Moon,
+  Lock,
+  Unlock,
+  Fingerprint,
 } from 'lucide-react';
 import {
   exportDatabaseToJson,
@@ -34,6 +37,13 @@ import { playSuccessChime, playClickSound } from '../../lib/sound';
 import { AVATAR_OPTIONS, getAvatarById } from '../../data/avatars';
 import type { UserProfile } from '../auth/AuthContainer';
 import { checkForAppUpdate, CURRENT_APP_VERSION, AppUpdateInfo } from '../../lib/appUpdater';
+import {
+  isPinSet,
+  isBiometricsEnabled,
+  isBiometricsSupported,
+  setAppLocked,
+} from '../../lib/securityService';
+import { SecuritySetupModal } from '../security/SecuritySetupModal';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -46,6 +56,7 @@ interface SettingsModalProps {
   currentUser?: UserProfile | null;
   onLogout?: () => void;
   onShowUpdateModal?: (info: AppUpdateInfo) => void;
+  onLockApp?: () => void;
 }
 
 const THEME_ACCENTS = [
@@ -64,6 +75,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   currentUser,
   onLogout,
   onShowUpdateModal,
+  onLockApp,
 }) => {
   const [feedback, setFeedback] = useState<{ text: string; success: boolean } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -97,6 +109,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }
     return '21:00';
   });
+
+  const [pinConfigured, setPinConfigured] = useState<boolean>(() => isPinSet());
+  const [bioActive, setBioActive] = useState<boolean>(() => isBiometricsEnabled());
+  const [bioSupported, setBioSupported] = useState<boolean>(false);
+  const [isSecurityModalOpen, setIsSecurityModalOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    isBiometricsSupported().then((supported) => setBioSupported(supported));
+  }, []);
+
+  const handleRefreshSecurityState = () => {
+    setPinConfigured(isPinSet());
+    setBioActive(isBiometricsEnabled());
+  };
 
   const handleToggleEveningDebrief = () => {
     playClickSound();
@@ -517,6 +543,78 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           )}
         </div>
 
+        {/* Security & PIN Lock */}
+        <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-[2rem] space-y-3 shadow-[2px_2px_0px_#18181B]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full bg-[#E8DCFF] border border-[#18181B] flex items-center justify-center text-xs shadow-2xs">
+                {pinConfigured ? (
+                  <Lock className="w-4 h-4 text-purple-950 stroke-[2.25]" />
+                ) : (
+                  <Unlock className="w-4 h-4 text-slate-400 stroke-[2.25]" />
+                )}
+              </div>
+              <div>
+                <span className="text-xs font-black font-display text-[#18181B] block">
+                  Защита и PIN-код
+                </span>
+                <span className="text-[10px] font-semibold text-slate-400 block">
+                  {pinConfigured
+                    ? bioActive
+                      ? 'PIN + Отпечаток пальца'
+                      : '4-значный PIN активен'
+                    : 'Защита отключена'}
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                playClickSound();
+                setIsSecurityModalOpen(true);
+              }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-black border-[1.5px] border-[#18181B] transition-all cursor-pointer ${
+                pinConfigured
+                  ? 'bg-[#D1FBE4] text-[#18181B] shadow-2xs'
+                  : 'bg-[#FFE873] text-[#18181B] shadow-2xs'
+              }`}
+            >
+              {pinConfigured ? 'Настроить' : 'Включить PIN'}
+            </button>
+          </div>
+
+          {pinConfigured && (
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {bioActive ? (
+                  <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                    <Fingerprint className="w-3 h-3" />
+                    <span>Биометрия включена</span>
+                  </div>
+                ) : (
+                  <span className="text-[10px] font-bold text-slate-400">PIN активен</span>
+                )}
+              </div>
+
+              {onLockApp && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    playClickSound();
+                    onLockApp();
+                    onClose();
+                  }}
+                  className="px-2.5 py-1 bg-[#FAF7F2] hover:bg-rose-50 border border-[#18181B] rounded-lg text-[10px] font-black text-[#18181B] flex items-center gap-1 cursor-pointer active:scale-95 transition-all"
+                >
+                  <Lock className="w-3 h-3 text-slate-700 stroke-[2.25]" />
+                  <span>Заблокировать сейчас</span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* 3. Theme & Accent Color Palette */}
         <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-[2rem] space-y-2.5 shadow-[2px_2px_0px_#18181B]">
           <div className="flex items-center justify-between">
@@ -644,6 +742,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           )}
         </div>
 
+        {/* Security PIN / Biometrics Setup Modal */}
+        <SecuritySetupModal
+          isOpen={isSecurityModalOpen}
+          onClose={() => setIsSecurityModalOpen(false)}
+          onSecurityUpdated={handleRefreshSecurityState}
+        />
       </div>
     </div>
   );

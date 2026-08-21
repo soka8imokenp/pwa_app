@@ -10,8 +10,10 @@ import {
   Moon,
   Share2,
   Calendar,
+  Lock,
 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
+import { isPinSet } from '../../lib/securityService';
 import type { TabView } from '../layout/BottomNav';
 
 interface MenuModalProps {
@@ -23,6 +25,7 @@ interface MenuModalProps {
   onOpenEveningReview?: () => void;
   onOpenWeeklyInfographic?: () => void;
   onOpenCalendarExport?: () => void;
+  onLockApp?: () => void;
 }
 
 export const MenuModal: React.FC<MenuModalProps> = ({
@@ -34,6 +37,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
   onOpenEveningReview,
   onOpenWeeklyInfographic,
   onOpenCalendarExport,
+  onLockApp,
 }) => {
   if (!isOpen) return null;
 
@@ -219,6 +223,29 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                 <div>
                   <h4 className="text-xs font-black text-[#18181B]">Calendar Sync & .ics</h4>
                   <p className="text-[10px] text-slate-500 font-medium">Google, Apple & Outlook Export</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </button>
+          )}
+
+          {/* Lock App Now (if PIN configured) */}
+          {isPinSet() && onLockApp && (
+            <button
+              onClick={() => {
+                playClickSound();
+                onClose();
+                onLockApp();
+              }}
+              className="w-full p-3.5 rounded-2xl bg-[#E8DCFF]/60 hover:bg-[#E8DCFF] border-[1.75px] border-[#18181B] flex items-center justify-between transition-all cursor-pointer text-left shadow-2xs"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#E8DCFF] border border-[#18181B] flex items-center justify-center shadow-2xs shrink-0">
+                  <Lock className="w-4 h-4 text-purple-950 stroke-[2.25]" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-[#18181B]">Заблокировать приложение</h4>
+                  <p className="text-[10px] text-slate-500 font-medium">Закрыть доступ по PIN-коду</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-400" />

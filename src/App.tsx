@@ -29,6 +29,8 @@ import { usePlannerData } from './hooks/usePlannerData';
 import { getTodayString } from './lib/dateUtils';
 import { isSoundMuted, setSoundMuted, playClickSound, playSuccessChime } from './lib/sound';
 import { handleGoogleOAuthCallback } from './lib/googleCalendarService';
+import { isAppLocked, setAppLocked } from './lib/securityService';
+import { SecurityLockScreen } from './components/security/SecurityLockScreen';
 import type { Task } from './types';
 
 export function App() {
@@ -66,6 +68,17 @@ export function App() {
   const [isWeeklyInfographicOpen, setIsWeeklyInfographicOpen] = useState(false);
   const [isCalendarExportOpen, setIsCalendarExportOpen] = useState(false);
   const [availableUpdate, setAvailableUpdate] = useState<AppUpdateInfo | null>(null);
+  const [isLocked, setIsLocked] = useState<boolean>(() => isAppLocked());
+
+  const handleLockApp = () => {
+    setAppLocked(true);
+    setIsLocked(true);
+  };
+
+  const handleUnlockApp = () => {
+    setAppLocked(false);
+    setIsLocked(false);
+  };
 
   // Focus Timer active selection
   const [focusSelectedTask, setFocusSelectedTask] = useState<Task | null>(null);
@@ -382,6 +395,7 @@ export function App() {
           onOpenEveningReview={() => setIsEveningReviewOpen(true)}
           onOpenWeeklyInfographic={() => setIsWeeklyInfographicOpen(true)}
           onOpenCalendarExport={() => setIsCalendarExportOpen(true)}
+          onLockApp={handleLockApp}
         />
 
         <SettingsModal
@@ -395,6 +409,7 @@ export function App() {
           currentUser={currentUser}
           onLogout={handleLogout}
           onShowUpdateModal={(info) => setAvailableUpdate(info)}
+          onLockApp={handleLockApp}
         />
 
         {/* Telegram Auto-Update Modal */}
@@ -448,6 +463,14 @@ export function App() {
           selectedDate={selectedDate}
           onImportTask={addTask}
         />
+
+        {/* Fullscreen PIN / Biometrics Security Lock Screen */}
+        {isLocked && (
+          <SecurityLockScreen
+            onUnlock={handleUnlockApp}
+            userName={displayName}
+          />
+        )}
       </div>
     </div>
   );

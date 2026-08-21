@@ -7,6 +7,7 @@ import {
   Compass,
   Settings,
   ChevronRight,
+  Moon,
 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 import type { TabView } from '../layout/BottomNav';
@@ -17,6 +18,7 @@ interface MenuModalProps {
   activeTab: TabView;
   onSelectTab: (tab: TabView) => void;
   onOpenSettings: () => void;
+  onOpenEveningReview?: () => void;
 }
 
 export const MenuModal: React.FC<MenuModalProps> = ({
@@ -25,6 +27,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
   activeTab,
   onSelectTab,
   onOpenSettings,
+  onOpenEveningReview,
 }) => {
   if (!isOpen) return null;
 
@@ -146,6 +149,29 @@ export const MenuModal: React.FC<MenuModalProps> = ({
           <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block px-1">
             Preferences
           </span>
+
+          {/* Evening Debrief */}
+          {onOpenEveningReview && (
+            <button
+              onClick={() => {
+                playClickSound();
+                onClose();
+                onOpenEveningReview();
+              }}
+              className="w-full p-3.5 rounded-2xl bg-[#FEFCE8] hover:bg-amber-100/60 border-[1.75px] border-[#18181B] flex items-center justify-between transition-all cursor-pointer text-left shadow-2xs"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#FEF08A] border border-[#18181B] flex items-center justify-center shadow-2xs shrink-0">
+                  <Moon className="w-4 h-4 text-amber-950 stroke-[2.25]" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-[#18181B]">Evening Debrief</h4>
+                  <p className="text-[10px] text-slate-500 font-medium">Daily wrap-up, score & rollover</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </button>
+          )}
 
           {/* Settings */}
           <button

@@ -22,6 +22,7 @@ import {
   ArrowUpCircle,
   ExternalLink,
   RefreshCw,
+  Moon,
 } from 'lucide-react';
 import {
   exportDatabaseToJson,
@@ -83,6 +84,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [updateChecking, setUpdateChecking] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [eveningDebriefEnabled, setEveningDebriefEnabled] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const val = localStorage.getItem('kairo_evening_debrief_enabled');
+      return val !== null ? val === 'true' : true;
+    }
+    return true;
+  });
+  const [eveningDebriefTime, setEveningDebriefTime] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('kairo_evening_debrief_time') || '21:00';
+    }
+    return '21:00';
+  });
+
+  const handleToggleEveningDebrief = () => {
+    playClickSound();
+    const next = !eveningDebriefEnabled;
+    setEveningDebriefEnabled(next);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kairo_evening_debrief_enabled', String(next));
+    }
+  };
+
+  const handleChangeEveningTime = (time: string) => {
+    playClickSound();
+    setEveningDebriefTime(time);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kairo_evening_debrief_time', time);
+    }
+  };
 
   const handleSaveGeminiKey = () => {
     playClickSound();
@@ -431,6 +462,59 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </>
             )}
           </button>
+        </div>
+
+        {/* Evening Debrief Toggle & Time Capsule */}
+        <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-[2rem] space-y-3 shadow-[2px_2px_0px_#18181B]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full bg-[#FEF08A] border border-[#18181B] flex items-center justify-center text-xs shadow-2xs">
+                <Moon className="w-4 h-4 text-amber-900 stroke-[2.25]" />
+              </div>
+              <div>
+                <span className="text-xs font-black font-display text-[#18181B] block">
+                  Evening Debrief
+                </span>
+                <span className="text-[10px] font-semibold text-slate-400 block">
+                  Daily wrap-up, score & task rollover
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleToggleEveningDebrief}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-black border-[1.5px] border-[#18181B] transition-all cursor-pointer ${
+                eveningDebriefEnabled
+                  ? 'bg-[#BEF264] text-[#18181B] shadow-2xs'
+                  : 'bg-slate-100 text-slate-500'
+              }`}
+            >
+              {eveningDebriefEnabled ? 'Enabled' : 'Disabled'}
+            </button>
+          </div>
+
+          {eveningDebriefEnabled && (
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+              <span className="text-[10px] font-black uppercase text-slate-400">
+                Debrief Time
+              </span>
+              <div className="flex items-center gap-1.5">
+                {['20:00', '21:00', '22:00', '23:00'].map((time) => (
+                  <button
+                    key={time}
+                    onClick={() => handleChangeEveningTime(time)}
+                    className={`px-2.5 py-1 rounded-lg border text-[10px] font-mono-num font-black transition-all cursor-pointer ${
+                      eveningDebriefTime === time
+                        ? 'bg-[#FFE873] text-[#18181B] border-[#18181B] shadow-2xs'
+                        : 'bg-[#FAF7F2] text-slate-500 border-slate-200 hover:border-[#18181B]'
+                    }`}
+                  >
+                    {time}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 3. Theme & Accent Color Palette */}

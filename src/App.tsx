@@ -102,6 +102,22 @@ export function App() {
         }, 800);
         return () => clearTimeout(timer);
       }
+
+      // Auto-prompt evening review if enabled, scheduled hour is reached, and not done yet today
+      const debriefEnabled = localStorage.getItem('kairo_evening_debrief_enabled') !== 'false';
+      const debriefTime = localStorage.getItem('kairo_evening_debrief_time') || '21:00';
+      const debriefHour = parseInt(debriefTime.split(':')[0] || '21', 10);
+      const currentHour = new Date().getHours();
+      const debriefDone = localStorage.getItem(`kairo_evening_debrief_done_${todayStr}`);
+      const debriefPrompted = localStorage.getItem(`kairo_evening_debrief_prompted_${todayStr}`);
+
+      if (debriefEnabled && currentHour >= debriefHour && !debriefDone && !debriefPrompted) {
+        const debriefTimer = setTimeout(() => {
+          setIsEveningReviewOpen(true);
+          localStorage.setItem(`kairo_evening_debrief_prompted_${todayStr}`, 'true');
+        }, 1400);
+        return () => clearTimeout(debriefTimer);
+      }
     }
 
     return () => window.removeEventListener('sumire:navigate', handleWebNavigate);
@@ -128,6 +144,7 @@ export function App() {
     promoteTaskToPriority,
     demoteTaskToBacklog,
     deleteTask,
+    updateTaskDate,
     addHabit,
     deleteHabit,
     toggleHabitLog,
@@ -330,9 +347,13 @@ export function App() {
           isOpen={isEveningReviewOpen}
           onClose={() => setIsEveningReviewOpen(false)}
           priorityTasks={priorityTasks}
+          allTasks={allTasks}
           habits={habitsWithStats}
           todaysSessions={todaysFocusSessions}
           selectedDate={selectedDate}
+          onRolloverTask={updateTaskDate}
+          onDemoteToBacklog={demoteTaskToBacklog}
+          onToggleComplete={toggleTaskComplete}
         />
 
         <SumireCompanionModal
@@ -346,6 +367,7 @@ export function App() {
           activeTab={activeTab}
           onSelectTab={setActiveTab}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenEveningReview={() => setIsEveningReviewOpen(true)}
         />
 
         <SettingsModal

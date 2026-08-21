@@ -1,40 +1,88 @@
-import React, { useEffect } from 'react';
-import { Trophy, CheckCircle2, Flame, Clock, Target, ArrowRight, X, Heart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+  Trophy,
+  Flame,
+  Clock,
+  Target,
+  ArrowRight,
+  X,
+  Calendar,
+  Archive,
+  CheckCircle2,
+  Smile,
+  Zap,
+  Leaf,
+  Moon,
+  Sparkles,
+  Check,
+} from 'lucide-react';
 import type { Task, HabitWithStats, FocusSession } from '../../types';
-import { playSuccessChime, playClickSound } from '../../lib/sound';
+import { playSuccessChime, playClickSound, playTaskCheckSound } from '../../lib/sound';
+import { shiftDate } from '../../lib/dateUtils';
 import confetti from 'canvas-confetti';
 
 interface EveningReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   priorityTasks: Task[];
+  allTasks: Task[];
   habits: HabitWithStats[];
   todaysSessions: FocusSession[];
   selectedDate: string;
+  onRolloverTask?: (taskId: number, newDate: string) => void;
+  onDemoteToBacklog?: (task: Task) => void;
+  onToggleComplete?: (task: Task) => void;
+  onDataChanged?: () => void;
 }
+
+const MOOD_OPTIONS = [
+  { id: 'fire', label: 'On Fire', icon: <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />, color: '#FEF08A' },
+  { id: 'focused', label: 'Focused', icon: <Target className="w-3.5 h-3.5 text-purple-700" />, color: '#E8DCFF' },
+  { id: 'calm', label: 'Calm', icon: <Leaf className="w-3.5 h-3.5 text-emerald-700" />, color: '#D1FBE4' },
+  { id: 'energetic', label: 'Energetic', icon: <Zap className="w-3.5 h-3.5 text-amber-700" />, color: '#FED7AA' },
+  { id: 'tired', label: 'Tired', icon: <Moon className="w-3.5 h-3.5 text-slate-700" />, color: '#FAF7F2' },
+];
 
 export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
   isOpen,
   onClose,
   priorityTasks,
+  allTasks,
   habits,
   todaysSessions,
   selectedDate,
+  onRolloverTask,
+  onDemoteToBacklog,
+  onToggleComplete,
+  onDataChanged,
 }) => {
+  const [selectedMood, setSelectedMood] = useState<string>('focused');
+  const [winNote, setWinNote] = useState('');
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Load existing mood & note if already saved today
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && typeof window !== 'undefined') {
+      const savedMood = localStorage.getItem(`kairo_daily_mood_${selectedDate}`);
+      const savedNote = localStorage.getItem(`kairo_daily_note_${selectedDate}`);
+      if (savedMood) setSelectedMood(savedMood);
+      if (savedNote) setWinNote(savedNote);
+      setIsSaved(false);
+
       playSuccessChime();
       confetti({
-        particleCount: 90,
-        spread: 80,
+        particleCount: 60,
+        spread: 70,
         origin: { y: 0.5 },
-        colors: ['#BEF264', '#C084FC', '#FED7AA', '#38BDF8', '#FEF08A'],
+        colors: ['#BEF264', '#FFE873', '#E8DCFF', '#D1FBE4'],
       });
     }
-  }, [isOpen]);
+  }, [isOpen, selectedDate]);
 
   if (!isOpen) return null;
 
+  const todayTasks = allTasks.filter((t) => t.date === selectedDate);
+  const pendingTasks = todayTasks.filter((t) => !t.isCompleted);
   const completedPriorities = priorityTasks.filter((t) => t.isCompleted).length;
   const completedHabits = habits.filter((h) => h.completedToday).length;
   const totalFocusMins = todaysSessions.reduce((acc, s) => acc + s.durationMinutes, 0);
@@ -48,81 +96,84 @@ export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
     )
   );
 
+  const handleRolloverAll = () => {
+    if (!onRolloverTask) return;
+    const tomorrow = shiftDate(selectedDate, 1);
+    playClickSound();
+    pendingTasks.forEach((t) => {
+      if (t.id) onRolloverTask(t.id, tomorrow);
+    });
+    if (onDataChanged) onDataChanged();
+  };
+
+  const handleMoveAllToBacklog = () => {
+    if (!onDemoteToBacklog) return;
+    playClickSound();
+    pendingTasks.forEach((t) => {
+      onDemoteToBacklog(t);
+    });
+    if (onDataChanged) onDataChanged();
+  };
+
+  const handleSaveAndClose = () => {
+    playSuccessChime();
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`kairo_daily_mood_${selectedDate}`, selectedMood);
+      localStorage.setItem(`kairo_daily_note_${selectedDate}`, winNote.trim());
+      localStorage.setItem(`kairo_evening_debrief_done_${selectedDate}`, 'true');
+    }
+    setIsSaved(true);
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#FFE873', '#BEF264', '#E8DCFF'],
+    });
+
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#18181B]/40 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
-      <div className="w-full max-w-md bg-white border-[2px] border-[#18181B] rounded-[2.5rem] shadow-[4px_4px_0px_#18181B] p-5 space-y-4 text-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#18181B]/40 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
+      <div className="w-full max-w-md bg-white border-[2px] border-[#18181B] rounded-[2.5rem] shadow-[4px_4px_0px_#18181B] p-5 space-y-4 max-h-[90vh] overflow-y-auto">
         
-        {/* Close */}
-        <div className="flex justify-end">
+        {/* Header with Trophy and Close */}
+        <div className="flex items-center justify-between pb-2 border-b border-[#18181B]/15">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-[#FEF08A] border-[1.75px] border-[#18181B] flex items-center justify-center shadow-2xs shrink-0">
+              <Trophy className="w-5 h-5 text-amber-900 stroke-[2.25]" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#18181B]">
+                Evening Debrief
+              </h3>
+              <p className="text-[10px] font-bold text-slate-400">
+                Daily Wrap-Up • {selectedDate}
+              </p>
+            </div>
+          </div>
+
           <button
             onClick={() => {
               playClickSound();
               onClose();
             }}
-            className="w-8 h-8 rounded-full bg-[#FAF7F2] border border-[#18181B]/20 flex items-center justify-center text-slate-500 hover:text-[#18181B] cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border border-[#18181B] flex items-center justify-center text-slate-700 hover:text-[#18181B] cursor-pointer shadow-2xs active:scale-95 transition-all"
           >
             <X className="w-4 h-4 stroke-[2.5]" />
           </button>
         </div>
 
-        {/* Celebration Trophy Icon */}
-        <div className="w-16 h-16 rounded-full bg-[#FEF08A] border-[2px] border-[#18181B] flex items-center justify-center mx-auto shadow-[2px_2px_0px_#18181B]">
-          <Trophy className="w-8 h-8 text-amber-900 stroke-[2.25]" />
-        </div>
-
-        <div>
-          <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 bg-[#E9D5FF] px-3 py-1 rounded-full border border-[#18181B]">
-            Daily Wrap-Up • {selectedDate}
-          </span>
-          <h2 className="text-xl font-black font-display text-[#18181B] mt-2">
-            Fantastic Effort Today!
-          </h2>
-          <p className="text-xs font-semibold text-slate-500 max-w-xs mx-auto mt-1">
-            You've built strong momentum towards your long-term goals.
-          </p>
-        </div>
-
-        {/* 3 Metric Badges */}
-        <div className="grid grid-cols-3 gap-2">
-          <div className="p-3 bg-[#FAF7F2] border border-[#18181B]/20 rounded-2xl">
-            <Target className="w-4 h-4 text-purple-800 mx-auto stroke-[2.25]" />
-            <p className="text-base font-black font-mono-num text-[#18181B] mt-1">
-              {completedPriorities}/{priorityTasks.length}
-            </p>
-            <p className="text-[9px] font-extrabold uppercase text-slate-400">
-              Priorities
-            </p>
-          </div>
-
-          <div className="p-3 bg-[#FAF7F2] border border-[#18181B]/20 rounded-2xl">
-            <Flame className="w-4 h-4 text-amber-600 mx-auto stroke-[2.25]" />
-            <p className="text-base font-black font-mono-num text-[#18181B] mt-1">
-              {completedHabits}/{habits.length}
-            </p>
-            <p className="text-[9px] font-extrabold uppercase text-slate-400">
-              Habits
-            </p>
-          </div>
-
-          <div className="p-3 bg-[#FAF7F2] border border-[#18181B]/20 rounded-2xl">
-            <Clock className="w-4 h-4 text-lime-800 mx-auto stroke-[2.25]" />
-            <p className="text-base font-black font-mono-num text-[#18181B] mt-1">
-              {totalFocusMins}m
-            </p>
-            <p className="text-[9px] font-extrabold uppercase text-slate-400">
-              Deep Flow
-            </p>
-          </div>
-        </div>
-
-        {/* Daily Grade Banner */}
+        {/* 1. Daily Score Banner */}
         <div className="p-3.5 bg-[#BEF264] border-[1.75px] border-[#18181B] rounded-2xl flex items-center justify-between shadow-2xs">
-          <div className="text-left">
-            <span className="text-[9px] font-extrabold uppercase text-lime-950 block">
-              Day Score
+          <div>
+            <span className="text-[9px] font-black uppercase text-lime-950 block">
+              Day Productivity Score
             </span>
             <span className="text-sm font-black text-lime-950 font-display">
-              Grade A+ Efficiency
+              {score >= 80 ? 'Exceptional Work!' : score >= 50 ? 'Solid Consistency' : 'Good Recovery Day'}
             </span>
           </div>
           <span className="text-2xl font-black font-mono-num text-lime-950">
@@ -130,15 +181,154 @@ export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
           </span>
         </div>
 
+        {/* 2. Three Metric Badges */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="p-3 bg-[#FAF7F2] border border-[#18181B]/20 rounded-2xl text-center shadow-2xs">
+            <Target className="w-4 h-4 text-purple-800 mx-auto stroke-[2.25]" />
+            <p className="text-base font-black font-mono-num text-[#18181B] mt-1">
+              {completedPriorities}/{priorityTasks.length}
+            </p>
+            <p className="text-[9px] font-black uppercase text-slate-400">
+              Priorities
+            </p>
+          </div>
+
+          <div className="p-3 bg-[#FAF7F2] border border-[#18181B]/20 rounded-2xl text-center shadow-2xs">
+            <Flame className="w-4 h-4 text-amber-600 mx-auto stroke-[2.25]" />
+            <p className="text-base font-black font-mono-num text-[#18181B] mt-1">
+              {completedHabits}/{habits.length}
+            </p>
+            <p className="text-[9px] font-black uppercase text-slate-400">
+              Habits
+            </p>
+          </div>
+
+          <div className="p-3 bg-[#FAF7F2] border border-[#18181B]/20 rounded-2xl text-center shadow-2xs">
+            <Clock className="w-4 h-4 text-sky-800 mx-auto stroke-[2.25]" />
+            <p className="text-base font-black font-mono-num text-[#18181B] mt-1">
+              {totalFocusMins}m
+            </p>
+            <p className="text-[9px] font-black uppercase text-slate-400">
+              Deep Flow
+            </p>
+          </div>
+        </div>
+
+        {/* 3. Mood & State Check-In */}
+        <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-2xl space-y-2 shadow-2xs">
+          <label className="block text-xs font-black uppercase tracking-wider text-slate-700">
+            How was your day?
+          </label>
+          
+          <div className="grid grid-cols-5 gap-1.5">
+            {MOOD_OPTIONS.map((m) => {
+              const isSelected = selectedMood === m.id;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => {
+                    playClickSound();
+                    setSelectedMood(m.id);
+                  }}
+                  className={`py-2 px-1 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1 ${
+                    isSelected
+                      ? 'border-[#18181B] shadow-[2px_2px_0px_#18181B] scale-105'
+                      : 'border-slate-200 bg-[#FAF7F2] hover:border-[#18181B]'
+                  }`}
+                  style={{ backgroundColor: isSelected ? m.color : undefined }}
+                >
+                  {m.icon}
+                  <span className="text-[8px] font-black text-[#18181B] truncate max-w-full">
+                    {m.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Win of the Day Input */}
+          <div className="pt-1">
+            <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">
+              Biggest Win or Takeaway
+            </label>
+            <input
+              type="text"
+              value={winNote}
+              onChange={(e) => setWinNote(e.target.value)}
+              placeholder="e.g. Shipped APK update, 2h deep focus code sprint..."
+              className="w-full px-3 py-2 bg-[#FAF7F2] text-xs font-bold rounded-xl border border-[#18181B] outline-none placeholder:text-slate-400 shadow-2xs text-[#18181B]"
+            />
+          </div>
+        </div>
+
+        {/* 4. Uncompleted Tasks Action (Rollover / Backlog) */}
+        {pendingTasks.length > 0 && (
+          <div className="p-3.5 bg-[#FEFCE8] border-[1.75px] border-[#18181B] rounded-2xl space-y-2.5 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase text-amber-900">
+                {pendingTasks.length} Unfinished Task{pendingTasks.length > 1 ? 's' : ''} Today
+              </span>
+              <span className="text-[9px] font-bold text-amber-700">
+                Choose action
+              </span>
+            </div>
+
+            <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+              {pendingTasks.map((t) => (
+                <div
+                  key={t.id}
+                  className="p-2 bg-white border border-[#18181B]/20 rounded-xl flex items-center justify-between gap-2 text-xs"
+                >
+                  <span className="font-bold text-[#18181B] truncate flex-1">{t.title}</span>
+                  {t.id && onRolloverTask && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playClickSound();
+                        onRolloverTask(t.id!, shiftDate(selectedDate, 1));
+                        if (onDataChanged) onDataChanged();
+                      }}
+                      title="Move to tomorrow"
+                      className="px-2 py-0.5 bg-[#FAF7F2] hover:bg-[#FFE873] border border-[#18181B] rounded-lg text-[9px] font-black text-[#18181B] cursor-pointer shrink-0"
+                    >
+                      +1 Day
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                type="button"
+                onClick={handleRolloverAll}
+                className="py-1.5 px-2 bg-white hover:bg-amber-100 border border-[#18181B] rounded-xl text-[10px] font-black text-[#18181B] flex items-center justify-center gap-1 cursor-pointer shadow-2xs active:scale-95"
+              >
+                <Calendar className="w-3 h-3 text-amber-800" />
+                <span>Move All to Tomorrow</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleMoveAllToBacklog}
+                className="py-1.5 px-2 bg-white hover:bg-purple-100 border border-[#18181B] rounded-xl text-[10px] font-black text-[#18181B] flex items-center justify-center gap-1 cursor-pointer shadow-2xs active:scale-95"
+              >
+                <Archive className="w-3 h-3 text-purple-800" />
+                <span>Move to Backlog</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 5. Complete & Save Button */}
         <button
-          onClick={() => {
-            playClickSound();
-            onClose();
-          }}
-          className="w-full py-3 rounded-full bg-[#C084FC] hover:bg-[#B366FA] text-[#18181B] border-[1.75px] border-[#18181B] text-xs font-black shadow-xs active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-1.5 transition-all"
+          type="button"
+          onClick={handleSaveAndClose}
+          className="w-full py-3 rounded-2xl bg-[#FFE873] hover:bg-[#FED7AA] text-[#18181B] border-[1.75px] border-[#18181B] text-xs font-black shadow-[2px_2px_0px_#18181B] active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-2 transition-all"
         >
-          <span>Ready for Tomorrow</span>
-          <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+          <Check className="w-4 h-4 stroke-[3]" />
+          <span>Save & Complete Daily Wrap-Up</span>
         </button>
 
       </div>

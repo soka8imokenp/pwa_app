@@ -139,6 +139,11 @@ export function usePlannerData(selectedDate: string) {
     );
   };
 
+  const updateTaskDate = async (taskId: number, newDate: string) => {
+    await db.tasks.update(taskId, { date: newDate });
+    triggerTwoWaySync();
+  };
+
   const deleteHabit = async (habitId: number) => {
     await db.transaction('rw', [db.habits, db.habitLogs], async () => {
       await db.habits.delete(habitId);
@@ -228,6 +233,7 @@ export function usePlannerData(selectedDate: string) {
     promoteTaskToPriority,
     demoteTaskToBacklog,
     deleteTask,
+    updateTaskDate,
     addHabit,
     deleteHabit,
     toggleHabitLog,

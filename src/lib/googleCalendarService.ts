@@ -90,7 +90,12 @@ export function initiateGoogleOAuth(customClientId?: string): boolean {
   if (!clientId) {
     return false;
   }
-  const redirectUri = window.location.origin + window.location.pathname;
+  let redirectUri = window.location.origin;
+  if (window.location.pathname && window.location.pathname !== '/') {
+    redirectUri += window.location.pathname;
+  } else {
+    redirectUri += '/';
+  }
   const scope = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email';
 
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(

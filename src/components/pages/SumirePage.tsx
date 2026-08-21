@@ -7,7 +7,6 @@ import {
   Image as ImageIcon,
   X,
   RotateCcw,
-  Sparkles,
 } from 'lucide-react';
 import { askSumireAI, AIChatMessage } from '../../lib/aiService';
 import { startVoiceDictation, stopVoiceDictation, isSpeechRecognitionSupported } from '../../lib/speechRecognition';
@@ -23,7 +22,7 @@ export const SumirePage: React.FC<SumirePageProps> = ({ onDataChanged }) => {
     {
       id: 'welcome',
       role: 'assistant',
-      content: 'Привет. У меня много работы в архиве, так что давай сразу по делу. Я вижу все твои задачи, привычки и блокнот на сегодня. Чем помочь? Можешь прикрепить фото заметок, надиктовать задачу голосом или попросить раскидать план.',
+      content: "Hi! I'm ready to help.",
       timestamp: Date.now(),
     },
   ]);
@@ -45,7 +44,7 @@ export const SumirePage: React.FC<SumirePageProps> = ({ onDataChanged }) => {
       {
         id: 'welcome_reset',
         role: 'assistant',
-        content: 'История очищена. Чем помочь по текущим задачам или архиву?',
+        content: "History cleared. How can I help?",
         timestamp: Date.now(),
       },
     ]);
@@ -80,7 +79,7 @@ export const SumirePage: React.FC<SumirePageProps> = ({ onDataChanged }) => {
     const userMsg: AIChatMessage = {
       id: `user_${Date.now()}`,
       role: 'user',
-      content: text || 'Посмотри прикрепленное изображение:',
+      content: text || 'Analyze attached image:',
       imagePreview: currentAttachment?.previewUrl,
       timestamp: Date.now(),
     };
@@ -125,7 +124,7 @@ export const SumirePage: React.FC<SumirePageProps> = ({ onDataChanged }) => {
         {
           id: `err_${Date.now()}`,
           role: 'assistant',
-          content: `${err.message || 'Не удалось выполнить запрос.'}`,
+          content: `${err.message || 'Could not process request.'}`,
           timestamp: Date.now(),
         },
       ]);
@@ -136,7 +135,7 @@ export const SumirePage: React.FC<SumirePageProps> = ({ onDataChanged }) => {
 
   const handleToggleVoice = () => {
     if (!isSpeechRecognitionSupported()) {
-      alert('Голосовой ввод не поддерживается данным браузером/устройством.');
+      alert('Voice input is not supported by this browser or device.');
       return;
     }
 
@@ -161,10 +160,10 @@ export const SumirePage: React.FC<SumirePageProps> = ({ onDataChanged }) => {
   };
 
   const QUICK_PROMPTS = [
-    'Что у меня в приоритете на сегодня?',
-    'Разбей мою задачу на 4 подшага',
-    'Запиши в блокнот мысль: ',
-    'Создай задачу на 45 минут',
+    'What are my top priorities today?',
+    'Break down my main task into subtasks',
+    'Add a priority task: ',
+    'Mark daily habit completed',
   ];
 
   return (
@@ -193,7 +192,7 @@ export const SumirePage: React.FC<SumirePageProps> = ({ onDataChanged }) => {
 
         <button
           onClick={handleClearHistory}
-          title="Очистить диалог"
+          title="Clear chat"
           className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-rose-50 border border-[#18181B] flex items-center justify-center text-slate-600 hover:text-rose-700 shadow-2xs active:scale-95 transition-all cursor-pointer"
         >
           <RotateCcw className="w-3.5 h-3.5" />
@@ -246,7 +245,7 @@ export const SumirePage: React.FC<SumirePageProps> = ({ onDataChanged }) => {
             <div className="w-2 h-2 rounded-full bg-[#A855F7] animate-bounce" />
             <div className="w-2 h-2 rounded-full bg-[#A855F7] animate-bounce" style={{ animationDelay: '0.2s' }} />
             <div className="w-2 h-2 rounded-full bg-[#A855F7] animate-bounce" style={{ animationDelay: '0.4s' }} />
-            <span className="text-[10px] font-bold text-slate-400 ml-1">Анализ...</span>
+            <span className="text-[10px] font-bold text-slate-400 ml-1">Thinking...</span>
           </div>
         )}
 
@@ -279,7 +278,7 @@ export const SumirePage: React.FC<SumirePageProps> = ({ onDataChanged }) => {
             <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#18181B] shrink-0">
               <img src={attachedImage.previewUrl} alt="Preview" className="w-full h-full object-cover" />
             </div>
-            <span className="text-[11px] font-bold text-[#18181B] truncate">Фото прикреплено к анализу</span>
+            <span className="text-[11px] font-bold text-[#18181B] truncate">Image attached for analysis</span>
           </div>
           <button
             type="button"
@@ -313,7 +312,7 @@ export const SumirePage: React.FC<SumirePageProps> = ({ onDataChanged }) => {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            title="Прикрепить картинку / фото заметок"
+            title="Attach image or notes photo"
             className="w-10 h-10 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border-[1.5px] border-[#18181B] flex items-center justify-center text-slate-700 shrink-0 shadow-2xs cursor-pointer active:translate-y-0.5 transition-all"
           >
             <ImageIcon className="w-4 h-4 stroke-[2.25]" />
@@ -323,7 +322,7 @@ export const SumirePage: React.FC<SumirePageProps> = ({ onDataChanged }) => {
           <button
             type="button"
             onClick={handleToggleVoice}
-            title={isRecording ? 'Остановить запись' : 'Голосовой ввод'}
+            title={isRecording ? 'Stop recording' : 'Voice input'}
             className={`w-10 h-10 rounded-xl border-[1.5px] border-[#18181B] flex items-center justify-center shrink-0 transition-all cursor-pointer ${
               isRecording
                 ? 'bg-rose-500 text-white animate-pulse shadow-2xs'
@@ -337,7 +336,7 @@ export const SumirePage: React.FC<SumirePageProps> = ({ onDataChanged }) => {
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder={isRecording ? 'Слушаю...' : 'Команда или вопрос Сумирэ...'}
+            placeholder={isRecording ? 'Listening...' : 'Type...'}
             className="flex-1 px-3 py-2 bg-[#FAF7F2] text-xs font-bold rounded-xl border-[1.5px] border-[#18181B] outline-none placeholder:text-slate-400 shadow-2xs"
           />
 

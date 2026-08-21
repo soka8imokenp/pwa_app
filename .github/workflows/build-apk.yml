@@ -44,9 +44,10 @@ jobs:
 
       - name: Auto-Synchronize Version from Tag / Commit
         run: |
-          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             RAW_TAG="${{ github.ref_name }}"
             CLEAN_VERSION="${RAW_TAG#v}"
+            RAW_TAG="v${CLEAN_VERSION}"
           else
             CLEAN_VERSION=$(node -p "require('./package.json').version")
             RAW_TAG="v${CLEAN_VERSION}"

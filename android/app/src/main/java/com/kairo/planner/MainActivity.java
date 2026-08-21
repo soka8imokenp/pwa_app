@@ -37,7 +37,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
+import android.webkit.PermissionRequest;
+import android.webkit.WebChromeClient;
+import java.util.ArrayList;
 
 public class MainActivity extends BridgeActivity {
     private static final String CHANNEL_ID = "daily_sumire_music_channel";
@@ -58,6 +63,7 @@ public class MainActivity extends BridgeActivity {
         configureWebView();
         initMediaSession();
         requestNotificationPermission();
+        requestAudioPermission();
     }
 
     @Override
@@ -98,6 +104,12 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
+    private void requestAudioPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.MODIFY_AUDIO_SETTINGS}, 102);
+        }
+    }
+
     private void configureWebView() {
         try {
             if (getBridge() != null && getBridge().getWebView() != null) {
@@ -120,9 +132,22 @@ public class MainActivity extends BridgeActivity {
                 cookieManager.setAcceptCookie(true);
                 cookieManager.setAcceptThirdPartyCookies(webView, true);
 
-                // Add Javascript Interfaces for Native Lock Screen & Direct Package Installer
+                // Allow Web Audio capture in WebChromeClient
+                webView.setWebChromeClient(new WebChromeClient() {
+                    @Override
+                    public void onPermissionRequest(final PermissionRequest request) {
+                        runOnUiThread(() -> {
+                            try {
+                                request.grant(request.getResources());
+                            } catch (Exception ignored) {}
+                        });
+                    }
+                });
+
+                // Add Javascript Interfaces for Native Lock Screen, Package Installer & Native Speech Recognizer
                 webView.addJavascriptInterface(new MediaJsInterface(), "AndroidMediaNotification");
                 webView.addJavascriptInterface(new AppInstallerJsInterface(), "AndroidAppInstaller");
+                webView.addJavascriptInterface(new SpeechRecognizerJsInterface(), "AndroidSpeechRecognizer");
             }
         } catch (Exception ignored) {}
     }
@@ -329,6 +354,115 @@ public class MainActivity extends BridgeActivity {
                     e.printStackTrace();
                 }
             }).start();
+        }
+    }
+
+    public class SpeechRecognizerJsInterface {
+        private SpeechRecognizer speechRecognizer;
+
+        @JavascriptInterface
+        public void startDictation(String lang) {
+            runOnUiThread(() -> {
+                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.MODIFY_AUDIO_SETTINGS}, 102);
+                    notifyJs("window.onAndroidSpeechError && window.onAndroidSpeechError('Please grant microphone permission in Settings');");
+                    return;
+                }
+
+                try {
+                    if (speechRecognizer != null) {
+                        try {
+                            speechRecognizer.destroy();
+                        } catch (Exception ignored) {}
+                    }
+
+                    speechRecognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
+                    Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, (lang != null && !lang.isEmpty()) ? lang : "ru-RU");
+                    intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+                    intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
+
+                    speechRecognizer.setRecognitionListener(new RecognitionListener() {
+                        @Override
+                        public void onReadyForSpeech(Bundle params) {
+                            notifyJs("window.onAndroidSpeechReady && window.onAndroidSpeechReady();");
+                        }
+
+                        @Override
+                        public void onBeginningOfSpeech() {}
+
+                        @Override
+                        public void onRmsChanged(float rmsdB) {}
+
+                        @Override
+                        public void onBufferReceived(byte[] buffer) {}
+
+                        @Override
+                        public void onEndOfSpeech() {
+                            notifyJs("window.onAndroidSpeechEnd && window.onAndroidSpeechEnd();");
+                        }
+
+                        @Override
+                        public void onError(int error) {
+                            String msg = "Voice recognition error: " + error;
+                            if (error == SpeechRecognizer.ERROR_NO_MATCH) msg = "No speech detected";
+                            else if (error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) msg = "Speech timeout";
+                            else if (error == SpeechRecognizer.ERROR_AUDIO) msg = "Audio recording error";
+                            else if (error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS) msg = "Microphone permission required";
+                            notifyJs("window.onAndroidSpeechError && window.onAndroidSpeechError('" + msg + "');");
+                        }
+
+                        @Override
+                        public void onResults(Bundle results) {
+                            ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                            if (matches != null && !matches.isEmpty()) {
+                                String text = matches.get(0).replace("'", "\\'").replace("\n", " ");
+                                notifyJs("window.onAndroidSpeechResult && window.onAndroidSpeechResult('" + text + "', true);");
+                            }
+                            notifyJs("window.onAndroidSpeechEnd && window.onAndroidSpeechEnd();");
+                        }
+
+                        @Override
+                        public void onPartialResults(Bundle partialResults) {
+                            ArrayList<String> matches = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                            if (matches != null && !matches.isEmpty()) {
+                                String text = matches.get(0).replace("'", "\\'").replace("\n", " ");
+                                notifyJs("window.onAndroidSpeechResult && window.onAndroidSpeechResult('" + text + "', false);");
+                            }
+                        }
+
+                        @Override
+                        public void onEvent(int eventType, Bundle params) {}
+                    });
+
+                    speechRecognizer.startListening(intent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    notifyJs("window.onAndroidSpeechError && window.onAndroidSpeechError('" + e.getMessage() + "');");
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void stopDictation() {
+            runOnUiThread(() -> {
+                if (speechRecognizer != null) {
+                    try {
+                        speechRecognizer.stopListening();
+                    } catch (Exception ignored) {}
+                }
+            });
+        }
+
+        private void notifyJs(String jsCode) {
+            runOnUiThread(() -> {
+                try {
+                    if (getBridge() != null && getBridge().getWebView() != null) {
+                        getBridge().getWebView().evaluateJavascript(jsCode, null);
+                    }
+                } catch (Exception ignored) {}
+            });
         }
     }
 

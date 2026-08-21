@@ -109,16 +109,13 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
 
   const handleConnectOAuth = () => {
     playClickSound();
-    if (!customClientId.trim()) {
-      setShowConfig(true);
-      setSyncStatusText('Для входа через OAuth укажите ваш Client ID из Google Cloud Console или вставьте Access Token.');
-      return;
+    if (customClientId.trim()) {
+      setStoredGCalClientId(customClientId.trim());
     }
-    setStoredGCalClientId(customClientId.trim());
-    const ok = initiateGoogleOAuth(customClientId);
+    const ok = initiateGoogleOAuth(customClientId || undefined);
     if (!ok) {
       setShowConfig(true);
-      setSyncStatusText('Укажите корректный Client ID из Google Cloud Console.');
+      setSyncStatusText('Не удалось запустить Google OAuth.');
     }
   };
 
@@ -440,14 +437,44 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
             ) : (
               /* NOT CONNECTED STATE */
               <div className="space-y-3">
-                {/* 1. Direct 1-Click Instant Add to Google Calendar */}
+                {/* 1. Primary 1-Click Google OAuth Connection */}
+                <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl text-center space-y-3 shadow-2xs">
+                  <div className="w-10 h-10 rounded-2xl bg-[#E8DCFF] border-[1.75px] border-[#18181B] flex items-center justify-center mx-auto shadow-2xs">
+                    <RefreshCw className="w-5 h-5 text-purple-950 stroke-[2.25]" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
+                      Google Calendar 2-Way Sync
+                    </h4>
+                    <p className="text-[10px] font-semibold text-slate-500 max-w-xs mx-auto mt-0.5">
+                      Автоматическая двусторонняя синхронизация задач и событий с вашим Google Календарем.
+                    </p>
+                  </div>
+
+                  {syncStatusText && (
+                    <p className="text-[10px] font-bold text-amber-900 bg-[#FEF08A] p-2 rounded-xl border border-amber-900/20">
+                      {syncStatusText}
+                    </p>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleConnectOAuth}
+                    className="w-full py-3 bg-[#FFE873] hover:bg-[#FED7AA] border-[1.75px] border-[#18181B] rounded-xl text-xs font-black text-[#18181B] shadow-[2px_2px_0px_#18181B] active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-2 transition-all"
+                  >
+                    <ExternalLink className="w-4 h-4 stroke-[2.25]" />
+                    <span>Войти через Google (1 клик)</span>
+                  </button>
+                </div>
+
+                {/* 2. Direct 1-Click Instant Add to Google Calendar Web */}
                 <div className="p-3.5 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-2xl space-y-2 shadow-2xs">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase text-slate-500">
-                      Быстрое добавление (1 клик)
+                      Быстрый экспорт дня
                     </span>
                     <span className="text-[9px] font-bold text-emerald-700 bg-[#D1FBE4] px-2 py-0.5 rounded-full border border-emerald-900/20">
-                      Без API ключей
+                      Без входа
                     </span>
                   </div>
 
@@ -459,101 +486,59 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
                     className="w-full py-2.5 px-3 bg-[#BEF264] hover:bg-lime-300 border-[1.75px] border-[#18181B] rounded-xl text-xs font-black text-[#18181B] shadow-2xs active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-2 transition-all"
                   >
                     <ExternalLink className="w-4 h-4 stroke-[2.25]" />
-                    <span>Добавить расписание дня в Google Календарь</span>
+                    <span>Открыть расписание в Google Календаре</span>
                   </a>
                 </div>
 
-                {/* 2. Full 2-Way API Live Sync Setup */}
-                <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl text-center space-y-2.5 shadow-2xs">
-                  <div className="w-10 h-10 rounded-2xl bg-[#E8DCFF] border-[1.75px] border-[#18181B] flex items-center justify-center mx-auto shadow-2xs">
-                    <RefreshCw className="w-5 h-5 text-purple-950 stroke-[2.25]" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
-                      Двусторонняя авто-синхронизация API
-                    </h4>
-                    <p className="text-[10px] font-semibold text-slate-500 max-w-xs mx-auto mt-0.5">
-                      Для прямого обмена событиями укажите Access Token или ваш Google OAuth Client ID.
-                    </p>
-                  </div>
+                {/* 3. Advanced Token / Custom Client ID Options */}
+                <div className="pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowConfig(!showConfig)}
+                    className="text-[10px] font-bold text-slate-500 hover:text-[#18181B] flex items-center gap-1 mx-auto cursor-pointer"
+                  >
+                    <Sliders className="w-3 h-3" />
+                    <span>{showConfig ? 'Скрыть доп. настройки' : 'Ручной ввод токена / Client ID'}</span>
+                  </button>
 
-                  {syncStatusText && (
-                    <p className="text-[10px] font-bold text-amber-900 bg-[#FEF08A] p-2 rounded-xl border border-amber-900/20">
-                      {syncStatusText}
-                    </p>
-                  )}
-
-                  {/* Direct Token Paste Form */}
-                  <div className="p-3 bg-[#FAF7F2] border border-[#18181B]/20 rounded-xl space-y-2 text-left">
-                    <label className="block text-[10px] font-black uppercase text-slate-600">
-                      Вставьте Access Token из OAuth Playground:
-                    </label>
-                    <div className="flex gap-1.5">
-                      <input
-                        type="password"
-                        value={manualTokenInput}
-                        onChange={(e) => setManualTokenInput(e.target.value)}
-                        placeholder="ya29.a0Ac..."
-                        className="flex-1 px-2.5 py-1.5 bg-white border border-[#18181B] rounded-lg text-xs font-mono outline-none text-[#18181B]"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleSaveManualToken}
-                        className="px-3 py-1.5 bg-[#BEF264] hover:bg-lime-300 border border-[#18181B] rounded-lg text-xs font-black text-[#18181B] cursor-pointer shadow-2xs shrink-0 active:scale-95 transition-all"
-                      >
-                        Войти
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-1 text-[9px] font-bold">
-                      <a
-                        href="https://developers.google.com/oauthplayground"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-purple-700 hover:underline flex items-center gap-0.5"
-                      >
-                        <span>Получить токен в 2 клика (OAuth Playground)</span>
-                        <ExternalLink className="w-2.5 h-2.5" />
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* OAuth 2.0 Client ID Dropdown */}
-                  <div className="pt-1">
-                    <button
-                      type="button"
-                      onClick={() => setShowConfig(!showConfig)}
-                      className="text-[10px] font-bold text-slate-500 hover:text-[#18181B] flex items-center gap-1 mx-auto cursor-pointer"
-                    >
-                      <Sliders className="w-3 h-3" />
-                      <span>{showConfig ? 'Скрыть Client ID' : 'Использовать собственный Google Client ID'}</span>
-                    </button>
-
-                    {showConfig && (
-                      <div className="mt-2 p-3 bg-[#FAF7F2] border border-[#18181B] rounded-xl space-y-2 text-left text-xs">
-                        <div>
-                          <label className="block text-[9px] font-bold uppercase text-slate-500 mb-1">
-                            Google Cloud OAuth 2.0 Client ID:
-                          </label>
+                  {showConfig && (
+                    <div className="mt-2 p-3 bg-[#FAF7F2] border border-[#18181B] rounded-xl space-y-2.5 text-left text-xs">
+                      <div>
+                        <label className="block text-[9px] font-bold uppercase text-slate-500 mb-1">
+                          Прямой Access Token:
+                        </label>
+                        <div className="flex gap-1.5">
                           <input
-                            type="text"
-                            value={customClientId}
-                            onChange={(e) => setCustomClientId(e.target.value)}
-                            placeholder="xxxxxx.apps.googleusercontent.com"
-                            className="w-full px-2 py-1.5 bg-white border border-[#18181B] rounded-lg text-xs font-mono outline-none text-[#18181B]"
+                            type="password"
+                            value={manualTokenInput}
+                            onChange={(e) => setManualTokenInput(e.target.value)}
+                            placeholder="ya29.a0Ac..."
+                            className="flex-1 px-2.5 py-1.5 bg-white border border-[#18181B] rounded-lg text-xs font-mono outline-none text-[#18181B]"
                           />
+                          <button
+                            type="button"
+                            onClick={handleSaveManualToken}
+                            className="px-3 py-1.5 bg-[#BEF264] hover:bg-lime-300 border border-[#18181B] rounded-lg text-xs font-black text-[#18181B] cursor-pointer shadow-2xs shrink-0 active:scale-95 transition-all"
+                          >
+                            Войти
+                          </button>
                         </div>
-
-                        <button
-                          type="button"
-                          onClick={handleConnectOAuth}
-                          className="w-full py-2 bg-[#FFE873] hover:bg-[#FED7AA] border border-[#18181B] rounded-lg text-xs font-black text-[#18181B] cursor-pointer shadow-2xs active:scale-95 transition-all"
-                        >
-                          Войти через Google OAuth
-                        </button>
                       </div>
-                    )}
-                  </div>
+
+                      <div>
+                        <label className="block text-[9px] font-bold uppercase text-slate-500 mb-1">
+                          Кастомный Google OAuth Client ID:
+                        </label>
+                        <input
+                          type="text"
+                          value={customClientId}
+                          onChange={(e) => setCustomClientId(e.target.value)}
+                          placeholder="xxxxxx.apps.googleusercontent.com"
+                          className="w-full px-2 py-1.5 bg-white border border-[#18181B] rounded-lg text-xs font-mono outline-none text-[#18181B]"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

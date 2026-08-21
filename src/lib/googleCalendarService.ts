@@ -17,6 +17,8 @@ export interface GoogleUserProfile {
   picture?: string;
 }
 
+export const DEFAULT_GOOGLE_CLIENT_ID = '98363494043-t58b883m6upt2mrtegt90e7lq08srq01.apps.googleusercontent.com';
+
 /**
  * Storage keys
  */
@@ -84,7 +86,7 @@ export function getStoredGCalUser(): GoogleUserProfile | null {
 }
 
 export function initiateGoogleOAuth(customClientId?: string): boolean {
-  const clientId = customClientId?.trim() || getStoredGCalClientId();
+  const clientId = customClientId?.trim() || getStoredGCalClientId() || DEFAULT_GOOGLE_CLIENT_ID;
   if (!clientId) {
     return false;
   }

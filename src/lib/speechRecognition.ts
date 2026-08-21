@@ -50,7 +50,8 @@ export function startVoiceDictation(handlers: SpeechRecognitionResultHandler) {
         handlers.onError?.(errMsg);
       };
 
-      (window as any).AndroidSpeechRecognizer.startDictation('ru-RU');
+      const preferredLang = (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : 'ru-RU';
+      (window as any).AndroidSpeechRecognizer.startDictation(preferredLang);
       return { type: 'native' };
     } catch (e: any) {
       console.warn('Failed to start Native Android Speech Recognizer:', e);
@@ -70,7 +71,7 @@ export function startVoiceDictation(handlers: SpeechRecognitionResultHandler) {
     const recognition = new SpeechRecognitionClass();
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = 'ru-RU,en-US';
+    recognition.lang = (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : 'ru-RU';
 
     recognition.onresult = (event: any) => {
       let transcript = '';

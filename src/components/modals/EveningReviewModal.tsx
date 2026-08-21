@@ -9,11 +9,9 @@ import {
   Calendar,
   Archive,
   CheckCircle2,
-  Smile,
   Zap,
   Leaf,
   Moon,
-  Sparkles,
   Check,
 } from 'lucide-react';
 import type { Task, HabitWithStats, FocusSession } from '../../types';

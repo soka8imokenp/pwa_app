@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LottiePlayer } from './LottiePlayer';
 import rabbitAnimation from '../../assets/rabbit-hi.json';
-import { Zap, Sparkles, Flame, Check } from 'lucide-react';
+import { Zap, Flame, Check } from 'lucide-react';
 
 interface AppSplashScreenProps {
   onFinish?: () => void;

@@ -85,17 +85,21 @@ export function getStoredGCalUser(): GoogleUserProfile | null {
   return null;
 }
 
+export function getOAuthRedirectUri(): string {
+  if (typeof window === 'undefined') return 'https://localhost/';
+  const origin = window.location.origin || 'https://localhost';
+  if (origin === 'capacitor://localhost' || origin === 'https://localhost' || origin === 'http://localhost') {
+    return 'https://localhost/';
+  }
+  return origin.endsWith('/') ? origin : `${origin}/`;
+}
+
 export function initiateGoogleOAuth(customClientId?: string): boolean {
   const clientId = customClientId?.trim() || getStoredGCalClientId() || DEFAULT_GOOGLE_CLIENT_ID;
   if (!clientId) {
     return false;
   }
-  let redirectUri = window.location.origin;
-  if (window.location.pathname && window.location.pathname !== '/') {
-    redirectUri += window.location.pathname;
-  } else {
-    redirectUri += '/';
-  }
+  const redirectUri = getOAuthRedirectUri();
   const scope = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email';
 
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
@@ -109,21 +113,28 @@ export function initiateGoogleOAuth(customClientId?: string): boolean {
 }
 
 /**
- * Checks URL hash on page load for OAuth access_token
+ * Checks URL hash or search params on page load for OAuth access_token
  */
 export function handleGoogleOAuthCallback(): boolean {
   if (typeof window === 'undefined') return false;
 
-  const hash = window.location.hash;
-  if (!hash || !hash.includes('access_token=')) return false;
+  const rawUrl = window.location.href;
+  if (!rawUrl.includes('access_token=')) return false;
 
   try {
-    const params = new URLSearchParams(hash.substring(1));
-    const accessToken = params.get('access_token');
+    let accessToken: string | null = null;
+    if (window.location.hash && window.location.hash.includes('access_token=')) {
+      const params = new URLSearchParams(window.location.hash.substring(1));
+      accessToken = params.get('access_token');
+    } else if (window.location.search && window.location.search.includes('access_token=')) {
+      const params = new URLSearchParams(window.location.search.substring(1));
+      accessToken = params.get('access_token');
+    }
+
     if (accessToken) {
       setStoredGCalToken(accessToken);
       // Clean URL hash without reloading
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      window.history.replaceState(null, '', window.location.pathname);
       // Fetch user profile
       fetchGoogleUserProfile(accessToken);
       return true;

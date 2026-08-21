@@ -57,7 +57,18 @@ export async function initNotificationSystem(onNavigate: (tab: TabView, extra?: 
 /**
  * Request system notification permission
  */
-export async function requestNotificationPermission(): Promise<boolean> {
+export async function requestNotificationPermission(force: boolean = false): Promise<boolean> {
+  if (typeof window !== 'undefined' && !force) {
+    const hasAsked = localStorage.getItem('kairo_notification_permission_prompted');
+    if (hasAsked) {
+      if (typeof Notification !== 'undefined') {
+        return Notification.permission === 'granted';
+      }
+      return false;
+    }
+    localStorage.setItem('kairo_notification_permission_prompted', 'true');
+  }
+
   if (Capacitor.isNativePlatform()) {
     try {
       const status = await LocalNotifications.requestPermissions();

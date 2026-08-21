@@ -16,7 +16,7 @@ export function usePlannerData(selectedDate: string) {
 
   // 1. Live Queries from IndexedDB
   const allTasks = useLiveQuery(() => db.tasks.toArray(), []) || [];
-  const allHabits = useLiveQuery(() => db.habits.where('archived').equals(0).toArray(), []) || [];
+  const allHabits = useLiveQuery(() => db.habits.filter((h) => !h.archived).toArray(), []) || [];
   const allHabitLogs = useLiveQuery(() => db.habitLogs.toArray(), []) || [];
   const allFocusSessions = useLiveQuery(() => db.focusSessions.toArray(), []) || [];
   const allLinks = useLiveQuery(() => db.links.toArray(), []) || [];

@@ -211,9 +211,6 @@ export const FocusPage: React.FC<FocusPageProps> = ({
 
   const handleTogglePlay = () => {
     playClickSound();
-    if (!isRunning) {
-      requestNotificationPermission();
-    }
     setIsRunning(!isRunning);
   };
 

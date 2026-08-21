@@ -120,13 +120,29 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
   };
 
   const handleSaveManualToken = () => {
-    if (!manualTokenInput.trim()) return;
+    let input = manualTokenInput.trim();
+    if (!input) return;
     playClickSound();
-    setStoredGCalToken(manualTokenInput.trim());
-    setAuthToken(manualTokenInput.trim());
+
+    // If user pasted full redirect URL like https://localhost/#access_token=ya29...
+    if (input.includes('access_token=')) {
+      try {
+        const hashPart = input.includes('#') ? input.split('#')[1] : input.split('?')[1] || input;
+        const params = new URLSearchParams(hashPart);
+        const extracted = params.get('access_token');
+        if (extracted) {
+          input = extracted;
+        }
+      } catch {
+        // fallback to raw input
+      }
+    }
+
+    setStoredGCalToken(input);
+    setAuthToken(input);
     setManualTokenInput('');
     playSuccessChime();
-    fetchGoogleUserProfile(manualTokenInput.trim()).then((u) => {
+    fetchGoogleUserProfile(input).then((u) => {
       if (u) setGcalUser(u);
     });
     loadGoogleEvents();

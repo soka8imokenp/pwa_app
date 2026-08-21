@@ -27,7 +27,8 @@ import { initNotificationSystem } from './lib/notifications';
 import { checkForAppUpdate, AppUpdateInfo } from './lib/appUpdater';
 import { usePlannerData } from './hooks/usePlannerData';
 import { getTodayString } from './lib/dateUtils';
-import { isSoundMuted, setSoundMuted, playClickSound } from './lib/sound';
+import { isSoundMuted, setSoundMuted, playClickSound, playSuccessChime } from './lib/sound';
+import { handleGoogleOAuthCallback } from './lib/googleCalendarService';
 import type { Task } from './types';
 
 export function App() {
@@ -94,6 +95,12 @@ export function App() {
         setAvailableUpdate(update);
       }
     });
+
+    // Check if returning from Google OAuth 2.0 flow
+    if (handleGoogleOAuthCallback()) {
+      setIsCalendarExportOpen(true);
+      playSuccessChime();
+    }
 
     // Check if streak greeting was shown today; if not, greet user with Duolingo streak screen!
     if (typeof window !== 'undefined') {
@@ -439,6 +446,7 @@ export function App() {
           onClose={() => setIsCalendarExportOpen(false)}
           allTasks={allTasks}
           selectedDate={selectedDate}
+          onImportTask={addTask}
         />
       </div>
     </div>

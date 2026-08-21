@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  StickyNote,
   CheckSquare,
-  Target,
-  Calculator,
   Plus,
   Trash2,
-  Copy,
   Check,
   ChevronDown,
   ChevronUp,
@@ -14,180 +10,204 @@ import {
   Mic,
   MicOff,
   Sparkles,
-  Clock,
-  Flame,
   Star,
-  Zap,
-  Lightbulb,
-  Droplets,
-  BookOpen,
   Send,
-  ArrowRight,
-  Minus,
+  Flame,
+  Lightbulb,
+  Repeat,
+  Layers,
+  Filter,
 } from 'lucide-react';
 import { playClickSound, playSuccessChime, playTaskCheckSound } from '../../lib/sound';
 import { startVoiceDictation, stopVoiceDictation, isSpeechRecognitionSupported } from '../../lib/speechRecognition';
 import confetti from 'canvas-confetti';
 import type { Task } from '../../types';
 
-export type ScratchMode = 'notes' | 'checklist' | 'matrix' | 'counter';
+export type ChecklistTag = 'general' | 'urgent' | 'idea' | 'routine';
+export type ChecklistFilter = 'all' | 'active' | 'completed';
 
-interface ChecklistItem {
+export interface QuickChecklistItem {
   id: string;
   text: string;
   isCompleted: boolean;
+  isStarred?: boolean;
+  tag?: ChecklistTag;
+  createdAt: number;
 }
 
-interface MatrixItem {
-  id: string;
-  text: string;
-  quadrant: 'urgent' | 'important' | 'quick' | 'ideas';
-}
-
-interface TallyCounter {
-  id: string;
-  label: string;
-  count: number;
-  step: number;
-  icon: 'water' | 'focus' | 'pages';
-}
-
-interface QuickScratchpadCardProps {
+interface QuickChecklistCardProps {
   selectedDate?: string;
   onQuickCreateTask?: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<any>;
 }
 
-export const QuickScratchpadCard: React.FC<QuickScratchpadCardProps> = ({
+const TAG_CONFIG: Record<ChecklistTag, { label: string; bg: string; color: string; icon: React.ReactNode }> = {
+  general: { label: 'General', bg: '#FAF7F2', color: '#18181B', icon: <Layers className="w-2.5 h-2.5" /> },
+  urgent: { label: 'Urgent', bg: '#FED7AA', color: '#9A3412', icon: <Flame className="w-2.5 h-2.5" /> },
+  idea: { label: 'Idea', bg: '#FEF08A', color: '#854D0E', icon: <Lightbulb className="w-2.5 h-2.5" /> },
+  routine: { label: 'Routine', bg: '#E8DCFF', color: '#6B21A8', icon: <Repeat className="w-2.5 h-2.5" /> },
+};
+
+export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
   selectedDate,
   onQuickCreateTask,
 }) => {
-  // Mode Selection
-  const [mode, setMode] = useState<ScratchMode>(() => {
-    if (typeof window !== 'undefined') {
-      return (localStorage.getItem('kairo_scratchpad_active_mode') as ScratchMode) || 'notes';
-    }
-    return 'notes';
-  });
-
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
-  const [copied, setCopied] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [actionNotice, setActionNotice] = useState<string | null>(null);
-
-  // 1. Notes State
-  const [noteColor, setNoteColor] = useState<string>('#FEF08A');
-  const [notes, setNotes] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('kairo_scratchpad_notes_v2') || '';
-    }
-    return '';
-  });
+  const [activeFilter, setActiveFilter] = useState<ChecklistFilter>('all');
+  const [selectedTag, setSelectedTag] = useState<ChecklistTag>('general');
+  const [inputText, setInputText] = useState('');
   const [isVoiceRecording, setIsVoiceRecording] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // 2. Checklist State
-  const [checklist, setChecklist] = useState<ChecklistItem[]>(() => {
+  // Load items from localStorage
+  const [items, setItems] = useState<QuickChecklistItem[]>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem('kairo_scratchpad_checklist_v2');
+        const saved = localStorage.getItem('kairo_quick_checklist_v3');
         if (saved) return JSON.parse(saved);
       } catch {}
     }
     return [
-      { id: '1', text: 'Review daily priorities', isCompleted: false },
-      { id: '2', text: 'Quick email catch-up', isCompleted: true },
+      { id: '1', text: 'Morning coffee & review top 3 priorities', isCompleted: true, isStarred: true, tag: 'routine', createdAt: Date.now() - 3600000 },
+      { id: '2', text: 'Quick inbox zero & team check-in', isCompleted: false, isStarred: false, tag: 'general', createdAt: Date.now() - 1800000 },
+      { id: '3', text: 'Fix critical bug in deployment pipeline', isCompleted: false, isStarred: true, tag: 'urgent', createdAt: Date.now() - 900000 },
     ];
   });
-  const [newChecklistText, setNewChecklistText] = useState('');
 
-  // 3. Matrix State
-  const [matrixItems, setMatrixItems] = useState<MatrixItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('kairo_scratchpad_matrix_v2');
-        if (saved) return JSON.parse(saved);
-      } catch {}
-    }
-    return [
-      { id: 'm1', text: 'Critical bugfix', quadrant: 'urgent' },
-      { id: 'm2', text: 'System architecture plan', quadrant: 'important' },
-    ];
-  });
-  const [activeMatrixQuadrant, setActiveMatrixQuadrant] = useState<'urgent' | 'important' | 'quick' | 'ideas'>('urgent');
-  const [newMatrixText, setNewMatrixText] = useState('');
-
-  // 4. Counter & Math State
-  const [tallies, setTallies] = useState<TallyCounter[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('kairo_scratchpad_tallies_v2');
-        if (saved) return JSON.parse(saved);
-      } catch {}
-    }
-    return [
-      { id: 'water', label: 'Water Glasses', count: 4, step: 1, icon: 'water' },
-      { id: 'focus', label: 'Focus Sprints', count: 2, step: 1, icon: 'focus' },
-      { id: 'pages', label: 'Pages / Reps', count: 15, step: 5, icon: 'pages' },
-    ];
-  });
-  const [calcInput, setCalcInput] = useState('');
-  const [calcResult, setCalcResult] = useState<string | null>(null);
-
-  // Save changes to localStorage with debounced indicator
+  // Save to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setIsSaving(true);
-      localStorage.setItem('kairo_scratchpad_active_mode', mode);
-      localStorage.setItem('kairo_scratchpad_notes_v2', notes);
-      localStorage.setItem('kairo_scratchpad_checklist_v2', JSON.stringify(checklist));
-      localStorage.setItem('kairo_scratchpad_matrix_v2', JSON.stringify(matrixItems));
-      localStorage.setItem('kairo_scratchpad_tallies_v2', JSON.stringify(tallies));
-      const timer = setTimeout(() => setIsSaving(false), 400);
-      return () => clearTimeout(timer);
+      localStorage.setItem('kairo_quick_checklist_v3', JSON.stringify(items));
     }
-  }, [mode, notes, checklist, matrixItems, tallies]);
+  }, [items]);
 
   const showToast = (msg: string) => {
     setActionNotice(msg);
     setTimeout(() => setActionNotice(null), 2500);
   };
 
-  const handleCopyText = (text: string) => {
-    if (!text.trim()) return;
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    playSuccessChime();
-    confetti({
-      particleCount: 30,
-      spread: 45,
-      origin: { y: 0.7 },
-      colors: ['#FFE873', '#E8DCFF', '#D1FBE4'],
-    });
-    setTimeout(() => setCopied(false), 2000);
+  // Calculations
+  const completedCount = items.filter((i) => i.isCompleted).length;
+  const totalCount = items.length;
+  const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+  const isAllDone = totalCount > 0 && completedCount === totalCount;
+
+  // Add Item
+  const handleAddItem = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!inputText.trim()) return;
+
+    playClickSound();
+    const newItem: QuickChecklistItem = {
+      id: Date.now().toString(),
+      text: inputText.trim(),
+      isCompleted: false,
+      isStarred: selectedTag === 'urgent',
+      tag: selectedTag,
+      createdAt: Date.now(),
+    };
+
+    setItems([newItem, ...items]);
+    setInputText('');
   };
 
-  // --- Mode 1: Notes Handlers ---
-  const handleInsertNoteSnippet = (prefix: string) => {
+  // Toggle Complete
+  const handleToggleItem = (id: string) => {
+    playTaskCheckSound();
+    setItems((prev) => {
+      const updated = prev.map((item) => {
+        if (item.id === id) {
+          const nextCompleted = !item.isCompleted;
+          if (nextCompleted && completedCount + 1 === totalCount) {
+            playSuccessChime();
+            confetti({
+              particleCount: 50,
+              spread: 60,
+              origin: { y: 0.75 },
+              colors: ['#FFE873', '#E8DCFF', '#D1FBE4'],
+            });
+          }
+          return { ...item, isCompleted: nextCompleted };
+        }
+        return item;
+      });
+      return updated;
+    });
+  };
+
+  // Toggle Star / Pin
+  const handleToggleStar = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     playClickSound();
-    const textarea = textareaRef.current;
-    if (!textarea) {
-      setNotes((prev) => (prev ? `${prev}\n${prefix}` : prefix));
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, isStarred: !item.isStarred } : item
+      )
+    );
+  };
+
+  // Delete Item
+  const handleDeleteItem = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    playClickSound();
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  // Clear Completed
+  const handleClearCompleted = () => {
+    if (completedCount === 0) return;
+    playClickSound();
+    setItems((prev) => prev.filter((item) => !item.isCompleted));
+    showToast(`Cleared ${completedCount} completed items`);
+  };
+
+  // Promote single item to Today Tasks
+  const handlePromoteToTask = async (item: QuickChecklistItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onQuickCreateTask) return;
+
+    playClickSound();
+    await onQuickCreateTask({
+      title: item.text,
+      date: selectedDate || new Date().toISOString().slice(0, 10),
+      isPriority: !!item.isStarred || item.tag === 'urgent',
+      isCompleted: false,
+      category: item.tag === 'urgent' ? 'code' : 'general',
+      estimatedMinutes: item.tag === 'urgent' ? 45 : 25,
+    });
+
+    handleDeleteItem(item.id, e);
+    playSuccessChime();
+    showToast('Promoted to Today Tasks!');
+  };
+
+  // Import all pending to Today Tasks
+  const handleImportAllPending = async () => {
+    if (!onQuickCreateTask) return;
+    const pending = items.filter((i) => !i.isCompleted);
+    if (pending.length === 0) {
+      showToast('No pending items to import');
       return;
     }
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const before = notes.substring(0, start);
-    const after = notes.substring(end);
-    const needsNewline = before.length > 0 && !before.endsWith('\n');
-    const insertString = needsNewline ? `\n${prefix}` : prefix;
-    setNotes(before + insertString + after);
-    setTimeout(() => {
-      textarea.focus();
-      const pos = start + insertString.length;
-      textarea.setSelectionRange(pos, pos);
-    }, 40);
+
+    playClickSound();
+    for (const item of pending) {
+      await onQuickCreateTask({
+        title: item.text,
+        date: selectedDate || new Date().toISOString().slice(0, 10),
+        isPriority: !!item.isStarred || item.tag === 'urgent',
+        isCompleted: false,
+        category: item.tag === 'urgent' ? 'code' : 'general',
+        estimatedMinutes: 25,
+      });
+    }
+
+    playSuccessChime();
+    confetti({ particleCount: 40, spread: 55, origin: { y: 0.7 } });
+    showToast(`Imported ${pending.length} items to Tasks!`);
   };
 
+  // Voice Dictation
   const handleToggleVoice = () => {
     playClickSound();
     if (isVoiceRecording) {
@@ -200,8 +220,10 @@ export const QuickScratchpadCard: React.FC<QuickScratchpadCardProps> = ({
       }
       setIsVoiceRecording(true);
       startVoiceDictation({
-        onTranscript: (t) => {
-          handleInsertNoteSnippet(t);
+        onTranscript: (transcript) => {
+          if (transcript) {
+            setInputText(transcript);
+          }
         },
         onEnd: () => setIsVoiceRecording(false),
         onError: () => setIsVoiceRecording(false),
@@ -209,167 +231,71 @@ export const QuickScratchpadCard: React.FC<QuickScratchpadCardProps> = ({
     }
   };
 
-  // --- Mode 2: Checklist Handlers ---
-  const handleAddChecklistItem = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newChecklistText.trim()) return;
-    playClickSound();
-    setChecklist([
-      ...checklist,
-      { id: Date.now().toString(), text: newChecklistText.trim(), isCompleted: false },
-    ]);
-    setNewChecklistText('');
-  };
-
-  const handleToggleCheckItem = (id: string) => {
-    playTaskCheckSound();
-    setChecklist(
-      checklist.map((item) =>
-        item.id === id ? { ...item, isCompleted: !item.isCompleted } : item
-      )
-    );
-  };
-
-  const handleDeleteCheckItem = (id: string) => {
-    playClickSound();
-    setChecklist(checklist.filter((item) => item.id !== id));
-  };
-
-  const handleImportChecklistToTasks = async () => {
-    if (!onQuickCreateTask) return;
-    const pendingItems = checklist.filter((i) => !i.isCompleted);
-    if (pendingItems.length === 0) {
-      showToast('No pending items to import');
-      return;
-    }
-
-    playClickSound();
-    for (const item of pendingItems) {
-      await onQuickCreateTask({
-        title: item.text,
-        date: selectedDate || new Date().toISOString().slice(0, 10),
-        isPriority: false,
-        isCompleted: false,
-        category: 'general',
-        estimatedMinutes: 25,
-      });
-    }
-
-    playSuccessChime();
-    confetti({ particleCount: 40, spread: 55, origin: { y: 0.7 } });
-    showToast(`Imported ${pendingItems.length} items to Tasks!`);
-  };
-
-  // --- Mode 3: Matrix Handlers ---
-  const handleAddMatrixItem = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMatrixText.trim()) return;
-    playClickSound();
-    setMatrixItems([
-      ...matrixItems,
-      { id: Date.now().toString(), text: newMatrixText.trim(), quadrant: activeMatrixQuadrant },
-    ]);
-    setNewMatrixText('');
-  };
-
-  const handleDeleteMatrixItem = (id: string) => {
-    playClickSound();
-    setMatrixItems(matrixItems.filter((i) => i.id !== id));
-  };
-
-  const handlePromoteMatrixItem = async (item: MatrixItem) => {
-    if (!onQuickCreateTask) return;
-    playClickSound();
-    await onQuickCreateTask({
-      title: item.text,
-      date: selectedDate || new Date().toISOString().slice(0, 10),
-      isPriority: item.quadrant === 'urgent' || item.quadrant === 'important',
-      isCompleted: false,
-      category: item.quadrant === 'urgent' ? 'health' : 'code',
-      estimatedMinutes: item.quadrant === 'urgent' ? 15 : 45,
+  // Filtered & Sorted items (Starred on top)
+  const filteredItems = items
+    .filter((item) => {
+      if (activeFilter === 'active') return !item.isCompleted;
+      if (activeFilter === 'completed') return item.isCompleted;
+      return true;
+    })
+    .sort((a, b) => {
+      if (a.isCompleted !== b.isCompleted) {
+        return a.isCompleted ? 1 : -1;
+      }
+      if (a.isStarred && !b.isStarred) return -1;
+      if (!a.isStarred && b.isStarred) return 1;
+      return b.createdAt - a.createdAt;
     });
-    handleDeleteMatrixItem(item.id);
-    playSuccessChime();
-    showToast('Promoted to Today Tasks!');
-  };
-
-  // --- Mode 4: Tally & Math Handlers ---
-  const handleUpdateTally = (id: string, delta: number) => {
-    playClickSound();
-    setTallies(
-      tallies.map((t) =>
-        t.id === id ? { ...t, count: Math.max(0, t.count + delta) } : t
-      )
-    );
-  };
-
-  const handleResetTally = (id: string) => {
-    playClickSound();
-    setTallies(tallies.map((t) => (t.id === id ? { ...t, count: 0 } : t)));
-  };
-
-  const handleCalculate = (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      // Safe math eval with digits & operators only
-      const sanitized = calcInput.replace(/[^0-9+\-*/(). ]/g, '');
-      if (!sanitized) return;
-      // eslint-disable-next-line no-eval
-      const res = Function(`'use strict'; return (${sanitized})`)();
-      setCalcResult(String(res));
-      playSuccessChime();
-    } catch {
-      setCalcResult('Error');
-    }
-  };
-
-  const MODES_CONFIG: { id: ScratchMode; label: string; icon: React.ReactNode; color: string }[] = [
-    { id: 'notes', label: 'Memo', icon: <StickyNote className="w-3.5 h-3.5 stroke-[2.25]" />, color: '#FEF08A' },
-    { id: 'checklist', label: 'Checklist', icon: <CheckSquare className="w-3.5 h-3.5 stroke-[2.25]" />, color: '#E8DCFF' },
-    { id: 'matrix', label: 'Priority Matrix', icon: <Target className="w-3.5 h-3.5 stroke-[2.25]" />, color: '#FED7AA' },
-    { id: 'counter', label: 'Tally & Math', icon: <Calculator className="w-3.5 h-3.5 stroke-[2.25]" />, color: '#D1FBE4' },
-  ];
-
-  const currentModeConfig = MODES_CONFIG.find((m) => m.id === mode) || MODES_CONFIG[0];
 
   return (
     <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-3 font-body">
       
-      {/* Top Header & Mode Switcher */}
+      {/* Header with Title, Progress & Expand/Collapse */}
       <div className="flex items-center justify-between">
         <div
           onClick={() => {
             playClickSound();
             setIsExpanded(!isExpanded);
           }}
-          className="flex items-center gap-2.5 cursor-pointer select-none"
+          className="flex items-center gap-2.5 cursor-pointer select-none flex-1"
         >
           <div
             className="w-8 h-8 rounded-xl border-[1.5px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-2xs transition-colors"
-            style={{ backgroundColor: currentModeConfig.color }}
+            style={{ backgroundColor: isAllDone ? '#D1FBE4' : '#E8DCFF' }}
           >
-            {currentModeConfig.icon}
+            {isAllDone ? (
+              <Sparkles className="w-4 h-4 text-emerald-700 stroke-[2.5]" />
+            ) : (
+              <CheckSquare className="w-4 h-4 text-purple-900 stroke-[2.25]" />
+            )}
           </div>
+
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
-                Quick Workspace
+                Quick Checklist
               </h3>
-              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-slate-500">
-                <span className={`w-1.5 h-1.5 rounded-full ${isSaving ? 'bg-amber-400 animate-ping' : 'bg-emerald-500'}`} />
-                {isSaving ? 'Saving' : 'Saved'}
-              </span>
+              {totalCount > 0 && (
+                <span
+                  className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border border-[#18181B] shadow-2xs font-mono-num ${
+                    isAllDone ? 'bg-[#D1FBE4] text-emerald-900' : 'bg-[#FFE873] text-[#18181B]'
+                  }`}
+                >
+                  {completedCount}/{totalCount}
+                </span>
+              )}
             </div>
-            <p className="text-[10px] text-slate-400 font-bold">
-              {mode === 'notes' && `${notes.length} chars`}
-              {mode === 'checklist' && `${checklist.filter((i) => i.isCompleted).length}/${checklist.length} done`}
-              {mode === 'matrix' && `${matrixItems.length} matrix items`}
-              {mode === 'counter' && 'Tallies & inline math'}
+            <p className="text-[10px] text-slate-500 font-bold">
+              {totalCount === 0
+                ? 'Keep track of fast sub-goals & routine'
+                : isAllDone
+                ? '🎉 All done! You are crushing it!'
+                : `${totalCount - completedCount} items remaining (${progressPercent}%)`}
             </p>
           </div>
         </div>
 
-        {/* Action / Toast Notice & Toggle */}
+        {/* Action Notice / Toggle */}
         <div className="flex items-center gap-1.5 select-none">
           {actionNotice && (
             <span className="text-[9px] font-black text-emerald-800 bg-[#D1FBE4] border border-[#18181B] px-2 py-0.5 rounded-lg shadow-2xs animate-in fade-in">
@@ -386,401 +312,273 @@ export const QuickScratchpadCard: React.FC<QuickScratchpadCardProps> = ({
             title={isExpanded ? 'Collapse' : 'Expand'}
             className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-slate-100 border border-[#18181B] flex items-center justify-center text-[#18181B] shadow-2xs active:scale-95 transition-all cursor-pointer"
           >
-            {isExpanded ? <ChevronUp className="w-3.5 h-3.5 stroke-[2.5]" /> : <ChevronDown className="w-3.5 h-3.5 stroke-[2.5]" />}
+            {isExpanded ? (
+              <ChevronUp className="w-3.5 h-3.5 stroke-[2.5]" />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5 stroke-[2.5]" />
+            )}
           </button>
         </div>
       </div>
 
+      {/* Progress Bar */}
+      {totalCount > 0 && (
+        <div className="w-full h-2 bg-[#FAF7F2] border-[1.25px] border-[#18181B] rounded-full overflow-hidden shadow-2xs">
+          <div
+            className="h-full transition-all duration-300 rounded-full"
+            style={{
+              width: `${progressPercent}%`,
+              backgroundColor: isAllDone ? '#4ADE80' : '#FFE873',
+            }}
+          />
+        </div>
+      )}
+
       {isExpanded && (
         <div className="space-y-3 animate-in fade-in duration-150">
           
-          {/* Functional Mode Selector Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 px-0.5 scrollbar-none select-none">
-            {MODES_CONFIG.map((m) => {
-              const isActive = mode === m.id;
-              return (
+          {/* Quick Input Bar */}
+          <form onSubmit={handleAddItem} className="space-y-2">
+            <div className="flex items-center gap-1.5">
+              <div className="relative flex-1">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  placeholder="Add a quick checklist item..."
+                  className="w-full pl-3 pr-8 py-2 bg-[#FAF7F2] focus:bg-white border-[1.5px] border-[#18181B] rounded-xl text-xs font-bold text-[#18181B] placeholder:text-slate-400 outline-none shadow-2xs focus:shadow-[2px_2px_0px_#18181B] transition-all"
+                />
+                
+                {/* Voice Mic Button */}
                 <button
-                  key={m.id}
                   type="button"
-                  onClick={() => {
-                    playClickSound();
-                    setMode(m.id);
-                  }}
-                  className={`px-3 py-1.5 rounded-xl border-[1.5px] text-[10px] font-black flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
-                    isActive
-                      ? 'border-[#18181B] text-[#18181B] shadow-2xs ring-1 ring-[#18181B]'
-                      : 'bg-[#FAF7F2] border-[#18181B]/20 text-slate-500 hover:border-[#18181B] hover:bg-white'
+                  onClick={handleToggleVoice}
+                  title="Voice input"
+                  className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-lg border text-slate-700 active:scale-90 transition-all cursor-pointer ${
+                    isVoiceRecording
+                      ? 'bg-rose-500 text-white border-rose-600 animate-pulse'
+                      : 'bg-white hover:bg-slate-100 border-[#18181B]/30'
                   }`}
-                  style={{ backgroundColor: isActive ? m.color : undefined }}
                 >
-                  {m.icon}
-                  <span>{m.label}</span>
+                  {isVoiceRecording ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3 text-rose-500" />}
                 </button>
-              );
-            })}
-          </div>
+              </div>
 
-          {/* ======================================================== */}
-          {/* MODE 1: FREEFORM SMART MEMO                              */}
-          {/* ======================================================== */}
-          {mode === 'notes' && (
-            <div className="space-y-2">
-              {/* Quick Toolbar */}
-              <div className="flex items-center justify-between gap-1 overflow-x-auto py-0.5 px-0.5 scrollbar-none select-none">
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => handleInsertNoteSnippet('• ')}
-                    className="px-2 py-1 bg-[#FAF7F2] hover:bg-white border border-[#18181B]/20 hover:border-[#18181B] rounded-lg text-[10px] font-bold text-slate-700 flex items-center gap-1 shadow-2xs active:scale-95 transition-all cursor-pointer"
-                  >
-                    <span>Bullet</span>
-                  </button>
+              <button
+                type="submit"
+                disabled={!inputText.trim()}
+                className="px-3.5 py-2 bg-[#FFE873] hover:bg-[#FED7AA] disabled:opacity-40 border-[1.5px] border-[#18181B] rounded-xl text-xs font-black text-[#18181B] flex items-center gap-1 shadow-2xs active:translate-y-0.5 transition-all cursor-pointer shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                <span>Add</span>
+              </button>
+            </div>
 
+            {/* Quick Tag Selector Chips */}
+            <div className="flex items-center gap-1 overflow-x-auto py-0.5 scrollbar-none select-none">
+              <span className="text-[9px] font-black uppercase text-slate-400 pr-1 shrink-0">
+                Tag:
+              </span>
+              {(Object.keys(TAG_CONFIG) as ChecklistTag[]).map((tagKey) => {
+                const cfg = TAG_CONFIG[tagKey];
+                const isSelected = selectedTag === tagKey;
+                return (
                   <button
+                    key={tagKey}
                     type="button"
                     onClick={() => {
-                      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                      handleInsertNoteSnippet(`[${timeStr}] `);
+                      playClickSound();
+                      setSelectedTag(tagKey);
                     }}
-                    className="px-2 py-1 bg-[#FAF7F2] hover:bg-white border border-[#18181B]/20 hover:border-[#18181B] rounded-lg text-[10px] font-bold text-slate-700 flex items-center gap-1 shadow-2xs active:scale-95 transition-all cursor-pointer"
-                  >
-                    <Clock className="w-3 h-3 text-amber-700" />
-                    <span>Time</span>
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  {/* Voice Button */}
-                  <button
-                    type="button"
-                    onClick={handleToggleVoice}
-                    className={`px-2 py-1 rounded-lg border text-[10px] font-bold flex items-center gap-1 shadow-2xs active:scale-95 transition-all cursor-pointer ${
-                      isVoiceRecording
-                        ? 'bg-rose-500 text-white border-rose-600 animate-pulse'
-                        : 'bg-[#FAF7F2] hover:bg-white border-[#18181B]/20 text-slate-700'
+                    className={`px-2 py-0.5 rounded-lg border text-[9px] font-black flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
+                      isSelected
+                        ? 'border-[#18181B] shadow-2xs ring-1 ring-[#18181B]'
+                        : 'border-[#18181B]/20 opacity-60 hover:opacity-100'
                     }`}
+                    style={{ backgroundColor: cfg.bg, color: cfg.color }}
                   >
-                    {isVoiceRecording ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3 text-rose-600" />}
-                    <span>{isVoiceRecording ? 'Recording...' : 'Voice'}</span>
+                    {cfg.icon}
+                    <span>{cfg.label}</span>
                   </button>
-
-                  {notes.trim().length > 0 && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => handleCopyText(notes)}
-                        title="Copy memo"
-                        className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-[#FFE873] border border-[#18181B] flex items-center justify-center text-slate-700 shadow-2xs active:scale-95 transition-all cursor-pointer"
-                      >
-                        {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (window.confirm('Clear current memo?')) {
-                            playClickSound();
-                            setNotes('');
-                          }
-                        }}
-                        title="Clear memo"
-                        className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-rose-50 border border-[#18181B]/40 hover:border-rose-500 flex items-center justify-center text-slate-400 hover:text-rose-600 shadow-2xs active:scale-95 transition-all cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Textarea */}
-              <textarea
-                ref={textareaRef}
-                rows={5}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Type quick memos, brainstorm ideas, paste links or code..."
-                className="w-full p-3 bg-[#FAF7F2] focus:bg-white text-xs font-mono font-medium rounded-xl border-[1.5px] border-[#18181B] outline-none placeholder:text-slate-400 shadow-2xs focus:shadow-[2px_2px_0px_#18181B] transition-all resize-y leading-relaxed"
-              />
+                );
+              })}
             </div>
-          )}
+          </form>
 
-          {/* ======================================================== */}
-          {/* MODE 2: INTERACTIVE TASK CHECKLIST                       */}
-          {/* ======================================================== */}
-          {mode === 'checklist' && (
-            <div className="space-y-2.5">
-              {/* Quick Add Form */}
-              <form onSubmit={handleAddChecklistItem} className="flex items-center gap-1.5">
-                <input
-                  type="text"
-                  value={newChecklistText}
-                  onChange={(e) => setNewChecklistText(e.target.value)}
-                  placeholder="Add quick checklist item..."
-                  className="flex-1 px-3 py-2 bg-[#FAF7F2] focus:bg-white border-[1.5px] border-[#18181B] rounded-xl text-xs font-bold text-[#18181B] placeholder:text-slate-400 outline-none shadow-2xs"
-                />
-                <button
-                  type="submit"
-                  disabled={!newChecklistText.trim()}
-                  className="px-3 py-2 bg-[#E8DCFF] hover:bg-[#D8C4FF] disabled:opacity-40 border-[1.5px] border-[#18181B] rounded-xl text-xs font-black text-[#18181B] flex items-center gap-1 shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                  <span>Add</span>
-                </button>
-              </form>
+          {/* Filter Pills */}
+          {items.length > 0 && (
+            <div className="flex items-center justify-between pt-1 select-none">
+              <div className="flex items-center gap-1">
+                {(['all', 'active', 'completed'] as ChecklistFilter[]).map((f) => {
+                  const count =
+                    f === 'all'
+                      ? items.length
+                      : f === 'active'
+                      ? items.filter((i) => !i.isCompleted).length
+                      : items.filter((i) => i.isCompleted).length;
 
-              {/* Checklist Items List */}
-              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-0.5">
-                {checklist.length === 0 ? (
-                  <p className="text-center text-[11px] font-bold text-slate-400 py-3 border border-dashed border-[#18181B]/20 rounded-xl">
-                    No items in checklist yet.
-                  </p>
-                ) : (
-                  checklist.map((item) => (
-                    <div
-                      key={item.id}
-                      className={`flex items-center justify-between gap-2 p-2 rounded-xl border-[1.5px] border-[#18181B] shadow-2xs transition-all ${
-                        item.isCompleted ? 'bg-slate-50 opacity-70' : 'bg-white'
-                      }`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => handleToggleCheckItem(item.id)}
-                        className="flex items-center gap-2 flex-1 text-left cursor-pointer"
-                      >
-                        <div
-                          className={`w-4 h-4 rounded border border-[#18181B] flex items-center justify-center shrink-0 ${
-                            item.isCompleted ? 'bg-[#18181B] text-white' : 'bg-white'
-                          }`}
-                        >
-                          {item.isCompleted && <Check className="w-3 h-3 stroke-[3]" />}
-                        </div>
-                        <span className={`text-xs font-bold text-[#18181B] ${item.isCompleted ? 'line-through text-slate-400' : ''}`}>
-                          {item.text}
-                        </span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteCheckItem(item.id)}
-                        className="text-slate-400 hover:text-rose-600 p-1 cursor-pointer"
-                        title="Delete item"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Checklist Bottom Actions */}
-              {checklist.length > 0 && (
-                <div className="flex items-center justify-between pt-1 border-t border-[#18181B]/15">
-                  <span className="text-[10px] font-bold text-slate-500">
-                    {checklist.filter((i) => i.isCompleted).length} of {checklist.length} completed
-                  </span>
-
-                  {onQuickCreateTask && (
-                    <button
-                      type="button"
-                      onClick={handleImportChecklistToTasks}
-                      className="px-2.5 py-1 bg-[#FFE873] hover:bg-[#FED7AA] border border-[#18181B] rounded-lg text-[10px] font-black text-[#18181B] flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer"
-                    >
-                      <Send className="w-3 h-3" />
-                      <span>Import to Today Tasks</span>
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ======================================================== */}
-          {/* MODE 3: PRIORITY MATRIX (EISENHOWER)                     */}
-          {/* ======================================================== */}
-          {mode === 'matrix' && (
-            <div className="space-y-2.5">
-              {/* Quadrant Selector */}
-              <div className="grid grid-cols-2 gap-1.5 select-none">
-                {[
-                  { id: 'urgent' as const, label: 'Urgent & Vital', color: '#FED7AA', icon: <Flame className="w-3 h-3 text-rose-600" /> },
-                  { id: 'important' as const, label: 'Important Plan', color: '#FEF08A', icon: <Star className="w-3 h-3 text-amber-600" /> },
-                  { id: 'quick' as const, label: 'Quick Delegate', color: '#E8DCFF', icon: <Zap className="w-3 h-3 text-purple-600" /> },
-                  { id: 'ideas' as const, label: 'Someday / Ideas', color: '#D1FBE4', icon: <Lightbulb className="w-3 h-3 text-emerald-600" /> },
-                ].map((q) => {
-                  const count = matrixItems.filter((i) => i.quadrant === q.id).length;
-                  const isSel = activeMatrixQuadrant === q.id;
+                  const isActive = activeFilter === f;
 
                   return (
                     <button
-                      key={q.id}
+                      key={f}
                       type="button"
                       onClick={() => {
                         playClickSound();
-                        setActiveMatrixQuadrant(q.id);
+                        setActiveFilter(f);
                       }}
-                      className={`p-2 rounded-xl border-[1.5px] text-left transition-all cursor-pointer ${
-                        isSel
-                          ? 'border-[#18181B] shadow-2xs ring-1 ring-[#18181B]'
-                          : 'border-[#18181B]/20 bg-[#FAF7F2] hover:border-[#18181B]'
+                      className={`px-2 py-0.5 rounded-lg text-[9px] font-black capitalize transition-all cursor-pointer ${
+                        isActive
+                          ? 'bg-[#18181B] text-white border border-[#18181B] shadow-2xs'
+                          : 'bg-[#FAF7F2] text-slate-500 hover:text-slate-800 border border-[#18181B]/15'
                       }`}
-                      style={{ backgroundColor: isSel ? q.color : undefined }}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1">
-                          {q.icon}
-                          <span className="text-[10px] font-black text-[#18181B]">{q.label}</span>
-                        </div>
-                        <span className="text-[9px] font-black font-mono-num bg-white/70 px-1.5 rounded-full border border-[#18181B]/20">
-                          {count}
-                        </span>
-                      </div>
+                      {f} ({count})
                     </button>
                   );
                 })}
               </div>
 
-              {/* Add to Selected Quadrant */}
-              <form onSubmit={handleAddMatrixItem} className="flex items-center gap-1.5">
-                <input
-                  type="text"
-                  value={newMatrixText}
-                  onChange={(e) => setNewMatrixText(e.target.value)}
-                  placeholder={`Add to "${activeMatrixQuadrant}"...`}
-                  className="flex-1 px-3 py-2 bg-[#FAF7F2] focus:bg-white border-[1.5px] border-[#18181B] rounded-xl text-xs font-bold text-[#18181B] placeholder:text-slate-400 outline-none shadow-2xs"
-                />
+              {completedCount > 0 && (
                 <button
-                  type="submit"
-                  disabled={!newMatrixText.trim()}
-                  className="px-3 py-2 bg-[#FFE873] hover:bg-[#FED7AA] disabled:opacity-40 border-[1.5px] border-[#18181B] rounded-xl text-xs font-black text-[#18181B] flex items-center gap-1 shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
+                  type="button"
+                  onClick={handleClearCompleted}
+                  className="text-[9px] font-bold text-slate-400 hover:text-rose-600 transition-colors flex items-center gap-0.5 cursor-pointer"
                 >
-                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                  <span>Add</span>
+                  <RotateCcw className="w-2.5 h-2.5" />
+                  <span>Clear done</span>
                 </button>
-              </form>
-
-              {/* Matrix Items for Active Quadrant */}
-              <div className="space-y-1.5 max-h-40 overflow-y-auto pr-0.5">
-                {matrixItems.filter((i) => i.quadrant === activeMatrixQuadrant).length === 0 ? (
-                  <p className="text-center text-[11px] font-bold text-slate-400 py-3 border border-dashed border-[#18181B]/20 rounded-xl">
-                    No items in this quadrant.
-                  </p>
-                ) : (
-                  matrixItems
-                    .filter((i) => i.quadrant === activeMatrixQuadrant)
-                    .map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between gap-2 p-2 bg-white rounded-xl border-[1.5px] border-[#18181B] shadow-2xs"
-                      >
-                        <span className="text-xs font-bold text-[#18181B] flex-1">{item.text}</span>
-
-                        <div className="flex items-center gap-1">
-                          {onQuickCreateTask && (
-                            <button
-                              type="button"
-                              onClick={() => handlePromoteMatrixItem(item)}
-                              title="Promote to Top Priority Task"
-                              className="px-2 py-0.5 bg-[#FFE873] hover:bg-[#FED7AA] border border-[#18181B] rounded-lg text-[9px] font-black text-[#18181B] flex items-center gap-0.5 shadow-2xs cursor-pointer active:scale-95"
-                            >
-                              <ArrowRight className="w-2.5 h-2.5" />
-                              <span>Promote</span>
-                            </button>
-                          )}
-
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteMatrixItem(item.id)}
-                            className="text-slate-400 hover:text-rose-600 p-1 cursor-pointer"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                )}
-              </div>
+              )}
             </div>
           )}
 
-          {/* ======================================================== */}
-          {/* MODE 4: TALLY COUNTERS & QUICK MATH                      */}
-          {/* ======================================================== */}
-          {mode === 'counter' && (
-            <div className="space-y-3">
-              {/* Tally Cards */}
-              <div className="grid grid-cols-3 gap-2 select-none">
-                {tallies.map((t) => (
+          {/* Checklist Items Container */}
+          <div className="space-y-1.5 max-h-60 overflow-y-auto pr-0.5 scrollbar-thin">
+            {filteredItems.length === 0 ? (
+              <div className="p-4 text-center border-[1.5px] border-dashed border-[#18181B]/20 rounded-xl bg-[#FAF7F2] space-y-1">
+                <CheckSquare className="w-5 h-5 text-slate-300 mx-auto stroke-[1.5]" />
+                <p className="text-[11px] font-bold text-slate-400">
+                  {activeFilter === 'completed'
+                    ? 'No completed items yet.'
+                    : activeFilter === 'active'
+                    ? 'All items are completed! Great job!'
+                    : 'No checklist items yet. Add one above!'}
+                </p>
+              </div>
+            ) : (
+              filteredItems.map((item) => {
+                const tagConfig = item.tag ? TAG_CONFIG[item.tag] : TAG_CONFIG.general;
+
+                return (
                   <div
-                    key={t.id}
-                    className="p-2.5 bg-[#FAF7F2] border-[1.5px] border-[#18181B] rounded-xl shadow-2xs text-center space-y-1.5"
+                    key={item.id}
+                    className={`group flex items-center justify-between gap-2 p-2 rounded-xl border-[1.5px] border-[#18181B] shadow-2xs transition-all ${
+                      item.isCompleted
+                        ? 'bg-slate-50 opacity-65 border-[#18181B]/40'
+                        : item.isStarred
+                        ? 'bg-[#FEFCE8]'
+                        : 'bg-white hover:bg-slate-50/80'
+                    }`}
                   >
-                    <div className="flex items-center justify-center gap-1 text-[10px] font-black text-slate-600">
-                      {t.icon === 'water' && <Droplets className="w-3 h-3 text-cyan-600" />}
-                      {t.icon === 'focus' && <Flame className="w-3 h-3 text-amber-600" />}
-                      {t.icon === 'pages' && <BookOpen className="w-3 h-3 text-purple-600" />}
-                      <span className="truncate">{t.label}</span>
+                    {/* Checkbox & Text */}
+                    <div
+                      onClick={() => handleToggleItem(item.id)}
+                      className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer select-none"
+                    >
+                      <div
+                        className={`w-4.5 h-4.5 rounded-lg border-[1.5px] border-[#18181B] flex items-center justify-center shrink-0 transition-transform active:scale-90 ${
+                          item.isCompleted ? 'bg-[#18181B] text-white shadow-2xs' : 'bg-white hover:bg-slate-100'
+                        }`}
+                      >
+                        {item.isCompleted && <Check className="w-3 h-3 stroke-[3]" />}
+                      </div>
+
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span
+                          className={`text-xs font-bold leading-snug break-words ${
+                            item.isCompleted ? 'line-through text-slate-400' : 'text-[#18181B]'
+                          }`}
+                        >
+                          {item.text}
+                        </span>
+
+                        {item.tag && item.tag !== 'general' && (
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <span
+                              className="inline-flex items-center gap-0.5 text-[8px] font-black px-1.5 py-0.2 rounded border border-[#18181B]/20"
+                              style={{ backgroundColor: tagConfig.bg, color: tagConfig.color }}
+                            >
+                              {tagConfig.icon}
+                              <span>{tagConfig.label}</span>
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="text-lg font-black font-mono-num text-[#18181B]">{t.count}</div>
-
-                    <div className="flex items-center justify-center gap-1">
+                    {/* Actions: Star, Promote, Delete */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {/* Star Button */}
                       <button
                         type="button"
-                        onClick={() => handleUpdateTally(t.id, -t.step)}
-                        className="w-6 h-6 rounded-lg bg-white hover:bg-slate-100 border border-[#18181B] flex items-center justify-center text-[#18181B] shadow-2xs active:scale-95 cursor-pointer"
+                        onClick={(e) => handleToggleStar(item.id, e)}
+                        title={item.isStarred ? 'Unstar' : 'Pin to top'}
+                        className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
+                          item.isStarred
+                            ? 'text-amber-500 bg-amber-50 border border-amber-300 shadow-2xs'
+                            : 'text-slate-300 hover:text-amber-400 hover:bg-slate-100'
+                        }`}
                       >
-                        <Minus className="w-3 h-3" />
+                        <Star className={`w-3.5 h-3.5 ${item.isStarred ? 'fill-amber-400' : ''}`} />
                       </button>
 
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateTally(t.id, t.step)}
-                        className="w-6 h-6 rounded-lg bg-[#FFE873] hover:bg-[#FED7AA] border border-[#18181B] flex items-center justify-center text-[#18181B] shadow-2xs active:scale-95 cursor-pointer font-black"
-                      >
-                        <Plus className="w-3 h-3 stroke-[2.5]" />
-                      </button>
+                      {/* Promote to Task */}
+                      {!item.isCompleted && onQuickCreateTask && (
+                        <button
+                          type="button"
+                          onClick={(e) => handlePromoteToTask(item, e)}
+                          title="Convert to Today Task"
+                          className="px-2 py-1 bg-[#FFE873] hover:bg-[#FED7AA] border border-[#18181B] rounded-lg text-[9px] font-black text-[#18181B] flex items-center gap-0.5 shadow-2xs active:scale-95 cursor-pointer"
+                        >
+                          <Send className="w-2.5 h-2.5" />
+                          <span>Task</span>
+                        </button>
+                      )}
 
+                      {/* Delete */}
                       <button
                         type="button"
-                        onClick={() => handleResetTally(t.id)}
-                        title="Reset"
-                        className="w-6 h-6 rounded-lg bg-white hover:bg-rose-50 border border-[#18181B]/40 flex items-center justify-center text-slate-400 hover:text-rose-600 shadow-2xs active:scale-95 cursor-pointer"
+                        onClick={(e) => handleDeleteItem(item.id, e)}
+                        title="Delete"
+                        className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
                       >
-                        <RotateCcw className="w-2.5 h-2.5" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
-                ))}
-              </div>
+                );
+              })
+            )}
+          </div>
 
-              {/* Inline Quick Calculator */}
-              <div className="p-2.5 bg-white border-[1.5px] border-[#18181B] rounded-xl space-y-2 shadow-2xs">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">
-                  Quick Math Evaluator
-                </span>
-                <form onSubmit={handleCalculate} className="flex items-center gap-1.5">
-                  <input
-                    type="text"
-                    value={calcInput}
-                    onChange={(e) => setCalcInput(e.target.value)}
-                    placeholder="e.g. 120 + 45 * 2"
-                    className="flex-1 px-3 py-1.5 bg-[#FAF7F2] focus:bg-white border border-[#18181B] rounded-xl text-xs font-mono font-bold text-[#18181B] outline-none"
-                  />
-                  <button
-                    type="submit"
-                    className="px-3 py-1.5 bg-[#D1FBE4] hover:bg-[#A7F3D0] border border-[#18181B] rounded-xl text-xs font-black text-[#18181B] shadow-2xs active:scale-95 cursor-pointer"
-                  >
-                    =
-                  </button>
-                  {calcResult !== null && (
-                    <div className="px-2.5 py-1.5 bg-[#FEF08A] border border-[#18181B] rounded-xl text-xs font-black font-mono-num text-[#18181B]">
-                      {calcResult}
-                    </div>
-                  )}
-                </form>
-              </div>
+          {/* Footer Actions */}
+          {items.length > 0 && onQuickCreateTask && (
+            <div className="pt-2 border-t border-[#18181B]/15 flex items-center justify-between gap-2">
+              <span className="text-[10px] font-bold text-slate-500">
+                {items.filter((i) => !i.isCompleted).length} pending
+              </span>
+
+              {items.some((i) => !i.isCompleted) && (
+                <button
+                  type="button"
+                  onClick={handleImportAllPending}
+                  className="px-3 py-1.5 bg-[#E8DCFF] hover:bg-[#D8C4FF] border-[1.5px] border-[#18181B] rounded-xl text-[10px] font-black text-[#18181B] flex items-center gap-1 shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
+                >
+                  <Send className="w-3 h-3" />
+                  <span>Import All to Today Tasks</span>
+                </button>
+              )}
             </div>
           )}
 
@@ -789,3 +587,5 @@ export const QuickScratchpadCard: React.FC<QuickScratchpadCardProps> = ({
     </div>
   );
 };
+
+export const QuickChecklistCard = QuickScratchpadCard;

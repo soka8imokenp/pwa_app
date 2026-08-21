@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  CheckSquare,
+  ListChecks,
   Plus,
   Trash2,
   Check,
@@ -264,9 +264,9 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
             style={{ backgroundColor: isAllDone ? '#D1FBE4' : '#E8DCFF' }}
           >
             {isAllDone ? (
-              <Sparkles className="w-4 h-4 text-emerald-700 stroke-[2.5]" />
+              <Sparkles className="w-4 h-4 text-emerald-700 stroke-[2.25]" />
             ) : (
-              <CheckSquare className="w-4 h-4 text-purple-900 stroke-[2.25]" />
+              <ListChecks className="w-4 h-4 text-purple-900 stroke-[2.25]" />
             )}
           </div>
 
@@ -289,7 +289,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
               {totalCount === 0
                 ? 'Keep track of fast sub-goals & routine'
                 : isAllDone
-                ? '🎉 All done! You are crushing it!'
+                ? 'All done! You are crushing it!'
                 : `${totalCount - completedCount} items remaining (${progressPercent}%)`}
             </p>
           </div>
@@ -457,7 +457,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
           <div className="space-y-1.5 max-h-60 overflow-y-auto pr-0.5 scrollbar-thin">
             {filteredItems.length === 0 ? (
               <div className="p-4 text-center border-[1.5px] border-dashed border-[#18181B]/20 rounded-xl bg-[#FAF7F2] space-y-1">
-                <CheckSquare className="w-5 h-5 text-slate-300 mx-auto stroke-[1.5]" />
+                <ListChecks className="w-5 h-5 text-slate-300 mx-auto stroke-[1.5]" />
                 <p className="text-[11px] font-bold text-slate-400">
                   {activeFilter === 'completed'
                     ? 'No completed items yet.'

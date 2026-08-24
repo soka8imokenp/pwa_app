@@ -59,10 +59,7 @@ export function generateIcsCalendar(
       startDate = new Date();
     }
 
-    // If task has estimated time in minutes, calculate end time; otherwise default to 30 mins or all-day
     const durationMinutes = task.estimatedMinutes && task.estimatedMinutes > 0 ? task.estimatedMinutes : 30;
-    
-    // Set a default hour if just a date (e.g. 09:00 AM + index * 45m for realistic schedule layout)
     startDate.setHours(9 + Math.floor((index * 45) / 60), (index * 45) % 60, 0, 0);
     const endDate = addMinutes(startDate, durationMinutes);
 
@@ -70,7 +67,7 @@ export function generateIcsCalendar(
     const summaryPrefix = task.isPriority ? '[Top Priority] ' : '';
     const summary = `${summaryPrefix}${task.title}`;
 
-    let descriptionParts: string[] = [];
+    const descriptionParts: string[] = [];
     if (task.category) descriptionParts.push(`Category: ${task.category}`);
     if (task.estimatedMinutes) descriptionParts.push(`Estimated: ${task.estimatedMinutes} min`);
     if (task.subtasks && task.subtasks.length > 0) {
@@ -107,7 +104,7 @@ export function downloadIcsCalendarFile(tasks: Task[], filename?: string): void 
   const icsContent = generateIcsCalendar(tasks);
   const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
   const url = URL.createObjectURL(blob);
-  
+
   const link = document.createElement('a');
   link.href = url;
   link.download = filename || `Daily-Sumire-${format(new Date(), 'yyyy-MM-dd')}.ics`;
@@ -115,70 +112,6 @@ export function downloadIcsCalendarFile(tasks: Task[], filename?: string): void 
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-}
-
-/**
- * Builds a direct 1-click Google Calendar Web Add link
- */
-export function createGoogleCalendarLink(task: Task): string {
-  let startDate: Date;
-  try {
-    startDate = parseISO(task.date);
-  } catch {
-    startDate = new Date();
-  }
-  startDate.setHours(10, 0, 0, 0);
-  const duration = task.estimatedMinutes || 30;
-  const endDate = addMinutes(startDate, duration);
-
-  const startIso = format(startDate, "yyyyMMdd'T'HHmmss");
-  const endIso = format(endDate, "yyyyMMdd'T'HHmmss");
-
-  const title = encodeURIComponent(`${task.isPriority ? '🎯 ' : ''}${task.title}`);
-  
-  let detailsText = '';
-  if (task.category) detailsText += `Category: ${task.category}\n`;
-  if (task.subtasks && task.subtasks.length > 0) {
-    detailsText += `Subtasks:\n` + task.subtasks.map((st) => `- ${st.isCompleted ? '✓' : '○'} ${st.title}`).join('\n') + '\n';
-  }
-  detailsText += '\nManaged with Daily Sumire Planner';
-
-  const details = encodeURIComponent(detailsText);
-
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startIso}/${endIso}&details=${details}`;
-}
-
-/**
- * Builds a direct 1-click Google Calendar Day Plan Link
- */
-export function createGoogleCalendarDayPlanLink(tasks: Task[], selectedDate: string): string {
-  let startDate: Date;
-  try {
-    startDate = parseISO(selectedDate);
-  } catch {
-    startDate = new Date();
-  }
-  startDate.setHours(9, 0, 0, 0);
-  const endDate = new Date(startDate);
-  endDate.setHours(18, 0, 0, 0);
-
-  const startIso = format(startDate, "yyyyMMdd'T'HHmmss");
-  const endIso = format(endDate, "yyyyMMdd'T'HHmmss");
-
-  const title = encodeURIComponent(`Daily Sumire Schedule (${selectedDate})`);
-
-  let detailsText = `Daily Sumire Tasks for ${selectedDate}:\n\n`;
-  tasks.forEach((t) => {
-    detailsText += `${t.isPriority ? '🎯 [Priority] ' : '• '}${t.title}${t.estimatedMinutes ? ` (${t.estimatedMinutes}m)` : ''}\n`;
-    if (t.subtasks && t.subtasks.length > 0) {
-      t.subtasks.forEach((st) => {
-        detailsText += `   ${st.isCompleted ? '✓' : '○'} ${st.title}\n`;
-      });
-    }
-  });
-  detailsText += '\nManaged with Daily Sumire Planner';
-
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startIso}/${endIso}&details=${encodeURIComponent(detailsText)}`;
 }
 
 /**
@@ -199,13 +132,17 @@ export async function shareIcsCalendarFile(tasks: Task[], filename?: string): Pr
           files: [file],
         });
         return true;
-      } catch {
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          console.warn('Share error, falling back to download:', err);
+          downloadIcsCalendarFile(tasks, actualFilename);
+        }
         return false;
       }
     }
   }
 
-  // Fallback to download
+  // Fallback to standard download
   downloadIcsCalendarFile(tasks, actualFilename);
   return true;
 }

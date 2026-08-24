@@ -6,10 +6,6 @@
   "server": {
     "androidScheme": "https",
     "allowNavigation": [
-      "accounts.google.com",
-      "*.google.com",
-      "*.googleusercontent.com",
-      "*.googleapis.com",
       "open.spotify.com",
       "accounts.spotify.com",
       "*.spotify.com",

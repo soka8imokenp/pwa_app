@@ -221,8 +221,8 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                   <Calendar className="w-4 h-4 text-amber-950 stroke-[2.25]" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-[#18181B]">Calendar Sync & .ics</h4>
-                  <p className="text-[10px] text-slate-500 font-medium">Google, Apple & Outlook Export</p>
+                  <h4 className="text-xs font-black text-[#18181B]">Экспорт календаря (.ics)</h4>
+                  <p className="text-[10px] text-slate-500 font-medium">Экспорт расписания и задач в .ics</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-400" />

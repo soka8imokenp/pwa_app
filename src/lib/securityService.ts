@@ -1,10 +1,11 @@
-// Bank-grade 100% Local Security Service for Daily Sumire
-// Provides SHA-256 hashed 4-digit PIN protection & WebAuthn Biometrics (Fingerprint / Face ID)
+// 100% Local Security Service for Daily Sumire
+// Provides SHA-256 hashed 4-digit PIN protection & Native Android Biometrics (Fingerprint / Face ID)
+
+import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 
 const STORAGE_PIN_HASH = 'kairo_security_pin_hash';
 const STORAGE_BIOMETRICS = 'kairo_security_biometrics_enabled';
-const STORAGE_IS_LOCKED = 'kairo_security_is_locked';
-const STORAGE_BIOMETRIC_CREDENTIAL_ID = 'kairo_security_bio_cred_id';
+const SESSION_UNLOCKED = 'kairo_session_unlocked';
 
 /**
  * Computes SHA-256 hash of a string using Web Crypto API
@@ -35,6 +36,8 @@ export async function savePin(pin: string): Promise<void> {
   if (typeof window !== 'undefined') {
     const hashed = await hashPin(pin);
     localStorage.setItem(STORAGE_PIN_HASH, hashed);
+    // Mark current session as unlocked so user isn't immediately locked out during setup
+    sessionStorage.setItem(SESSION_UNLOCKED, 'true');
   }
 }
 
@@ -56,24 +59,29 @@ export function removePin(): void {
   if (typeof window !== 'undefined') {
     localStorage.removeItem(STORAGE_PIN_HASH);
     localStorage.removeItem(STORAGE_BIOMETRICS);
-    localStorage.removeItem(STORAGE_BIOMETRIC_CREDENTIAL_ID);
-    localStorage.removeItem(STORAGE_IS_LOCKED);
+    sessionStorage.removeItem(SESSION_UNLOCKED);
   }
 }
 
 /**
- * Checks if Biometrics (WebAuthn / Fingerprint / Face Unlock) is supported on device
+ * Checks if Biometrics (Fingerprint / Face Unlock / Touch ID) is available on device
  */
 export async function isBiometricsSupported(): Promise<boolean> {
-  if (typeof window === 'undefined' || !window.PublicKeyCredential) {
+  if (typeof window === 'undefined') {
     return false;
   }
   try {
-    if (PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
-      return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    const result = await NativeBiometric.isAvailable();
+    return Boolean(result && result.isAvailable);
+  } catch (err) {
+    // Fallback: Check WebAuthn in browser
+    if (window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+      try {
+        return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      } catch {
+        return false;
+      }
     }
-    return true;
-  } catch {
     return false;
   }
 }
@@ -98,61 +106,39 @@ export function setBiometricsEnabled(enabled: boolean): void {
 }
 
 /**
- * Registers biometric credentials on device
+ * Registers / Tests biometric credentials on device
  */
 export async function registerBiometrics(): Promise<boolean> {
-  if (typeof window === 'undefined' || !window.crypto || !window.crypto.getRandomValues) {
-    return false;
-  }
-
   try {
-    const challenge = new Uint8Array(32);
-    window.crypto.getRandomValues(challenge);
-
-    const userId = new Uint8Array(16);
-    window.crypto.getRandomValues(userId);
-
-    const creationOptions: CredentialCreationOptions = {
-      publicKey: {
-        challenge,
-        rp: {
-          name: 'Daily Sumire',
-          id: window.location.hostname || 'localhost',
-        },
-        user: {
-          id: userId,
-          name: 'sumire_user',
-          displayName: 'Daily Sumire User',
-        },
-        pubKeyCredParams: [
-          { type: 'public-key', alg: -7 }, // ES256
-          { type: 'public-key', alg: -257 }, // RS256
-        ],
-        authenticatorSelection: {
-          authenticatorAttachment: 'platform',
-          userVerification: 'preferred',
-        },
-        timeout: 60000,
-      },
-    };
-
-    const credential = (await navigator.credentials.create(creationOptions)) as PublicKeyCredential | null;
-    if (credential && credential.id) {
-      localStorage.setItem(STORAGE_BIOMETRIC_CREDENTIAL_ID, credential.id);
+    // Verify biometrics work right now to confirm enrollment
+    const isAvail = await isBiometricsSupported();
+    if (!isAvail) {
       setBiometricsEnabled(true);
       return true;
     }
-  } catch (err) {
-    console.warn('Biometric registration error or cancelled:', err);
-  }
 
-  // Fallback: Enable preference even if WebAuthn platform prompt was soft
-  setBiometricsEnabled(true);
-  return true;
+    await NativeBiometric.verifyIdentity({
+      reason: 'Подтвердите отпечаток пальца для включения защиты',
+      title: 'Daily Sumire',
+      subtitle: 'Настройка биометрии',
+      description: 'Прикоснитесь к сканеру отпечатков пальцев',
+    });
+
+    setBiometricsEnabled(true);
+    return true;
+  } catch (err) {
+    console.warn('Native biometric registration prompt cancelled or failed:', err);
+    // If user cancelled, don't enable; if error on desktop web, enable preference
+    if (typeof window !== 'undefined' && !(window as any).Capacitor?.isNativePlatform()) {
+      setBiometricsEnabled(true);
+      return true;
+    }
+    return false;
+  }
 }
 
 /**
- * Authenticates user via device Fingerprint / Face Unlock
+ * Authenticates user via native device Fingerprint / Face Unlock
  */
 export async function authenticateWithBiometrics(): Promise<boolean> {
   if (typeof window === 'undefined' || !isBiometricsEnabled()) {
@@ -160,54 +146,55 @@ export async function authenticateWithBiometrics(): Promise<boolean> {
   }
 
   try {
-    const challenge = new Uint8Array(32);
-    window.crypto.getRandomValues(challenge);
-
-    const credId = localStorage.getItem(STORAGE_BIOMETRIC_CREDENTIAL_ID);
-    const allowCredentials: PublicKeyCredentialDescriptor[] = credId
-      ? [
-          {
-            type: 'public-key',
-            id: new TextEncoder().encode(credId),
-          },
-        ]
-      : [];
-
-    const requestOptions: CredentialRequestOptions = {
-      publicKey: {
-        challenge,
-        allowCredentials: allowCredentials.length > 0 ? allowCredentials : undefined,
-        userVerification: 'required',
-        timeout: 60000,
-      },
-    };
-
-    const assertion = await navigator.credentials.get(requestOptions);
-    return Boolean(assertion);
+    await NativeBiometric.verifyIdentity({
+      reason: 'Разблокируйте приложение Daily Sumire',
+      title: 'Daily Sumire',
+      subtitle: 'Вход по отпечатку пальца',
+      description: 'Прикоснитесь к сканеру отпечатков пальцев',
+    });
+    return true;
   } catch (err) {
-    console.warn('Biometric verification cancelled or failed:', err);
+    console.warn('Native biometric authentication failed or cancelled:', err);
+
+    // Fallback for desktop browser WebAuthn testing if available
+    if (typeof window !== 'undefined' && window.PublicKeyCredential && !(window as any).Capacitor?.isNativePlatform()) {
+      try {
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+        const assertion = await navigator.credentials.get({
+          publicKey: { challenge, timeout: 60000, userVerification: 'preferred' },
+        });
+        return Boolean(assertion);
+      } catch {
+        return false;
+      }
+    }
     return false;
   }
 }
 
 /**
- * Check if the application is currently locked
+ * Check if the application is currently locked.
+ * If PIN is configured and session is not yet unlocked, returns true.
  */
 export function isAppLocked(): boolean {
   if (typeof window !== 'undefined') {
     if (!isPinSet()) return false;
-    const locked = localStorage.getItem(STORAGE_IS_LOCKED);
-    // If PIN is set, lock by default on first boot if not explicitly unlocked in current session
-    return locked !== 'false';
+    const sessionUnlocked = sessionStorage.getItem(SESSION_UNLOCKED);
+    return sessionUnlocked !== 'true';
   }
   return false;
 }
 
 /**
- * Set the app lock state
+ * Set the app lock state for the current session
  */
 export function setAppLocked(locked: boolean): void {
   if (typeof window !== 'undefined') {
-    localStorage.setItem(STORAGE_IS_LOCKED, String(locked));
+    if (locked) {
+      sessionStorage.removeItem(SESSION_UNLOCKED);
+    } else {
+      sessionStorage.setItem(SESSION_UNLOCKED, 'true');
+    }
   }
 }

@@ -25,9 +25,12 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
     const bioEnabled = isBiometricsEnabled();
     setBioAvailable(bioEnabled);
 
-    // Auto-trigger biometric prompt on first render if enabled
+    // Auto-trigger biometric prompt after brief layout mount delay if enabled
     if (bioEnabled) {
-      handleBiometricUnlock();
+      const timer = setTimeout(() => {
+        handleBiometricUnlock();
+      }, 250);
+      return () => clearTimeout(timer);
     }
   }, []);
 

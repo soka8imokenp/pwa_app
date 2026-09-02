@@ -33,7 +33,12 @@ import {
   importDatabaseFromJson,
   resetAndSeedDatabase,
 } from '../../lib/exportImport';
-import { playSuccessChime, playClickSound } from '../../lib/sound';
+import {
+  playSuccessChime,
+  playClickSound,
+  playTaskCheckSound,
+  playTimerFinishAlarm,
+} from '../../lib/sound';
 import { AVATAR_OPTIONS, getAvatarById } from '../../data/avatars';
 import type { UserProfile } from '../auth/AuthContainer';
 import { checkForAppUpdate, CURRENT_APP_VERSION, AppUpdateInfo } from '../../lib/appUpdater';
@@ -450,44 +455,89 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* 4. Audio & Haptic Feedback Capsule */}
-        <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-[2rem] flex items-center justify-between shadow-[2px_2px_0px_#24201D]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center text-xs">
+        <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-[2rem] space-y-2.5 shadow-[2px_2px_0px_#24201D]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center text-xs">
+                {isSoundMuted ? (
+                  <VolumeX className="w-4 h-4 text-stone-400 stroke-[2.25]" />
+                ) : (
+                  <Volume2 className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
+                )}
+              </div>
+              <div>
+                <span className="text-xs font-black font-display text-[#24201D] block">
+                  Sound Effects & Chimes
+                </span>
+                <span className="text-[10px] font-semibold text-[#6B635B] block">
+                  Tactile Wood, Marimba Pop & Zen Bowl
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                playClickSound();
+                onToggleSound();
+              }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-black border-[1.5px] border-[#24201D] transition-all cursor-pointer flex items-center gap-1.5 ${isSoundMuted
+                  ? 'bg-stone-100 text-stone-500'
+                  : 'bg-[#3D6B52] text-white shadow-2xs'
+                }`}
+            >
               {isSoundMuted ? (
-                <VolumeX className="w-4 h-4 text-stone-400 stroke-[2.25]" />
+                <span>Muted</span>
               ) : (
-                <Volume2 className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
+                <>
+                  <span>Active</span>
+                  <Volume2 className="w-3.5 h-3.5 stroke-[2.25]" />
+                </>
               )}
-            </div>
-            <div>
-              <span className="text-xs font-black font-display text-[#24201D] block">
-                Sound Effects & Chimes
-              </span>
-              <span className="text-[10px] font-semibold text-[#6B635B] block">
-                Web Audio synthesizer & completion haptics
-              </span>
-            </div>
+            </button>
           </div>
 
-          <button
-            onClick={() => {
-              playClickSound();
-              onToggleSound();
-            }}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-black border-[1.5px] border-[#24201D] transition-all cursor-pointer flex items-center gap-1.5 ${isSoundMuted
-                ? 'bg-stone-100 text-stone-500'
-                : 'bg-[#3D6B52] text-white shadow-2xs'
-              }`}
-          >
-            {isSoundMuted ? (
-              <span>Muted</span>
-            ) : (
-              <>
-                <span>Active</span>
-                <Volume2 className="w-3.5 h-3.5 stroke-[2.25]" />
-              </>
-            )}
-          </button>
+          {/* Sound Preview Test Row */}
+          {!isSoundMuted && (
+            <div className="pt-2 border-t border-stone-100">
+              <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] block mb-1.5">
+                Preview Audio & Tactile FX
+              </span>
+              <div className="grid grid-cols-4 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => playClickSound()}
+                  className="py-1.5 px-1 bg-[#FAF8F5] hover:bg-[#F4F0EA] border border-[#24201D] rounded-xl text-[10px] font-bold text-[#24201D] shadow-2xs active:translate-y-0.5 transition-all text-center cursor-pointer"
+                  title="Test Tactile Wood Tap"
+                >
+                  🪵 Wood
+                </button>
+                <button
+                  type="button"
+                  onClick={() => playTaskCheckSound()}
+                  className="py-1.5 px-1 bg-[#DDE8DE] hover:bg-[#C9DCCB] border border-[#24201D] rounded-xl text-[10px] font-bold text-[#2D503C] shadow-2xs active:translate-y-0.5 transition-all text-center cursor-pointer"
+                  title="Test Matcha Pop"
+                >
+                  🍵 Pop
+                </button>
+                <button
+                  type="button"
+                  onClick={() => playSuccessChime()}
+                  className="py-1.5 px-1 bg-[#FBECCF] hover:bg-[#F7E2BB] border border-[#24201D] rounded-xl text-[10px] font-bold text-[#854D0E] shadow-2xs active:translate-y-0.5 transition-all text-center cursor-pointer"
+                  title="Test Zen Victory Chime"
+                >
+                  ✨ Chime
+                </button>
+                <button
+                  type="button"
+                  onClick={() => playTimerFinishAlarm()}
+                  className="py-1.5 px-1 bg-[#DEE8EF] hover:bg-[#C8DCE8] border border-[#24201D] rounded-xl text-[10px] font-bold text-[#476C85] shadow-2xs active:translate-y-0.5 transition-all text-center cursor-pointer"
+                  title="Test Zen Singing Bowl"
+                >
+                  🔔 Bowl
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Evening Debrief Toggle & Time Capsule */}

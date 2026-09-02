@@ -23,6 +23,8 @@ import {
   ExternalLink,
   RefreshCw,
   Moon,
+  Sun,
+  Monitor,
   Lock,
   Unlock,
   Fingerprint,
@@ -43,6 +45,7 @@ import {
   isBiometricsSupported,
   setAppLocked,
 } from '../../lib/securityService';
+import { getStoredThemeMode, setThemeMode, ThemeMode } from '../../lib/themeService';
 import { SecuritySetupModal } from '../security/SecuritySetupModal';
 
 interface SettingsModalProps {
@@ -79,7 +82,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const [feedback, setFeedback] = useState<{ text: string; success: boolean } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedAccent, setSelectedAccent] = useState('lilac');
+  const [selectedAccent, setSelectedAccent] = useState('sage');
+  const [themeMode, setCurrentThemeMode] = useState<ThemeMode>(() => getStoredThemeMode());
+
+  useEffect(() => {
+    const handleThemeChange = (e: any) => {
+      if (e.detail?.mode) {
+        setCurrentThemeMode(e.detail.mode);
+      }
+    };
+    window.addEventListener('sumire:theme-changed', handleThemeChange);
+    return () => window.removeEventListener('sumire:theme-changed', handleThemeChange);
+  }, []);
   const [selectedAvatar, setSelectedAvatar] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('kairo_selected_avatar') || 'sumire-scout';
@@ -615,42 +629,103 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           )}
         </div>
 
-        {/* 3. Theme & Accent Color Palette */}
-        <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-[2rem] space-y-2.5 shadow-[2px_2px_0px_#24201D]">
+        {/* 3. Theme & Appearance Mode */}
+        <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-[2rem] space-y-3 shadow-[2px_2px_0px_#24201D]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Palette className="w-4 h-4 text-[#3D6B52] stroke-[2.25]" />
               <span className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                Accent Colors
+                Appearance & Theme
               </span>
             </div>
             <span className="text-[9px] font-extrabold uppercase text-[#6B635B]">
-              Matcha & Paper
+              {themeMode === 'dark' ? 'Obsidian Matcha' : themeMode === 'light' ? 'Warm Paper' : 'System Auto'}
             </span>
           </div>
 
-          <div className="grid grid-cols-4 gap-2">
-            {THEME_ACCENTS.map((accent) => (
-              <button
-                key={accent.id}
-                onClick={() => {
-                  playClickSound();
-                  setSelectedAccent(accent.id);
-                }}
-                className={`py-2 px-1 rounded-2xl border-[1.5px] text-center transition-all cursor-pointer flex flex-col items-center gap-1 ${selectedAccent === accent.id
-                    ? 'border-[#24201D] shadow-[2px_2px_0px_#24201D] scale-105'
-                    : 'border-stone-200 hover:border-[#24201D]'
+          {/* Theme Mode 3-Way Segment */}
+          <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#FAF8F5] border border-[#24201D]/20 rounded-2xl">
+            <button
+              type="button"
+              onClick={() => {
+                playClickSound();
+                setCurrentThemeMode('light');
+                setThemeMode('light');
+              }}
+              className={`py-2 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                themeMode === 'light'
+                  ? 'bg-white text-[#24201D] border border-[#24201D] shadow-2xs'
+                  : 'text-stone-500 hover:text-[#24201D]'
+              }`}
+            >
+              <Sun className="w-3.5 h-3.5 text-[#F59E0B]" />
+              <span className="text-[10px]">Warm Paper</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                playClickSound();
+                setCurrentThemeMode('dark');
+                setThemeMode('dark');
+              }}
+              className={`py-2 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                themeMode === 'dark'
+                  ? 'bg-[#141312] text-[#F5EFE6] border border-[#3E3730] shadow-2xs'
+                  : 'text-stone-500 hover:text-[#24201D]'
+              }`}
+            >
+              <Moon className="w-3.5 h-3.5 text-[#529974]" />
+              <span className="text-[10px]">Obsidian</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                playClickSound();
+                setCurrentThemeMode('system');
+                setThemeMode('system');
+              }}
+              className={`py-2 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                themeMode === 'system'
+                  ? 'bg-white text-[#24201D] border border-[#24201D] shadow-2xs'
+                  : 'text-stone-500 hover:text-[#24201D]'
+              }`}
+            >
+              <Monitor className="w-3.5 h-3.5 text-stone-600" />
+              <span className="text-[10px]">Auto</span>
+            </button>
+          </div>
+
+          {/* Accent Colors */}
+          <div className="pt-1">
+            <label className="block text-[10px] font-black uppercase text-[#6B635B] mb-1.5">
+              Palette Accents
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {THEME_ACCENTS.map((accent) => (
+                <button
+                  key={accent.id}
+                  onClick={() => {
+                    playClickSound();
+                    setSelectedAccent(accent.id);
+                  }}
+                  className={`py-2 px-1 rounded-2xl border-[1.5px] text-center transition-all cursor-pointer flex flex-col items-center gap-1 ${
+                    selectedAccent === accent.id
+                      ? 'border-[#24201D] shadow-[2px_2px_0px_#24201D] scale-105'
+                      : 'border-stone-200 hover:border-[#24201D]'
                   }`}
-                style={{ backgroundColor: accent.bg }}
-              >
-                <div className="w-3 h-3 rounded-full bg-[#24201D]/80 flex items-center justify-center">
-                  {selectedAccent === accent.id && <Check className="w-2 h-2 text-white stroke-[3]" />}
-                </div>
-                <span className="text-[9px] font-black text-[#24201D] truncate max-w-full">
-                  {accent.name.split(' ')[1] || accent.name}
-                </span>
-              </button>
-            ))}
+                  style={{ backgroundColor: accent.bg }}
+                >
+                  <div className="w-3 h-3 rounded-full bg-[#24201D]/80 flex items-center justify-center">
+                    {selectedAccent === accent.id && <Check className="w-2 h-2 text-white stroke-[3]" />}
+                  </div>
+                  <span className="text-[9px] font-black text-[#24201D] truncate max-w-full">
+                    {accent.name.split(' ')[1] || accent.name}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

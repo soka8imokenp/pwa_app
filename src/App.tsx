@@ -30,6 +30,7 @@ import { getTodayString } from './lib/dateUtils';
 import { isSoundMuted, setSoundMuted, playClickSound, playSuccessChime } from './lib/sound';
 import { isAppLocked, setAppLocked } from './lib/securityService';
 import { SecurityLockScreen } from './components/security/SecurityLockScreen';
+import { initThemeService } from './lib/themeService';
 import type { Task } from './types';
 
 export function App() {
@@ -82,8 +83,10 @@ export function App() {
   // Focus Timer active selection
   const [focusSelectedTask, setFocusSelectedTask] = useState<Task | null>(null);
 
-  // Initialize notification deep-linking system & check for Telegram APK updates & daily streak greeting
+  // Initialize theme, notification deep-linking system & check for Telegram APK updates & daily streak greeting
   useEffect(() => {
+    const cleanupTheme = initThemeService();
+
     initNotificationSystem((targetTab, extra) => {
       if (targetTab) {
         setActiveTab(targetTab);
@@ -137,7 +140,10 @@ export function App() {
       }
     }
 
-    return () => window.removeEventListener('sumire:navigate', handleWebNavigate);
+    return () => {
+      cleanupTheme();
+      window.removeEventListener('sumire:navigate', handleWebNavigate);
+    };
   }, []);
 
   // Planner Data Hook (IndexedDB / Dexie.js)

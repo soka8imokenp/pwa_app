@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, Settings, Moon, Sun } from 'lucide-react';
+import { Flame, Settings } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 import { getAvatarById } from '../../data/avatars';
-import { isDarkMode, toggleTheme } from '../../lib/themeService';
 
 interface HeaderProps {
   streakCount: number;
@@ -18,7 +17,6 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenStreak,
 }) => {
   const [avatarId, setAvatarId] = useState<string>('sumire-scout');
-  const [isDark, setIsDark] = useState<boolean>(() => isDarkMode());
 
   useEffect(() => {
     const updateAvatar = () => {
@@ -29,23 +27,8 @@ export const Header: React.FC<HeaderProps> = ({
     };
     updateAvatar();
     window.addEventListener('storage', updateAvatar);
-
-    const handleThemeChange = (e: any) => {
-      setIsDark(e.detail?.isDark ?? isDarkMode());
-    };
-    window.addEventListener('sumire:theme-changed', handleThemeChange);
-
-    return () => {
-      window.removeEventListener('storage', updateAvatar);
-      window.removeEventListener('sumire:theme-changed', handleThemeChange);
-    };
+    return () => window.removeEventListener('storage', updateAvatar);
   }, []);
-
-  const handleToggleTheme = () => {
-    playClickSound();
-    const next = toggleTheme();
-    setIsDark(next === 'dark');
-  };
 
   const activeAvatar = getAvatarById(avatarId);
   const firstName = userName.split(' ')[0] || 'Friend';
@@ -74,22 +57,8 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Right: Theme, Streak & Settings */}
-        <div className="flex items-center gap-1.5">
-          {/* 1-Tap Quick Theme Toggle */}
-          <button
-            onClick={handleToggleTheme}
-            title={isDark ? 'Switch to Warm Paper (Light)' : 'Switch to Obsidian Matcha (Dark)'}
-            aria-label="Toggle theme"
-            className="w-8 h-8 rounded-xl bg-white hover:bg-stone-100 border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
-          >
-            {isDark ? (
-              <Sun className="w-4 h-4 text-[#F59E0B] stroke-[2.25] transition-transform rotate-0 scale-100" />
-            ) : (
-              <Moon className="w-4 h-4 text-[#3D6B52] stroke-[2.25] transition-transform rotate-0 scale-100" />
-            )}
-          </button>
-
+        {/* Right: Streak & Settings */}
+        <div className="flex items-center gap-2">
           {/* Flame Streak Pill (Click to open Streak screen) */}
           <button
             onClick={() => {

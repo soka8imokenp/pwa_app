@@ -7,15 +7,12 @@ import {
   Compass,
   Settings,
   ChevronRight,
-  Moon,
-  Sun,
   Share2,
   Calendar,
   Lock,
 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 import { isPinSet } from '../../lib/securityService';
-import { isDarkMode, toggleTheme } from '../../lib/themeService';
 import type { TabView } from '../layout/BottomNav';
 
 interface MenuModalProps {
@@ -253,34 +250,6 @@ export const MenuModal: React.FC<MenuModalProps> = ({
               <ChevronRight className="w-4 h-4 text-stone-400 group-hover:translate-x-0.5 transition-transform" />
             </button>
           )}
-
-          {/* Theme Quick Toggle */}
-          <button
-            onClick={() => {
-              playClickSound();
-              toggleTheme();
-            }}
-            className="w-full p-3.5 rounded-2xl bg-[#FAF8F5] hover:bg-[#F4F0EA] border-[1.75px] border-[#24201D] flex items-center justify-between transition-all cursor-pointer text-left shadow-2xs"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0">
-                {isDarkMode() ? (
-                  <Sun className="w-4 h-4 text-[#F59E0B] stroke-[2.25]" />
-                ) : (
-                  <Moon className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
-                )}
-              </div>
-              <div>
-                <h4 className="text-xs font-black text-[#24201D]">
-                  {isDarkMode() ? 'Светлая тема (Warm Paper)' : 'Темная тема (Obsidian Matcha)'}
-                </h4>
-                <p className="text-[10px] text-[#6B635B] font-medium">Переключить визуальный стиль</p>
-              </div>
-            </div>
-            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full border border-[#24201D]/20 bg-white text-[#24201D]">
-              {isDarkMode() ? 'Dark' : 'Light'}
-            </span>
-          </button>
 
           {/* Settings */}
           <button

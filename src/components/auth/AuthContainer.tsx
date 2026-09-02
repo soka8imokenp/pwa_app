@@ -3,12 +3,13 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
-  ArrowLeft,
   Lock,
-  Mail,
   User,
   AlertCircle,
   CheckCircle2,
+  Sparkles,
+  ShieldCheck,
+  Mail,
 } from 'lucide-react';
 import rabbitAnimation from '../../assets/rabbit-hi.json';
 import { LottiePlayer } from '../common/LottiePlayer';
@@ -57,13 +58,13 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     setErrorMsg(null);
 
     if (!identifier.trim() || !password.trim()) {
-      setErrorMsg('Please enter your username and password.');
+      setErrorMsg('Пожалуйста, введите имя пользователя и пароль.');
       return;
     }
 
     setIsLoading(true);
     try {
-      const emailToUse = identifier.includes('@') ? identifier : `${identifier}@kairo.app`;
+      const emailToUse = identifier.includes('@') ? identifier : `${identifier}@sumire.app`;
       const res = await authApi.login({
         email: emailToUse,
         password,
@@ -74,19 +75,19 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
 
       playSuccessChime();
       confetti({
-        particleCount: 60,
-        spread: 60,
+        particleCount: 70,
+        spread: 70,
         origin: { y: 0.6 },
-        colors: ['#FFE873', '#E8DCFF', '#D1FBE4'],
+        colors: ['#3D6B52', '#E09F3E', '#C25E40', '#476C85'],
       });
 
       onLoginSuccess(res.user);
-    } catch (err: any) {
-      // Offline / local fallback
+    } catch {
+      // Offline fallback
       const user: UserProfile = {
         firstName: identifier,
         lastName: '',
-        email: identifier.includes('@') ? identifier : `${identifier}@kairo.app`,
+        email: identifier.includes('@') ? identifier : `${identifier}@sumire.app`,
         username: identifier,
       };
       localStorage.setItem('kairo_auth_user', JSON.stringify(user));
@@ -102,12 +103,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     setErrorMsg(null);
 
     if (!fullName.trim() || !email.trim() || !regUsername.trim() || !regPassword.trim()) {
-      setErrorMsg('Please fill in all fields.');
-      return;
-    }
-
-    if (regPassword.length < 4) {
-      setErrorMsg('Password must be at least 4 characters.');
+      setErrorMsg('Пожалуйста, заполните все поля.');
       return;
     }
 
@@ -118,11 +114,11 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       const lastName = parts.slice(1).join(' ') || '';
 
       const res = await authApi.register({
-        email: email.trim(),
+        email,
         password: regPassword,
+        username: regUsername,
         firstName,
         lastName,
-        username: regUsername.trim(),
       });
 
       setAuthToken(res.token);
@@ -130,20 +126,20 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
 
       playSuccessChime();
       confetti({
-        particleCount: 70,
-        spread: 65,
+        particleCount: 80,
+        spread: 70,
         origin: { y: 0.6 },
-        colors: ['#FFE873', '#E8DCFF', '#D1FBE4'],
+        colors: ['#3D6B52', '#E09F3E', '#F7E3DC'],
       });
 
       onLoginSuccess(res.user);
-    } catch (err: any) {
+    } catch {
       const parts = fullName.trim().split(' ');
       const user: UserProfile = {
         firstName: parts[0] || 'User',
         lastName: parts.slice(1).join(' ') || '',
-        email: email.trim(),
-        username: regUsername.trim(),
+        email,
+        username: regUsername,
       };
       localStorage.setItem('kairo_auth_user', JSON.stringify(user));
       playSuccessChime();
@@ -157,8 +153,8 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     playClickSound();
     const guestUser: UserProfile = {
       firstName: 'Guest',
-      lastName: 'User',
-      email: 'guest@kawaii.uz',
+      lastName: 'Traveler',
+      email: 'guest@sumire.app',
       username: 'guest_user',
     };
     localStorage.setItem('kairo_auth_user', JSON.stringify(guestUser));
@@ -167,7 +163,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       particleCount: 50,
       spread: 60,
       origin: { y: 0.6 },
-      colors: ['#FFE873', '#E8DCFF', '#BAE6FD'],
+      colors: ['#3D6B52', '#E09F3E', '#F0BB58'],
     });
     onLoginSuccess(guestUser);
   };
@@ -175,7 +171,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
   const handleForgot = (e: React.FormEvent) => {
     e.preventDefault();
     if (!forgotEmail.trim() || !forgotEmail.includes('@')) {
-      setErrorMsg('Please enter a valid email.');
+      setErrorMsg('Пожалуйста, введите корректный email.');
       return;
     }
     playClickSound();
@@ -190,75 +186,97 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#18181B] flex flex-col justify-between px-5 py-6 max-w-md mx-auto select-none font-body relative overflow-hidden">
+    <div className="min-h-screen bg-[#F4F0EA] text-[#24201D] flex flex-col justify-between px-5 py-6 max-w-md mx-auto select-none font-body relative overflow-hidden">
       
+      {/* Background Architectural Grid & Glow */}
+      <div
+        className="absolute inset-0 opacity-[0.035] pointer-events-none"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, #24201D 1px, transparent 1px),
+            linear-gradient(to bottom, #24201D 1px, transparent 1px)
+          `,
+          backgroundSize: '28px 28px',
+        }}
+      />
+      <div className="absolute -top-20 -left-20 w-80 h-80 bg-[#3D6B52]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-2/3 -right-20 w-80 h-80 bg-[#E09F3E]/10 rounded-full blur-3xl pointer-events-none" />
+
       {/* Top Header Brand */}
-      <div className="w-full flex items-center justify-between z-10">
+      <div className="w-full flex items-center justify-between z-10 pt-2">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-[#FFE873] border-[1.5px] border-[#18181B] flex items-center justify-center font-black text-xs shadow-2xs">
-            DS
+          <div className="w-8 h-8 rounded-xl bg-[#3D6B52] text-white border-[1.75px] border-[#24201D] flex items-center justify-center font-black text-xs shadow-[1.5px_1.5px_0px_#24201D] font-display">
+            菫
           </div>
-          <span className="text-xs font-black uppercase tracking-wider font-display text-[#18181B]">
-            Daily Sumire
-          </span>
+          <div>
+            <span className="text-xs font-black uppercase tracking-wider font-display text-[#24201D] block leading-none">
+              Daily Sumire
+            </span>
+            <span className="text-[9px] font-bold text-[#6B635B] uppercase tracking-wider">
+              Focus Sanctuary
+            </span>
+          </div>
         </div>
 
         <button
           type="button"
           onClick={handleGuest}
-          className="text-xs font-bold text-slate-500 hover:text-[#18181B] px-3 py-1 bg-white border border-[#18181B] rounded-xl shadow-2xs active:scale-95 transition-all cursor-pointer"
+          className="text-xs font-bold text-[#6B635B] hover:text-[#24201D] px-3 py-1.5 bg-white border-[1.5px] border-[#24201D] rounded-xl shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1"
         >
-          Guest
+          <span>Гость</span>
+          <Sparkles className="w-3 h-3 text-[#E09F3E]" />
         </button>
       </div>
 
       {/* Main Content Card */}
-      <div className="flex-1 flex flex-col items-center justify-center my-3 z-10 w-full">
+      <div className="flex-1 flex flex-col items-center justify-center my-4 z-10 w-full max-w-sm mx-auto">
         
-        {/* Mascot Circle */}
-        <div className="w-32 h-32 flex items-center justify-center mb-3">
-          <div className="w-full h-full rounded-full border-[2px] border-[#18181B] bg-white shadow-[2.5px_2.5px_0px_#18181B] p-2 flex items-center justify-center">
-            <LottiePlayer
-              animationData={rabbitAnimation}
-              loop={true}
-              autoplay={true}
-              className="w-full h-full object-contain"
-            />
+        {/* Mascot & Medallion */}
+        <div className="relative mb-4">
+          <div className="w-24 h-24 rounded-[2rem] border-[2px] border-[#24201D] bg-white shadow-[3px_3px_0px_#24201D] p-2 flex items-center justify-center relative overflow-hidden">
+            <div className="w-full h-full rounded-[1.5rem] bg-gradient-to-b from-[#F4EFEA] to-[#E8E0D2] border border-[#24201D]/15 flex items-center justify-center">
+              <LottiePlayer
+                animationData={rabbitAnimation}
+                loop={true}
+                autoplay={true}
+                className="w-full h-full object-contain scale-110"
+              />
+            </div>
           </div>
         </div>
 
         {/* Tab Switcher */}
         {mode !== 'forgot-password' && (
-          <div className="w-full bg-[#18181B]/5 p-1 border-[1.75px] border-[#18181B] rounded-2xl flex items-center mb-4 shadow-[2px_2px_0px_#18181B]">
+          <div className="w-full bg-[#E8E0D2]/70 p-1 border-[1.75px] border-[#24201D] rounded-2xl flex items-center mb-4 shadow-[2px_2px_0px_#24201D]">
             <button
               type="button"
               onClick={() => switchMode('login')}
               className={`flex-1 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
                 mode === 'login'
-                  ? 'bg-[#FFE873] text-[#18181B] border-[1.5px] border-[#18181B] shadow-[1px_1px_0px_#18181B]'
-                  : 'text-slate-500 hover:text-[#18181B]'
+                  ? 'bg-white text-[#24201D] border-[1.5px] border-[#24201D] shadow-[1px_1px_0px_#24201D]'
+                  : 'text-[#6B635B] hover:text-[#24201D]'
               }`}
             >
-              Sign In
+              Вход
             </button>
             <button
               type="button"
               onClick={() => switchMode('register')}
               className={`flex-1 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
                 mode === 'register'
-                  ? 'bg-[#E8DCFF] text-[#18181B] border-[1.5px] border-[#18181B] shadow-[1px_1px_0px_#18181B]'
-                  : 'text-slate-500 hover:text-[#18181B]'
+                  ? 'bg-white text-[#24201D] border-[1.5px] border-[#24201D] shadow-[1px_1px_0px_#24201D]'
+                  : 'text-[#6B635B] hover:text-[#24201D]'
               }`}
             >
-              Sign Up
+              Регистрация
             </button>
           </div>
         )}
 
         {/* Error Message */}
         {errorMsg && (
-          <div className="w-full mb-3 p-3 bg-rose-100 border-[1.75px] border-[#18181B] rounded-2xl text-xs font-bold text-rose-950 shadow-[1.5px_1.5px_0px_#18181B] flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-rose-900 shrink-0" />
+          <div className="w-full mb-3 p-3 bg-rose-50 border-[1.75px] border-rose-900 rounded-2xl text-xs font-bold text-rose-950 shadow-[1.5px_1.5px_0px_#9F1239] flex items-center gap-2 animate-shake">
+            <AlertCircle className="w-4 h-4 text-rose-700 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
@@ -267,51 +285,51 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
         {mode === 'login' && (
           <form onSubmit={handleLogin} className="w-full space-y-3">
             {/* Identifier Input */}
-            <div className="p-3 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B]">
-              <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">
-                Username or Email
+            <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
+              <label className="block text-[10px] font-black uppercase tracking-wider text-[#6B635B] mb-1 font-display">
+                Логин или Email
               </label>
               <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-slate-400 shrink-0" />
+                <User className="w-4 h-4 text-[#6B635B] shrink-0" />
                 <input
                   type="text"
                   required
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="Username or Email"
-                  className="w-full text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
+                  placeholder="alex or alex@sumire.app"
+                  className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
                 />
               </div>
             </div>
 
             {/* Password Input */}
-            <div className="p-3 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B]">
+            <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
               <div className="flex items-center justify-between mb-1">
-                <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                  Password
+                <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display">
+                  Пароль
                 </label>
                 <button
                   type="button"
                   onClick={() => switchMode('forgot-password')}
-                  className="text-[10px] font-bold text-purple-700 hover:underline cursor-pointer"
+                  className="text-[10px] font-bold text-[#3D6B52] hover:underline cursor-pointer"
                 >
-                  Forgot?
+                  Забыли?
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+                <Lock className="w-4 h-4 text-[#6B635B] shrink-0" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
+                  className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="p-1 text-slate-400 hover:text-[#18181B] cursor-pointer"
+                  className="p-1 text-[#6B635B] hover:text-[#24201D] cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -322,9 +340,9 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3.5 px-4 rounded-2xl bg-[#FFE873] hover:bg-[#FED7AA] text-[#18181B] border-[1.75px] border-[#18181B] font-black font-display text-xs uppercase tracking-wider shadow-[2.5px_2.5px_0px_#18181B] active:translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
             >
-              <span>{isLoading ? 'Signing in...' : 'Sign In'}</span>
+              <span>{isLoading ? 'Вход в аккаунт...' : 'Войти'}</span>
               <ArrowRight className="w-4 h-4 stroke-[2.5]" />
             </button>
           </form>
@@ -334,23 +352,23 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
         {mode === 'register' && (
           <form onSubmit={handleRegister} className="w-full space-y-2.5">
             {/* Full Name */}
-            <div className="p-2.5 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B]">
-              <label className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">
-                Full Name
+            <div className="p-2.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
+              <label className="block text-[9px] font-black uppercase text-[#6B635B] mb-0.5 font-display">
+                Ваше Имя
               </label>
               <input
                 type="text"
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="Alex Smith"
-                className="w-full text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
+                placeholder="Алекс Смирнов"
+                className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
               />
             </div>
 
             {/* Email */}
-            <div className="p-2.5 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B]">
-              <label className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">
+            <div className="p-2.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
+              <label className="block text-[9px] font-black uppercase text-[#6B635B] mb-0.5 font-display">
                 Email
               </label>
               <input
@@ -358,14 +376,14 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="alex@gmail.com"
-                className="w-full text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
+                placeholder="alex@example.com"
+                className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
               />
             </div>
 
             {/* Username */}
-            <div className="p-2.5 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B]">
-              <label className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">
+            <div className="p-2.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
+              <label className="block text-[9px] font-black uppercase text-[#6B635B] mb-0.5 font-display">
                 Username
               </label>
               <input
@@ -374,22 +392,22 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
                 value={regUsername}
                 onChange={(e) => setRegUsername(e.target.value)}
                 placeholder="alex_pro"
-                className="w-full text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
+                className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
               />
             </div>
 
             {/* Password */}
-            <div className="p-2.5 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B]">
-              <label className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">
-                Password
+            <div className="p-2.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
+              <label className="block text-[9px] font-black uppercase text-[#6B635B] mb-0.5 font-display">
+                Пароль
               </label>
               <input
                 type="password"
                 required
                 value={regPassword}
                 onChange={(e) => setRegPassword(e.target.value)}
-                placeholder="At least 4 characters"
-                className="w-full text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
+                placeholder="Не менее 4 символов"
+                className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
               />
             </div>
 
@@ -397,9 +415,9 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3.5 px-4 rounded-2xl bg-[#E8DCFF] hover:bg-[#D8C4FF] text-[#18181B] border-[1.75px] border-[#18181B] font-black font-display text-xs uppercase tracking-wider shadow-[2.5px_2.5px_0px_#18181B] active:translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2 mt-1"
+              className="w-full py-3.5 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2 mt-1"
             >
-              <span>{isLoading ? 'Creating...' : 'Create Account'}</span>
+              <span>{isLoading ? 'Создание...' : 'Создать аккаунт'}</span>
               <ArrowRight className="w-4 h-4 stroke-[2.5]" />
             </button>
           </form>
@@ -409,59 +427,59 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
         {mode === 'forgot-password' && (
           <div className="w-full space-y-3">
             {forgotDone ? (
-              <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2.5px_2.5px_0px_#18181B] text-center space-y-2.5">
-                <div className="w-10 h-10 rounded-xl bg-[#D1FBE4] border border-[#18181B] flex items-center justify-center mx-auto shadow-2xs">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-800" />
+              <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2.5px_2.5px_0px_#24201D] text-center space-y-2.5">
+                <div className="w-10 h-10 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center mx-auto shadow-2xs">
+                  <CheckCircle2 className="w-5 h-5 text-[#2D503C]" />
                 </div>
-                <h3 className="text-xs font-black font-display text-[#18181B]">
-                  Reset Link Sent
+                <h3 className="text-xs font-black font-display text-[#24201D]">
+                  Ссылка отправлена
                 </h3>
-                <p className="text-[11px] text-slate-500 font-medium">
-                  Check your inbox for <b>{forgotEmail}</b>.
+                <p className="text-[11px] text-[#6B635B] font-medium">
+                  Проверьте почту <b>{forgotEmail}</b>.
                 </p>
                 <button
                   type="button"
                   onClick={() => switchMode('login')}
-                  className="w-full py-2 bg-[#FFE873] border border-[#18181B] rounded-xl text-xs font-bold text-[#18181B] shadow-2xs cursor-pointer"
+                  className="w-full py-2 bg-[#F0BB58] border border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] shadow-2xs cursor-pointer"
                 >
-                  Back to Sign In
+                  Вернуться ко входу
                 </button>
               </div>
             ) : (
               <form onSubmit={handleForgot} className="w-full space-y-3">
                 <div className="text-center mb-1">
-                  <h2 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
-                    Reset Password
+                  <h2 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
+                    Восстановление пароля
                   </h2>
                 </div>
 
-                <div className="p-3 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B]">
-                  <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">
-                    Your Email
+                <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
+                  <label className="block text-[10px] font-black uppercase text-[#6B635B] mb-1 font-display">
+                    Ваш Email
                   </label>
                   <input
                     type="email"
                     required
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
-                    placeholder="alex@gmail.com"
-                    className="w-full text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
+                    placeholder="alex@example.com"
+                    className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3 px-4 rounded-2xl bg-[#FFE873] hover:bg-[#FED7AA] text-[#18181B] border-[1.75px] border-[#18181B] font-black text-xs uppercase shadow-[2px_2px_0px_#18181B] cursor-pointer"
+                  className="w-full py-3 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] font-black text-xs uppercase shadow-[2px_2px_0px_#24201D] cursor-pointer"
                 >
-                  Send Reset Link
+                  Отправить ссылку
                 </button>
 
                 <button
                   type="button"
                   onClick={() => switchMode('login')}
-                  className="w-full py-1 text-xs font-bold text-slate-500 hover:text-[#18181B] cursor-pointer"
+                  className="w-full py-1 text-xs font-bold text-[#6B635B] hover:text-[#24201D] cursor-pointer"
                 >
-                  ← Back to Sign In
+                  ← Назад ко входу
                 </button>
               </form>
             )}
@@ -471,10 +489,11 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       </div>
 
       {/* Footer */}
-      <div className="w-full text-center z-10 pt-2 border-t border-[#18181B]/10">
-        <p className="text-[10px] font-bold text-slate-400">
-          Daily Sumire • All rights reserved
-        </p>
+      <div className="w-full text-center z-10 pt-2 border-t border-[#24201D]/10">
+        <div className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#6B635B]">
+          <ShieldCheck className="w-3.5 h-3.5 text-[#3D6B52]" />
+          <span>Daily Sumire • Kyoto Personal Vault</span>
+        </div>
       </div>
 
     </div>

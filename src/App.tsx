@@ -30,7 +30,6 @@ import { getTodayString } from './lib/dateUtils';
 import { isSoundMuted, setSoundMuted, playClickSound, playSuccessChime } from './lib/sound';
 import { isAppLocked, setAppLocked } from './lib/securityService';
 import { SecurityLockScreen } from './components/security/SecurityLockScreen';
-import { initThemeService } from './lib/themeService';
 import type { Task } from './types';
 
 export function App() {
@@ -83,10 +82,8 @@ export function App() {
   // Focus Timer active selection
   const [focusSelectedTask, setFocusSelectedTask] = useState<Task | null>(null);
 
-  // Initialize theme, notification deep-linking system & check for Telegram APK updates & daily streak greeting
+  // Initialize notification deep-linking system & check for Telegram APK updates & daily streak greeting
   useEffect(() => {
-    const cleanupTheme = initThemeService();
-
     initNotificationSystem((targetTab, extra) => {
       if (targetTab) {
         setActiveTab(targetTab);
@@ -140,10 +137,7 @@ export function App() {
       }
     }
 
-    return () => {
-      cleanupTheme();
-      window.removeEventListener('sumire:navigate', handleWebNavigate);
-    };
+    return () => window.removeEventListener('sumire:navigate', handleWebNavigate);
   }, []);
 
   // Planner Data Hook (IndexedDB / Dexie.js)
@@ -221,7 +215,7 @@ export function App() {
   const displayName = `${currentUser.firstName} ${currentUser.lastName}`.trim() || currentUser.username || 'Sam Smith';
 
   return (
-    <div className="min-h-screen bg-[#F4F0EA] dark:bg-[#0E1612] text-[#24201D] dark:text-[#EDF7F1] flex justify-center bg-subtle-grid relative overflow-x-hidden transition-colors duration-200">
+    <div className="min-h-screen bg-[#F4F0EA] text-[#24201D] flex justify-center bg-subtle-grid relative overflow-x-hidden">
       {showSplash && <AppSplashScreen onFinish={() => setShowSplash(false)} />}
 
       {/* Dynamic Background Elements */}

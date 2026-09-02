@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Sparkles, Shield, Feather } from 'lucide-react';
 import { LottiePlayer } from './LottiePlayer';
 import rabbitAnimation from '../../assets/rabbit-hi.json';
-import { Zap, Flame, Check } from 'lucide-react';
 
 interface AppSplashScreenProps {
   onFinish?: () => void;
@@ -10,25 +10,27 @@ interface AppSplashScreenProps {
 
 export const AppSplashScreen: React.FC<AppSplashScreenProps> = ({
   onFinish,
-  minDurationMs = 1400,
+  minDurationMs = 1500,
 }) => {
   const [progress, setProgress] = useState(0);
   const [isFadingOut, setIsFadingOut] = useState(false);
-  const [statusText, setStatusText] = useState('Initializing Archive...');
+  const [statusText, setStatusText] = useState('Initializing sanctuary...');
 
   useEffect(() => {
     const startTime = Date.now();
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      const pct = Math.min(100, Math.round((elapsed / minDurationMs) * 100));
+      const rawPct = (elapsed / minDurationMs) * 100;
+      // Smooth easing curve
+      const pct = Math.min(100, Math.round(rawPct));
       setProgress(pct);
 
-      if (pct < 40) {
-        setStatusText('Loading Daily Tasks...');
-      } else if (pct < 80) {
-        setStatusText('Syncing Habits & Streaks...');
+      if (pct < 35) {
+        setStatusText('Calibrating daily rhythm...');
+      } else if (pct < 75) {
+        setStatusText('Harmonizing habits & focus...');
       } else {
-        setStatusText('Ready!');
+        setStatusText('Welcome back');
       }
 
       if (pct >= 100) {
@@ -39,38 +41,58 @@ export const AppSplashScreen: React.FC<AppSplashScreenProps> = ({
             if (onFinish) {
               onFinish();
             }
-          }, 400);
-        }, 150);
+          }, 450);
+        }, 200);
       }
-    }, 30);
+    }, 25);
 
     return () => clearInterval(interval);
   }, [minDurationMs, onFinish]);
 
   return (
     <div
-      className={`fixed inset-0 z-100 flex flex-col items-center justify-center p-6 bg-[#FAF7F2] font-body select-none transition-all duration-400 ease-out ${
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-between p-8 bg-[#F4F0EA] font-body select-none transition-all duration-500 ease-out ${
         isFadingOut
-          ? 'opacity-0 scale-105 pointer-events-none'
+          ? 'opacity-0 scale-[1.03] pointer-events-none filter blur-xs'
           : 'opacity-100 scale-100'
       }`}
     >
-      {/* Background Dots Accent */}
+      {/* Background Architectural Texture */}
       <div
-        className="absolute inset-0 opacity-20 pointer-events-none"
+        className="absolute inset-0 opacity-[0.035] pointer-events-none"
         style={{
-          backgroundImage:
-            'radial-gradient(#18181B 1.25px, transparent 1.25px)',
-          backgroundSize: '20px 20px',
+          backgroundImage: `
+            linear-gradient(to right, #24201D 1px, transparent 1px),
+            linear-gradient(to bottom, #24201D 1px, transparent 1px)
+          `,
+          backgroundSize: '28px 28px',
         }}
       />
 
-      <div className="relative z-10 w-full max-w-xs flex flex-col items-center text-center space-y-5 animate-in fade-in zoom-in-95 duration-300">
-        {/* Animated Mascot Card */}
+      {/* Ambient Breathing Glows */}
+      <div className="absolute top-1/4 -left-20 w-80 h-80 bg-[#3D6B52]/12 rounded-full blur-3xl pointer-events-none animate-pulse" />
+      <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-[#E09F3E]/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Top Subtle Status Pill */}
+      <div className="relative z-10 pt-4 animate-in fade-in slide-in-from-top-4 duration-500">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-white/80 backdrop-blur-md border-[1.5px] border-[#24201D] rounded-full shadow-[1.5px_1.5px_0px_#24201D]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#3D6B52] animate-ping" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#24201D] font-display">
+            Kyoto Edition • v1.6
+          </span>
+        </div>
+      </div>
+
+      {/* Center Emblem & Typography */}
+      <div className="relative z-10 flex flex-col items-center text-center space-y-6 max-w-xs w-full my-auto animate-in fade-in zoom-in-95 duration-500">
+        
+        {/* Luxury Mascot & Seal Container */}
         <div className="relative">
-          <div className="w-32 h-32 rounded-[2.5rem] bg-white border-[2.25px] border-[#18181B] shadow-[4px_4px_0px_#18181B] flex items-center justify-center p-3 relative overflow-hidden">
-            {/* Pastel Inner Circle */}
-            <div className="absolute inset-2 rounded-[2rem] bg-[#E8DCFF] border border-[#18181B]/15 flex items-center justify-center overflow-hidden">
+          {/* Outer Decorative Ring */}
+          <div className="w-32 h-32 rounded-[2.5rem] bg-white border-[2px] border-[#24201D] shadow-[4px_4px_0px_#24201D] flex items-center justify-center p-3 relative transition-transform">
+            
+            {/* Inner Silk Well */}
+            <div className="w-full h-full rounded-[2rem] bg-gradient-to-b from-[#F4EFEA] to-[#E8E0D2] border-[1.5px] border-[#24201D]/20 flex items-center justify-center overflow-hidden relative shadow-inner">
               <LottiePlayer
                 animationData={rabbitAnimation}
                 loop={true}
@@ -80,38 +102,46 @@ export const AppSplashScreen: React.FC<AppSplashScreenProps> = ({
             </div>
           </div>
 
-          {/* Floating Flame Badge */}
-          <div className="absolute -bottom-2 -right-2 px-2.5 py-1 bg-[#FFE873] border-[1.75px] border-[#18181B] rounded-xl shadow-[2px_2px_0px_#18181B] flex items-center gap-1">
-            <Flame className="w-3.5 h-3.5 text-amber-600 fill-amber-400 animate-bounce" />
-            <span className="text-[10px] font-black text-[#18181B] font-mono-num uppercase">
-              100% Offline
+          {/* Floating Japanese Seal Kanji Stamp */}
+          <div className="absolute -bottom-2 -right-2 px-2.5 py-1 bg-[#3D6B52] text-white border-[1.75px] border-[#24201D] rounded-xl shadow-[2px_2px_0px_#24201D] flex items-center gap-1.5 animate-neo-float">
+            <Sparkles className="w-3 h-3 text-[#F0BB58]" />
+            <span className="text-[10px] font-black font-display tracking-wider uppercase">
+              菫 SUMIRE
             </span>
           </div>
         </div>
 
-        {/* Brand Titles */}
-        <div className="space-y-1">
-          <h1 className="text-xl font-black font-display tracking-wider uppercase text-[#18181B]">
+        {/* Brand Headline & Editorial Tagline */}
+        <div className="space-y-1.5">
+          <h1 className="text-2xl font-black font-display tracking-wider text-[#24201D] uppercase">
             Daily Sumire
           </h1>
-          <p className="text-xs font-bold text-slate-500">
-            Focus & Habits Vault
+          <p className="text-xs font-bold text-[#6B635B] tracking-wide">
+            Mindful Rhythm • Focus • Habits
           </p>
         </div>
 
-        {/* Progress Bar & Status */}
-        <div className="w-full space-y-2 pt-2">
-          <div className="w-full h-3 bg-white border-[1.75px] border-[#18181B] rounded-full overflow-hidden p-0.5 shadow-[2px_2px_0px_#18181B]">
+        {/* Minimalist Satin Progress Bar */}
+        <div className="w-full space-y-2.5 pt-4">
+          <div className="w-full h-2 bg-stone-200/90 border-[1.5px] border-[#24201D] rounded-full overflow-hidden p-[1px] shadow-[1.5px_1.5px_0px_#24201D]">
             <div
-              className="h-full bg-[#BEF264] rounded-full border-r border-[#18181B] transition-all duration-75 ease-linear"
+              className="h-full bg-gradient-to-r from-[#3D6B52] to-[#529974] rounded-full transition-all duration-100 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
 
-          <div className="flex items-center justify-between text-[10px] font-black uppercase text-slate-500 px-1 font-mono-num">
-            <span>{statusText}</span>
-            <span>{progress}%</span>
+          <div className="flex items-center justify-between text-[11px] font-bold text-[#6B635B] px-1 font-mono-num">
+            <span className="truncate">{statusText}</span>
+            <span className="font-extrabold text-[#24201D]">{progress}%</span>
           </div>
+        </div>
+      </div>
+
+      {/* Bottom Privacy & Encryption Guarantee */}
+      <div className="relative z-10 pb-2 text-center animate-in fade-in duration-700">
+        <div className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#6B635B]">
+          <Shield className="w-3.5 h-3.5 text-[#3D6B52]" />
+          <span>Local Encrypted Vault • 100% Private</span>
         </div>
       </div>
     </div>

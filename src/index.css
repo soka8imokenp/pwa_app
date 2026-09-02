@@ -39,39 +39,39 @@
   }
 
   .dark {
-    --bg-canvas: #141312;
-    --card-bg: #1E1B18;
-    --card-surface: #272420;
-    --ink-black: #F5EFE6;
-    --ink-muted: #A89F91;
-    --border-color: #3E3730;
-    --shadow-color: #3E3730;
+    --bg-canvas: #0E1612;
+    --card-bg: #15221B;
+    --card-surface: #1D2D24;
+    --ink-black: #EDF7F1;
+    --ink-muted: #8FA899;
+    --border-color: #2D4436;
+    --shadow-color: #0A100D;
 
-    /* Obsidian Matcha Palette (Deep Matte & Neon Matcha) */
-    --neo-matcha: #4E8A68;
-    --neo-matcha-soft: #1E382A;
-    --neo-matcha-dark: #6FC494;
+    /* Authentic Kyoto Dark Matcha Palette */
+    --neo-matcha: #348B5C;
+    --neo-matcha-soft: #1B3526;
+    --neo-matcha-dark: #52C285;
 
-    --neo-terracotta: #D97354;
-    --neo-terracotta-soft: #3C1F18;
+    --neo-terracotta: #D96B50;
+    --neo-terracotta-soft: #381E18;
 
-    --neo-ochre: #E5A84B;
-    --neo-ochre-soft: #382A14;
+    --neo-ochre: #E5A336;
+    --neo-ochre-soft: #382B14;
 
-    --neo-indigo: #5C88A6;
-    --neo-indigo-soft: #1C2D38;
+    --neo-indigo: #4D7E9E;
+    --neo-indigo-soft: #162833;
 
-    --neo-sand: #36312B;
-    --neo-sand-soft: #2A2520;
+    --neo-sand: #2C3D33;
+    --neo-sand-soft: #1E2E25;
 
-    --neo-plum: #D4697B;
-    --neo-plum-soft: #3A1C22;
+    --neo-plum: #C95B6E;
+    --neo-plum-soft: #381B22;
 
-    --neo-yellow: #D99B36;
-    --neo-violet: #1E382A;
-    --neo-lime: #1E382A;
-    --neo-peach: #3C1F18;
-    --neo-cyan: #1C2D38;
+    --neo-yellow: #E5A336;
+    --neo-violet: #1B3526;
+    --neo-lime: #1B3526;
+    --neo-peach: #381E18;
+    --neo-cyan: #162833;
   }
 
   html, body {
@@ -88,8 +88,8 @@
 
   html.dark, body.dark, .dark {
     color-scheme: dark;
-    background-color: #141312;
-    color: #F5EFE6;
+    background-color: #0E1612;
+    color: #EDF7F1;
   }
 
   ::-webkit-scrollbar {
@@ -109,7 +109,7 @@
 
 .dark .font-display {
   letter-spacing: -0.025em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .font-body {
@@ -169,93 +169,94 @@
 }
 
 /* ========================================================================= */
-/* Obsidian Matcha Dark Editorial Mode Styles & Token Mappings              */
+/* Authentic Kyoto Dark Matcha Editorial Mode Styles & Token Mappings       */
 /* ========================================================================= */
 
 .dark .neo-card {
-  background-color: #1E1B18 !important;
-  border-color: #3E3730 !important;
-  box-shadow: 2px 2px 0px #3E3730 !important;
-  color: #F5EFE6 !important;
+  background-color: #15221B !important;
+  border-color: #2D4436 !important;
+  box-shadow: 2px 2px 0px #0A100D !important;
+  color: #EDF7F1 !important;
 }
 
 .dark .neo-btn {
-  border-color: #3E3730 !important;
-  box-shadow: 1.5px 1.5px 0px #3E3730 !important;
+  border-color: #2D4436 !important;
+  box-shadow: 1.5px 1.5px 0px #0A100D !important;
 }
 
 .dark .neo-badge {
-  border-color: #3E3730 !important;
-  box-shadow: 1px 1px 0px #3E3730 !important;
+  border-color: #2D4436 !important;
+  box-shadow: 1px 1px 0px #0A100D !important;
 }
 
 /* 1. Background Canvas & Page Containers */
 .dark [class*="bg-[#F4F0EA]"],
 .dark [class*="bg-[#FAF7F2]"],
 .dark .bg-subtle-grid {
-  background-color: #141312 !important;
+  background-color: #0E1612 !important;
 }
 
 /* 2. Elevated Cards & Modal Panels */
 .dark [class*="bg-white"] {
-  background-color: #1E1B18 !important;
+  background-color: #15221B !important;
 }
 
 /* 3. Sub-surfaces & Nested Cards */
 .dark [class*="bg-[#FAF8F5]"],
 .dark [class*="bg-stone-50"],
 .dark [class*="bg-slate-50"] {
-  background-color: #272420 !important;
+  background-color: #1D2D24 !important;
 }
 
 .dark [class*="bg-stone-100"],
 .dark [class*="bg-slate-100"] {
-  background-color: #2E2924 !important;
+  background-color: #24372C !important;
 }
 
-/* 4. Interactive Buttons in Dark Mode */
+/* 4. Interactive Buttons in Dark Matcha Mode */
 .dark [class*="bg-[#3D6B52]"],
 .dark [class*="bg-[#345B45]"] {
-  background-color: #4E8A68 !important;
+  background-color: #2E7D52 !important;
   color: #FFFFFF !important;
 }
 
-.dark [class*="hover:bg-[#345B45]"]:hover {
-  background-color: #5BA07A !important;
+.dark [class*="hover:bg-[#345B45]"]:hover,
+.dark [class*="hover:bg-[#3D6B52]"]:hover {
+  background-color: #389764 !important;
 }
 
 .dark [class*="bg-[#F0BB58]"],
 .dark [class*="bg-[#FFE873]"],
 .dark [class*="bg-[#E09F3E]"] {
-  background-color: #D99B36 !important;
-  color: #141312 !important;
+  background-color: #E5A336 !important;
+  color: #0E1612 !important;
 }
 
 .dark [class*="hover:bg-[#E5A943]"]:hover,
 .dark [class*="hover:bg-[#FED7AA]"]:hover {
-  background-color: #E6AA45 !important;
+  background-color: #F0B14A !important;
 }
 
 .dark [class*="bg-[#24201D]"],
 .dark [class*="bg-[#18181B]"] {
-  background-color: #2D2823 !important;
-  color: #F5EFE6 !important;
+  background-color: #121E17 !important;
+  color: #EDF7F1 !important;
 }
 
 .dark [class*="hover:bg-stone-100"]:hover,
 .dark [class*="hover:bg-slate-100"]:hover,
 .dark [class*="hover:bg-stone-50"]:hover,
 .dark [class*="hover:bg-slate-50"]:hover {
-  background-color: #2F2A25 !important;
+  background-color: #24372C !important;
 }
 
 .dark [class*="hover:bg-[#FAF8F5]"]:hover,
 .dark [class*="hover:bg-[#F4F0EA]"]:hover {
-  background-color: #2E2924 !important;
+  background-color: #24372C !important;
 }
 
 .dark [class*="hover:bg-white"]:hover {
-  background-color: #2A2520 !important;
+  background-color: #203127 !important;
 }
 
 /* 5. Soft Category Chips, Badges & Tints in Dark Mode */
@@ -263,33 +264,33 @@
 .dark [class*="bg-[#D1FBE4]"],
 .dark [class*="bg-[#EEF5F0]"],
 .dark [class*="bg-[#E8EFE9]"] {
-  background-color: #1E382A !important;
-  color: #86EFAC !important;
+  background-color: #1B3526 !important;
+  color: #4ADE80 !important;
 }
 
 .dark [class*="bg-[#FBECCF]"],
 .dark [class*="bg-[#FEF08A]"],
 .dark [class*="bg-[#FCF7ED]"] {
-  background-color: #382A14 !important;
+  background-color: #382B14 !important;
   color: #FCD34D !important;
 }
 
 .dark [class*="bg-[#F7E3DC]"],
 .dark [class*="bg-[#FED7AA]"],
 .dark [class*="bg-[#FAF0EC]"] {
-  background-color: #3C1F18 !important;
+  background-color: #381E18 !important;
   color: #FCA5A5 !important;
 }
 
 .dark [class*="bg-[#DEE8EF]"],
 .dark [class*="bg-[#EFF5F9]"],
 .dark [class*="bg-[#E8DCFF]"] {
-  background-color: #1C2D38 !important;
+  background-color: #162833 !important;
   color: #93C5FD !important;
 }
 
 .dark [class*="bg-[#F9E2E5]"] {
-  background-color: #3A1C22 !important;
+  background-color: #381B22 !important;
   color: #FDA4AF !important;
 }
 
@@ -299,40 +300,40 @@
 .dark [class*="text-stone-900"],
 .dark [class*="text-slate-900"],
 .dark [class*="text-zinc-900"] {
-  color: #F5EFE6 !important;
+  color: #EDF7F1 !important;
 }
 
 .dark [class*="text-[#6B635B]"],
 .dark [class*="text-stone-500"],
 .dark [class*="text-slate-500"] {
-  color: #A89F91 !important;
+  color: #8FA899 !important;
 }
 
 .dark [class*="text-stone-600"],
 .dark [class*="text-slate-600"] {
-  color: #BCB2A5 !important;
+  color: #A3BDAE !important;
 }
 
 .dark [class*="text-stone-700"],
 .dark [class*="text-slate-700"] {
-  color: #DDD4C8 !important;
+  color: #C8DFD3 !important;
 }
 
 .dark [class*="text-stone-400"],
 .dark [class*="text-slate-400"] {
-  color: #7E766D !important;
+  color: #6C8576 !important;
 }
 
 .dark [class*="text-stone-300"],
 .dark [class*="text-slate-300"] {
-  color: #575048 !important;
+  color: #445B4D !important;
 }
 
 .dark [class*="text-[#2D503C]"],
 .dark [class*="text-emerald-700"],
 .dark [class*="text-emerald-800"],
 .dark [class*="text-emerald-900"] {
-  color: #86EFAC !important;
+  color: #4ADE80 !important;
 }
 
 .dark [class*="text-[#854D0E]"],
@@ -354,7 +355,7 @@
 .dark [class*="border-slate-200"],
 .dark [class*="border-stone-300"],
 .dark [class*="border-slate-300"] {
-  border-color: #3E3730 !important;
+  border-color: #2D4436 !important;
 }
 
 .dark [class*="border-[#24201D]/15"],
@@ -363,7 +364,7 @@
 .dark [class*="border-[#18181B]/20"],
 .dark [class*="border-[#24201D]/30"],
 .dark [class*="border-[#18181B]/30"] {
-  border-color: rgba(245, 239, 230, 0.14) !important;
+  border-color: rgba(237, 247, 241, 0.12) !important;
 }
 
 /* 8. Neo-Brutalist Shadows in Dark Mode */
@@ -378,7 +379,7 @@
 .dark [class*="shadow-[4px_4px_0px_#24201D]"],
 .dark [class*="shadow-[4px_4px_0px_#18181B]"],
 .dark .shadow-2xs {
-  box-shadow: 2px 2px 0px #3E3730 !important;
+  box-shadow: 2px 2px 0px #0A100D !important;
 }
 
 /* 9. Inputs, Textareas & Selection Controls in Dark Mode */
@@ -388,14 +389,14 @@
 .dark input[type="password"],
 .dark textarea,
 .dark select {
-  background-color: #272420 !important;
-  color: #F5EFE6 !important;
-  border-color: #3E3730 !important;
+  background-color: #1D2D24 !important;
+  color: #EDF7F1 !important;
+  border-color: #2D4436 !important;
 }
 
 .dark input::placeholder,
 .dark textarea::placeholder {
-  color: #7E766D !important;
+  color: #6C8576 !important;
 }
 
 /* 10. Modal Backdrops & Dialog Overlays in Dark Mode */
@@ -403,7 +404,7 @@
 .dark .bg-\[\#18181B\]\/40,
 .dark .bg-black\/45,
 .dark .bg-black\/40 {
-  background-color: rgba(10, 9, 8, 0.78) !important;
+  background-color: rgba(7, 13, 10, 0.82) !important;
 }
 
 /* ========================================================================= */

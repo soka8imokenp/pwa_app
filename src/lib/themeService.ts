@@ -55,7 +55,7 @@ export function applyTheme(mode?: ThemeMode): void {
   }
 
   // Update native PWA status bar meta theme-color
-  const themeColor = isDark ? '#141312' : '#F4F0EA';
+  const themeColor = isDark ? '#0E1612' : '#F4F0EA';
   const metaThemeColors = document.querySelectorAll('meta[name="theme-color"]');
   metaThemeColors.forEach((meta) => {
     meta.setAttribute('content', themeColor);

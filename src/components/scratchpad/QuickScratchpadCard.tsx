@@ -13,9 +13,6 @@ import {
   Lightbulb,
   Repeat,
   Layers,
-  ChevronLeft,
-  ChevronRight,
-  Sparkles,
 } from 'lucide-react';
 import { playClickSound, playSuccessChime, playTaskCheckSound } from '../../lib/sound';
 import { startVoiceDictation, stopVoiceDictation, isSpeechRecognitionSupported } from '../../lib/speechRecognition';
@@ -399,18 +396,6 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                   );
                 })}
               </div>
-            </form>
-
-            <div className="p-2.5 bg-[#F4F0EA] border border-dashed border-[#24201D]/25 rounded-xl flex items-center justify-between text-[10px] font-medium text-[#6B635B]">
-              <span>💡 Swipe left to see active & completed notes</span>
-              <button
-                type="button"
-                onClick={() => goToSlide(1)}
-                className="text-[#3D6B52] font-black underline cursor-pointer flex items-center gap-0.5"
-              >
-                <span>View Active ({activeItems.length})</span>
-                <ChevronRight className="w-3 h-3" />
-              </button>
             </div>
           </div>
 
@@ -574,49 +559,24 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
         </div>
       </div>
 
-      {/* Bottom 3 Dots Pagination & Swipe Cue */}
-      <div className="pt-2 border-t border-[#24201D]/15 flex items-center justify-between">
-        
-        {/* Left Cue / Prev Button */}
-        <button
-          type="button"
-          disabled={currentSlide === 0}
-          onClick={() => goToSlide(currentSlide - 1)}
-          className="p-1 rounded-lg text-[#6B635B] hover:text-[#24201D] disabled:opacity-20 cursor-pointer transition-all"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-
-        {/* 3 Interactive Dots */}
-        <div className="flex items-center gap-2">
-          {SLIDE_TABS.map((tab) => {
-            const isSelected = currentSlide === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => goToSlide(tab.id)}
-                title={`Go to ${tab.label}`}
-                className={`transition-all duration-300 rounded-full cursor-pointer ${
-                  isSelected
-                    ? 'w-6 h-2 bg-[#3D6B52] shadow-2xs'
-                    : 'w-2 h-2 bg-[#24201D]/25 hover:bg-[#24201D]/50'
-                }`}
-              />
-            );
-          })}
-        </div>
-
-        {/* Right Cue / Next Button */}
-        <button
-          type="button"
-          disabled={currentSlide === 2}
-          onClick={() => goToSlide(currentSlide + 1)}
-          className="p-1 rounded-lg text-[#6B635B] hover:text-[#24201D] disabled:opacity-20 cursor-pointer transition-all"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-
+      {/* Bottom 3 Dots Pagination */}
+      <div className="pt-2 border-t border-[#24201D]/15 flex items-center justify-center gap-2">
+        {SLIDE_TABS.map((tab) => {
+          const isSelected = currentSlide === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => goToSlide(tab.id)}
+              title={`Go to ${tab.label}`}
+              className={`transition-all duration-300 rounded-full cursor-pointer ${
+                isSelected
+                  ? 'w-6 h-2 bg-[#3D6B52] shadow-2xs'
+                  : 'w-2 h-2 bg-[#24201D]/25 hover:bg-[#24201D]/50'
+              }`}
+            />
+          );
+        })}
       </div>
 
     </div>

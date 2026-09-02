@@ -396,7 +396,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                   );
                 })}
               </div>
-            </div>
+            </form>
           </div>
 
           {/* SLIDE 1: ACTIVE ITEMS PANEL */}

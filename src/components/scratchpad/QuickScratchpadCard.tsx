@@ -410,9 +410,9 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
           {/* Checklist Items Container */}
           <div className="space-y-1.5 max-h-60 overflow-y-auto pr-0.5 scrollbar-thin">
             {filteredItems.length === 0 ? (
-              <div className="p-4 text-center border-[1.5px] border-dashed border-[#18181B]/20 rounded-xl bg-[#FAF7F2] space-y-1">
-                <ListChecks className="w-5 h-5 text-slate-300 mx-auto stroke-[1.5]" />
-                <p className="text-[11px] font-bold text-slate-400">
+              <div className="p-4 text-center border-[1.5px] border-dashed border-[#24201D]/20 rounded-xl bg-[#FAF8F5] space-y-1">
+                <ListChecks className="w-5 h-5 text-stone-300 mx-auto stroke-[1.5]" />
+                <p className="text-[11px] font-bold text-[#6B635B]">
                   {activeFilter === 'completed'
                     ? 'No completed items yet.'
                     : activeFilter === 'active'
@@ -427,22 +427,22 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                 return (
                   <div
                     key={item.id}
-                    className={`group flex items-center justify-between gap-2 p-2 rounded-xl border-[1.5px] border-[#18181B] shadow-2xs transition-all ${
+                    className={`group flex items-center justify-between gap-2 p-2 rounded-xl border-[1.5px] border-[#24201D] shadow-2xs transition-all ${
                       item.isCompleted
-                        ? 'bg-slate-50 opacity-65 border-[#18181B]/40'
+                        ? 'bg-stone-50 opacity-65 border-[#24201D]/40'
                         : item.isStarred
-                        ? 'bg-[#FEFCE8]'
-                        : 'bg-white hover:bg-slate-50/80'
+                        ? 'bg-[#FBECCF]/40'
+                        : 'bg-white hover:bg-stone-50/80'
                     }`}
                   >
                     {/* Checkbox & Text */}
                     <div
-                      onClick={() => handleToggleItem(item.id)}
+                      onClick={() => handleToggleDone(item.id)}
                       className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer select-none"
                     >
                       <div
-                        className={`w-4.5 h-4.5 rounded-lg border-[1.5px] border-[#18181B] flex items-center justify-center shrink-0 transition-transform active:scale-90 ${
-                          item.isCompleted ? 'bg-[#18181B] text-white shadow-2xs' : 'bg-white hover:bg-slate-100'
+                        className={`w-4.5 h-4.5 rounded-lg border-[1.5px] border-[#24201D] flex items-center justify-center shrink-0 transition-transform active:scale-90 ${
+                          item.isCompleted ? 'bg-[#3D6B52] text-white shadow-2xs' : 'bg-white hover:bg-stone-100'
                         }`}
                       >
                         {item.isCompleted && <Check className="w-3 h-3 stroke-[3]" />}
@@ -451,7 +451,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                       <div className="flex flex-col min-w-0 flex-1">
                         <span
                           className={`text-xs font-bold leading-snug break-words ${
-                            item.isCompleted ? 'line-through text-slate-400' : 'text-[#18181B]'
+                            item.isCompleted ? 'line-through text-stone-400' : 'text-[#24201D]'
                           }`}
                         >
                           {item.text}
@@ -460,7 +460,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                         {item.tag && item.tag !== 'general' && (
                           <div className="flex items-center gap-1 mt-0.5">
                             <span
-                              className="inline-flex items-center gap-0.5 text-[8px] font-black px-1.5 py-0.2 rounded border border-[#18181B]/20"
+                              className="inline-flex items-center gap-0.5 text-[8px] font-black px-1.5 py-0.2 rounded border border-[#24201D]/20"
                               style={{ backgroundColor: tagConfig.bg, color: tagConfig.color }}
                             >
                               {tagConfig.icon}
@@ -476,15 +476,18 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                       {/* Star Button */}
                       <button
                         type="button"
-                        onClick={(e) => handleToggleStar(item.id, e)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleStar(item.id);
+                        }}
                         title={item.isStarred ? 'Unstar' : 'Pin to top'}
                         className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
                           item.isStarred
                             ? 'text-amber-500 bg-amber-50 border border-amber-300 shadow-2xs'
-                            : 'text-slate-300 hover:text-amber-400 hover:bg-slate-100'
+                            : 'text-stone-300 hover:text-amber-500 hover:bg-stone-100'
                         }`}
                       >
-                        <Star className={`w-3.5 h-3.5 ${item.isStarred ? 'fill-amber-400' : ''}`} />
+                        <Star className={`w-3.5 h-3.5 ${item.isStarred ? 'fill-[#F0BB58] text-[#F0BB58]' : ''}`} />
                       </button>
 
                       {/* Promote to Task */}
@@ -493,7 +496,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                           type="button"
                           onClick={(e) => handlePromoteToTask(item, e)}
                           title="Convert to Today Task"
-                          className="px-2 py-1 bg-[#FFE873] hover:bg-[#FED7AA] border border-[#18181B] rounded-lg text-[9px] font-black text-[#18181B] flex items-center gap-0.5 shadow-2xs active:scale-95 cursor-pointer"
+                          className="px-2 py-1 bg-[#F0BB58] hover:bg-[#E09F3E] border border-[#24201D] rounded-lg text-[9px] font-black text-[#24201D] flex items-center gap-0.5 shadow-2xs active:scale-95 cursor-pointer"
                         >
                           <Send className="w-2.5 h-2.5" />
                           <span>Task</span>
@@ -503,9 +506,12 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                       {/* Delete */}
                       <button
                         type="button"
-                        onClick={(e) => handleDeleteItem(item.id, e)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteItem(item.id);
+                        }}
                         title="Delete"
-                        className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
+                        className="w-6 h-6 rounded-lg flex items-center justify-center text-stone-300 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -518,8 +524,8 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
 
           {/* Footer Actions */}
           {items.length > 0 && onQuickCreateTask && (
-            <div className="pt-2 border-t border-[#18181B]/15 flex items-center justify-between gap-2">
-              <span className="text-[10px] font-bold text-slate-500">
+            <div className="pt-2 border-t border-[#24201D]/15 flex items-center justify-between gap-2">
+              <span className="text-[10px] font-bold text-[#6B635B]">
                 {items.filter((i) => !i.isCompleted).length} pending
               </span>
 
@@ -527,7 +533,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                 <button
                   type="button"
                   onClick={handleImportAllPending}
-                  className="px-3 py-1.5 bg-[#E8DCFF] hover:bg-[#D8C4FF] border-[1.5px] border-[#18181B] rounded-xl text-[10px] font-black text-[#18181B] flex items-center gap-1 shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
+                  className="px-3 py-1.5 bg-[#DDE8DE] hover:bg-[#CADBCF] border-[1.5px] border-[#24201D] rounded-xl text-[10px] font-black text-[#2D503C] flex items-center gap-1 shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
                 >
                   <Send className="w-3 h-3" />
                   <span>Import All to Today Tasks</span>

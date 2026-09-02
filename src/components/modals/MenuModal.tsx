@@ -11,6 +11,7 @@ import {
   Calendar,
   Lock,
   Moon,
+  Sparkles,
 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 import { isPinSet } from '../../lib/securityService';
@@ -22,6 +23,7 @@ interface MenuModalProps {
   activeTab: TabView;
   onSelectTab: (tab: TabView) => void;
   onOpenSettings: () => void;
+  onOpenSumire?: () => void;
   onOpenEveningReview?: () => void;
   onOpenWeeklyInfographic?: () => void;
   onOpenCalendarExport?: () => void;
@@ -34,6 +36,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
   activeTab,
   onSelectTab,
   onOpenSettings,
+  onOpenSumire,
   onOpenEveningReview,
   onOpenWeeklyInfographic,
   onOpenCalendarExport,
@@ -83,6 +86,36 @@ export const MenuModal: React.FC<MenuModalProps> = ({
             <X className="w-4 h-4 stroke-[2.5]" />
           </button>
         </div>
+
+        {/* Featured: Sumire AI Companion */}
+        {onOpenSumire && (
+          <button
+            onClick={() => {
+              playClickSound();
+              onClose();
+              onOpenSumire();
+            }}
+            className="w-full p-3.5 rounded-2xl bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[1.75px] border-[#24201D] flex items-center justify-between transition-all cursor-pointer text-left shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#3D6B52] text-white border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
+                <Sparkles className="w-5 h-5 text-[#F0BB58]" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <h4 className="text-xs font-black text-[#2D503C] font-display uppercase tracking-wide">
+                    Sumire AI Companion
+                  </h4>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#3D6B52] animate-ping" />
+                </div>
+                <p className="text-[10px] text-[#2D503C]/80 font-medium">
+                  Smart coaching, goal breakdown & reflections
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[#2D503C] group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        )}
 
         {/* Section 1: Views & Hubs */}
         <div className="space-y-1.5">

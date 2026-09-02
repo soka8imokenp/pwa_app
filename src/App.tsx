@@ -329,11 +329,10 @@ export function App() {
           )}
         </main>
 
-        {/* Persistent Symmetrical Bottom Nav Dock */}
+        {/* Persistent Symmetrical 4-Item Bottom Nav Dock */}
         <BottomNav
           activeTab={activeTab}
           onChangeTab={setActiveTab}
-          onOpenSumire={() => setIsSumireOpen(true)}
           onOpenMenu={() => setIsMenuOpen(true)}
         />
 
@@ -385,6 +384,7 @@ export function App() {
           activeTab={activeTab}
           onSelectTab={setActiveTab}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenSumire={() => setIsSumireOpen(true)}
           onOpenEveningReview={() => setIsEveningReviewOpen(true)}
           onOpenWeeklyInfographic={() => setIsWeeklyInfographicOpen(true)}
           onOpenCalendarExport={() => setIsCalendarExportOpen(true)}

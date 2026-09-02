@@ -48,7 +48,7 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           <div>
-            <span className="text-[10px] font-bold text-[#6B635B] uppercase tracking-wider block leading-none">
+            <span className="text-[10px] font-bold text-[#6B635B] uppercase tracking-wider block leading-none font-display">
               Daily Planner
             </span>
             <h1 className="text-sm font-bold font-display text-[#24201D] tracking-tight leading-tight mt-0.5">
@@ -59,7 +59,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right: Streak & Settings */}
         <div className="flex items-center gap-2">
-          {/* Flame Streak Pill (Click to open Streak screen) */}
+          {/* Flame Streak Pill */}
           <button
             onClick={() => {
               playClickSound();

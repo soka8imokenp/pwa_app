@@ -12,8 +12,6 @@ import {
   Target,
   Heart,
   Coffee,
-  RotateCcw,
-  Calendar,
   Layers,
 } from 'lucide-react';
 import type { HabitWithStats } from '../../types';
@@ -32,51 +30,39 @@ interface HabitsPageProps {
 export const renderHabitLucideIcon = (iconKey?: string) => {
   switch (iconKey?.toLowerCase()) {
     case 'water':
-    case '💧':
-      return <Droplets className="w-4 h-4 text-sky-700" />;
+      return <Droplets className="w-4 h-4 text-[#476C85]" />;
     case 'book':
     case 'reading':
-    case '📖':
-    case '📚':
-      return <BookOpen className="w-4 h-4 text-amber-700" />;
+      return <BookOpen className="w-4 h-4 text-[#854D0E]" />;
     case 'stretch':
-    case 'posture':
     case 'activity':
     case 'gym':
-    case '🧘':
-    case '💪':
-      return <Activity className="w-4 h-4 text-emerald-700" />;
+      return <Activity className="w-4 h-4 text-[#2D503C]" />;
     case 'sleep':
     case 'night':
-    case '🌙':
-    case '🛌':
-      return <Moon className="w-4 h-4 text-purple-700" />;
+      return <Moon className="w-4 h-4 text-[#574B3E]" />;
     case 'flame':
     case 'fire':
-      return <Flame className="w-4 h-4 text-amber-600 fill-amber-400" />;
+      return <Flame className="w-4 h-4 text-[#C25E40] fill-[#E09F3E]" />;
     case 'target':
-    case '🎯':
-      return <Target className="w-4 h-4 text-rose-700" />;
+      return <Target className="w-4 h-4 text-[#C25E40]" />;
     case 'heart':
-    case '❤️':
-      return <Heart className="w-4 h-4 text-rose-600" />;
+      return <Heart className="w-4 h-4 text-[#C25E40]" />;
     case 'coffee':
-    case '☕':
-      return <Coffee className="w-4 h-4 text-amber-800" />;
+      return <Coffee className="w-4 h-4 text-[#854D0E]" />;
     case 'zap':
     case 'energy':
-    case '⚡':
     default:
-      return <Zap className="w-4 h-4 text-amber-700" />;
+      return <Zap className="w-4 h-4 text-[#3D6B52]" />;
   }
 };
 
 const STARTER_TEMPLATES = [
-  { title: 'Hydrate 2.5L Water', icon: 'water', color: '#BAE6FD' },
-  { title: 'Read 20 Pages', icon: 'book', color: '#FEF08A' },
-  { title: 'Morning Workout & Stretch', icon: 'stretch', color: '#FED7AA' },
-  { title: 'Code Deep Work (2h)', icon: 'zap', color: '#E8DCFF' },
-  { title: 'Sleep Before 11:30 PM', icon: 'sleep', color: '#D1FBE4' },
+  { title: 'Hydrate 2.5L Water', icon: 'water', color: '#DEE8EF' },
+  { title: 'Read 20 Pages', icon: 'book', color: '#FBECCF' },
+  { title: 'Morning Workout & Stretch', icon: 'stretch', color: '#DDE8DE' },
+  { title: 'Deep Focus Session', icon: 'zap', color: '#F7E3DC' },
+  { title: 'Sleep Before 11:30 PM', icon: 'sleep', color: '#E8E0D2' },
 ];
 
 export const HabitsPage: React.FC<HabitsPageProps> = ({
@@ -89,7 +75,7 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
 }) => {
   const [quickTitle, setQuickTitle] = useState('');
   const [quickIcon, setQuickIcon] = useState('zap');
-  const [quickColor, setQuickColor] = useState('#FFE873');
+  const [quickColor, setQuickColor] = useState('#DDE8DE');
   const [isQuickAdding, setIsQuickAdding] = useState(false);
 
   const completedTodayCount = habits.filter((h) => h.completedToday).length;
@@ -110,7 +96,7 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
             particleCount: 75,
             spread: 70,
             origin: { y: 0.6 },
-            colors: ['#D1FBE4', '#FFE873', '#E8DCFF'],
+            colors: ['#3D6B52', '#E09F3E', '#FBECCF'],
           });
         }, 120);
       }
@@ -134,21 +120,21 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
       particleCount: 30,
       spread: 45,
       origin: { y: 0.7 },
-      colors: ['#FFE873', '#E8DCFF', '#D1FBE4'],
+      colors: ['#3D6B52', '#E09F3E', '#DEE8EF'],
     });
   };
 
   return (
-    <div className="w-full space-y-4 pb-24 font-body select-none">
+    <div className="w-full space-y-3.5 pb-24 font-body select-none">
       
       {/* 1. Habit Progress & Streaks Card */}
-      <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-3">
+      <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
-              Habit Streaks & Consistency
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block font-display">
+              Habit Consistency
             </span>
-            <h2 className="text-sm font-black font-display uppercase tracking-tight text-[#18181B] mt-0.5">
+            <h2 className="text-sm font-bold font-display text-[#24201D] mt-0.5">
               {totalHabits === 0
                 ? 'No Active Habits'
                 : `${completedTodayCount} of ${totalHabits} Completed Today`}
@@ -156,16 +142,16 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center gap-1 px-2.5 py-1 bg-[#FEF08A] border-[1.5px] border-[#18181B] rounded-xl shadow-2xs">
-              <Flame className="w-3.5 h-3.5 text-amber-600 fill-amber-400" />
-              <span className="text-[11px] font-black text-[#18181B] font-mono-num">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#FBECCF] border border-[#24201D] rounded-xl shadow-2xs">
+              <Flame className="w-3.5 h-3.5 text-[#C25E40] fill-[#E09F3E]" />
+              <span className="text-[11px] font-black text-[#24201D] font-mono-num">
                 {bestStreak}d best
               </span>
             </div>
 
             <span
-              className={`text-[11px] font-black font-mono-num px-2.5 py-1 rounded-xl border border-[#18181B] shadow-2xs ${
-                isAllDone ? 'bg-[#D1FBE4] text-emerald-900' : 'bg-[#FAF7F2] text-[#18181B]'
+              className={`text-[11px] font-black font-mono-num px-2.5 py-1 rounded-xl border border-[#24201D] shadow-2xs ${
+                isAllDone ? 'bg-[#3D6B52] text-white' : 'bg-[#F4F0EA] text-[#24201D]'
               }`}
             >
               {habitScore}%
@@ -175,13 +161,10 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
 
         {/* Progress Bar */}
         {totalHabits > 0 && (
-          <div className="w-full h-2.5 bg-[#FAF7F2] border-[1.25px] border-[#18181B] rounded-full overflow-hidden shadow-2xs">
+          <div className="w-full h-2.5 bg-[#F4F0EA] border border-[#24201D] rounded-full overflow-hidden p-[1px] shadow-2xs">
             <div
-              className="h-full transition-all duration-300 rounded-full"
-              style={{
-                width: `${habitScore}%`,
-                backgroundColor: isAllDone ? '#4ADE80' : '#FFE873',
-              }}
+              className="h-full transition-all duration-300 rounded-full bg-[#3D6B52]"
+              style={{ width: `${habitScore}%` }}
             />
           </div>
         )}
@@ -190,8 +173,8 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
       {/* 2. Habits Header & Add Button */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-1.5">
-          <Layers className="w-4 h-4 text-slate-700" />
-          <span className="text-xs font-black font-display text-slate-700 uppercase tracking-wider">
+          <Layers className="w-4 h-4 text-[#6B635B]" />
+          <span className="text-xs font-black font-display text-[#24201D] uppercase tracking-wider">
             Daily Habits ({totalHabits})
           </span>
         </div>
@@ -203,9 +186,9 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
               playClickSound();
               setIsQuickAdding(!isQuickAdding);
             }}
-            className="px-2.5 py-1 bg-[#FAF7F2] hover:bg-white border-[1.5px] border-[#18181B] rounded-xl text-[10px] font-black text-[#18181B] shadow-2xs active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+            className="px-2.5 py-1 bg-[#F4F0EA] hover:bg-stone-200 border border-[#24201D] rounded-xl text-[10px] font-black text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer flex items-center gap-1"
           >
-            <Plus className="w-3 h-3 stroke-[3]" />
+            <Plus className="w-3 h-3 stroke-[2.5]" />
             <span>Quick</span>
           </button>
 
@@ -215,9 +198,9 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
               playClickSound();
               onOpenAddHabit();
             }}
-            className="px-3 py-1 bg-[#FFE873] hover:bg-[#FED7AA] border-[1.5px] border-[#18181B] rounded-xl text-[10px] font-black text-[#18181B] shadow-2xs active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1"
+            className="px-3 py-1 bg-[#3D6B52] hover:bg-[#345B45] text-white border border-[#24201D] rounded-xl text-[10px] font-black shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1"
           >
-            <Plus className="w-3 h-3 stroke-[3]" />
+            <Plus className="w-3 h-3 stroke-[2.5]" />
             <span>New Habit</span>
           </button>
         </div>
@@ -227,16 +210,16 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
       {isQuickAdding && (
         <form
           onSubmit={handleQuickAddSubmit}
-          className="p-3 bg-[#FEFCE8] border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-2.5 animate-in fade-in duration-150"
+          className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5 animate-in fade-in duration-150"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-amber-900">
+            <span className="text-[10px] font-black uppercase text-[#6B635B] font-display">
               Fast Add Habit
             </span>
             <button
               type="button"
               onClick={() => setIsQuickAdding(false)}
-              className="text-[10px] font-bold text-slate-400 hover:text-slate-700 cursor-pointer"
+              className="text-[10px] font-bold text-[#6B635B] hover:text-[#24201D] cursor-pointer"
             >
               Cancel
             </button>
@@ -250,12 +233,12 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
               value={quickTitle}
               onChange={(e) => setQuickTitle(e.target.value)}
               placeholder="e.g. Read 15 mins or Meditate"
-              className="flex-1 px-3 py-2 bg-white border-[1.5px] border-[#18181B] rounded-xl text-xs font-bold text-[#18181B] placeholder:text-slate-400 outline-none shadow-2xs"
+              className="flex-1 px-3 py-2 bg-[#F4F0EA] border border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-[#A89F91] outline-none shadow-2xs"
             />
             <button
               type="submit"
               disabled={!quickTitle.trim()}
-              className="px-3.5 py-2 bg-[#18181B] text-white disabled:opacity-40 rounded-xl text-xs font-black shadow-2xs active:scale-95 cursor-pointer"
+              className="px-3.5 py-2 bg-[#3D6B52] text-white disabled:opacity-40 rounded-xl text-xs font-black shadow-2xs active:scale-95 cursor-pointer"
             >
               Create
             </button>
@@ -273,8 +256,8 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
                 }}
                 className={`w-7 h-7 rounded-lg border flex items-center justify-center cursor-pointer transition-all ${
                   quickIcon === k
-                    ? 'bg-[#FFE873] border-[#18181B] shadow-2xs scale-105 ring-1 ring-[#18181B]'
-                    : 'bg-white border-[#18181B]/20'
+                    ? 'bg-[#3D6B52] text-white border-[#24201D] shadow-2xs scale-105'
+                    : 'bg-[#F4F0EA] border-[#24201D]/20 hover:border-[#24201D]'
                 }`}
               >
                 {renderHabitLucideIcon(k)}
@@ -285,18 +268,18 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
       )}
 
       {/* 3. Habits List */}
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {totalHabits === 0 ? (
-          <div className="p-6 bg-white border-[1.75px] border-dashed border-[#18181B]/30 rounded-2xl text-center space-y-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#FEF08A] border-[1.5px] border-[#18181B] flex items-center justify-center mx-auto shadow-2xs">
-              <Flame className="w-5 h-5 text-amber-600 fill-amber-400" />
+          <div className="p-6 bg-white border-[1.75px] border-dashed border-[#24201D]/25 rounded-2xl text-center space-y-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#FBECCF] border border-[#24201D] flex items-center justify-center mx-auto shadow-2xs">
+              <Flame className="w-5 h-5 text-[#C25E40] fill-[#E09F3E]" />
             </div>
             <div>
-              <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
+              <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
                 No Habits Tracked Yet
               </h4>
-              <p className="text-[10px] text-slate-500 font-bold mt-0.5">
-                Pick a starter template below or create your own custom daily streak!
+              <p className="text-[10px] text-[#6B635B] font-bold mt-0.5">
+                Pick a template below or create your custom daily streak!
               </p>
             </div>
 
@@ -307,20 +290,20 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
                   key={tmpl.title}
                   type="button"
                   onClick={() => handleApplyTemplate(tmpl)}
-                  className="p-2 bg-[#FAF7F2] hover:bg-[#FFE873]/30 border-[1.5px] border-[#18181B] rounded-xl flex items-center justify-between text-left shadow-2xs active:scale-95 transition-all cursor-pointer"
+                  className="p-2 bg-[#F4F0EA] hover:bg-[#DDE8DE] border border-[#24201D] rounded-xl flex items-center justify-between text-left shadow-2xs active:scale-95 transition-all cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <div
-                      className="w-7 h-7 rounded-lg border border-[#18181B] flex items-center justify-center shrink-0"
+                      className="w-7 h-7 rounded-lg border border-[#24201D] flex items-center justify-center shrink-0"
                       style={{ backgroundColor: tmpl.color }}
                     >
                       {renderHabitLucideIcon(tmpl.icon)}
                     </div>
-                    <span className="text-xs font-bold text-[#18181B] truncate">
+                    <span className="text-xs font-bold text-[#24201D] truncate">
                       {tmpl.title}
                     </span>
                   </div>
-                  <Plus className="w-3.5 h-3.5 text-slate-500 stroke-[3] shrink-0" />
+                  <Plus className="w-3.5 h-3.5 text-[#6B635B] stroke-[2.5] shrink-0" />
                 </button>
               ))}
             </div>
@@ -329,7 +312,7 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
               <button
                 type="button"
                 onClick={onOpenAddHabit}
-                className="px-5 py-2.5 bg-[#FFE873] hover:bg-[#FED7AA] border-[1.75px] border-[#18181B] rounded-xl text-xs font-black text-[#18181B] shadow-2xs active:translate-y-0.5 cursor-pointer"
+                className="px-5 py-2.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border border-[#24201D] rounded-xl text-xs font-black shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 cursor-pointer"
               >
                 + Create Custom Habit
               </button>
@@ -339,31 +322,31 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
           habits.map((habit) => (
             <div
               key={habit.id}
-              className={`p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] flex flex-col gap-3 transition-all ${
-                habit.completedToday ? 'bg-[#FAFDF9]' : ''
+              className={`p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex flex-col gap-2.5 transition-all ${
+                habit.completedToday ? 'bg-stone-50/80' : ''
               }`}
             >
               {/* Top Row: Icon + Title + Streaks + Checkbox + Delete */}
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div
-                    className="w-10 h-10 rounded-xl border-[1.5px] border-[#18181B] flex items-center justify-center shrink-0 shadow-2xs"
-                    style={{ backgroundColor: habit.color || '#FFE873' }}
+                    className="w-9 h-9 rounded-xl border border-[#24201D] flex items-center justify-center shrink-0 shadow-2xs"
+                    style={{ backgroundColor: habit.color || '#DDE8DE' }}
                   >
                     {renderHabitLucideIcon(habit.icon)}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-xs font-black text-[#18181B] truncate">
+                    <h3 className={`text-xs font-bold text-[#24201D] truncate ${habit.completedToday ? 'line-through text-[#6B635B]' : ''}`}>
                       {habit.title}
                     </h3>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-700 font-mono-num">
-                        <Flame className="w-3 h-3 text-amber-600 fill-amber-400" />
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#854D0E] font-mono-num">
+                        <Flame className="w-3 h-3 text-[#C25E40] fill-[#E09F3E]" />
                         {habit.currentStreak}d streak
                       </span>
-                      <span className="text-slate-300">•</span>
-                      <span className="text-[10px] font-bold text-slate-400 font-mono-num">
+                      <span className="text-stone-300">•</span>
+                      <span className="text-[10px] font-bold text-[#6B635B] font-mono-num">
                         best: {habit.longestStreak}d
                       </span>
                     </div>
@@ -376,16 +359,16 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
                     type="button"
                     onClick={() => habit.id && handleToggle(habit.id, selectedDate, habit.completedToday)}
                     title={habit.completedToday ? 'Mark incomplete' : 'Complete today'}
-                    className={`w-10 h-10 rounded-xl border-[1.75px] border-[#18181B] flex items-center justify-center transition-transform active:scale-90 cursor-pointer shadow-2xs ${
+                    className={`w-9 h-9 rounded-xl border-[1.75px] border-[#24201D] flex items-center justify-center transition-transform active:scale-90 cursor-pointer shadow-2xs ${
                       habit.completedToday
-                        ? 'bg-[#BEF264] text-[#18181B]'
-                        : 'bg-[#FAF7F2] hover:bg-white text-slate-300'
+                        ? 'bg-[#3D6B52] text-white shadow-[1px_1px_0px_#24201D]'
+                        : 'bg-[#F4F0EA] hover:bg-stone-200 text-stone-300'
                     }`}
                   >
                     {habit.completedToday ? (
-                      <Check className="w-5 h-5 stroke-[3]" />
+                      <Check className="w-4 h-4 stroke-[3]" />
                     ) : (
-                      <div className="w-3 h-3 rounded-md border border-[#18181B]/30" />
+                      <div className="w-3 h-3 rounded-md border border-[#24201D]/25" />
                     )}
                   </button>
 
@@ -399,7 +382,7 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
                       }
                     }}
                     title="Delete habit"
-                    className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-rose-50 border border-[#18181B]/20 hover:border-rose-400 flex items-center justify-center text-slate-400 hover:text-rose-600 cursor-pointer shadow-2xs active:scale-95 transition-colors"
+                    className="w-7 h-7 rounded-lg bg-[#F4F0EA] hover:bg-rose-50 border border-[#24201D]/20 hover:border-rose-400 flex items-center justify-center text-[#6B635B] hover:text-rose-600 cursor-pointer shadow-2xs active:scale-95 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -407,8 +390,8 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
               </div>
 
               {/* Bottom Row: 7-Day History Interactive Tracker Pills */}
-              <div className="flex items-center justify-between pt-2 border-t border-[#18181B]/15">
-                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+              <div className="flex items-center justify-between pt-2 border-t border-[#24201D]/10">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-[#6B635B]">
                   Past 7 Days
                 </span>
 
@@ -426,11 +409,11 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
                         onClick={() => habit.id && handleToggle(habit.id, log.date, log.completed)}
                         className={`w-7 h-8 rounded-lg border text-[9px] font-black flex flex-col items-center justify-center transition-all cursor-pointer select-none ${
                           log.completed
-                            ? 'bg-[#18181B] text-white border-[#18181B] shadow-2xs'
+                            ? 'bg-[#3D6B52] text-white border-[#24201D] shadow-2xs'
                             : isSelected
-                            ? 'bg-[#FFE873] text-[#18181B] border-[#18181B] shadow-2xs'
-                            : 'bg-[#FAF7F2] text-slate-400 border-[#18181B]/20 hover:border-[#18181B]'
-                        } ${isSelected ? 'ring-1 ring-[#18181B]' : ''}`}
+                            ? 'bg-[#F0BB58] text-[#24201D] border-[#24201D] shadow-2xs'
+                            : 'bg-[#F4F0EA] text-[#6B635B] border-[#24201D]/20 hover:border-[#24201D]'
+                        }`}
                         title={`${log.date}: ${log.completed ? 'Completed' : 'Not completed'}`}
                       >
                         <span className="text-[8px] font-bold opacity-75">{dayLetter}</span>

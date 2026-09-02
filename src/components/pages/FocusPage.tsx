@@ -298,53 +298,48 @@ export const FocusPage: React.FC<FocusPageProps> = ({
           ))}
         </div>
 
-        {/* Title Input Panel */}
-        <div className="p-3 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-2xl space-y-1">
-          <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 block px-1">
-            Title
-          </label>
-          <div className="flex items-center gap-2 bg-white border-[1.5px] border-[#24201D] rounded-xl px-3 py-2 shadow-2xs">
-            <input
-              type="text"
-              value={goalTitle}
-              onChange={(e) => setGoalTitle(e.target.value)}
-              placeholder="Goal or task title..."
-              className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-stone-400 bg-transparent"
-            />
-            {goalTitle && (
-              <button
-                type="button"
-                onClick={() => {
-                  setGoalTitle('');
-                  onClearSelectedTask();
-                }}
-                className="w-4 h-4 rounded-full bg-stone-100 flex items-center justify-center text-[10px] font-black text-stone-500 hover:text-[#24201D] cursor-pointer"
-              >
-                ×
-              </button>
-            )}
-          </div>
+        {/* Title Input */}
+        <div className="flex items-center gap-2 bg-[#F4F0EA] border border-[#24201D] rounded-xl px-3 py-2 shadow-2xs">
+          <input
+            type="text"
+            value={goalTitle}
+            onChange={(e) => setGoalTitle(e.target.value)}
+            placeholder="Focus goal or task title..."
+            className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
+          />
+          {goalTitle && (
+            <button
+              type="button"
+              onClick={() => {
+                setGoalTitle('');
+                onClearSelectedTask();
+              }}
+              className="w-4 h-4 rounded-full bg-stone-200/80 flex items-center justify-center text-[10px] font-black text-[#6B635B] hover:text-[#24201D] cursor-pointer"
+            >
+              ×
+            </button>
+          )}
         </div>
 
         {/* Large Digits Display & Status Indicator */}
-        <div className="py-2 text-center space-y-1.5">
+        <div className="py-3 text-center space-y-2">
           <div className="text-6xl sm:text-7xl font-black font-display font-mono-num text-[#24201D] tracking-tight">
             {displayTime}
           </div>
 
           <div className="flex items-center justify-center gap-2">
             {isRunning ? (
-              <span className="px-3 py-1 bg-[#EEF5F0] border border-[#3D6B52] rounded-full text-[10px] font-black font-mono-num text-[#2D503C] shadow-2xs">
+              <span className="px-3 py-1 bg-[#DDE8DE] border border-[#3D6B52] rounded-full text-[10px] font-black font-mono-num text-[#2D503C] shadow-2xs">
                 Active • {currentElapsedMinutes}m elapsed
               </span>
             ) : elapsedFocusSeconds > 0 ? (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F9E2E5] border-[1.5px] border-[#C25E40] rounded-full text-xs font-black font-mono-num text-[#8C2B39] shadow-[1px_1px_0px_#C25E40] animate-in fade-in zoom-in-95 duration-150">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F7E3DC] border-[1.5px] border-[#C25E40] rounded-full text-xs font-black font-mono-num text-[#9A3412] shadow-[1px_1px_0px_#C25E40] animate-in fade-in zoom-in-95 duration-150">
                 <span className="w-2 h-2 rounded-full bg-[#C25E40] animate-ping" />
                 <span>Paused: {formatTime(pausedSeconds)}</span>
               </div>
             ) : (
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-stone-400">
-                Ready
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#6B635B]">
+                Ready to Focus
               </span>
             )}
           </div>
@@ -361,8 +356,8 @@ export const FocusPage: React.FC<FocusPageProps> = ({
                   onClick={() => handleSelectPreset(mins)}
                   className={`px-3.5 py-1 text-xs font-bold font-mono-num rounded-xl border transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-[#F0BB58] border-[#24201D] text-[#24201D] shadow-[1px_1px_0px_#24201D]'
-                      : 'bg-white border-[#24201D]/30 text-[#6B635B] hover:border-[#24201D]'
+                      ? 'bg-[#3D6B52] border-[#24201D] text-white shadow-[1px_1px_0px_#24201D]'
+                      : 'bg-[#F4F0EA] border-[#24201D]/25 text-[#6B635B] hover:border-[#24201D]'
                   }`}
                 >
                   {mins}m

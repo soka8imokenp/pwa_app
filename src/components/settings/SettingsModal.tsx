@@ -418,7 +418,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   type={showKeyText ? 'text' : 'password'}
                   value={geminiKeyInput}
                   onChange={(e) => setGeminiKeyInput(e.target.value)}
-                  placeholder="Вставьте ключ из Google AI Studio..."
+                  placeholder="Paste API key from Google AI Studio..."
                   className="w-full pl-8 pr-3 py-2 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl text-xs font-mono outline-none text-[#24201D]"
                 />
                 <Key className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-2.5" />
@@ -439,7 +439,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onClick={() => setShowKeyText(!showKeyText)}
                 className="text-[10px] font-bold text-[#6B635B] hover:text-[#24201D] cursor-pointer"
               >
-                {showKeyText ? 'Скрыть символы' : 'Показать ключ'}
+                {showKeyText ? 'Hide characters' : 'Show key'}
               </button>
               <a
                 href="https://aistudio.google.com/app/apikey"
@@ -447,7 +447,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 rel="noreferrer"
                 className="text-[10px] font-bold text-[#3D6B52] hover:underline flex items-center gap-1"
               >
-                <span>Получить бесплатный ключ</span>
+                <span>Get free API key</span>
                 <ExternalLink className="w-3 h-3 stroke-[2.25]" />
               </a>
             </div>
@@ -606,7 +606,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
               <div>
                 <span className="text-xs font-black font-display text-[#24201D] block">
-                  Защита и PIN-код
+                  Security & PIN Lock
                 </span>
                 <span className="text-[10px] font-semibold text-[#6B635B] block">
                   {pinConfigured

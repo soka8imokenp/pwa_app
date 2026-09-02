@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
 import {
-  Timer,
   Check,
   Code,
   Palette,
@@ -21,8 +20,6 @@ import { playTaskCheckSound, playSuccessChime, playClickSound } from '../../lib/
 import { startVoiceDictation, stopVoiceDictation, isSpeechRecognitionSupported } from '../../lib/speechRecognition';
 import { DailyMoodAndNote } from '../planner/DailyMoodAndNote';
 import { QuickScratchpadCard } from '../scratchpad/QuickScratchpadCard';
-import { LottiePlayer } from '../common/LottiePlayer';
-import stressManagementAnimation from '../../assets/stress-management.json';
 
 interface PrioritiesPageProps {
   selectedDate: string;
@@ -68,7 +65,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
           particleCount: 75,
           spread: 70,
           origin: { y: 0.6 },
-          colors: ['#FFE873', '#E8DCFF', '#D1FBE4', '#FED7AA'],
+          colors: ['#3D6B52', '#E09F3E', '#F0BB58', '#476C85'],
         });
       }
     }
@@ -98,7 +95,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
 
   const handleToggleVoice = () => {
     if (!isSpeechRecognitionSupported()) {
-      alert('Голосовой ввод поддерживается в Chrome/Edge/Android.');
+      alert('Voice dictation is supported in Chrome/Edge/Android.');
       return;
     }
 
@@ -144,8 +141,8 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
       {/* 1. Daily Progress & Header */}
       <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between gap-3">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block">
-            Today's Focus
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block font-display">
+            Daily Focus
           </span>
           <h2 className="text-sm font-bold font-display text-[#24201D] mt-0.5">
             {completedCount} of {priorityTasks.length} Priorities Completed
@@ -153,9 +150,9 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
         </div>
 
         <div className="flex items-center gap-2.5">
-          <div className="w-20 bg-stone-100 border-[1.5px] border-[#24201D] h-3 rounded-full overflow-hidden p-0.5 shadow-2xs">
+          <div className="w-20 bg-[#F4F0EA] border-[1.5px] border-[#24201D] h-3 rounded-full overflow-hidden p-0.5 shadow-2xs">
             <div
-              className="bg-[#3D6B52] h-full rounded-full transition-all duration-300 border-[1px] border-[#24201D]"
+              className="bg-[#3D6B52] h-full rounded-full transition-all duration-300"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -168,19 +165,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
       {/* 2. Compact Daily Mood & Micro-Note */}
       <DailyMoodAndNote selectedDate={selectedDate} />
 
-      {/* 3. Decorative Lottie Centerpiece Banner */}
-      <div className="w-full flex items-center justify-center py-1 select-none pointer-events-none">
-        <div className="w-40 h-40 flex items-center justify-center">
-          <LottiePlayer
-            animationData={stressManagementAnimation}
-            loop={true}
-            autoplay={true}
-            className="w-full h-full object-contain"
-          />
-        </div>
-      </div>
-
-      {/* 4. Top 3 Priorities Section */}
+      {/* 3. Top 3 Priorities Section */}
       <div className="space-y-2.5">
         <div className="flex items-center justify-between px-1">
           <span className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
@@ -204,7 +189,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
             <div
               key={task.id || idx}
               className={`p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] transition-all space-y-2.5 ${
-                task.isCompleted ? 'bg-stone-50/80 opacity-80' : ''
+                task.isCompleted ? 'bg-stone-50/80 opacity-75' : ''
               }`}
             >
               <div className="flex items-start justify-between gap-2.5">
@@ -260,7 +245,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                 </button>
               </div>
 
-              {/* Subtasks Checklist (Interactive) */}
+              {/* Subtasks Checklist */}
               {task.subtasks && task.subtasks.length > 0 && (
                 <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/15 rounded-xl space-y-1.5">
                   <div className="flex items-center justify-between text-[10px] font-bold text-[#6B635B] uppercase tracking-wider">
@@ -315,7 +300,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
         })}
       </div>
 
-      {/* 5. Minimalist Quick Add Input */}
+      {/* 4. Minimalist Quick Add Input */}
       <form onSubmit={handleQuickAdd} className="flex items-center gap-2 pt-1">
         <div className="relative flex-1">
           <input
@@ -345,7 +330,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
         </button>
       </form>
 
-      {/* 6. Bottom Quick Scratchpad Card */}
+      {/* 5. Bottom Quick Scratchpad Card */}
       <div className="pt-2">
         <QuickScratchpadCard
           selectedDate={selectedDate}

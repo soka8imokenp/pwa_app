@@ -12,6 +12,7 @@ import {
   Lock,
   Moon,
   Flower2,
+  User,
 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 import { isPinSet } from '../../lib/securityService';
@@ -23,6 +24,7 @@ interface MenuModalProps {
   activeTab: TabView;
   onSelectTab: (tab: TabView) => void;
   onOpenSettings: () => void;
+  onOpenProfile?: () => void;
   onOpenSumire?: () => void;
   onOpenEveningReview?: () => void;
   onOpenWeeklyInfographic?: () => void;
@@ -36,6 +38,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
   activeTab,
   onSelectTab,
   onOpenSettings,
+  onOpenProfile,
   onOpenSumire,
   onOpenEveningReview,
   onOpenWeeklyInfographic,
@@ -114,6 +117,33 @@ export const MenuModal: React.FC<MenuModalProps> = ({
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-[#2D503C] group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        )}
+
+        {/* User Profile & Account Entry */}
+        {onOpenProfile && (
+          <button
+            onClick={() => {
+              playClickSound();
+              onClose();
+              onOpenProfile();
+            }}
+            className="w-full p-3.5 rounded-2xl bg-[#FAF8F5] hover:bg-[#F4F0EA] border-[1.75px] border-[#24201D] flex items-center justify-between transition-all cursor-pointer text-left shadow-2xs active:translate-y-0.5 group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#FBECCF] border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0">
+                <User className="w-5 h-5 text-[#854D0E] stroke-[2.25]" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-xs font-black text-[#24201D] font-display uppercase tracking-wide truncate">
+                  User Profile
+                </h4>
+                <p className="text-[10px] text-[#6B635B] font-medium truncate">
+                  Identity, mascot avatar & account data
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-stone-400 group-hover:translate-x-0.5 transition-transform" />
           </button>
         )}
 
@@ -298,7 +328,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                 <h4 className="text-xs font-black text-white font-display uppercase tracking-wide">
                   Settings
                 </h4>
-                <p className="text-[10px] text-white/70 font-medium">Preferences, Sound, Cloud Sync</p>
+                <p className="text-[10px] text-white/70 font-medium">Sound, Security, AI & Backup</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-white/60" />

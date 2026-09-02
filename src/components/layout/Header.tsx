@@ -7,6 +7,7 @@ interface HeaderProps {
   streakCount: number;
   userName?: string;
   onOpenSettings: () => void;
+  onOpenProfile?: () => void;
   onOpenStreak?: () => void;
 }
 
@@ -14,6 +15,7 @@ export const Header: React.FC<HeaderProps> = ({
   streakCount,
   userName = 'Alex',
   onOpenSettings,
+  onOpenProfile,
   onOpenStreak,
 }) => {
   const [avatarId, setAvatarId] = useState<string>('sumire-scout');
@@ -39,10 +41,17 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Left: User Profile & Greeting */}
         <div className="flex items-center gap-2.5">
           <button
-            onClick={onOpenSettings}
+            onClick={() => {
+              playClickSound();
+              if (onOpenProfile) {
+                onOpenProfile();
+              } else {
+                onOpenSettings();
+              }
+            }}
             className="w-10 h-10 rounded-2xl border-[1.75px] border-[#24201D] flex items-center justify-center shadow-[1.5px_1.5px_0px_#24201D] shrink-0 cursor-pointer active:translate-y-0.5 active:shadow-none transition-all p-0.5"
             style={{ backgroundColor: activeAvatar.bg }}
-            title="Settings & Profile"
+            title="User Profile & Identity"
           >
             {activeAvatar.renderSvg('w-full h-full')}
           </button>

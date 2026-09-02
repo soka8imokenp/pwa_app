@@ -12,6 +12,7 @@ import { LinksPage } from './components/pages/LinksPage';
 import { AddTaskModal } from './components/planner/AddTaskModal';
 import { AddHabitModal } from './components/habits/AddHabitModal';
 import { SettingsModal } from './components/settings/SettingsModal';
+import { ProfileModal } from './components/profile/ProfileModal';
 import { SmartBraindumpModal } from './components/modals/SmartBraindumpModal';
 import { EveningReviewModal } from './components/modals/EveningReviewModal';
 import { SumireCompanionModal } from './components/modals/SumireCompanionModal';
@@ -58,6 +59,7 @@ export function App() {
   const [addTaskPriorityDefault, setAddTaskPriorityDefault] = useState(false);
   const [isAddHabitOpen, setIsAddHabitOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isBraindumpOpen, setIsBraindumpOpen] = useState(false);
   const [isEveningReviewOpen, setIsEveningReviewOpen] = useState(false);
   const [isSumireOpen, setIsSumireOpen] = useState(false);
@@ -229,6 +231,7 @@ export function App() {
           streakCount={overallStreak}
           userName={displayName}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenProfile={() => setIsProfileOpen(true)}
           onOpenStreak={() => setIsStreakModalOpen(true)}
         />
 
@@ -384,11 +387,21 @@ export function App() {
           activeTab={activeTab}
           onSelectTab={setActiveTab}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenProfile={() => setIsProfileOpen(true)}
           onOpenSumire={() => setIsSumireOpen(true)}
           onOpenEveningReview={() => setIsEveningReviewOpen(true)}
           onOpenWeeklyInfographic={() => setIsWeeklyInfographicOpen(true)}
           onOpenCalendarExport={() => setIsCalendarExportOpen(true)}
           onLockApp={handleLockApp}
+        />
+
+        <ProfileModal
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+          currentUser={currentUser}
+          onUpdateProfile={(updated) => setCurrentUser(updated)}
+          onLogout={handleLogout}
+          streakCount={overallStreak}
         />
 
         <SettingsModal
@@ -399,8 +412,6 @@ export function App() {
           isSoundMuted={soundMutedState}
           onToggleSound={handleToggleSound}
           onDataChanged={() => {}}
-          currentUser={currentUser}
-          onLogout={handleLogout}
           onShowUpdateModal={(info) => setAvailableUpdate(info)}
           onLockApp={handleLockApp}
         />

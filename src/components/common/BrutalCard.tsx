@@ -17,21 +17,21 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
   ...props
 }) => {
   const variantStyles = {
-    milk: 'bg-white border-[#18181B] shadow-[2.5px_2.5px_0px_#18181B]',
-    lavender: 'bg-[#F6EFFF] border-[#18181B] shadow-[2.5px_2.5px_0px_#18181B]',
-    lime: 'bg-[#F2FCE2] border-[#18181B] shadow-[2.5px_2.5px_0px_#18181B]',
-    peach: 'bg-[#FFF1E5] border-[#18181B] shadow-[2.5px_2.5px_0px_#18181B]',
-    yellow: 'bg-[#FEFCE8] border-[#18181B] shadow-[2.5px_2.5px_0px_#18181B]',
-    sky: 'bg-[#F0F9FF] border-[#18181B] shadow-[2.5px_2.5px_0px_#18181B]',
+    milk: 'bg-white border-[#24201D] shadow-[2.5px_2.5px_0px_#24201D]',
+    lavender: 'bg-[#F4EFEA] border-[#24201D] shadow-[2.5px_2.5px_0px_#24201D]', // Washi paper soft surface
+    lime: 'bg-[#EEF5F0] border-[#24201D] shadow-[2.5px_2.5px_0px_#24201D]',     // Soft Matcha leaf
+    peach: 'bg-[#FAF0EC] border-[#24201D] shadow-[2.5px_2.5px_0px_#24201D]',    // Baked Terracotta tint
+    yellow: 'bg-[#FCF7ED] border-[#24201D] shadow-[2.5px_2.5px_0px_#24201D]',   // Golden Ochre tint
+    sky: 'bg-[#EFF5F9] border-[#24201D] shadow-[2.5px_2.5px_0px_#24201D]',      // Aizome Indigo tint
   };
 
   return (
     <div
       className={twMerge(
         clsx(
-          'border-[1.5px] rounded-3xl p-5 transition-all duration-150',
+          'border-[1.75px] rounded-3xl p-5 transition-all duration-150',
           variantStyles[variant],
-          hoverEffect && 'hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_#18181B]',
+          hoverEffect && 'hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_#24201D]',
           className
         )
       )}

@@ -16,13 +16,13 @@ export const BrutalBadge: React.FC<BrutalBadgeProps> = ({
   children,
 }) => {
   const variantStyles = {
-    lavender: 'bg-[#F3E8FF] text-[#18181B] border-[#18181B]',
-    lime: 'bg-[#ECFCCB] text-[#18181B] border-[#18181B]',
-    peach: 'bg-[#FFEDD5] text-[#18181B] border-[#18181B]',
-    sky: 'bg-[#E0F2FE] text-[#18181B] border-[#18181B]',
-    yellow: 'bg-[#FEF08A] text-[#18181B] border-[#18181B]',
-    rose: 'bg-[#FFE4E6] text-[#18181B] border-[#18181B]',
-    slate: 'bg-white text-[#18181B] border-[#18181B]',
+    lavender: 'bg-[#E8EFE9] text-[#24201D] border-[#24201D]', // Washi Sage
+    lime: 'bg-[#DDE8DE] text-[#24201D] border-[#24201D]',     // Matcha Leaf
+    peach: 'bg-[#F7E3DC] text-[#24201D] border-[#24201D]',    // Baked Terracotta
+    sky: 'bg-[#DEE8EF] text-[#24201D] border-[#24201D]',      // Aizome Indigo
+    yellow: 'bg-[#FBECCF] text-[#24201D] border-[#24201D]',   // Golden Ochre
+    rose: 'bg-[#F9E2E5] text-[#24201D] border-[#24201D]',     // Soft Plum
+    slate: 'bg-white text-[#24201D] border-[#24201D]',        // Pure Cotton
   };
 
   const sizeStyles = {
@@ -34,7 +34,7 @@ export const BrutalBadge: React.FC<BrutalBadgeProps> = ({
     <span
       className={twMerge(
         clsx(
-          'inline-flex items-center gap-1 border-[1.25px] shadow-[1px_1px_0px_#18181B] select-none',
+          'inline-flex items-center gap-1 border-[1.25px] shadow-[1px_1px_0px_#24201D] select-none',
           variantStyles[variant],
           sizeStyles[size],
           className

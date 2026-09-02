@@ -2,20 +2,44 @@
 
 @layer base {
   :root {
-    --bg-canvas: #FAF7F2;
+    --bg-canvas: #F4F0EA;
     --card-bg: #FFFFFF;
-    --ink-black: #18181B;
-    --neo-yellow: #FFE873;
-    --neo-violet: #E8DCFF;
-    --neo-lime: #D1FBE4;
-    --neo-peach: #FED7AA;
-    --neo-cyan: #BAE6FD;
+    --card-surface: #FAF8F5;
+    --ink-black: #24201D;
+    --ink-muted: #6B635B;
+
+    /* Japanese Editorial Matcha Palette */
+    --neo-matcha: #3D6B52;
+    --neo-matcha-soft: #DDE8DE;
+    --neo-matcha-dark: #2F5440;
+
+    --neo-terracotta: #C25E40;
+    --neo-terracotta-soft: #F7E3DC;
+
+    --neo-ochre: #E09F3E;
+    --neo-ochre-soft: #FBECCF;
+
+    --neo-indigo: #476C85;
+    --neo-indigo-soft: #DEE8EF;
+
+    --neo-sand: #E8E0D2;
+    --neo-sand-soft: #F5EFE6;
+
+    --neo-plum: #B85060;
+    --neo-plum-soft: #F9E2E5;
+
+    /* Semantic Compatibility Variables */
+    --neo-yellow: #F0BB58;
+    --neo-violet: #DDE8DE;
+    --neo-lime: #DDE8DE;
+    --neo-peach: #F7E3DC;
+    --neo-cyan: #DEE8EF;
   }
 
   html, body {
-    background-color: #FAF7F2;
+    background-color: #F4F0EA;
     min-height: 100vh;
-    color: #18181B;
+    color: #24201D;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -44,47 +68,47 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Refined Neo-Brutalist Card Tokens */
+/* Refined Japanese Editorial Neo-Card Tokens */
 .neo-card {
   background-color: #FFFFFF;
-  border: 1.75px solid #18181B;
+  border: 1.75px solid #24201D;
   border-radius: 1.25rem;
-  box-shadow: 2px 2px 0px #18181B;
+  box-shadow: 2px 2px 0px #24201D;
   transition: transform 0.12s ease-out, box-shadow 0.12s ease-out;
 }
 
 .neo-card-hover:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #18181B;
+  box-shadow: 3px 3px 0px #24201D;
 }
 
 .neo-card-hover:active {
   transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0px #18181B;
+  box-shadow: 1px 1px 0px #24201D;
 }
 
 .neo-btn {
-  border: 1.75px solid #18181B;
+  border: 1.75px solid #24201D;
   border-radius: 0.875rem;
-  box-shadow: 1.5px 1.5px 0px #18181B;
+  box-shadow: 1.5px 1.5px 0px #24201D;
   font-weight: 700;
   transition: all 0.1s ease-out;
 }
 
 .neo-btn:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 2.5px 2.5px 0px #18181B;
+  box-shadow: 2.5px 2.5px 0px #24201D;
 }
 
 .neo-btn:active {
   transform: translate(1px, 1px);
-  box-shadow: 0px 0px 0px #18181B;
+  box-shadow: 0px 0px 0px #24201D;
 }
 
 .neo-badge {
-  border: 1.5px solid #18181B;
+  border: 1.5px solid #24201D;
   border-radius: 9999px;
-  box-shadow: 1px 1px 0px #18181B;
+  box-shadow: 1px 1px 0px #24201D;
   font-weight: 700;
 }
 

@@ -52,7 +52,7 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
         <div className="flex items-center gap-1.5">
           <button
             onClick={handlePrevDay}
-            className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0"
+            className="w-8 h-8 rounded-xl bg-[#F4F0EA] hover:bg-stone-200 border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-[1px_1px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0"
             aria-label="Previous day"
           >
             <ChevronLeft className="w-4 h-4 stroke-[2.25]" />
@@ -61,18 +61,18 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
           {/* Centered Date Badge (Click to open Calendar Planner) */}
           <button
             onClick={handleCalendarClick}
-            className="px-3 py-1.5 bg-[#FAF7F2] hover:bg-[#FFE873] border-[1.75px] border-[#18181B] rounded-xl flex items-center gap-2 shadow-[1px_1px_0px_#18181B] cursor-pointer transition-all active:translate-y-0.5"
+            className="px-3 py-1.5 bg-[#F4F0EA] hover:bg-[#F0BB58] border-[1.75px] border-[#24201D] rounded-xl flex items-center gap-2 shadow-[1px_1px_0px_#24201D] cursor-pointer transition-all active:translate-y-0.5"
             title="Open Calendar Planner"
           >
-            <Calendar className="w-3.5 h-3.5 text-[#18181B] stroke-[2.5]" />
-            <span className="text-xs sm:text-sm font-bold font-display text-[#18181B] tracking-tight">
+            <Calendar className="w-3.5 h-3.5 text-[#24201D] stroke-[2.5]" />
+            <span className="text-xs sm:text-sm font-bold font-display text-[#24201D] tracking-tight">
               {formatDisplayDate(selectedDate)}
             </span>
             <span
               className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
                 isTodaySelected
-                  ? 'bg-[#FFE873] text-[#18181B] border border-[#18181B]'
-                  : 'text-slate-600 bg-slate-200/70'
+                  ? 'bg-[#F0BB58] text-[#24201D] border border-[#24201D]'
+                  : 'text-[#6B635B] bg-[#E8E0D2]'
               }`}
             >
               {getRelativeDayLabel(selectedDate)}
@@ -81,7 +81,7 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
 
           <button
             onClick={handleNextDay}
-            className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0"
+            className="w-8 h-8 rounded-xl bg-[#F4F0EA] hover:bg-stone-200 border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-[1px_1px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0"
             aria-label="Next day"
           >
             <ChevronRight className="w-4 h-4 stroke-[2.25]" />
@@ -92,7 +92,7 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
         {!isTodaySelected && (
           <button
             onClick={handleToday}
-            className="absolute right-0 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider neo-btn bg-[#FAF7F2] hover:bg-[#FFE873] text-[#18181B] cursor-pointer shadow-[1px_1px_0px_#18181B]"
+            className="absolute right-0 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider neo-btn bg-[#F4F0EA] hover:bg-[#F0BB58] text-[#24201D] cursor-pointer shadow-[1px_1px_0px_#24201D]"
           >
             Today
           </button>
@@ -110,10 +110,10 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
             }}
             className={`flex flex-col items-center justify-center py-1.5 rounded-xl border-[1.5px] transition-all cursor-pointer select-none ${
               day.isSelected
-                ? 'bg-[#18181B] text-white border-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] -translate-y-0.5'
+                ? 'bg-[#24201D] text-[#FAF8F5] border-[#24201D] shadow-[1.5px_1.5px_0px_#24201D] -translate-y-0.5'
                 : day.isToday
-                ? 'bg-[#FFE873] text-[#18181B] border-[#18181B] shadow-[1px_1px_0px_#18181B]'
-                : 'bg-[#FAF7F2] text-[#18181B] border-slate-200 hover:border-[#18181B]'
+                ? 'bg-[#F0BB58] text-[#24201D] border-[#24201D] shadow-[1px_1px_0px_#24201D]'
+                : 'bg-[#F4F0EA] text-[#24201D] border-stone-300/80 hover:border-[#24201D]'
             }`}
           >
             <span className="text-[9px] font-bold uppercase tracking-wider opacity-80">{day.dayShort}</span>

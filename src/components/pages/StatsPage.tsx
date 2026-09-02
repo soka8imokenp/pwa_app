@@ -85,17 +85,17 @@ export const StatsPage: React.FC<StatsPageProps> = ({
   return (
     <div className="w-full space-y-4 pb-20 font-body select-none">
       {/* 1. Top Level & XP Card */}
-      <div className="neo-card p-5 bg-white space-y-3">
+      <div className="p-5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-[#FFE873] border-[1.75px] border-[#18181B] flex items-center justify-center text-sm font-bold shadow-[1.5px_1.5px_0px_#18181B]">
-              <Crown className="w-5 h-5 text-amber-900 fill-amber-500" />
+            <div className="w-10 h-10 rounded-xl bg-[#FBECCF] border-[1.75px] border-[#24201D] flex items-center justify-center text-sm font-bold shadow-2xs">
+              <Crown className="w-5 h-5 text-[#854D0E] fill-[#F0BB58]" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-none">
+              <span className="text-[10px] font-bold text-[#6B635B] uppercase tracking-wider block leading-none">
                 Mastery Rank
               </span>
-              <h2 className="text-base font-bold font-display text-[#18181B] mt-0.5">
+              <h2 className="text-base font-bold font-display text-[#24201D] mt-0.5">
                 Level {currentLevel} Architect
               </h2>
             </div>
@@ -110,7 +110,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
                 handleShareCard();
               }
             }}
-            className="px-3.5 py-1.5 bg-[#E8DCFF] hover:bg-[#D8C4FF] neo-btn flex items-center gap-1.5 text-xs text-[#18181B] cursor-pointer shadow-2xs active:translate-y-0.5"
+            className="px-3.5 py-1.5 bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[1.5px] border-[#24201D] rounded-xl flex items-center gap-1.5 text-xs font-bold text-[#2D503C] cursor-pointer shadow-2xs active:translate-y-0.5"
           >
             <Share2 className="w-3.5 h-3.5 stroke-[2.25]" />
             <span>Weekly Card</span>
@@ -119,13 +119,13 @@ export const StatsPage: React.FC<StatsPageProps> = ({
 
         {/* XP Progress Bar */}
         <div className="space-y-1">
-          <div className="flex items-center justify-between text-xs font-bold font-mono-num text-slate-500">
+          <div className="flex items-center justify-between text-xs font-bold font-mono-num text-[#6B635B]">
             <span>{xpIntoCurrentLevel} / 500 XP</span>
             <span>{levelProgressPercent}%</span>
           </div>
-          <div className="w-full bg-slate-100 border-[1.5px] border-[#18181B] h-3 rounded-full overflow-hidden p-0.5 shadow-[1px_1px_0px_#18181B]">
+          <div className="w-full bg-[#F4F0EA] border-[1.5px] border-[#24201D] h-3 rounded-full overflow-hidden p-0.5 shadow-2xs">
             <div
-              className="bg-[#FFE873] h-full rounded-full transition-all duration-300 border-[1px] border-[#18181B]"
+              className="bg-[#3D6B52] h-full rounded-full transition-all duration-300 border-[1px] border-[#24201D]"
               style={{ width: `${levelProgressPercent}%` }}
             />
           </div>
@@ -134,32 +134,32 @@ export const StatsPage: React.FC<StatsPageProps> = ({
 
       {/* 2. Key Metrics 3-Column Grid */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="neo-card p-3.5 bg-white text-center space-y-1">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 mx-auto" />
-          <span className="text-lg font-bold font-mono-num text-[#18181B] block">
+        <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] text-center space-y-1">
+          <CheckCircle2 className="w-4 h-4 text-[#3D6B52] mx-auto" />
+          <span className="text-lg font-bold font-mono-num text-[#24201D] block">
             {totalTasksDone}
           </span>
-          <span className="text-[10px] font-bold text-slate-400 uppercase">
+          <span className="text-[10px] font-bold text-[#6B635B] uppercase">
             Tasks Done
           </span>
         </div>
 
-        <div className="neo-card p-3.5 bg-white text-center space-y-1">
-          <Clock className="w-4 h-4 text-purple-600 mx-auto" />
-          <span className="text-lg font-bold font-mono-num text-[#18181B] block">
+        <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] text-center space-y-1">
+          <Clock className="w-4 h-4 text-[#3D6B52] mx-auto" />
+          <span className="text-lg font-bold font-mono-num text-[#24201D] block">
             {totalFocusHours}h
           </span>
-          <span className="text-[10px] font-bold text-slate-400 uppercase">
+          <span className="text-[10px] font-bold text-[#6B635B] uppercase">
             Focus Time
           </span>
         </div>
 
-        <div className="neo-card p-3.5 bg-white text-center space-y-1">
-          <Flame className="w-4 h-4 text-amber-600 mx-auto" />
-          <span className="text-lg font-bold font-mono-num text-[#18181B] block">
+        <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] text-center space-y-1">
+          <Flame className="w-4 h-4 text-[#C25E40] mx-auto" />
+          <span className="text-lg font-bold font-mono-num text-[#24201D] block">
             {totalHabitChecks}
           </span>
-          <span className="text-[10px] font-bold text-slate-400 uppercase">
+          <span className="text-[10px] font-bold text-[#6B635B] uppercase">
             Habit Logs
           </span>
         </div>
@@ -175,7 +175,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
 
       {/* 4. Timeframe Filter Selector */}
       <div className="flex items-center justify-between px-1">
-        <span className="text-xs font-bold font-display text-slate-500 uppercase tracking-wider">
+        <span className="text-xs font-bold font-display text-[#6B635B] uppercase tracking-wider">
           Time Period
         </span>
         <div className="flex items-center gap-1">
@@ -188,8 +188,8 @@ export const StatsPage: React.FC<StatsPageProps> = ({
               }}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase transition-all cursor-pointer border-[1.5px] ${
                 timeframe === tf
-                  ? 'bg-[#18181B] text-white border-[#18181B] shadow-[1px_1px_0px_#18181B]'
-                  : 'bg-white text-slate-500 border-slate-200 hover:border-[#18181B]'
+                  ? 'bg-[#24201D] text-white border-[#24201D] shadow-2xs'
+                  : 'bg-white text-[#6B635B] border-stone-200 hover:border-[#24201D]'
               }`}
             >
               {tf === 'all' ? 'All Time' : tf}
@@ -199,35 +199,35 @@ export const StatsPage: React.FC<StatsPageProps> = ({
       </div>
 
       {/* 5. Achievements & Badges */}
-      <div className="neo-card p-5 bg-white space-y-3">
+      <div className="p-5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
         <div className="flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-amber-500" />
-          <span className="text-xs font-bold font-display text-[#18181B] uppercase tracking-wider">
+          <Trophy className="w-4 h-4 text-[#F0BB58]" />
+          <span className="text-xs font-bold font-display text-[#24201D] uppercase tracking-wider">
             Unlocked Milestones
           </span>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
           {[
-            { title: 'First Blood', desc: 'Complete 1st Task', unlocked: totalTasksDone >= 1, xp: '+50 XP', color: '#FFE873' },
-            { title: 'Deep Worker', desc: '5h Focus Logged', unlocked: Number(totalFocusHours) >= 5, xp: '+200 XP', color: '#E8DCFF' },
-            { title: 'Habit Master', desc: '10 Habit Logs', unlocked: totalHabitChecks >= 10, xp: '+150 XP', color: '#D1FBE4' },
-            { title: 'Rule of 3 Hero', desc: 'Clear Daily Top 3', unlocked: totalTasksDone >= 3, xp: '+300 XP', color: '#FED7AA' },
+            { title: 'First Blood', desc: 'Complete 1st Task', unlocked: totalTasksDone >= 1, xp: '+50 XP', color: '#F0BB58' },
+            { title: 'Deep Worker', desc: '5h Focus Logged', unlocked: Number(totalFocusHours) >= 5, xp: '+200 XP', color: '#3D6B52' },
+            { title: 'Habit Master', desc: '10 Habit Logs', unlocked: totalHabitChecks >= 10, xp: '+150 XP', color: '#3D6B52' },
+            { title: 'Rule of 3 Hero', desc: 'Clear Daily Top 3', unlocked: totalTasksDone >= 3, xp: '+300 XP', color: '#C25E40' },
           ].map((item, idx) => (
             <div
               key={idx}
-              className={`p-3 rounded-xl border-[1.5px] border-[#18181B] space-y-1 transition-all ${
-                item.unlocked ? 'bg-white shadow-[1.5px_1.5px_0px_#18181B]' : 'bg-slate-50 opacity-40 border-slate-200'
+              className={`p-3 rounded-xl border-[1.5px] border-[#24201D] space-y-1 transition-all ${
+                item.unlocked ? 'bg-[#FAF8F5] shadow-2xs' : 'bg-stone-50 opacity-40 border-stone-200'
               }`}
             >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: item.color }}>
                   {item.unlocked ? 'Unlocked' : 'Locked'}
                 </span>
-                <span className="text-[9px] font-bold font-mono-num text-slate-500">{item.xp}</span>
+                <span className="text-[9px] font-bold font-mono-num text-[#6B635B]">{item.xp}</span>
               </div>
-              <h4 className="text-xs font-bold text-[#18181B]">{item.title}</h4>
-              <p className="text-[10px] text-slate-500">{item.desc}</p>
+              <h4 className="text-xs font-bold text-[#24201D]">{item.title}</h4>
+              <p className="text-[10px] text-[#6B635B]">{item.desc}</p>
             </div>
           ))}
         </div>

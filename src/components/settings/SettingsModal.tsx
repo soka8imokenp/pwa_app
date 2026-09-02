@@ -257,20 +257,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#18181B]/40 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
-      <div className="w-full max-w-md bg-white border-[2px] border-[#18181B] rounded-[2.5rem] shadow-[4px_4px_0px_#18181B] p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#24201D]/45 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
+      <div className="w-full max-w-md bg-white border-[2px] border-[#24201D] rounded-[2.5rem] shadow-[4px_4px_0px_#24201D] p-5 space-y-4 max-h-[90vh] overflow-y-auto">
 
         {/* Modal Top Header */}
-        <div className="flex items-center justify-between pb-1 border-b border-[#18181B]/15">
+        <div className="flex items-center justify-between pb-1 border-b border-[#24201D]/15">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-full bg-[#E9D5FF] border-[1.75px] border-[#18181B] flex items-center justify-center shadow-2xs">
-              <Settings className="w-5 h-5 text-purple-950 stroke-[2.25]" />
+            <div className="w-10 h-10 rounded-full bg-[#DDE8DE] border-[1.75px] border-[#24201D] flex items-center justify-center shadow-2xs">
+              <Settings className="w-5 h-5 text-[#2D503C] stroke-[2.25]" />
             </div>
             <div>
-              <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#18181B]">
+              <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D]">
                 Settings & Profile
               </h3>
-              <p className="text-[10px] font-semibold text-slate-500">
+              <p className="text-[10px] font-semibold text-[#6B635B]">
                 Preferences, audio & offline backup
               </p>
             </div>
@@ -281,7 +281,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               playClickSound();
               onClose();
             }}
-            className="w-9 h-9 rounded-full bg-[#FAF7F2] hover:bg-slate-100 border-[1.5px] border-[#18181B] flex items-center justify-center text-slate-600 hover:text-[#18181B] cursor-pointer shadow-2xs active:scale-95"
+            className="w-9 h-9 rounded-full bg-[#FAF8F5] hover:bg-stone-100 border-[1.5px] border-[#24201D] flex items-center justify-center text-stone-600 hover:text-[#24201D] cursor-pointer shadow-2xs active:scale-95"
           >
             <X className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -291,14 +291,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         {feedback && (
           <div
             className={`p-3 rounded-2xl border-[1.75px] flex items-center gap-2.5 text-xs font-bold ${feedback.success
-                ? 'bg-[#ECFCCB] text-lime-950 border-[#18181B] shadow-2xs'
-                : 'bg-[#FFE4E6] text-rose-950 border-[#18181B] shadow-2xs'
+                ? 'bg-[#DDE8DE] text-[#2D503C] border-[#24201D] shadow-2xs'
+                : 'bg-[#F7E3DC] text-[#C25E40] border-[#24201D] shadow-2xs'
               }`}
           >
             {feedback.success ? (
-              <CheckCircle2 className="w-4 h-4 text-lime-700 stroke-[2.5] shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-[#3D6B52] stroke-[2.5] shrink-0" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-rose-700 stroke-[2.5] shrink-0" />
+              <AlertCircle className="w-4 h-4 text-[#C25E40] stroke-[2.5] shrink-0" />
             )}
             <span>{feedback.text}</span>
           </div>
@@ -306,16 +306,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* 1. User Profile Account Capsule */}
         {currentUser && (
-          <div className="p-3.5 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-[2rem] flex items-center justify-between shadow-[2px_2px_0px_#18181B]">
+          <div className="p-3.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-[2rem] flex items-center justify-between shadow-[2px_2px_0px_#24201D]">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-[#E9D5FF] via-[#F3E8FF] to-[#C084FC] border-[1.5px] border-[#18181B] flex items-center justify-center text-lg shadow-2xs shrink-0">
-                <User className="w-5 h-5 text-purple-950 stroke-[2.25]" />
+              <div className="w-11 h-11 rounded-full bg-[#DDE8DE] border-[1.5px] border-[#24201D] flex items-center justify-center text-lg shadow-2xs shrink-0">
+                <User className="w-5 h-5 text-[#2D503C] stroke-[2.25]" />
               </div>
               <div className="min-w-0">
-                <h4 className="text-xs font-black font-display text-[#18181B] truncate">
+                <h4 className="text-xs font-black font-display text-[#24201D] truncate">
                   {currentUser.firstName} {currentUser.lastName}
                 </h4>
-                <p className="text-[10px] font-bold text-slate-400 truncate">
+                <p className="text-[10px] font-bold text-[#6B635B] truncate">
                   {currentUser.email}
                 </p>
               </div>
@@ -323,7 +323,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             <button
               onClick={handleLogoutClick}
-              className="px-3 py-1.5 rounded-full bg-[#FFE4E6] hover:bg-rose-200 border-[1.5px] border-[#18181B] text-[11px] font-black text-rose-950 flex items-center gap-1.5 shadow-2xs cursor-pointer active:translate-y-0.5 shrink-0 transition-all"
+              className="px-3 py-1.5 rounded-full bg-[#F7E3DC] hover:bg-[#F0D0C5] border-[1.5px] border-[#24201D] text-[11px] font-black text-[#C25E40] flex items-center gap-1.5 shadow-2xs cursor-pointer active:translate-y-0.5 shrink-0 transition-all"
             >
               <LogOut className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>Sign Out</span>
@@ -331,24 +331,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         )}
 
-        {/* 2. Funny Vector Mascot Avatars Grid */}
-        <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-3">
+        {/* 2. Mascot Avatars Grid */}
+        <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#FFE873] border border-[#18181B] flex items-center justify-center shadow-xs">
-                <Smile className="w-4 h-4 text-[#18181B] stroke-[2.25]" />
+              <div className="w-8 h-8 rounded-xl bg-[#F0BB58] border border-[#24201D] flex items-center justify-center shadow-xs">
+                <Smile className="w-4 h-4 text-[#24201D] stroke-[2.25]" />
               </div>
               <div>
-                <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
+                <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
                   Mascot Avatar
                 </h4>
-                <p className="text-[10px] text-slate-500 font-bold">
+                <p className="text-[10px] text-[#6B635B] font-bold">
                   Funny vector character avatars
                 </p>
               </div>
             </div>
 
-            <span className="text-[10px] font-bold text-purple-800 bg-[#E8DCFF] px-2 py-0.5 rounded-full border border-[#18181B]">
+            <span className="text-[10px] font-bold text-[#2D503C] bg-[#DDE8DE] px-2 py-0.5 rounded-full border border-[#24201D]">
               {getAvatarById(selectedAvatar).name}
             </span>
           </div>
@@ -362,8 +362,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   type="button"
                   onClick={() => handleSelectAvatar(avatar.id)}
                   className={`p-1.5 rounded-2xl border-[1.75px] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${isSelected
-                      ? 'border-[#18181B] shadow-[2px_2px_0px_#18181B] scale-105 ring-2 ring-[#FFE873]'
-                      : 'border-slate-200 hover:border-[#18181B] opacity-80 hover:opacity-100'
+                      ? 'border-[#24201D] shadow-[2px_2px_0px_#24201D] scale-105 ring-2 ring-[#F0BB58]'
+                      : 'border-stone-200 hover:border-[#24201D] opacity-80 hover:opacity-100'
                     }`}
                   style={{ backgroundColor: avatar.bg }}
                   title={avatar.name}
@@ -371,7 +371,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div className="w-10 h-10">
                     {avatar.renderSvg('w-full h-full')}
                   </div>
-                  <span className="text-[9px] font-black text-[#18181B] truncate w-full text-center leading-tight">
+                  <span className="text-[9px] font-black text-[#24201D] truncate w-full text-center leading-tight">
                     {avatar.name.split(' ')[0]}
                   </span>
                 </button>
@@ -381,26 +381,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* 3. Gemini AI API Key Capsule */}
-        <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-3">
+        <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#E8DCFF] border border-[#18181B] flex items-center justify-center shadow-xs">
-                <Bot className="w-4 h-4 text-purple-950 stroke-[2.25]" />
+              <div className="w-8 h-8 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-xs">
+                <Bot className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
               </div>
               <div>
-                <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
+                <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
                   Gemini AI API Key
                 </h4>
-                <p className="text-[10px] text-slate-500 font-bold">
+                <p className="text-[10px] text-[#6B635B] font-bold">
                   Model: gemini-3.5-flash-lite
                 </p>
               </div>
             </div>
 
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#18181B] ${
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#24201D] ${
               geminiKeyInput.trim()
-                ? 'bg-[#D1FBE4] text-[#065F46]'
-                : 'bg-[#FEF08A] text-amber-900'
+                ? 'bg-[#DDE8DE] text-[#2D503C]'
+                : 'bg-[#FBECCF] text-[#854D0E]'
             }`}>
               {geminiKeyInput.trim() ? 'Configured' : 'Not Set'}
             </span>
@@ -414,15 +414,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   value={geminiKeyInput}
                   onChange={(e) => setGeminiKeyInput(e.target.value)}
                   placeholder="Вставьте ключ из Google AI Studio..."
-                  className="w-full pl-8 pr-3 py-2 bg-[#FAF7F2] border-[1.5px] border-[#18181B] rounded-xl text-xs font-mono outline-none text-[#18181B]"
+                  className="w-full pl-8 pr-3 py-2 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl text-xs font-mono outline-none text-[#24201D]"
                 />
-                <Key className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                <Key className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-2.5" />
               </div>
 
               <button
                 type="button"
                 onClick={handleSaveGeminiKey}
-                className="px-3.5 py-2 bg-[#BEF264] hover:bg-lime-300 border-[1.5px] border-[#18181B] rounded-xl text-xs font-black text-[#18181B] shadow-2xs cursor-pointer active:translate-y-0.5 transition-all shrink-0"
+                className="px-3.5 py-2 bg-[#3D6B52] hover:bg-[#345B45] border-[1.5px] border-[#24201D] rounded-xl text-xs font-black text-white shadow-2xs cursor-pointer active:translate-y-0.5 transition-all shrink-0"
               >
                 Save
               </button>
@@ -432,7 +432,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <button
                 type="button"
                 onClick={() => setShowKeyText(!showKeyText)}
-                className="text-[10px] font-bold text-slate-500 hover:text-[#18181B] cursor-pointer"
+                className="text-[10px] font-bold text-[#6B635B] hover:text-[#24201D] cursor-pointer"
               >
                 {showKeyText ? 'Скрыть символы' : 'Показать ключ'}
               </button>
@@ -440,7 +440,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 href="https://aistudio.google.com/app/apikey"
                 target="_blank"
                 rel="noreferrer"
-                className="text-[10px] font-bold text-purple-700 hover:underline flex items-center gap-1"
+                className="text-[10px] font-bold text-[#3D6B52] hover:underline flex items-center gap-1"
               >
                 <span>Получить бесплатный ключ</span>
                 <ExternalLink className="w-3 h-3 stroke-[2.25]" />
@@ -450,20 +450,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* 4. Audio & Haptic Feedback Capsule */}
-        <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-[2rem] flex items-center justify-between shadow-[2px_2px_0px_#18181B]">
+        <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-[2rem] flex items-center justify-between shadow-[2px_2px_0px_#24201D]">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-[#E9D5FF] border border-[#18181B] flex items-center justify-center text-xs">
+            <div className="w-9 h-9 rounded-full bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center text-xs">
               {isSoundMuted ? (
-                <VolumeX className="w-4 h-4 text-slate-400 stroke-[2.25]" />
+                <VolumeX className="w-4 h-4 text-stone-400 stroke-[2.25]" />
               ) : (
-                <Volume2 className="w-4 h-4 text-purple-900 stroke-[2.25]" />
+                <Volume2 className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
               )}
             </div>
             <div>
-              <span className="text-xs font-black font-display text-[#18181B] block">
+              <span className="text-xs font-black font-display text-[#24201D] block">
                 Sound Effects & Chimes
               </span>
-              <span className="text-[10px] font-semibold text-slate-400 block">
+              <span className="text-[10px] font-semibold text-[#6B635B] block">
                 Web Audio synthesizer & completion haptics
               </span>
             </div>
@@ -474,9 +474,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               playClickSound();
               onToggleSound();
             }}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-black border-[1.5px] border-[#18181B] transition-all cursor-pointer flex items-center gap-1.5 ${isSoundMuted
-                ? 'bg-slate-100 text-slate-500'
-                : 'bg-[#BEF264] text-[#18181B] shadow-2xs'
+            className={`px-3.5 py-1.5 rounded-full text-xs font-black border-[1.5px] border-[#24201D] transition-all cursor-pointer flex items-center gap-1.5 ${isSoundMuted
+                ? 'bg-stone-100 text-stone-500'
+                : 'bg-[#3D6B52] text-white shadow-2xs'
               }`}
           >
             {isSoundMuted ? (
@@ -491,17 +491,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Evening Debrief Toggle & Time Capsule */}
-        <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-[2rem] space-y-3 shadow-[2px_2px_0px_#18181B]">
+        <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-[2rem] space-y-3 shadow-[2px_2px_0px_#24201D]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-full bg-[#FEF08A] border border-[#18181B] flex items-center justify-center text-xs shadow-2xs">
-                <Moon className="w-4 h-4 text-amber-900 stroke-[2.25]" />
+              <div className="w-9 h-9 rounded-full bg-[#F0BB58] border border-[#24201D] flex items-center justify-center text-xs shadow-2xs">
+                <Moon className="w-4 h-4 text-[#24201D] stroke-[2.25]" />
               </div>
               <div>
-                <span className="text-xs font-black font-display text-[#18181B] block">
+                <span className="text-xs font-black font-display text-[#24201D] block">
                   Evening Debrief
                 </span>
-                <span className="text-[10px] font-semibold text-slate-400 block">
+                <span className="text-[10px] font-semibold text-[#6B635B] block">
                   Daily wrap-up, score & task rollover
                 </span>
               </div>
@@ -509,10 +509,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             <button
               onClick={handleToggleEveningDebrief}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-black border-[1.5px] border-[#18181B] transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-black border-[1.5px] border-[#24201D] transition-all cursor-pointer ${
                 eveningDebriefEnabled
-                  ? 'bg-[#BEF264] text-[#18181B] shadow-2xs'
-                  : 'bg-slate-100 text-slate-500'
+                  ? 'bg-[#3D6B52] text-white shadow-2xs'
+                  : 'bg-stone-100 text-stone-500'
               }`}
             >
               {eveningDebriefEnabled ? 'Enabled' : 'Disabled'}
@@ -520,8 +520,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           {eveningDebriefEnabled && (
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-              <span className="text-[10px] font-black uppercase text-slate-400">
+            <div className="flex items-center justify-between pt-2 border-t border-stone-100">
+              <span className="text-[10px] font-black uppercase text-[#6B635B]">
                 Debrief Time
               </span>
               <div className="flex items-center gap-1.5">
@@ -531,8 +531,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     onClick={() => handleChangeEveningTime(time)}
                     className={`px-2.5 py-1 rounded-lg border text-[10px] font-mono-num font-black transition-all cursor-pointer ${
                       eveningDebriefTime === time
-                        ? 'bg-[#FFE873] text-[#18181B] border-[#18181B] shadow-2xs'
-                        : 'bg-[#FAF7F2] text-slate-500 border-slate-200 hover:border-[#18181B]'
+                        ? 'bg-[#F0BB58] text-[#24201D] border-[#24201D] shadow-2xs'
+                        : 'bg-[#FAF8F5] text-[#6B635B] border-stone-200 hover:border-[#24201D]'
                     }`}
                   >
                     {time}
@@ -544,21 +544,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Security & PIN Lock */}
-        <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-[2rem] space-y-3 shadow-[2px_2px_0px_#18181B]">
+        <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-[2rem] space-y-3 shadow-[2px_2px_0px_#24201D]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-full bg-[#E8DCFF] border border-[#18181B] flex items-center justify-center text-xs shadow-2xs">
+              <div className="w-9 h-9 rounded-full bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center text-xs shadow-2xs">
                 {pinConfigured ? (
-                  <Lock className="w-4 h-4 text-purple-950 stroke-[2.25]" />
+                  <Lock className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
                 ) : (
-                  <Unlock className="w-4 h-4 text-slate-400 stroke-[2.25]" />
+                  <Unlock className="w-4 h-4 text-stone-400 stroke-[2.25]" />
                 )}
               </div>
               <div>
-                <span className="text-xs font-black font-display text-[#18181B] block">
+                <span className="text-xs font-black font-display text-[#24201D] block">
                   Защита и PIN-код
                 </span>
-                <span className="text-[10px] font-semibold text-slate-400 block">
+                <span className="text-[10px] font-semibold text-[#6B635B] block">
                   {pinConfigured
                     ? bioActive
                       ? 'PIN + Отпечаток пальца'
@@ -574,10 +574,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 playClickSound();
                 setIsSecurityModalOpen(true);
               }}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-black border-[1.5px] border-[#18181B] transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-black border-[1.5px] border-[#24201D] transition-all cursor-pointer ${
                 pinConfigured
-                  ? 'bg-[#D1FBE4] text-[#18181B] shadow-2xs'
-                  : 'bg-[#FFE873] text-[#18181B] shadow-2xs'
+                  ? 'bg-[#DDE8DE] text-[#2D503C] shadow-2xs'
+                  : 'bg-[#F0BB58] text-[#24201D] shadow-2xs'
               }`}
             >
               {pinConfigured ? 'Настроить' : 'Включить PIN'}
@@ -585,15 +585,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           {pinConfigured && (
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+            <div className="pt-2 border-t border-stone-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {bioActive ? (
-                  <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                  <div className="flex items-center gap-1 text-[10px] font-bold text-[#2D503C] bg-[#DDE8DE] px-2 py-0.5 rounded-md border border-[#24201D]">
                     <Fingerprint className="w-3 h-3" />
                     <span>Биометрия включена</span>
                   </div>
                 ) : (
-                  <span className="text-[10px] font-bold text-slate-400">PIN активен</span>
+                  <span className="text-[10px] font-bold text-stone-400">PIN активен</span>
                 )}
               </div>
 
@@ -605,9 +605,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     onLockApp();
                     onClose();
                   }}
-                  className="px-2.5 py-1 bg-[#FAF7F2] hover:bg-rose-50 border border-[#18181B] rounded-lg text-[10px] font-black text-[#18181B] flex items-center gap-1 cursor-pointer active:scale-95 transition-all"
+                  className="px-2.5 py-1 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] rounded-lg text-[10px] font-black text-[#24201D] flex items-center gap-1 cursor-pointer active:scale-95 transition-all"
                 >
-                  <Lock className="w-3 h-3 text-slate-700 stroke-[2.25]" />
+                  <Lock className="w-3 h-3 text-stone-700 stroke-[2.25]" />
                   <span>Заблокировать сейчас</span>
                 </button>
               )}
@@ -616,16 +616,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* 3. Theme & Accent Color Palette */}
-        <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-[2rem] space-y-2.5 shadow-[2px_2px_0px_#18181B]">
+        <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-[2rem] space-y-2.5 shadow-[2px_2px_0px_#24201D]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Palette className="w-4 h-4 text-purple-800 stroke-[2.25]" />
-              <span className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
+              <Palette className="w-4 h-4 text-[#3D6B52] stroke-[2.25]" />
+              <span className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
                 Accent Colors
               </span>
             </div>
-            <span className="text-[9px] font-extrabold uppercase text-slate-400">
-              Soft Brutalism
+            <span className="text-[9px] font-extrabold uppercase text-[#6B635B]">
+              Matcha & Paper
             </span>
           </div>
 
@@ -638,15 +638,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   setSelectedAccent(accent.id);
                 }}
                 className={`py-2 px-1 rounded-2xl border-[1.5px] text-center transition-all cursor-pointer flex flex-col items-center gap-1 ${selectedAccent === accent.id
-                    ? 'border-[#18181B] shadow-[2px_2px_0px_#18181B] scale-105'
-                    : 'border-slate-200 hover:border-[#18181B]'
+                    ? 'border-[#24201D] shadow-[2px_2px_0px_#24201D] scale-105'
+                    : 'border-stone-200 hover:border-[#24201D]'
                   }`}
                 style={{ backgroundColor: accent.bg }}
               >
-                <div className="w-3 h-3 rounded-full bg-[#18181B]/80 flex items-center justify-center">
+                <div className="w-3 h-3 rounded-full bg-[#24201D]/80 flex items-center justify-center">
                   {selectedAccent === accent.id && <Check className="w-2 h-2 text-white stroke-[3]" />}
                 </div>
-                <span className="text-[9px] font-black text-[#18181B] truncate max-w-full">
+                <span className="text-[9px] font-black text-[#24201D] truncate max-w-full">
                   {accent.name.split(' ')[1] || accent.name}
                 </span>
               </button>
@@ -655,21 +655,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* 4. Offline Database Vault & Backup */}
-        <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-[2rem] space-y-2.5 shadow-[2px_2px_0px_#18181B]">
+        <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-[2rem] space-y-2.5 shadow-[2px_2px_0px_#24201D]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Database className="w-4 h-4 text-purple-800 stroke-[2.25]" />
-              <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
+              <Database className="w-4 h-4 text-[#3D6B52] stroke-[2.25]" />
+              <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
                 Offline Data Vault
               </h4>
             </div>
-            <span className="text-[9px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1">
+            <span className="text-[9px] font-black text-[#2D503C] bg-[#DDE8DE] px-2 py-0.5 rounded-full border border-[#24201D] flex items-center gap-1">
               <ShieldCheck className="w-3 h-3" />
               <span>100% Offline</span>
             </span>
           </div>
 
-          <p className="text-[11px] font-medium text-slate-500 leading-relaxed">
+          <p className="text-[11px] font-medium text-[#6B635B] leading-relaxed">
             All tasks, habits, streak records, and focus logs are stored locally in your browser IndexedDB.
           </p>
 
@@ -677,7 +677,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <button
               onClick={handleExport}
               disabled={isProcessing}
-              className="flex-1 py-2 px-3 rounded-full bg-[#E9D5FF] hover:bg-[#D8B4FE] border-[1.5px] border-[#18181B] text-xs font-black text-[#18181B] flex items-center justify-center gap-1.5 shadow-2xs active:translate-y-0.5 cursor-pointer transition-all"
+              className="flex-1 py-2 px-3 rounded-full bg-[#DDE8DE] hover:bg-[#CADBCF] border-[1.5px] border-[#24201D] text-xs font-black text-[#24201D] flex items-center justify-center gap-1.5 shadow-2xs active:translate-y-0.5 cursor-pointer transition-all"
             >
               <Download className="w-3.5 h-3.5 stroke-[2.25]" />
               <span>Export JSON</span>
@@ -686,7 +686,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <button
               onClick={handleImportClick}
               disabled={isProcessing}
-              className="flex-1 py-2 px-3 rounded-full bg-[#FAF7F2] hover:bg-slate-100 border-[1.5px] border-[#18181B] text-xs font-black text-[#18181B] flex items-center justify-center gap-1.5 shadow-2xs active:translate-y-0.5 cursor-pointer transition-all"
+              className="flex-1 py-2 px-3 rounded-full bg-[#FAF8F5] hover:bg-stone-100 border-[1.5px] border-[#24201D] text-xs font-black text-[#24201D] flex items-center justify-center gap-1.5 shadow-2xs active:translate-y-0.5 cursor-pointer transition-all"
             >
               <Upload className="w-3.5 h-3.5 stroke-[2.25]" />
               <span>Import JSON</span>
@@ -702,7 +702,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <button
               onClick={handleResetDemo}
               disabled={isProcessing}
-              className="w-full py-1.5 rounded-full bg-[#FED7AA] hover:bg-[#FDBA74] border-[1.5px] border-[#18181B] text-[10px] font-black text-[#18181B] flex items-center justify-center gap-1 shadow-2xs active:translate-y-0.5 cursor-pointer transition-all"
+              className="w-full py-1.5 rounded-full bg-[#F7E3DC] hover:bg-[#F0D0C5] border-[1.5px] border-[#24201D] text-[10px] font-black text-[#C25E40] flex items-center justify-center gap-1 shadow-2xs active:translate-y-0.5 cursor-pointer transition-all"
             >
               <RotateCcw className="w-3 h-3 stroke-[2.25]" />
               <span>Reset & Reload Sample Data</span>
@@ -711,32 +711,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* 4. App Version & Official Updater */}
-        <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-2.5">
+        <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#FFE873] border border-[#18181B] flex items-center justify-center font-bold text-xs shadow-xs">
-                <Zap className="w-4 h-4 text-[#18181B] stroke-[2.25]" />
+              <div className="w-8 h-8 rounded-xl bg-[#F0BB58] border border-[#24201D] flex items-center justify-center font-bold text-xs shadow-xs">
+                <Zap className="w-4 h-4 text-[#24201D] stroke-[2.25]" />
               </div>
               <div>
-                <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
+                <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
                   Daily Sumire
                 </h4>
-                <span className="text-[10px] text-slate-500 font-bold">Version {CURRENT_APP_VERSION}</span>
+                <span className="text-[10px] text-[#6B635B] font-bold">Version {CURRENT_APP_VERSION}</span>
               </div>
             </div>
 
             <button
               onClick={handleCheckAppUpdate}
               disabled={updateChecking}
-              className="px-3 py-1.5 rounded-full bg-[#FAF7F2] hover:bg-[#E8DCFF] border border-[#18181B] text-[10px] font-black text-[#18181B] flex items-center gap-1.5 shadow-2xs cursor-pointer active:translate-y-0.5 transition-all"
+              className="px-3 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#DDE8DE] border border-[#24201D] text-[10px] font-black text-[#24201D] flex items-center gap-1.5 shadow-2xs cursor-pointer active:translate-y-0.5 transition-all"
             >
-              <RefreshCw className={`w-3 h-3 ${updateChecking ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3 h-3 ${updateChecking ? 'animate-spin text-[#3D6B52]' : ''}`} />
               <span>{updateChecking ? 'Checking...' : 'Check Updates'}</span>
             </button>
           </div>
 
           {updateStatus && (
-            <div className="p-2 bg-[#D1FBE4] border border-[#065F46]/30 rounded-xl text-[10px] font-bold text-[#065F46] text-center">
+            <div className="p-2 bg-[#DDE8DE] border border-[#24201D]/20 rounded-xl text-[10px] font-bold text-[#2D503C] text-center">
               {updateStatus}
             </div>
           )}

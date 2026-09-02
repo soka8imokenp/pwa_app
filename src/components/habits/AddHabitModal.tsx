@@ -16,7 +16,7 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
 }) => {
   const [title, setTitle] = useState('');
   const [iconKey, setIconKey] = useState('zap');
-  const [color, setColor] = useState('#C084FC');
+  const [color, setColor] = useState('#3D6B52');
   const [targetDays, setTargetDays] = useState<string[]>([
     'mon',
     'tue',
@@ -39,11 +39,11 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
   ];
 
   const colorOptions = [
-    { label: 'Lilac', hex: '#C084FC' },
-    { label: 'Mint', hex: '#BEF264' },
-    { label: 'Peach', hex: '#FED7AA' },
-    { label: 'Sky', hex: '#BAE6FD' },
-    { label: 'Lemon', hex: '#FEF08A' },
+    { label: 'Matcha', hex: '#3D6B52' },
+    { label: 'Terracotta', hex: '#C25E40' },
+    { label: 'Ochre', hex: '#E09F3E' },
+    { label: 'Indigo', hex: '#476C85' },
+    { label: 'Sage', hex: '#8FA89B' },
   ];
 
   const daysList = [
@@ -84,20 +84,20 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#18181B]/40 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
-      <div className="w-full max-w-md bg-white border-[2px] border-[#18181B] rounded-[2.5rem] shadow-[4px_4px_0px_#18181B] p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#24201D]/45 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
+      <div className="w-full max-w-md bg-white border-[2px] border-[#24201D] rounded-[2.5rem] shadow-[4px_4px_0px_#24201D] p-5 space-y-4 max-h-[90vh] overflow-y-auto">
         
         {/* Top Header */}
-        <div className="flex items-center justify-between pb-1 border-b border-[#18181B]/15">
+        <div className="flex items-center justify-between pb-1 border-b border-[#24201D]/15">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-full bg-[#FEF08A] border-[1.75px] border-[#18181B] flex items-center justify-center shadow-2xs">
-              <Flame className="w-5 h-5 text-amber-700 fill-amber-400 stroke-[2.25]" />
+            <div className="w-10 h-10 rounded-full bg-[#FBECCF] border-[1.75px] border-[#24201D] flex items-center justify-center shadow-2xs">
+              <Flame className="w-5 h-5 text-[#854D0E] fill-[#F0BB58] stroke-[2.25]" />
             </div>
             <div>
-              <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#18181B]">
+              <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D]">
                 Create Habit Streak
               </h3>
-              <p className="text-[10px] font-semibold text-slate-500">
+              <p className="text-[10px] font-semibold text-[#6B635B]">
                 Track daily quantifiable consistency
               </p>
             </div>
@@ -108,7 +108,7 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
               playClickSound();
               onClose();
             }}
-            className="w-9 h-9 rounded-full bg-[#FAF7F2] hover:bg-slate-100 border-[1.5px] border-[#18181B] flex items-center justify-center text-slate-600 hover:text-[#18181B] cursor-pointer shadow-2xs active:scale-95"
+            className="w-9 h-9 rounded-full bg-[#FAF8F5] hover:bg-stone-100 border-[1.5px] border-[#24201D] flex items-center justify-center text-stone-600 hover:text-[#24201D] cursor-pointer shadow-2xs active:scale-95"
           >
             <X className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -117,7 +117,7 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-3.5">
           {/* Title */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+            <label className="block text-xs font-black uppercase tracking-wider text-[#24201D] mb-1">
               Habit Name
             </label>
             <input
@@ -127,13 +127,13 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Read 20 pages or 2L pure water"
-              className="w-full px-4 py-2.5 bg-[#FAF7F2] text-xs font-bold rounded-2xl border-[1.75px] border-[#18181B] outline-none placeholder:text-slate-400 shadow-2xs"
+              className="w-full px-4 py-2.5 bg-[#FAF8F5] text-xs font-bold text-[#24201D] rounded-2xl border-[1.75px] border-[#24201D] outline-none placeholder:text-stone-400 shadow-2xs"
             />
           </div>
 
           {/* Lucide Icon Selector */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+            <label className="block text-xs font-black uppercase tracking-wider text-[#24201D] mb-1">
               Icon Badge
             </label>
             <div className="grid grid-cols-6 gap-1.5">
@@ -147,8 +147,8 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
                   }}
                   className={`h-10 rounded-2xl border-[1.5px] flex items-center justify-center transition-all cursor-pointer ${
                     iconKey === item.id
-                      ? 'bg-[#C084FC] text-[#18181B] border-[#18181B] shadow-2xs scale-105'
-                      : 'bg-white text-slate-500 border-slate-200 hover:border-[#18181B]'
+                      ? 'bg-[#DDE8DE] text-[#2D503C] border-[#24201D] shadow-2xs scale-105'
+                      : 'bg-white text-stone-500 border-stone-200 hover:border-[#24201D]'
                   }`}
                   title={item.label}
                 >
@@ -160,7 +160,7 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
 
           {/* Color Accent */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+            <label className="block text-xs font-black uppercase tracking-wider text-[#24201D] mb-1">
               Accent Color
             </label>
             <div className="flex items-center gap-2">
@@ -173,14 +173,14 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
                     setColor(c.hex);
                   }}
                   style={{ backgroundColor: c.hex }}
-                  className={`w-9 h-9 rounded-2xl border-[1.75px] border-[#18181B] transition-transform cursor-pointer flex items-center justify-center ${
+                  className={`w-9 h-9 rounded-2xl border-[1.75px] border-[#24201D] transition-transform cursor-pointer flex items-center justify-center ${
                     color === c.hex
-                      ? 'shadow-[2px_2px_0px_#18181B] scale-110'
+                      ? 'shadow-[2px_2px_0px_#24201D] scale-110'
                       : 'opacity-80 hover:opacity-100'
                   }`}
                   title={c.label}
                 >
-                  {color === c.hex && <Check className="w-3.5 h-3.5 text-[#18181B] stroke-[3]" />}
+                  {color === c.hex && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
                 </button>
               ))}
             </div>
@@ -189,21 +189,21 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
           {/* Target Days */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-700">
+              <label className="text-xs font-black uppercase tracking-wider text-[#24201D]">
                 Frequency
               </label>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setTargetDays(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])}
-                  className="text-[10px] font-black text-purple-700 underline cursor-pointer"
+                  className="text-[10px] font-black text-[#3D6B52] underline cursor-pointer"
                 >
                   Daily
                 </button>
                 <button
                   type="button"
                   onClick={() => setTargetDays(['mon', 'tue', 'wed', 'thu', 'fri'])}
-                  className="text-[10px] font-black text-purple-700 underline cursor-pointer"
+                  className="text-[10px] font-black text-[#3D6B52] underline cursor-pointer"
                 >
                   Weekdays
                 </button>
@@ -218,8 +218,8 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
                   onClick={() => toggleDay(d.id)}
                   className={`flex-1 py-1.5 rounded-xl border-[1.5px] font-black text-xs transition-all cursor-pointer ${
                     targetDays.includes(d.id)
-                      ? 'bg-[#BEF264] text-[#18181B] border-[#18181B] shadow-2xs'
-                      : 'bg-white text-slate-400 border-slate-200 hover:border-[#18181B]'
+                      ? 'bg-[#3D6B52] text-white border-[#24201D] shadow-2xs'
+                      : 'bg-white text-stone-400 border-stone-200 hover:border-[#24201D]'
                   }`}
                 >
                   {d.label}
@@ -233,13 +233,13 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-full border border-slate-300 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
+              className="px-4 py-2 rounded-full border border-stone-300 text-xs font-bold text-[#6B635B] hover:bg-stone-50 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-full bg-[#BEF264] hover:bg-[#A3E635] text-[#18181B] border-[1.5px] border-[#18181B] text-xs font-black shadow-xs active:translate-y-0.5 cursor-pointer"
+              className="px-5 py-2 rounded-full bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.5px] border-[#24201D] text-xs font-black shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 cursor-pointer"
             >
               Start Habit
             </button>

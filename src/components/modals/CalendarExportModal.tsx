@@ -82,19 +82,19 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#18181B]/50 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
-      <div className="bg-white border-[2px] border-[#18181B] rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-[4px_4px_0px_#18181B] p-5 space-y-4 max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#24201D]/45 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
+      <div className="bg-white border-[2px] border-[#24201D] rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-[4px_4px_0px_#24201D] p-5 space-y-4 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between pb-2 border-b border-[#18181B]/15">
+        <div className="flex items-center justify-between pb-2 border-b border-[#24201D]/15">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-[#FFE873] border-[1.75px] border-[#18181B] flex items-center justify-center shadow-2xs">
-              <Calendar className="w-5 h-5 text-amber-950 stroke-[2.25]" />
+            <div className="w-10 h-10 rounded-2xl bg-[#DDE8DE] border-[1.75px] border-[#24201D] flex items-center justify-center shadow-2xs">
+              <Calendar className="w-5 h-5 text-[#2D503C] stroke-[2.25]" />
             </div>
             <div>
-              <h3 className="text-sm font-black font-display text-[#18181B]">
+              <h3 className="text-sm font-black font-display text-[#24201D]">
                 Экспорт в Календарь
               </h3>
-              <p className="text-[10px] text-slate-400 font-bold">
+              <p className="text-[10px] text-[#6B635B] font-bold">
                 Универсальный файл .ics для любых календарей
               </p>
             </div>
@@ -106,7 +106,7 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
               playClickSound();
               onClose();
             }}
-            className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border border-[#18181B] flex items-center justify-center text-slate-700 hover:text-[#18181B] cursor-pointer shadow-2xs active:scale-95 transition-all"
+            className="w-8 h-8 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-stone-700 hover:text-[#24201D] cursor-pointer shadow-2xs active:scale-95 transition-all"
           >
             <X className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -128,21 +128,21 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
               }}
               className={`p-2.5 rounded-2xl border-[1.5px] text-left transition-all cursor-pointer ${
                 scope === item.id
-                  ? 'bg-[#FFE873] border-[#18181B] shadow-[2px_2px_0px_#18181B]'
-                  : 'bg-[#FAF7F2] border-slate-200 hover:border-[#18181B]'
+                  ? 'bg-[#F0BB58] border-[#24201D] shadow-[2px_2px_0px_#24201D]'
+                  : 'bg-[#FAF8F5] border-stone-200 hover:border-[#24201D]'
               }`}
             >
-              <span className="text-xs font-black text-[#18181B] block">{item.label}</span>
-              <span className="text-[9px] font-bold text-slate-500 block truncate">{item.desc}</span>
+              <span className="text-xs font-black text-[#24201D] block">{item.label}</span>
+              <span className="text-[9px] font-bold text-[#6B635B] block truncate">{item.desc}</span>
             </button>
           ))}
         </div>
 
         {/* Schedule Summary & Toggle */}
-        <div className="p-3.5 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-2xl flex items-center justify-between shadow-2xs">
+        <div className="p-3.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl flex items-center justify-between shadow-2xs">
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-slate-700 stroke-[2.25]" />
-            <span className="text-xs font-black text-[#18181B]">
+            <Clock className="w-4 h-4 text-stone-700 stroke-[2.25]" />
+            <span className="text-xs font-black text-[#24201D]">
               {filteredTasks.length} {filteredTasks.length === 1 ? 'задача' : 'задач'} к экспорту
             </span>
           </div>
@@ -152,41 +152,41 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
               type="checkbox"
               checked={includeCompleted}
               onChange={(e) => setIncludeCompleted(e.target.checked)}
-              className="accent-[#18181B] w-3.5 h-3.5 rounded cursor-pointer"
+              className="accent-[#3D6B52] w-3.5 h-3.5 rounded cursor-pointer"
             />
-            <span className="text-[10px] font-bold text-slate-600">Включая выполненные</span>
+            <span className="text-[10px] font-bold text-[#6B635B]">Включая выполненные</span>
           </label>
         </div>
 
         {/* Tasks Preview List */}
         <div className="flex-1 overflow-y-auto space-y-1.5 max-h-48 pr-1">
           {filteredTasks.length === 0 ? (
-            <div className="p-6 text-center text-xs text-slate-400 font-semibold bg-[#FAF7F2] rounded-2xl border border-dashed border-slate-200">
+            <div className="p-6 text-center text-xs text-stone-400 font-semibold bg-[#FAF8F5] rounded-2xl border border-dashed border-stone-200">
               Нет задач для экспорта в выбранном периоде
             </div>
           ) : (
             filteredTasks.map((t) => (
               <div
                 key={t.id}
-                className="p-2.5 bg-white border border-[#18181B]/20 rounded-xl flex items-center justify-between text-xs"
+                className="p-2.5 bg-white border border-[#24201D]/20 rounded-xl flex items-center justify-between text-xs"
               >
                 <div className="flex items-center gap-2 truncate">
                   {t.isPriority ? (
-                    <Target className="w-3.5 h-3.5 text-rose-600 shrink-0 stroke-[2.5]" />
+                    <Target className="w-3.5 h-3.5 text-[#C25E40] shrink-0 stroke-[2.5]" />
                   ) : (
-                    <div className="w-2 h-2 rounded-full bg-slate-300 shrink-0" />
+                    <div className="w-2 h-2 rounded-full bg-stone-300 shrink-0" />
                   )}
                   <span
                     className={`font-bold truncate ${
-                      t.isCompleted ? 'line-through text-slate-400' : 'text-[#18181B]'
+                      t.isCompleted ? 'line-through text-stone-400' : 'text-[#24201D]'
                     }`}
                   >
                     {t.title}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0 text-[10px] font-mono-num text-slate-500 font-bold">
+                <div className="flex items-center gap-1.5 shrink-0 text-[10px] font-mono-num text-[#6B635B] font-bold">
                   {t.estimatedMinutes ? `${t.estimatedMinutes}м` : '30м'}
-                  {t.isCompleted && <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />}
+                  {t.isCompleted && <Check className="w-3 h-3 text-[#3D6B52] stroke-[3]" />}
                 </div>
               </div>
             ))
@@ -199,11 +199,11 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
             type="button"
             onClick={handleDownload}
             disabled={filteredTasks.length === 0}
-            className="py-3 px-3 bg-[#FFE873] hover:bg-[#FED7AA] disabled:opacity-50 border-[1.75px] border-[#18181B] rounded-2xl text-xs font-black text-[#18181B] shadow-[2px_2px_0px_#18181B] active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-2 transition-all"
+            className="py-3 px-3 bg-[#3D6B52] hover:bg-[#345B45] disabled:opacity-50 border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black text-white shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-2 transition-all"
           >
             {isDownloaded ? (
               <>
-                <CheckCircle2 className="w-4 h-4 text-emerald-800 stroke-[2.5]" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-200 stroke-[2.5]" />
                 <span>Скачано!</span>
               </>
             ) : (
@@ -218,11 +218,11 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
             type="button"
             onClick={handleShare}
             disabled={filteredTasks.length === 0}
-            className="py-3 px-3 bg-[#BEF264] hover:bg-lime-300 disabled:opacity-50 border-[1.75px] border-[#18181B] rounded-2xl text-xs font-black text-[#18181B] shadow-[2px_2px_0px_#18181B] active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-2 transition-all"
+            className="py-3 px-3 bg-[#FAF8F5] hover:bg-stone-100 disabled:opacity-50 border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black text-[#24201D] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-2 transition-all"
           >
             {isShared ? (
               <>
-                <CheckCircle2 className="w-4 h-4 text-emerald-800 stroke-[2.5]" />
+                <CheckCircle2 className="w-4 h-4 text-[#3D6B52] stroke-[2.5]" />
                 <span>Отправлено!</span>
               </>
             ) : (

@@ -117,20 +117,20 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#18181B]/40 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
-      <div className="w-full max-w-md bg-white border-[2px] border-[#18181B] rounded-[2.5rem] shadow-[4px_4px_0px_#18181B] p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#24201D]/45 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
+      <div className="w-full max-w-md bg-white border-[2px] border-[#24201D] rounded-[2.5rem] shadow-[4px_4px_0px_#24201D] p-5 space-y-4 max-h-[90vh] overflow-y-auto">
         
-        {/* Top Header */}
-        <div className="flex items-center justify-between pb-1 border-b border-[#18181B]/15">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between pb-2 border-b border-[#24201D]/15">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-full bg-[#E9D5FF] border-[1.75px] border-[#18181B] flex items-center justify-center shadow-2xs">
-              <PlusCircle className="w-5 h-5 text-purple-950 stroke-[2.25]" />
+            <div className="w-10 h-10 rounded-2xl bg-[#DDE8DE] border-[1.75px] border-[#24201D] flex items-center justify-center shadow-2xs">
+              <Calendar className="w-5 h-5 text-[#2D503C] stroke-[2.25]" />
             </div>
             <div>
-              <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#18181B]">
+              <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D]">
                 Create New Task
               </h3>
-              <p className="text-[10px] font-semibold text-slate-500 font-mono-num">
+              <p className="text-[10px] font-semibold text-[#6B635B] font-mono-num">
                 Scheduled for {defaultDate}
               </p>
             </div>
@@ -141,7 +141,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               playClickSound();
               onClose();
             }}
-            className="w-9 h-9 rounded-full bg-[#FAF7F2] hover:bg-slate-100 border-[1.5px] border-[#18181B] flex items-center justify-center text-slate-600 hover:text-[#18181B] cursor-pointer shadow-2xs active:scale-95"
+            className="w-9 h-9 rounded-full bg-[#FAF8F5] hover:bg-stone-100 border-[1.5px] border-[#24201D] flex items-center justify-center text-stone-600 hover:text-[#24201D] cursor-pointer shadow-2xs active:scale-95"
           >
             <X className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -150,7 +150,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-3.5">
           {/* Title */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+            <label className="block text-xs font-black uppercase tracking-wider text-[#24201D] mb-1">
               Task Title
             </label>
             <input
@@ -159,13 +159,13 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Implement WebSockets in Rust"
-              className="w-full px-4 py-2.5 bg-[#FAF7F2] text-xs font-bold rounded-2xl border-[1.75px] border-[#18181B] outline-none placeholder:text-slate-400 shadow-2xs"
+              className="w-full px-4 py-2.5 bg-[#FAF8F5] text-xs font-bold text-[#24201D] rounded-2xl border-[1.75px] border-[#24201D] outline-none placeholder:text-stone-400 shadow-2xs"
             />
           </div>
 
           {/* Subtasks (Checklists) */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-black uppercase tracking-wider text-slate-700">
+            <label className="block text-xs font-black uppercase tracking-wider text-[#24201D]">
               Subtasks / Steps ({subtasks.length})
             </label>
 
@@ -174,13 +174,13 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 {subtasks.map((st) => (
                   <div
                     key={st.id}
-                    className="p-2 bg-[#FAF7F2] border border-[#18181B]/20 rounded-xl flex items-center justify-between gap-2 text-xs"
+                    className="p-2 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl flex items-center justify-between gap-2 text-xs"
                   >
-                    <span className="font-bold text-[#18181B] truncate">{st.title}</span>
+                    <span className="font-bold text-[#24201D] truncate">{st.title}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveSubtask(st.id)}
-                      className="text-slate-400 hover:text-rose-600 cursor-pointer"
+                      className="text-stone-400 hover:text-rose-600 cursor-pointer"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -201,13 +201,13 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                   }
                 }}
                 placeholder="Add checklist step..."
-                className="flex-1 px-3 py-1.5 bg-[#FAF7F2] text-xs font-medium rounded-xl border border-[#18181B]/30 outline-none"
+                className="flex-1 px-3 py-1.5 bg-[#FAF8F5] text-xs font-medium text-[#24201D] rounded-xl border border-[#24201D]/30 outline-none placeholder:text-stone-400"
               />
               <button
                 type="button"
                 onClick={handleAddSubtask}
                 disabled={!newSubtaskTitle.trim()}
-                className="p-1.5 rounded-xl bg-white border border-[#18181B] text-[#18181B] cursor-pointer disabled:opacity-40"
+                className="p-1.5 rounded-xl bg-white border border-[#24201D] text-[#24201D] cursor-pointer disabled:opacity-40"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -216,7 +216,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
           {/* Category Chips */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+            <label className="block text-xs font-black uppercase tracking-wider text-[#24201D] mb-1">
               Category
             </label>
             <div className="grid grid-cols-3 gap-1.5">
@@ -230,8 +230,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                   }}
                   className={`py-2 px-2 rounded-2xl border-[1.5px] flex items-center justify-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
                     category === c.id
-                      ? 'bg-[#FFE873] border-[#18181B] text-[#18181B] shadow-2xs'
-                      : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400'
+                      ? 'bg-[#F0BB58] border-[#24201D] text-[#24201D] shadow-2xs'
+                      : 'bg-white border-stone-200 text-[#6B635B] hover:border-[#24201D]'
                   }`}
                 >
                   {c.icon}
@@ -243,9 +243,9 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
           {/* Estimated Time & Routine Toggle */}
           <div className="grid grid-cols-2 gap-2 pt-1">
-            {/* Custom Neo-Brutalist Estimate Dropdown */}
+            {/* Estimate Dropdown */}
             <div className="relative">
-              <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+              <label className="block text-xs font-black uppercase tracking-wider text-[#24201D] mb-1">
                 Estimate
               </label>
               
@@ -255,15 +255,15 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                   playClickSound();
                   setIsEstimateDropdownOpen(!isEstimateDropdownOpen);
                 }}
-                className="w-full px-3 py-2 bg-[#FAF7F2] hover:bg-white text-xs font-bold rounded-2xl border-[1.75px] border-[#18181B] flex items-center justify-between shadow-2xs cursor-pointer active:translate-y-0.5 transition-all text-[#18181B]"
+                className="w-full px-3 py-2 bg-[#FAF8F5] hover:bg-white text-xs font-bold rounded-2xl border-[1.75px] border-[#24201D] flex items-center justify-between shadow-2xs cursor-pointer active:translate-y-0.5 transition-all text-[#24201D]"
               >
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <Clock className="w-3.5 h-3.5 text-purple-700 shrink-0 stroke-[2.25]" />
+                  <Clock className="w-3.5 h-3.5 text-[#3D6B52] shrink-0 stroke-[2.25]" />
                   <span className="truncate font-mono-num text-[11px]">
                     {ESTIMATE_OPTIONS.find((o) => o.value === estimatedMinutes)?.label || `${estimatedMinutes}m`}
                   </span>
                 </div>
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-500 shrink-0 transition-transform ${isEstimateDropdownOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-stone-500 shrink-0 transition-transform ${isEstimateDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {/* Custom Dropdown Menu */}
@@ -273,7 +273,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                     className="fixed inset-0 z-20"
                     onClick={() => setIsEstimateDropdownOpen(false)}
                   />
-                  <div className="absolute left-0 right-0 bottom-full mb-1.5 z-30 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[3px_3px_0px_#18181B] p-1.5 space-y-1 max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
+                  <div className="absolute left-0 right-0 bottom-full mb-1.5 z-30 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[3px_3px_0px_#24201D] p-1.5 space-y-1 max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
                     {ESTIMATE_OPTIONS.map((opt) => (
                       <button
                         key={opt.value}
@@ -285,13 +285,13 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                         }}
                         className={`w-full px-2.5 py-1.5 rounded-xl text-[11px] font-bold flex items-center justify-between transition-all cursor-pointer ${
                           estimatedMinutes === opt.value
-                            ? 'bg-[#FFE873] text-[#18181B] border border-[#18181B] shadow-2xs'
-                            : 'hover:bg-[#FAF7F2] text-slate-700'
+                            ? 'bg-[#F0BB58] text-[#24201D] border border-[#24201D] shadow-2xs'
+                            : 'hover:bg-[#FAF8F5] text-stone-700'
                         }`}
                       >
                         <span className="font-mono-num">{opt.label}</span>
                         {estimatedMinutes === opt.value && (
-                          <Check className="w-3 h-3 stroke-[2.5] text-[#18181B]" />
+                          <Check className="w-3 h-3 stroke-[2.5] text-[#24201D]" />
                         )}
                       </button>
                     ))}
@@ -302,7 +302,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
             {/* Recurring Daily Toggle */}
             <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+              <label className="block text-xs font-black uppercase tracking-wider text-[#24201D] mb-1">
                 Routine
               </label>
               <button
@@ -311,10 +311,10 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                   playClickSound();
                   setIsRecurring(!isRecurring);
                 }}
-                className={`w-full py-2 px-3 rounded-2xl border-[1.75px] border-[#18181B] text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                className={`w-full py-2 px-3 rounded-2xl border-[1.75px] border-[#24201D] text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   isRecurring
-                    ? 'bg-[#BEF264] text-[#18181B] shadow-2xs'
-                    : 'bg-[#FAF7F2] text-slate-500'
+                    ? 'bg-[#DDE8DE] text-[#2D503C] shadow-2xs'
+                    : 'bg-[#FAF8F5] text-stone-500'
                 }`}
               >
                 <Repeat className="w-3.5 h-3.5" />
@@ -330,23 +330,23 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 playClickSound();
                 setIsPriority(!isPriority);
               }}
-              className={`p-3 rounded-2xl border-[1.75px] border-[#18181B] flex items-center justify-between cursor-pointer transition-all ${
+              className={`p-3 rounded-2xl border-[1.75px] border-[#24201D] flex items-center justify-between cursor-pointer transition-all ${
                 isPriority
-                  ? 'bg-[#FEF08A] shadow-2xs'
-                  : 'bg-[#FAF7F2] hover:bg-slate-50'
+                  ? 'bg-[#FBECCF] shadow-2xs'
+                  : 'bg-[#FAF8F5] hover:bg-stone-50'
               }`}
             >
               <div className="flex items-center gap-2">
-                <Star className={`w-4 h-4 ${isPriority ? 'text-amber-700 fill-amber-400' : 'text-slate-400'}`} />
+                <Star className={`w-4 h-4 ${isPriority ? 'text-[#854D0E] fill-[#F0BB58]' : 'text-stone-400'}`} />
                 <div>
-                  <h4 className="text-xs font-bold text-[#18181B]">Set as Top Focus Priority</h4>
-                  <p className="text-[9px] text-slate-500 font-medium">Elevate to top 3 slots for today</p>
+                  <h4 className="text-xs font-bold text-[#24201D]">Set as Top Focus Priority</h4>
+                  <p className="text-[9px] text-[#6B635B] font-medium">Elevate to top 3 slots for today</p>
                 </div>
               </div>
 
               <div
-                className={`w-5 h-5 rounded-lg border-[1.5px] border-[#18181B] flex items-center justify-center ${
-                  isPriority ? 'bg-[#18181B] text-white' : 'bg-white'
+                className={`w-5 h-5 rounded-lg border-[1.5px] border-[#24201D] flex items-center justify-center ${
+                  isPriority ? 'bg-[#24201D] text-white' : 'bg-white'
                 }`}
               >
                 {isPriority && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -358,7 +358,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full py-3 bg-[#FFE873] hover:bg-[#FED7AA] border-[2px] border-[#18181B] rounded-2xl font-black font-display uppercase tracking-wider text-xs text-[#18181B] shadow-[2px_2px_0px_#18181B] active:translate-y-0.5 active:shadow-none cursor-pointer transition-all"
+              className="w-full py-3 bg-[#3D6B52] hover:bg-[#345B45] border-[2px] border-[#24201D] rounded-2xl font-black font-display uppercase tracking-wider text-xs text-white shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer transition-all"
             >
               Create Task
             </button>

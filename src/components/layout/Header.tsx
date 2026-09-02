@@ -40,7 +40,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-2.5">
           <button
             onClick={onOpenSettings}
-            className="w-10 h-10 rounded-2xl border-[1.75px] border-[#18181B] flex items-center justify-center shadow-[1.5px_1.5px_0px_#18181B] shrink-0 cursor-pointer active:translate-y-0.5 active:shadow-none transition-all p-0.5"
+            className="w-10 h-10 rounded-2xl border-[1.75px] border-[#24201D] flex items-center justify-center shadow-[1.5px_1.5px_0px_#24201D] shrink-0 cursor-pointer active:translate-y-0.5 active:shadow-none transition-all p-0.5"
             style={{ backgroundColor: activeAvatar.bg }}
             title="Settings & Profile"
           >
@@ -48,10 +48,10 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           <div>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block leading-none">
+            <span className="text-[10px] font-bold text-[#6B635B] uppercase tracking-wider block leading-none">
               Daily Planner
             </span>
-            <h1 className="text-sm font-bold font-display text-[#18181B] tracking-tight leading-tight mt-0.5">
+            <h1 className="text-sm font-bold font-display text-[#24201D] tracking-tight leading-tight mt-0.5">
               Hey, {firstName}
             </h1>
           </div>
@@ -66,20 +66,20 @@ export const Header: React.FC<HeaderProps> = ({
               if (onOpenStreak) onOpenStreak();
             }}
             title={streakCount > 0 ? `${streakCount} Day Streak!` : 'Start your streak today'}
-            className={`flex items-center gap-1.5 px-3 py-1.5 border-[1.75px] border-[#18181B] rounded-full shadow-[1.5px_1.5px_0px_#18181B] cursor-pointer active:translate-y-0.5 transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 border-[1.75px] border-[#24201D] rounded-full shadow-[1.5px_1.5px_0px_#24201D] cursor-pointer active:translate-y-0.5 transition-all ${
               streakCount > 0
-                ? 'bg-[#FFE873] hover:bg-[#FED7AA]'
-                : 'bg-[#FAF7F2] hover:bg-slate-100'
+                ? 'bg-[#F0BB58] hover:bg-[#E5A943]'
+                : 'bg-[#F4F0EA] hover:bg-stone-200'
             }`}
           >
             <Flame
               className={`w-3.5 h-3.5 stroke-[2] ${
                 streakCount > 0
-                  ? 'text-amber-700 fill-amber-500'
-                  : 'text-slate-400 fill-slate-300'
+                  ? 'text-[#8A4B12] fill-[#D97706]'
+                  : 'text-stone-400 fill-stone-300'
               }`}
             />
-            <span className="text-xs font-bold font-display text-[#18181B] font-mono-num">
+            <span className="text-xs font-bold font-display text-[#24201D] font-mono-num">
               {streakCount}d
             </span>
           </button>
@@ -91,9 +91,9 @@ export const Header: React.FC<HeaderProps> = ({
               onOpenSettings();
             }}
             title="Settings"
-            className="w-8 h-8 rounded-xl bg-white hover:bg-slate-100 border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-white hover:bg-stone-100 border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
           >
-            <Settings className="w-4 h-4 text-[#18181B] stroke-[2]" />
+            <Settings className="w-4 h-4 text-[#24201D] stroke-[2]" />
           </button>
         </div>
       </div>

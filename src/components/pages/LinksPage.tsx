@@ -46,9 +46,9 @@ const ECOSYSTEM_SERVICES: EcosystemService[] = [
     badge: 'Watch Party & Streams',
     description: 'Anime streaming, sync rooms & creator tiers',
     url: 'https://tv.kawaii.uz',
-    icon: <Tv className="w-5 h-5 text-purple-900 stroke-[2.25]" />,
-    bg: 'bg-[#E8DCFF]',
-    borderColor: 'border-[#18181B]',
+    icon: <Tv className="w-5 h-5 text-[#2D503C] stroke-[2.25]" />,
+    bg: 'bg-[#DDE8DE]',
+    borderColor: 'border-[#24201D]',
   },
   {
     id: 'manga',
@@ -56,9 +56,9 @@ const ECOSYSTEM_SERVICES: EcosystemService[] = [
     badge: 'Reader & Novels',
     description: 'Manga, light novels, webtoons & translations',
     url: 'https://manga.kawaii.uz',
-    icon: <BookOpen className="w-5 h-5 text-amber-900 stroke-[2.25]" />,
-    bg: 'bg-[#FEF08A]',
-    borderColor: 'border-[#18181B]',
+    icon: <BookOpen className="w-5 h-5 text-[#854D0E] stroke-[2.25]" />,
+    bg: 'bg-[#FBECCF]',
+    borderColor: 'border-[#24201D]',
   },
   {
     id: 'anime',
@@ -66,9 +66,9 @@ const ECOSYSTEM_SERVICES: EcosystemService[] = [
     badge: 'Catalog & Dubs',
     description: 'Release calendar, anime database & dub studios',
     url: 'https://anime.kawaii.uz',
-    icon: <Film className="w-5 h-5 text-emerald-900 stroke-[2.25]" />,
-    bg: 'bg-[#D1FBE4]',
-    borderColor: 'border-[#18181B]',
+    icon: <Film className="w-5 h-5 text-[#C25E40] stroke-[2.25]" />,
+    bg: 'bg-[#F7E3DC]',
+    borderColor: 'border-[#24201D]',
   },
   {
     id: 'bot',
@@ -76,9 +76,9 @@ const ECOSYSTEM_SERVICES: EcosystemService[] = [
     badge: 'Assistant & Tools',
     description: 'Telegram bot assistant, release alerts & automation',
     url: 'https://bot.kawaii.uz',
-    icon: <Bot className="w-5 h-5 text-sky-900 stroke-[2.25]" />,
-    bg: 'bg-[#BAE6FD]',
-    borderColor: 'border-[#18181B]',
+    icon: <Bot className="w-5 h-5 text-[#2A495E] stroke-[2.25]" />,
+    bg: 'bg-[#DEE8EF]',
+    borderColor: 'border-[#24201D]',
   },
   {
     id: 'wiki',
@@ -86,9 +86,9 @@ const ECOSYSTEM_SERVICES: EcosystemService[] = [
     badge: 'Knowledge Base',
     description: 'Community guides, archive & anime encyclopaedia',
     url: 'https://wiki.kawaii.uz',
-    icon: <Library className="w-5 h-5 text-orange-900 stroke-[2.25]" />,
-    bg: 'bg-[#FED7AA]',
-    borderColor: 'border-[#18181B]',
+    icon: <Library className="w-5 h-5 text-[#854D0E] stroke-[2.25]" />,
+    bg: 'bg-[#FBECCF]',
+    borderColor: 'border-[#24201D]',
   },
   {
     id: 'portal',
@@ -96,9 +96,9 @@ const ECOSYSTEM_SERVICES: EcosystemService[] = [
     badge: 'Central Portal',
     description: 'Home of the anime community & ecosystem hub',
     url: 'https://kawaii.uz',
-    icon: <Compass className="w-5 h-5 text-purple-900 stroke-[2.25]" />,
-    bg: 'bg-[#FAF7F2]',
-    borderColor: 'border-[#18181B]',
+    icon: <Compass className="w-5 h-5 text-[#2D503C] stroke-[2.25]" />,
+    bg: 'bg-[#FAF8F5]',
+    borderColor: 'border-[#24201D]',
   },
 ];
 
@@ -117,7 +117,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
   // Form State for Custom Link
   const [newTitle, setNewTitle] = useState('');
   const [newUrl, setNewUrl] = useState('');
-  const [newColor, setNewColor] = useState('#FFE873');
+  const [newColor, setNewColor] = useState('#3D6B52');
 
   const filteredCustomLinks = links.filter((l) =>
     l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -183,12 +183,12 @@ export const LinksPage: React.FC<LinksPageProps> = ({
   return (
     <div className="w-full space-y-5 pb-20 font-body select-none">
       {/* 1. Header Card */}
-      <div className="neo-card p-4 bg-white flex items-center justify-between gap-3">
+      <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between gap-3">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block font-display">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block font-display">
             Kawaii Ecosystem
           </span>
-          <h2 className="text-base font-bold font-display text-[#18181B] mt-0.5">
+          <h2 className="text-base font-bold font-display text-[#24201D] mt-0.5">
             Portals & Hub
           </h2>
         </div>
@@ -199,7 +199,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
               playClickSound();
               setIsQrOpen(true);
             }}
-            className="w-8 h-8 rounded-xl bg-[#E8DCFF] hover:bg-[#D8C4FF] border-[1.5px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[1.5px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs cursor-pointer"
             title="Generate QR Code"
           >
             <QrCode className="w-4 h-4" />
@@ -210,7 +210,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
               playClickSound();
               setIsAddOpen(!isAddOpen);
             }}
-            className="px-3 py-1.5 bg-[#FFE873] hover:bg-[#FCD34D] neo-btn flex items-center gap-1 text-xs text-[#18181B] cursor-pointer"
+            className="px-3 py-1.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.5px] border-[#24201D] rounded-xl flex items-center gap-1 text-xs font-bold shadow-2xs active:translate-y-0.5 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Link</span>
@@ -220,23 +220,23 @@ export const LinksPage: React.FC<LinksPageProps> = ({
 
       {/* Search Input */}
       <div className="relative">
-        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+        <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search ecosystem services & links..."
-          className="w-full pl-10 pr-4 py-2 bg-white border-[1.75px] border-[#18181B] rounded-xl text-xs font-medium text-[#18181B] placeholder:text-slate-400 shadow-[1.5px_1.5px_0px_#18181B] focus:outline-none"
+          className="w-full pl-10 pr-4 py-2 bg-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-medium text-[#24201D] placeholder:text-stone-400 shadow-2xs focus:outline-none"
         />
       </div>
 
       {/* 2. Official Ecosystem Grid */}
       <div className="space-y-2.5">
         <div className="flex items-center justify-between px-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-display">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] font-display">
             Official Services
           </span>
-          <span className="text-[10px] font-bold text-slate-400">
+          <span className="text-[10px] font-bold text-stone-400">
             {filteredEcosystem.length} Platforms
           </span>
         </div>
@@ -246,20 +246,20 @@ export const LinksPage: React.FC<LinksPageProps> = ({
             <div
               key={service.id}
               onClick={() => handleOpenUrl(service.url)}
-              className="neo-card p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] flex flex-col justify-between gap-3 cursor-pointer hover:-translate-y-0.5 transition-all"
+              className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex flex-col justify-between gap-3 cursor-pointer hover:-translate-y-0.5 transition-all"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
                   <div
-                    className={`w-9 h-9 rounded-xl border-[1.5px] ${service.borderColor} ${service.bg} flex items-center justify-center shrink-0 shadow-[1px_1px_0px_#18181B]`}
+                    className={`w-9 h-9 rounded-xl border-[1.5px] ${service.borderColor} ${service.bg} flex items-center justify-center shrink-0 shadow-2xs`}
                   >
                     {service.icon}
                   </div>
                   <div>
-                    <h3 className="text-xs sm:text-sm font-bold text-[#18181B] leading-tight">
+                    <h3 className="text-xs sm:text-sm font-bold text-[#24201D] leading-tight">
                       {service.title}
                     </h3>
-                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tight block mt-0.5">
+                    <span className="text-[9px] font-bold text-[#6B635B] uppercase tracking-tight block mt-0.5">
                       {service.badge}
                     </span>
                   </div>
@@ -269,10 +269,10 @@ export const LinksPage: React.FC<LinksPageProps> = ({
                   <button
                     onClick={(e) => handleCopyLink(e, service.url, undefined, service.id)}
                     title="Copy URL"
-                    className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-slate-100 border border-slate-200 hover:border-[#18181B] flex items-center justify-center text-slate-600 cursor-pointer"
+                    className="w-7 h-7 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-stone-200 hover:border-[#24201D] flex items-center justify-center text-stone-600 cursor-pointer"
                   >
                     {copiedEcosystemId === service.id ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <Check className="w-3.5 h-3.5 text-[#3D6B52]" />
                     ) : (
                       <Copy className="w-3.5 h-3.5" />
                     )}
@@ -280,14 +280,14 @@ export const LinksPage: React.FC<LinksPageProps> = ({
                   <button
                     onClick={() => handleOpenUrl(service.url)}
                     title="Open Service"
-                    className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-slate-100 border border-slate-200 hover:border-[#18181B] flex items-center justify-center text-slate-600 cursor-pointer"
+                    className="w-7 h-7 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-stone-200 hover:border-[#24201D] flex items-center justify-center text-stone-600 cursor-pointer"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
-              <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+              <p className="text-[11px] text-[#6B635B] font-medium leading-relaxed">
                 {service.description}
               </p>
             </div>
@@ -298,18 +298,18 @@ export const LinksPage: React.FC<LinksPageProps> = ({
       {/* 3. Custom Personal Bookmarks */}
       <div className="space-y-2.5 pt-2">
         <div className="flex items-center justify-between px-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-display">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] font-display">
             Personal Bookmarks
           </span>
-          <span className="text-[10px] font-bold text-slate-400">
+          <span className="text-[10px] font-bold text-stone-400">
             {filteredCustomLinks.length} Saved
           </span>
         </div>
 
         {/* Add Link Form Collapsible */}
         {isAddOpen && (
-          <form onSubmit={handleCreateSubmit} className="neo-card p-4 bg-white space-y-3">
-            <h3 className="text-xs font-bold font-display text-[#18181B] uppercase tracking-wider">
+          <form onSubmit={handleCreateSubmit} className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
+            <h3 className="text-xs font-bold font-display text-[#24201D] uppercase tracking-wider">
               Create New Bookmark
             </h3>
 
@@ -319,26 +319,26 @@ export const LinksPage: React.FC<LinksPageProps> = ({
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 placeholder="Bookmark Title (e.g. My GitHub)"
-                className="w-full px-3.5 py-2 bg-white border-[1.75px] border-[#18181B] rounded-xl text-xs font-medium text-[#18181B] placeholder:text-slate-400 focus:outline-none"
+                className="w-full px-3.5 py-2 bg-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-medium text-[#24201D] placeholder:text-stone-400 focus:outline-none"
               />
               <input
                 type="text"
                 value={newUrl}
                 onChange={(e) => setNewUrl(e.target.value)}
                 placeholder="https://..."
-                className="w-full px-3.5 py-2 bg-white border-[1.75px] border-[#18181B] rounded-xl text-xs font-medium text-[#18181B] placeholder:text-slate-400 focus:outline-none"
+                className="w-full px-3.5 py-2 bg-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-medium text-[#24201D] placeholder:text-stone-400 focus:outline-none"
               />
             </div>
 
             <div className="flex items-center justify-between pt-1">
               <div className="flex items-center gap-1.5">
-                {['#FFE873', '#E8DCFF', '#D1FBE4', '#FED7AA', '#BAE6FD'].map((c) => (
+                {['#3D6B52', '#C25E40', '#F0BB58', '#476C85', '#8FA89B'].map((c) => (
                   <button
                     key={c}
                     type="button"
                     onClick={() => setNewColor(c)}
-                    className={`w-6 h-6 rounded-lg border-[1.5px] border-[#18181B] transition-all cursor-pointer ${
-                      newColor === c ? 'scale-110 shadow-[1px_1px_0px_#18181B]' : 'opacity-70'
+                    className={`w-6 h-6 rounded-lg border-[1.5px] border-[#24201D] transition-all cursor-pointer ${
+                      newColor === c ? 'scale-110 shadow-2xs ring-1 ring-[#24201D]' : 'opacity-70'
                     }`}
                     style={{ backgroundColor: c }}
                   />
@@ -349,13 +349,13 @@ export const LinksPage: React.FC<LinksPageProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAddOpen(false)}
-                  className="px-3 py-1.5 text-xs text-slate-500 font-bold hover:underline cursor-pointer"
+                  className="px-3 py-1.5 text-xs text-[#6B635B] font-bold hover:underline cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-[#FFE873] neo-btn text-xs text-[#18181B] cursor-pointer"
+                  className="px-4 py-1.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.5px] border-[#24201D] rounded-xl text-xs font-bold shadow-2xs active:translate-y-0.5 cursor-pointer"
                 >
                   Save
                 </button>
@@ -367,12 +367,12 @@ export const LinksPage: React.FC<LinksPageProps> = ({
         {/* Links List */}
         <div className="space-y-2">
           {filteredCustomLinks.length === 0 ? (
-            <div className="neo-card p-6 text-center bg-white border-dashed space-y-1.5">
-              <Globe className="w-6 h-6 text-slate-300 mx-auto" />
-              <h4 className="text-xs font-bold font-display text-slate-500">
+            <div className="p-6 text-center bg-[#FAF8F5] border-[1.75px] border-dashed border-[#24201D]/25 rounded-2xl space-y-1.5">
+              <Globe className="w-6 h-6 text-stone-300 mx-auto" />
+              <h4 className="text-xs font-bold font-display text-[#6B635B]">
                 No personal links yet
               </h4>
-              <p className="text-[10px] text-slate-400">
+              <p className="text-[10px] text-stone-400">
                 Tap «Add Link» above to pin your favorite tools or sites
               </p>
             </div>
@@ -381,21 +381,21 @@ export const LinksPage: React.FC<LinksPageProps> = ({
               <div
                 key={link.id}
                 onClick={() => handleOpenUrl(link.url, link.id)}
-                className="neo-card p-3 bg-white flex items-center justify-between gap-3 transition-all hover:-translate-y-0.5 cursor-pointer"
+                className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-xl shadow-2xs flex items-center justify-between gap-3 transition-all hover:-translate-y-0.5 cursor-pointer"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className="w-8 h-8 rounded-xl border-[1.5px] border-[#18181B] flex items-center justify-center shrink-0 shadow-[1px_1px_0px_#18181B]"
-                    style={{ backgroundColor: link.iconBg || '#FFE873' }}
+                    className="w-8 h-8 rounded-xl border-[1.5px] border-[#24201D] flex items-center justify-center shrink-0 shadow-2xs"
+                    style={{ backgroundColor: link.iconBg || '#DDE8DE' }}
                   >
-                    <Link2 className="w-4 h-4 text-[#18181B]" />
+                    <Link2 className="w-4 h-4 text-[#24201D]" />
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="text-xs sm:text-sm font-bold text-[#18181B] truncate">
+                    <h3 className="text-xs sm:text-sm font-bold text-[#24201D] truncate">
                       {link.title}
                     </h3>
-                    <span className="text-[10px] text-slate-400 truncate block">
+                    <span className="text-[10px] text-stone-400 truncate block">
                       {link.url.replace(/^https?:\/\//, '')}
                     </span>
                   </div>
@@ -405,15 +405,15 @@ export const LinksPage: React.FC<LinksPageProps> = ({
                   <button
                     onClick={(e) => handleCopyLink(e, link.url, link.id)}
                     title="Copy URL"
-                    className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-slate-100 border border-slate-200 hover:border-[#18181B] flex items-center justify-center text-slate-600 cursor-pointer"
+                    className="w-7 h-7 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-stone-200 hover:border-[#24201D] flex items-center justify-center text-stone-600 cursor-pointer"
                   >
-                    {copiedId === link.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedId === link.id ? <Check className="w-3.5 h-3.5 text-[#3D6B52]" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
 
                   <button
                     onClick={() => handleOpenUrl(link.url, link.id)}
                     title="Open Link"
-                    className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-slate-100 border border-slate-200 hover:border-[#18181B] flex items-center justify-center text-slate-600 cursor-pointer"
+                    className="w-7 h-7 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-stone-200 hover:border-[#24201D] flex items-center justify-center text-stone-600 cursor-pointer"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                   </button>
@@ -425,7 +425,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
                         onDeleteLink(link.id!);
                       }}
                       title="Delete"
-                      className="w-7 h-7 rounded-lg bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-400 flex items-center justify-center text-slate-400 hover:text-rose-600 cursor-pointer"
+                      className="w-7 h-7 rounded-lg bg-stone-50 hover:bg-rose-50 border border-stone-200 hover:border-rose-400 flex items-center justify-center text-stone-400 hover:text-rose-600 cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

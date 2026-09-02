@@ -126,17 +126,17 @@ export const InAppMusicPlayer: React.FC = () => {
   const progressPercent = duration > 0 ? Math.min(100, Math.max(0, (currentTime / duration) * 100)) : 0;
 
   return (
-    <div className="neo-card p-4 bg-white space-y-3 font-body select-none">
+    <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3 font-body select-none">
       {/* Header Controls */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-[#FFE873] border-[1.75px] border-[#18181B] flex items-center justify-center text-sm shadow-[1.5px_1.5px_0px_#18181B] shrink-0">
-            <Music className="w-4 h-4 text-[#18181B] stroke-[2.25]" />
+          <div className="w-8 h-8 rounded-xl bg-[#F0BB58] border-[1.75px] border-[#24201D] flex items-center justify-center text-sm shadow-2xs shrink-0">
+            <Music className="w-4 h-4 text-[#24201D] stroke-[2.25]" />
           </div>
           <div>
-            <h3 className="text-xs font-bold font-display text-[#18181B] leading-tight">Focus Music</h3>
+            <h3 className="text-xs font-bold font-display text-[#24201D] leading-tight">Focus Music</h3>
             {syncStatus && (
-              <span className="text-[10px] text-purple-700 font-bold block">{syncStatus}</span>
+              <span className="text-[10px] text-[#3D6B52] font-bold block">{syncStatus}</span>
             )}
           </div>
         </div>
@@ -148,9 +148,9 @@ export const InAppMusicPlayer: React.FC = () => {
             onClick={() => fetchVercelTracks(true)}
             disabled={isSyncing}
             title="Refresh from Vercel"
-            className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border-[1.5px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1px_1px_0px_#18181B] cursor-pointer active:translate-y-0.5"
+            className="w-8 h-8 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border-[1.5px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs cursor-pointer active:translate-y-0.5"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-purple-600' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-[#3D6B52]' : ''}`} />
           </button>
 
           {/* Tracklist Drawer Toggle */}
@@ -159,10 +159,10 @@ export const InAppMusicPlayer: React.FC = () => {
               playClickSound();
               setIsTracklistOpen(!isTracklistOpen);
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold border-[1.5px] border-[#18181B] flex items-center gap-1.5 cursor-pointer transition-all ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold border-[1.5px] border-[#24201D] flex items-center gap-1.5 cursor-pointer transition-all ${
               isTracklistOpen
-                ? 'bg-[#18181B] text-white'
-                : 'bg-[#FAF7F2] text-[#18181B] hover:bg-slate-100 shadow-[1px_1px_0px_#18181B]'
+                ? 'bg-[#24201D] text-[#FAF8F5]'
+                : 'bg-[#FAF8F5] text-[#24201D] hover:bg-stone-100 shadow-2xs'
             }`}
           >
             <ListMusic className="w-3.5 h-3.5" />
@@ -172,32 +172,32 @@ export const InAppMusicPlayer: React.FC = () => {
       </div>
 
       {/* Main Playing Track Card */}
-      <div className="p-3.5 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-3">
+      <div className="p-3.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
         {currentTrack ? (
           <div className="min-w-0">
             <div className="flex items-center justify-between gap-2">
-              <h4 className="text-sm sm:text-base font-bold text-[#18181B] truncate">{currentTrack.title}</h4>
+              <h4 className="text-sm sm:text-base font-bold text-[#24201D] truncate">{currentTrack.title}</h4>
               {isPlaying && (
                 <span className="flex items-center gap-0.5 shrink-0">
-                  <span className="w-1 h-3 bg-[#18181B] rounded-full animate-pulse" />
-                  <span className="w-1 h-4 bg-[#18181B] rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
-                  <span className="w-1 h-2 bg-[#18181B] rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+                  <span className="w-1 h-3 bg-[#24201D] rounded-full animate-pulse" />
+                  <span className="w-1 h-4 bg-[#24201D] rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                  <span className="w-1 h-2 bg-[#24201D] rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-500 font-medium truncate mt-0.5">{currentTrack.artist}</p>
+            <p className="text-xs text-[#6B635B] font-medium truncate mt-0.5">{currentTrack.artist}</p>
           </div>
         ) : (
           <div className="py-2 text-center">
-            <p className="text-xs font-bold text-slate-600">No tracks loaded yet</p>
-            <p className="text-[10px] text-slate-400 mt-0.5 flex items-center justify-center gap-1">
+            <p className="text-xs font-bold text-[#6B635B]">No tracks loaded yet</p>
+            <p className="text-[10px] text-stone-400 mt-0.5 flex items-center justify-center gap-1">
               <span>Push .mp3 files to Vercel and tap</span>
-              <RefreshCw className="w-3 h-3 text-slate-500 inline stroke-[2.25]" />
+              <RefreshCw className="w-3 h-3 text-stone-500 inline stroke-[2.25]" />
             </p>
           </div>
         )}
 
-        {/* Progress Scrubber Bar with Solid Black Fill */}
+        {/* Progress Scrubber Bar */}
         <div className="space-y-1">
           <input
             type="range"
@@ -206,12 +206,12 @@ export const InAppMusicPlayer: React.FC = () => {
             value={currentTime}
             onChange={handleSeek}
             disabled={!currentTrack}
-            className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-[#18181B]"
+            className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-[#3D6B52]"
             style={{
-              background: `linear-gradient(to right, #18181B ${progressPercent}%, #E4E4E7 ${progressPercent}%)`,
+              background: `linear-gradient(to right, #3D6B52 ${progressPercent}%, #E4E4E7 ${progressPercent}%)`,
             }}
           />
-          <div className="flex items-center justify-between text-[10px] font-bold font-mono-num text-slate-500">
+          <div className="flex items-center justify-between text-[10px] font-bold font-mono-num text-[#6B635B]">
             <span>{formatSeconds(currentTime)}</span>
             <span>{formatSeconds(duration)}</span>
           </div>
@@ -227,7 +227,7 @@ export const InAppMusicPlayer: React.FC = () => {
             }}
             disabled={!currentTrack}
             className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
-              isShuffle ? 'bg-[#FFE873] border-[#18181B] text-[#18181B] shadow-[1px_1px_0px_#18181B]' : 'border-transparent text-slate-400 hover:text-black'
+              isShuffle ? 'bg-[#F0BB58] border-[#24201D] text-[#24201D] shadow-2xs' : 'border-transparent text-stone-400 hover:text-stone-800'
             }`}
             title="Shuffle"
           >
@@ -238,7 +238,7 @@ export const InAppMusicPlayer: React.FC = () => {
           <button
             onClick={handlePrevTrack}
             disabled={!currentTrack}
-            className="w-11 h-11 rounded-xl bg-white border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 cursor-pointer disabled:opacity-50"
+            className="w-11 h-11 rounded-xl bg-white border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer disabled:opacity-50"
             title="Previous Track"
           >
             <SkipBack className="w-4 h-4 stroke-[2.5]" />
@@ -248,16 +248,16 @@ export const InAppMusicPlayer: React.FC = () => {
           <button
             onClick={handleTogglePlay}
             disabled={!currentTrack}
-            className="w-16 h-12 rounded-2xl bg-[#FFE873] hover:bg-[#FED7AA] border-[2px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[2.5px_2.5px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer disabled:opacity-50"
+            className="w-16 h-12 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] border-[2px] border-[#24201D] flex items-center justify-center text-white shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer disabled:opacity-50"
           >
-            {isPlaying ? <Pause className="w-6 h-6 fill-[#18181B]" /> : <Play className="w-6 h-6 fill-[#18181B] ml-0.5" />}
+            {isPlaying ? <Pause className="w-6 h-6 fill-white" /> : <Play className="w-6 h-6 fill-white ml-0.5" />}
           </button>
 
           {/* Next */}
           <button
             onClick={handleNextTrack}
             disabled={!currentTrack}
-            className="w-11 h-11 rounded-xl bg-white border-[1.75px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] active:translate-y-0.5 cursor-pointer disabled:opacity-50"
+            className="w-11 h-11 rounded-xl bg-white border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer disabled:opacity-50"
             title="Next Track"
           >
             <SkipForward className="w-4 h-4 stroke-[2.5]" />
@@ -271,7 +271,7 @@ export const InAppMusicPlayer: React.FC = () => {
             }}
             disabled={!currentTrack}
             className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
-              isRepeat ? 'bg-[#FFE873] border-[#18181B] text-[#18181B] shadow-[1px_1px_0px_#18181B]' : 'border-transparent text-slate-400 hover:text-black'
+              isRepeat ? 'bg-[#F0BB58] border-[#24201D] text-[#24201D] shadow-2xs' : 'border-transparent text-stone-400 hover:text-stone-800'
             }`}
             title="Repeat Track"
           >
@@ -280,27 +280,27 @@ export const InAppMusicPlayer: React.FC = () => {
         </div>
       </div>
 
-      {/* Tracklist Drawer with Clean Padding & Borders */}
+      {/* Tracklist Drawer */}
       {isTracklistOpen && (
-        <div className="p-3 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-2.5">
+        <div className="p-3 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5">
           {/* Search bar */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search tracks or artists..."
-              className="w-full pl-8 pr-3 py-2 bg-white border border-[#18181B] rounded-xl text-xs outline-none font-medium"
+              className="w-full pl-8 pr-3 py-2 bg-white border border-[#24201D] rounded-xl text-xs outline-none font-medium text-[#24201D]"
             />
           </div>
 
           {/* Tracks List */}
           <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1 py-0.5">
             {filteredPlaylist.length === 0 ? (
-              <p className="text-xs text-slate-400 text-center py-4 flex items-center justify-center gap-1">
+              <p className="text-xs text-stone-400 text-center py-4 flex items-center justify-center gap-1">
                 <span>No tracks found. Upload .mp3 to Vercel and tap</span>
-                <RefreshCw className="w-3 h-3 text-slate-400 inline" />
+                <RefreshCw className="w-3 h-3 text-stone-400 inline" />
               </p>
             ) : (
               filteredPlaylist.map((track) => {
@@ -314,34 +314,34 @@ export const InAppMusicPlayer: React.FC = () => {
                       playClickSound();
                       musicPlayer.selectTrack(originalIndex);
                     }}
-                    className={`p-2.5 rounded-xl border-[1.5px] border-[#18181B] flex items-center justify-between gap-2.5 cursor-pointer transition-all ${
+                    className={`p-2.5 rounded-xl border-[1.5px] border-[#24201D] flex items-center justify-between gap-2.5 cursor-pointer transition-all ${
                       isCurrent
-                        ? 'bg-[#E8DCFF] shadow-[2px_2px_0px_#18181B] -translate-y-0.5'
-                        : 'bg-white hover:bg-slate-50 shadow-[1px_1px_0px_#18181B]'
+                        ? 'bg-[#DDE8DE] shadow-[2px_2px_0px_#24201D] -translate-y-0.5'
+                        : 'bg-white hover:bg-stone-50 shadow-2xs'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div
-                        className={`w-6 h-6 rounded-lg border border-[#18181B] flex items-center justify-center text-xs font-bold font-mono-num shrink-0 ${
-                          isCurrent ? 'bg-[#FFE873] text-[#18181B]' : 'bg-[#FAF7F2] text-slate-500'
+                        className={`w-6 h-6 rounded-lg border border-[#24201D] flex items-center justify-center text-xs font-bold font-mono-num shrink-0 ${
+                          isCurrent ? 'bg-[#F0BB58] text-[#24201D]' : 'bg-[#FAF8F5] text-[#6B635B]'
                         }`}
                       >
                         {isCurrent && isPlaying ? (
-                          <Play className="w-3 h-3 fill-[#18181B] stroke-[#18181B]" />
+                          <Play className="w-3 h-3 fill-[#24201D] stroke-[#24201D]" />
                         ) : (
                           originalIndex + 1
                         )}
                       </div>
 
                       <div className="min-w-0">
-                        <p className={`text-xs font-bold truncate ${isCurrent ? 'text-[#18181B]' : 'text-slate-800'}`}>
+                        <p className={`text-xs font-bold truncate ${isCurrent ? 'text-[#24201D]' : 'text-stone-800'}`}>
                           {track.title}
                         </p>
-                        <p className="text-[10px] text-slate-500 truncate">{track.artist}</p>
+                        <p className="text-[10px] text-[#6B635B] truncate">{track.artist}</p>
                       </div>
                     </div>
 
-                    <span className="text-[10px] font-bold font-mono-num text-slate-500 shrink-0">
+                    <span className="text-[10px] font-bold font-mono-num text-[#6B635B] shrink-0">
                       {track.duration}
                     </span>
                   </div>

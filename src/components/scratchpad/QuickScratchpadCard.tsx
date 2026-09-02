@@ -40,10 +40,10 @@ interface QuickChecklistCardProps {
 }
 
 const TAG_CONFIG: Record<ChecklistTag, { label: string; bg: string; color: string; icon: React.ReactNode }> = {
-  general: { label: 'General', bg: '#FAF7F2', color: '#18181B', icon: <Layers className="w-2.5 h-2.5" /> },
-  urgent: { label: 'Urgent', bg: '#FED7AA', color: '#9A3412', icon: <Flame className="w-2.5 h-2.5" /> },
-  idea: { label: 'Idea', bg: '#FEF08A', color: '#854D0E', icon: <Lightbulb className="w-2.5 h-2.5" /> },
-  routine: { label: 'Routine', bg: '#E8DCFF', color: '#6B21A8', icon: <Repeat className="w-2.5 h-2.5" /> },
+  general: { label: 'General', bg: '#FAF8F5', color: '#24201D', icon: <Layers className="w-2.5 h-2.5" /> },
+  urgent: { label: 'Urgent', bg: '#F7E3DC', color: '#9A3412', icon: <Flame className="w-2.5 h-2.5" /> },
+  idea: { label: 'Idea', bg: '#FBECCF', color: '#854D0E', icon: <Lightbulb className="w-2.5 h-2.5" /> },
+  routine: { label: 'Routine', bg: '#DDE8DE', color: '#2D503C', icon: <Repeat className="w-2.5 h-2.5" /> },
 };
 
 export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
@@ -67,9 +67,9 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
       } catch {}
     }
     return [
-      { id: '1', text: 'Morning coffee & review top 3 priorities', isCompleted: true, isStarred: true, tag: 'routine', createdAt: Date.now() - 3600000 },
+      { id: '1', text: 'Morning tea & review top 3 outcomes', isCompleted: true, isStarred: true, tag: 'routine', createdAt: Date.now() - 3600000 },
       { id: '2', text: 'Quick inbox zero & team check-in', isCompleted: false, isStarred: false, tag: 'general', createdAt: Date.now() - 1800000 },
-      { id: '3', text: 'Fix critical bug in deployment pipeline', isCompleted: false, isStarred: true, tag: 'urgent', createdAt: Date.now() - 900000 },
+      { id: '3', text: 'Focus block on core project feature', isCompleted: false, isStarred: true, tag: 'urgent', createdAt: Date.now() - 900000 },
     ];
   });
 
@@ -80,84 +80,77 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
     }
   }, [items]);
 
-  const showToast = (msg: string) => {
-    setActionNotice(msg);
-    setTimeout(() => setActionNotice(null), 2500);
-  };
-
-  // Calculations
-  const completedCount = items.filter((i) => i.isCompleted).length;
   const totalCount = items.length;
-  const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+  const completedCount = items.filter((i) => i.isCompleted).length;
+  const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const isAllDone = totalCount > 0 && completedCount === totalCount;
 
   // Add Item
-  const handleAddItem = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!inputText.trim()) return;
+  const handleAddItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = inputText.trim();
+    if (!text) return;
 
     playClickSound();
     const newItem: QuickChecklistItem = {
       id: Date.now().toString(),
-      text: inputText.trim(),
+      text,
       isCompleted: false,
-      isStarred: selectedTag === 'urgent',
+      isStarred: false,
       tag: selectedTag,
       createdAt: Date.now(),
     };
 
-    setItems([newItem, ...items]);
+    setItems((prev) => [newItem, ...prev]);
     setInputText('');
   };
 
   // Toggle Complete
-  const handleToggleItem = (id: string) => {
+  const handleToggleDone = (id: string) => {
     playTaskCheckSound();
-    setItems((prev) => {
-      const updated = prev.map((item) => {
+    setItems((prev) =>
+      prev.map((item) => {
         if (item.id === id) {
-          const nextCompleted = !item.isCompleted;
-          if (nextCompleted && completedCount + 1 === totalCount) {
-            playSuccessChime();
-            confetti({
-              particleCount: 50,
-              spread: 60,
-              origin: { y: 0.75 },
-              colors: ['#FFE873', '#E8DCFF', '#D1FBE4'],
-            });
+          const nextState = !item.isCompleted;
+          if (nextState) {
+            // If checking done
+            if (completedCount + 1 === totalCount && totalCount > 1) {
+              playSuccessChime();
+              confetti({
+                particleCount: 50,
+                spread: 60,
+                origin: { y: 0.8 },
+                colors: ['#3D6B52', '#E09F3E', '#C25E40'],
+              });
+            }
           }
-          return { ...item, isCompleted: nextCompleted };
+          return { ...item, isCompleted: nextState };
         }
         return item;
-      });
-      return updated;
-    });
+      })
+    );
   };
 
   // Toggle Star / Pin
-  const handleToggleStar = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleToggleStar = (id: string) => {
     playClickSound();
     setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, isStarred: !item.isStarred } : item
-      )
+      prev.map((item) => (item.id === id ? { ...item, isStarred: !item.isStarred } : item))
     );
   };
 
   // Delete Item
-  const handleDeleteItem = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDeleteItem = (id: string) => {
     playClickSound();
     setItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   // Clear Completed
   const handleClearCompleted = () => {
-    if (completedCount === 0) return;
     playClickSound();
     setItems((prev) => prev.filter((item) => !item.isCompleted));
-    showToast(`Cleared ${completedCount} completed items`);
+    setActionNotice('Cleared done');
+    setTimeout(() => setActionNotice(null), 2000);
   };
 
   // Promote single item to Today Tasks
@@ -175,9 +168,10 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
       estimatedMinutes: item.tag === 'urgent' ? 45 : 25,
     });
 
-    handleDeleteItem(item.id, e);
+    handleDeleteItem(item.id);
     playSuccessChime();
-    showToast('Promoted to Today Tasks!');
+    setActionNotice('Promoted to Today Tasks!');
+    setTimeout(() => setActionNotice(null), 2000);
   };
 
   // Import all pending to Today Tasks
@@ -185,7 +179,8 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
     if (!onQuickCreateTask) return;
     const pending = items.filter((i) => !i.isCompleted);
     if (pending.length === 0) {
-      showToast('No pending items to import');
+      setActionNotice('No pending items');
+      setTimeout(() => setActionNotice(null), 2000);
       return;
     }
 
@@ -203,97 +198,61 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
 
     playSuccessChime();
     confetti({ particleCount: 40, spread: 55, origin: { y: 0.7 } });
-    showToast(`Imported ${pending.length} items to Tasks!`);
+    setActionNotice(`Imported ${pending.length} items`);
+    setTimeout(() => setActionNotice(null), 2000);
   };
 
   // Voice Dictation
   const handleToggleVoice = () => {
-    playClickSound();
+    if (!isSpeechRecognitionSupported()) {
+      alert('Voice dictation is supported in Chrome/Edge/Android.');
+      return;
+    }
+
     if (isVoiceRecording) {
       stopVoiceDictation();
       setIsVoiceRecording(false);
     } else {
-      if (!isSpeechRecognitionSupported()) {
-        alert('Voice recognition not supported in this browser.');
-        return;
-      }
       setIsVoiceRecording(true);
       startVoiceDictation({
-        onTranscript: (transcript) => {
-          if (transcript) {
-            setInputText(transcript);
-          }
+        onTranscript: (text: string) => {
+          setInputText(text);
         },
-        onEnd: () => setIsVoiceRecording(false),
         onError: () => setIsVoiceRecording(false),
+        onEnd: () => setIsVoiceRecording(false),
       });
     }
   };
 
-  // Filtered & Sorted items (Starred on top)
-  const filteredItems = items
-    .filter((item) => {
-      if (activeFilter === 'active') return !item.isCompleted;
-      if (activeFilter === 'completed') return item.isCompleted;
-      return true;
-    })
-    .sort((a, b) => {
-      if (a.isCompleted !== b.isCompleted) {
-        return a.isCompleted ? 1 : -1;
-      }
-      if (a.isStarred && !b.isStarred) return -1;
-      if (!a.isStarred && b.isStarred) return 1;
-      return b.createdAt - a.createdAt;
-    });
+  // Filtered & Sorted items
+  const filteredItems = items.filter((item) => {
+    if (activeFilter === 'active') return !item.isCompleted;
+    if (activeFilter === 'completed') return item.isCompleted;
+    return true;
+  });
 
   return (
-    <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-3 font-body">
+    <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3 font-body select-none">
       
-      {/* Header with Title, Progress & Expand/Collapse */}
-      <div className="flex items-center justify-between">
-        <div
-          onClick={() => {
-            playClickSound();
-            setIsExpanded(!isExpanded);
-          }}
-          className="flex items-center gap-2.5 cursor-pointer select-none flex-1"
-        >
-          <div
-            className="w-8 h-8 rounded-xl border-[1.5px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-2xs transition-colors"
-            style={{ backgroundColor: isAllDone ? '#D1FBE4' : '#E8DCFF' }}
-          >
-            <ListChecks className={`w-4 h-4 stroke-[2.25] ${isAllDone ? 'text-emerald-800' : 'text-purple-900'}`} />
+      {/* Header Bar */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-2xs">
+            <ListChecks className="w-3.5 h-3.5 text-[#24201D] stroke-[2.25]" />
           </div>
-
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
-                Quick Checklist
-              </h3>
-              {totalCount > 0 && (
-                <span
-                  className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border border-[#18181B] shadow-2xs font-mono-num ${
-                    isAllDone ? 'bg-[#D1FBE4] text-emerald-900' : 'bg-[#FFE873] text-[#18181B]'
-                  }`}
-                >
-                  {completedCount}/{totalCount}
-                </span>
-              )}
-            </div>
-            <p className="text-[10px] text-slate-500 font-bold">
-              {totalCount === 0
-                ? 'Keep track of fast sub-goals & routine'
-                : isAllDone
-                ? 'All done! You are crushing it!'
-                : `${totalCount - completedCount} items remaining (${progressPercent}%)`}
-            </p>
+            <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
+              Quick Scratchpad
+            </h3>
+            <span className="text-[10px] font-bold text-[#6B635B]">
+              {completedCount} of {totalCount} items completed
+            </span>
           </div>
         </div>
 
-        {/* Action Notice / Toggle */}
-        <div className="flex items-center gap-1.5 select-none">
+        <div className="flex items-center gap-1.5">
           {actionNotice && (
-            <span className="text-[9px] font-black text-emerald-800 bg-[#D1FBE4] border border-[#18181B] px-2 py-0.5 rounded-lg shadow-2xs animate-in fade-in">
+            <span className="text-[9px] font-black text-[#2D503C] bg-[#DDE8DE] border border-[#24201D] px-2 py-0.5 rounded-lg shadow-2xs animate-in fade-in">
               {actionNotice}
             </span>
           )}
@@ -305,7 +264,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
               setIsExpanded(!isExpanded);
             }}
             title={isExpanded ? 'Collapse' : 'Expand'}
-            className="w-7 h-7 rounded-lg bg-[#FAF7F2] hover:bg-slate-100 border border-[#18181B] flex items-center justify-center text-[#18181B] shadow-2xs active:scale-95 transition-all cursor-pointer"
+            className="w-7 h-7 rounded-lg bg-[#F4F0EA] hover:bg-stone-200 border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
           >
             {isExpanded ? (
               <ChevronUp className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -318,12 +277,12 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
 
       {/* Progress Bar */}
       {totalCount > 0 && (
-        <div className="w-full h-2 bg-[#FAF7F2] border-[1.25px] border-[#18181B] rounded-full overflow-hidden shadow-2xs">
+        <div className="w-full h-2 bg-[#F4F0EA] border-[1.25px] border-[#24201D] rounded-full overflow-hidden shadow-2xs">
           <div
             className="h-full transition-all duration-300 rounded-full"
             style={{
               width: `${progressPercent}%`,
-              backgroundColor: isAllDone ? '#4ADE80' : '#FFE873',
+              backgroundColor: isAllDone ? '#3D6B52' : '#F0BB58',
             }}
           />
         </div>
@@ -342,7 +301,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   placeholder="Add a quick checklist item..."
-                  className="w-full pl-3 pr-8 py-2 bg-[#FAF7F2] focus:bg-white border-[1.5px] border-[#18181B] rounded-xl text-xs font-bold text-[#18181B] placeholder:text-slate-400 outline-none shadow-2xs focus:shadow-[2px_2px_0px_#18181B] transition-all"
+                  className="w-full pl-3 pr-8 py-2 bg-[#FAF8F5] focus:bg-white border-[1.5px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-stone-400 outline-none shadow-2xs focus:shadow-[2px_2px_0px_#24201D] transition-all"
                 />
                 
                 {/* Voice Mic Button */}
@@ -350,20 +309,20 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                   type="button"
                   onClick={handleToggleVoice}
                   title="Voice input"
-                  className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-lg border text-slate-700 active:scale-90 transition-all cursor-pointer ${
+                  className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-lg border text-stone-700 active:scale-90 transition-all cursor-pointer ${
                     isVoiceRecording
                       ? 'bg-rose-500 text-white border-rose-600 animate-pulse'
-                      : 'bg-white hover:bg-slate-100 border-[#18181B]/30'
+                      : 'bg-white hover:bg-stone-100 border-[#24201D]/30'
                   }`}
                 >
-                  {isVoiceRecording ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3 text-rose-500" />}
+                  {isVoiceRecording ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3 text-[#C25E40]" />}
                 </button>
               </div>
 
               <button
                 type="submit"
                 disabled={!inputText.trim()}
-                className="px-3.5 py-2 bg-[#FFE873] hover:bg-[#FED7AA] disabled:opacity-40 border-[1.5px] border-[#18181B] rounded-xl text-xs font-black text-[#18181B] flex items-center gap-1 shadow-2xs active:translate-y-0.5 transition-all cursor-pointer shrink-0"
+                className="px-3.5 py-2 bg-[#3D6B52] hover:bg-[#345B45] text-white disabled:opacity-40 border-[1.5px] border-[#24201D] rounded-xl text-xs font-black flex items-center gap-1 shadow-2xs active:translate-y-0.5 transition-all cursor-pointer shrink-0"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[3]" />
                 <span>Add</span>
@@ -372,7 +331,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
 
             {/* Quick Tag Selector Chips */}
             <div className="flex items-center gap-1 overflow-x-auto py-0.5 scrollbar-none select-none">
-              <span className="text-[9px] font-black uppercase text-slate-400 pr-1 shrink-0">
+              <span className="text-[9px] font-black uppercase text-[#6B635B] pr-1 shrink-0">
                 Tag:
               </span>
               {(Object.keys(TAG_CONFIG) as ChecklistTag[]).map((tagKey) => {
@@ -388,8 +347,8 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                     }}
                     className={`px-2 py-0.5 rounded-lg border text-[9px] font-black flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
                       isSelected
-                        ? 'border-[#18181B] shadow-2xs ring-1 ring-[#18181B]'
-                        : 'border-[#18181B]/20 opacity-60 hover:opacity-100'
+                        ? 'border-[#24201D] shadow-2xs ring-1 ring-[#24201D]'
+                        : 'border-[#24201D]/20 opacity-60 hover:opacity-100'
                     }`}
                     style={{ backgroundColor: cfg.bg, color: cfg.color }}
                   >
@@ -425,8 +384,8 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                       }}
                       className={`px-2 py-0.5 rounded-lg text-[9px] font-black capitalize transition-all cursor-pointer ${
                         isActive
-                          ? 'bg-[#18181B] text-white border border-[#18181B] shadow-2xs'
-                          : 'bg-[#FAF7F2] text-slate-500 hover:text-slate-800 border border-[#18181B]/15'
+                          ? 'bg-[#24201D] text-[#FAF8F5] border border-[#24201D] shadow-2xs'
+                          : 'bg-[#F4F0EA] text-[#6B635B] hover:text-[#24201D] border border-[#24201D]/15'
                       }`}
                     >
                       {f} ({count})

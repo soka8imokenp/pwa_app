@@ -248,16 +248,16 @@ export const FocusPage: React.FC<FocusPageProps> = ({
     <div className="w-full space-y-3.5 pb-24 font-body select-none">
       
       {/* 1. Main Sumire Focus Card */}
-      <div className="p-4 sm:p-5 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-3.5">
+      <div className="p-4 sm:p-5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3.5">
         
         {/* Top Header with Zen Mode Icon in Top-Right Corner */}
-        <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#18181B]/15">
+        <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#24201D]/15">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-[#FFE873] border border-[#18181B] flex items-center justify-center shadow-2xs">
-              <Zap className="w-3.5 h-3.5 text-[#18181B] stroke-[2.25]" />
+            <div className="w-7 h-7 rounded-xl bg-[#FBECCF] border border-[#24201D] flex items-center justify-center shadow-2xs">
+              <Zap className="w-3.5 h-3.5 text-[#24201D] stroke-[2.25]" />
             </div>
             <div>
-              <h2 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
+              <h2 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
                 Sumire Focus Mode
               </h2>
             </div>
@@ -270,14 +270,14 @@ export const FocusPage: React.FC<FocusPageProps> = ({
               setIsZenModeOpen(true);
             }}
             title="Zen Desk Stand Mode"
-            className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-[#E8DCFF] border-[1.5px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-[#F4F0EA] hover:bg-[#DDE8DE] border-[1.5px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
           >
             <Maximize2 className="w-4 h-4 stroke-[2.25]" />
           </button>
         </div>
 
         {/* Mode Selector Tabs (Focus Flow, Rest Break, Stopwatch) */}
-        <div className="flex items-center gap-1.5 p-1 bg-[#FAF7F2] border-[1.5px] border-[#18181B] rounded-2xl shadow-2xs">
+        <div className="flex items-center gap-1.5 p-1 bg-[#F4F0EA] border-[1.5px] border-[#24201D] rounded-2xl shadow-2xs">
           {[
             { id: 'pomodoro', label: 'Focus Flow', icon: <Zap className="w-3.5 h-3.5" /> },
             { id: 'break', label: 'Rest Break', icon: <Coffee className="w-3.5 h-3.5" /> },
@@ -288,8 +288,8 @@ export const FocusPage: React.FC<FocusPageProps> = ({
               onClick={() => handleModeChange(m.id as any)}
               className={`flex-1 py-1.5 px-1 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                 mode === m.id
-                  ? 'bg-[#FFE873] text-[#18181B] border-[1.5px] border-[#18181B] shadow-[1px_1px_0px_#18181B]'
-                  : 'text-slate-500 hover:text-[#18181B]'
+                  ? 'bg-[#F0BB58] text-[#24201D] border-[1.5px] border-[#24201D] shadow-[1px_1px_0px_#24201D]'
+                  : 'text-[#6B635B] hover:text-[#24201D]'
               }`}
             >
               {m.icon}
@@ -299,17 +299,17 @@ export const FocusPage: React.FC<FocusPageProps> = ({
         </div>
 
         {/* Title Input Panel */}
-        <div className="p-3 bg-[#FAF7F2] border-[1.5px] border-[#18181B] rounded-2xl space-y-1">
-          <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block px-1">
+        <div className="p-3 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-2xl space-y-1">
+          <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 block px-1">
             Title
           </label>
-          <div className="flex items-center gap-2 bg-white border-[1.5px] border-[#18181B] rounded-xl px-3 py-2 shadow-2xs">
+          <div className="flex items-center gap-2 bg-white border-[1.5px] border-[#24201D] rounded-xl px-3 py-2 shadow-2xs">
             <input
               type="text"
               value={goalTitle}
               onChange={(e) => setGoalTitle(e.target.value)}
               placeholder="Goal or task title..."
-              className="w-full text-xs font-bold text-[#18181B] outline-none placeholder:text-slate-400 bg-transparent"
+              className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-stone-400 bg-transparent"
             />
             {goalTitle && (
               <button
@@ -318,7 +318,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
                   setGoalTitle('');
                   onClearSelectedTask();
                 }}
-                className="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 hover:text-[#18181B] cursor-pointer"
+                className="w-4 h-4 rounded-full bg-stone-100 flex items-center justify-center text-[10px] font-black text-stone-500 hover:text-[#24201D] cursor-pointer"
               >
                 ×
               </button>
@@ -328,29 +328,29 @@ export const FocusPage: React.FC<FocusPageProps> = ({
 
         {/* Large Digits Display & Status Indicator */}
         <div className="py-2 text-center space-y-1.5">
-          <div className="text-6xl sm:text-7xl font-black font-display font-mono-num text-[#18181B] tracking-tight">
+          <div className="text-6xl sm:text-7xl font-black font-display font-mono-num text-[#24201D] tracking-tight">
             {displayTime}
           </div>
 
           <div className="flex items-center justify-center gap-2">
             {isRunning ? (
-              <span className="px-3 py-1 bg-emerald-50 border border-emerald-500 rounded-full text-[10px] font-black font-mono-num text-emerald-700 shadow-2xs">
+              <span className="px-3 py-1 bg-[#EEF5F0] border border-[#3D6B52] rounded-full text-[10px] font-black font-mono-num text-[#2D503C] shadow-2xs">
                 Active • {currentElapsedMinutes}m elapsed
               </span>
             ) : elapsedFocusSeconds > 0 ? (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 border-[1.5px] border-rose-500 rounded-full text-xs font-black font-mono-num text-rose-600 shadow-[1px_1px_0px_#E11D48] animate-in fade-in zoom-in-95 duration-150">
-                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F9E2E5] border-[1.5px] border-[#C25E40] rounded-full text-xs font-black font-mono-num text-[#8C2B39] shadow-[1px_1px_0px_#C25E40] animate-in fade-in zoom-in-95 duration-150">
+                <span className="w-2 h-2 rounded-full bg-[#C25E40] animate-ping" />
                 <span>Paused: {formatTime(pausedSeconds)}</span>
               </div>
             ) : (
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-stone-400">
                 Ready
               </span>
             )}
           </div>
         </div>
 
-        {/* Duration Preset Chips (Without Clock Icon) */}
+        {/* Duration Preset Chips */}
         {mode !== 'stopwatch' && (
           <div className="flex items-center justify-center gap-1.5">
             {(mode === 'pomodoro' ? FOCUS_PRESETS : BREAK_PRESETS).map((mins) => {
@@ -361,8 +361,8 @@ export const FocusPage: React.FC<FocusPageProps> = ({
                   onClick={() => handleSelectPreset(mins)}
                   className={`px-3.5 py-1 text-xs font-bold font-mono-num rounded-xl border transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-[#FFE873] border-[#18181B] text-[#18181B] shadow-[1px_1px_0px_#18181B]'
-                      : 'bg-white border-[#18181B]/30 text-slate-600 hover:border-[#18181B]'
+                      ? 'bg-[#F0BB58] border-[#24201D] text-[#24201D] shadow-[1px_1px_0px_#24201D]'
+                      : 'bg-white border-[#24201D]/30 text-[#6B635B] hover:border-[#24201D]'
                   }`}
                 >
                   {mins}m
@@ -372,14 +372,14 @@ export const FocusPage: React.FC<FocusPageProps> = ({
           </div>
         )}
 
-        {/* Interactive Pause Prompt Banner (Asks whether to save result or resume) */}
+        {/* Interactive Pause Prompt Banner */}
         {!isRunning && elapsedFocusSeconds >= 10 && (
-          <div className="p-3 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-2.5 animate-in fade-in zoom-in-95 duration-150">
+          <div className="p-3 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-black font-display text-[#18181B]">
+              <span className="text-xs font-black font-display text-[#24201D]">
                 Session Paused ({currentElapsedMinutes}m elapsed)
               </span>
-              <span className="text-[10px] font-bold text-slate-500">
+              <span className="text-[10px] font-bold text-[#6B635B]">
                 Save result to database?
               </span>
             </div>
@@ -388,7 +388,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
               <button
                 type="button"
                 onClick={handleStopAndLogSession}
-                className="flex-1 py-2 px-3 rounded-xl bg-[#D1FBE4] hover:bg-[#B7F4D1] border-[1.5px] border-[#18181B] text-xs font-black text-emerald-950 shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer active:translate-y-0.5"
+                className="flex-1 py-2 px-3 rounded-xl bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[1.5px] border-[#24201D] text-xs font-black text-[#2D503C] shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer active:translate-y-0.5"
               >
                 <Check className="w-3.5 h-3.5 stroke-[3]" />
                 <span>Save</span>
@@ -397,9 +397,9 @@ export const FocusPage: React.FC<FocusPageProps> = ({
               <button
                 type="button"
                 onClick={handleTogglePlay}
-                className="py-2 px-3.5 rounded-xl bg-[#FFE873] hover:bg-[#FED7AA] border-[1.5px] border-[#18181B] text-xs font-black text-[#18181B] shadow-2xs flex items-center justify-center gap-1 cursor-pointer active:translate-y-0.5"
+                className="py-2 px-3.5 rounded-xl bg-[#F0BB58] hover:bg-[#E5A943] border-[1.5px] border-[#24201D] text-xs font-black text-[#24201D] shadow-2xs flex items-center justify-center gap-1 cursor-pointer active:translate-y-0.5"
               >
-                <Play className="w-3.5 h-3.5 fill-[#18181B]" />
+                <Play className="w-3.5 h-3.5 fill-[#24201D]" />
                 <span>Resume</span>
               </button>
 
@@ -407,7 +407,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
                 type="button"
                 onClick={handleReset}
                 title="Discard session"
-                className="w-8 h-8 rounded-xl bg-white hover:bg-rose-50 border-[1.5px] border-[#18181B] flex items-center justify-center text-slate-400 hover:text-rose-600 shadow-2xs cursor-pointer active:translate-y-0.5"
+                className="w-8 h-8 rounded-xl bg-white hover:bg-rose-50 border-[1.5px] border-[#24201D] flex items-center justify-center text-stone-400 hover:text-rose-600 shadow-2xs cursor-pointer active:translate-y-0.5"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
@@ -416,22 +416,22 @@ export const FocusPage: React.FC<FocusPageProps> = ({
         )}
 
         {/* Primary Controls Bar: Start / Pause + Reset + Complete & Log Checkmark */}
-        <div className="flex items-center justify-center gap-2 pt-2 border-t border-[#18181B]/15">
+        <div className="flex items-center justify-center gap-2 pt-2 border-t border-[#24201D]/15">
           {/* Start / Pause Button */}
           <button
             onClick={handleTogglePlay}
-            className={`flex-1 py-3 px-4 rounded-2xl border-[1.75px] border-[#18181B] flex items-center justify-center gap-2 font-black text-xs uppercase tracking-wider shadow-[2.5px_2.5px_0px_#18181B] active:translate-y-0.5 transition-all cursor-pointer ${
-              isRunning ? 'bg-[#FED7AA] text-[#18181B]' : 'bg-[#FFE873] hover:bg-[#FED7AA] text-[#18181B]'
+            className={`flex-1 py-3 px-4 rounded-2xl border-[1.75px] border-[#24201D] flex items-center justify-center gap-2 font-black text-xs uppercase tracking-wider shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer ${
+              isRunning ? 'bg-[#C25E40] text-white hover:bg-[#AC5035]' : 'bg-[#3D6B52] hover:bg-[#345B45] text-white'
             }`}
           >
             {isRunning ? (
               <>
-                <Pause className="w-4 h-4 fill-[#18181B]" />
+                <Pause className="w-4 h-4 fill-white" />
                 <span>Pause</span>
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 fill-[#18181B]" />
+                <Play className="w-4 h-4 fill-white" />
                 <span>{elapsedFocusSeconds > 0 ? 'Resume' : 'Start Focus'}</span>
               </>
             )}
@@ -441,7 +441,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
           <button
             onClick={handleReset}
             title="Reset Timer"
-            className="w-11 h-11 rounded-2xl bg-white hover:bg-slate-100 border-[1.75px] border-[#18181B] flex items-center justify-center text-slate-700 shadow-[2px_2px_0px_#18181B] active:translate-y-0.5 cursor-pointer shrink-0"
+            className="w-11 h-11 rounded-2xl bg-white hover:bg-stone-100 border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 cursor-pointer shrink-0"
           >
             <RotateCcw className="w-4 h-4 stroke-[2.25]" />
           </button>
@@ -450,7 +450,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
           <button
             onClick={handleStopAndLogSession}
             title={`Complete & Log Session (${currentElapsedMinutes}m)`}
-            className="w-11 h-11 rounded-2xl bg-[#D1FBE4] hover:bg-[#B7F4D1] border-[1.75px] border-[#18181B] flex items-center justify-center text-emerald-950 shadow-[2px_2px_0px_#18181B] active:translate-y-0.5 cursor-pointer shrink-0"
+            className="w-11 h-11 rounded-2xl bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[1.75px] border-[#24201D] flex items-center justify-center text-[#2D503C] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 cursor-pointer shrink-0"
           >
             <Check className="w-5 h-5 stroke-[3]" />
           </button>
@@ -462,52 +462,52 @@ export const FocusPage: React.FC<FocusPageProps> = ({
       <InAppMusicPlayer />
 
       {/* 3. Today's Completed Focus History (IndexedDB Log) */}
-      <div className="p-4 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] space-y-3">
+      <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-black font-display text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-black font-display text-[#6B635B] uppercase tracking-wider">
               Today's Focus Log
             </span>
-            <span className="px-2 py-0.5 bg-[#FAF7F2] border border-[#18181B]/20 text-[9px] font-bold text-slate-600 rounded-full">
+            <span className="px-2 py-0.5 bg-[#F4F0EA] border border-[#24201D]/20 text-[9px] font-bold text-[#6B635B] rounded-full">
               {todaysSessions.length} sessions
             </span>
           </div>
 
-          <span className="text-xs font-black font-mono-num text-[#18181B]">
+          <span className="text-xs font-black font-mono-num text-[#24201D]">
             {totalFocusTodayMins}m total
           </span>
         </div>
 
         {todaysSessions.length === 0 ? (
-          <div className="py-4 text-center bg-[#FAF7F2] border border-dashed border-[#18181B]/30 rounded-xl">
-            <p className="text-xs font-bold text-slate-500">No focus sessions logged today yet.</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Start a timer above to track your deep work!</p>
+          <div className="py-4 text-center bg-[#FAF8F5] border border-dashed border-[#24201D]/25 rounded-xl">
+            <p className="text-xs font-bold text-[#6B635B]">No focus sessions logged today yet.</p>
+            <p className="text-[10px] text-stone-400 mt-0.5">Start a timer above to track your deep work!</p>
           </div>
         ) : (
           <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
             {todaysSessions.map((s, idx) => (
               <div
                 key={s.id || idx}
-                className="p-2.5 bg-[#FAF7F2] border border-[#18181B]/20 rounded-xl flex items-center justify-between text-xs shadow-2xs"
+                className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl flex items-center justify-between text-xs shadow-2xs"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-5 h-5 rounded-lg bg-[#D1FBE4] border border-[#18181B] flex items-center justify-center shrink-0">
-                    <Check className="w-3 h-3 text-emerald-800 stroke-[3]" />
+                  <div className="w-5 h-5 rounded-lg bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shrink-0">
+                    <Check className="w-3 h-3 text-[#2D503C] stroke-[3]" />
                   </div>
-                  <span className="font-bold text-[#18181B] truncate">
+                  <span className="font-bold text-[#24201D] truncate">
                     {s.taskTitle || 'Focus Session'}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0 ml-2">
-                  <span className="font-black font-mono-num text-purple-900">
+                  <span className="font-black font-mono-num text-[#3D6B52]">
                     +{s.durationMinutes}m
                   </span>
                   {s.id && onDeleteFocusSession && (
                     <button
                       onClick={() => handleDeleteSession(s.id)}
                       title="Delete log entry"
-                      className="w-5 h-5 rounded hover:bg-rose-100 flex items-center justify-center text-slate-400 hover:text-rose-600 cursor-pointer"
+                      className="w-5 h-5 rounded hover:bg-rose-100 flex items-center justify-center text-stone-400 hover:text-rose-600 cursor-pointer"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>

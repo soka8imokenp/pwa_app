@@ -55,37 +55,37 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
   };
 
   const getColorClass = (score: number) => {
-    if (score === 0) return 'bg-[#FAF7F2] border-slate-200 text-slate-400';
-    if (score <= 2) return 'bg-[#E8DCFF] border-[#C084FC] text-purple-900';
-    if (score <= 5) return 'bg-[#BEF264] border-[#65A30D] text-emerald-950 font-bold';
-    return 'bg-[#FFE873] border-[#CA8A04] text-amber-950 font-black shadow-2xs';
+    if (score === 0) return 'bg-[#F4F0EA] border-[#24201D]/15 text-[#6B635B]';
+    if (score <= 2) return 'bg-[#DDE8DE] border-[#3D6B52]/40 text-[#2D503C]';
+    if (score <= 5) return 'bg-[#8FA89B] border-[#3D6B52] text-white font-bold';
+    return 'bg-[#3D6B52] border-[#24201D] text-white font-black shadow-2xs';
   };
 
   return (
-    <div className="neo-card p-4 bg-white space-y-3 font-body select-none">
+    <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3 font-body select-none">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-[#E8DCFF] border-[1.5px] border-[#18181B] flex items-center justify-center shadow-[1px_1px_0px_#18181B]">
-            <Calendar className="w-4 h-4 text-[#18181B] stroke-[2.25]" />
+          <div className="w-8 h-8 rounded-xl bg-[#DDE8DE] border-[1.5px] border-[#24201D] flex items-center justify-center shadow-2xs">
+            <Calendar className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
           </div>
           <div>
-            <h3 className="text-xs font-bold font-display uppercase tracking-wider text-[#18181B]">
+            <h3 className="text-xs font-bold font-display uppercase tracking-wider text-[#24201D]">
               Activity Heatmap
             </h3>
-            <span className="text-[10px] text-slate-500 font-bold">
+            <span className="text-[10px] text-[#6B635B] font-bold">
               Last 4 Weeks Consistency
             </span>
           </div>
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400">
+        <div className="flex items-center gap-1 text-[9px] font-bold text-stone-400">
           <span>Less</span>
-          <div className="w-3 h-3 rounded bg-[#FAF7F2] border border-slate-200" />
-          <div className="w-3 h-3 rounded bg-[#E8DCFF] border border-[#C084FC]" />
-          <div className="w-3 h-3 rounded bg-[#BEF264] border border-[#65A30D]" />
-          <div className="w-3 h-3 rounded bg-[#FFE873] border border-[#CA8A04]" />
+          <div className="w-3 h-3 rounded bg-[#F4F0EA] border border-[#24201D]/15" />
+          <div className="w-3 h-3 rounded bg-[#DDE8DE] border border-[#3D6B52]/40" />
+          <div className="w-3 h-3 rounded bg-[#8FA89B] border border-[#3D6B52]" />
+          <div className="w-3 h-3 rounded bg-[#3D6B52] border border-[#24201D]" />
           <span>More</span>
         </div>
       </div>
@@ -102,49 +102,43 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
               key={stats.dateStr}
               type="button"
               onClick={() => handleTileClick(day)}
-              className={`h-9 rounded-xl border-[1.5px] flex flex-col items-center justify-center transition-all cursor-pointer ${getColorClass(
+              className={`aspect-square rounded-xl border flex flex-col items-center justify-center p-1 text-[10px] transition-all cursor-pointer relative ${getColorClass(
                 stats.score
               )} ${
                 isSelected
-                  ? 'ring-2 ring-[#18181B] scale-105 shadow-[1.5px_1.5px_0px_#18181B]'
+                  ? 'ring-2 ring-[#24201D] scale-105 shadow-2xs z-10'
                   : isCurrent
-                  ? 'border-[#18181B] border-dashed'
-                  : ''
+                  ? 'ring-1.5 ring-[#C25E40]'
+                  : 'hover:scale-105'
               }`}
-              title={`${stats.dateStr}: ${stats.tasksDone} tasks, ${stats.focusMins}m focus`}
             >
-              <span className="text-[10px] font-mono-num font-bold leading-none">
-                {format(day, 'd')}
-              </span>
-              <span className="text-[8px] font-bold uppercase tracking-tighter opacity-70 leading-none mt-0.5">
-                {format(day, 'EEE')[0]}
-              </span>
+              <span className="leading-none text-[9px] font-mono-num">{format(day, 'd')}</span>
+              {stats.score > 0 && (
+                <span className="text-[7px] font-bold opacity-80 mt-0.5">
+                  {stats.score}
+                </span>
+              )}
             </button>
           );
         })}
       </div>
 
-      {/* Selected Day Detail Popover */}
+      {/* Day Details Drawer */}
       {selectedDayInfo && (
-        <div className="p-3 bg-[#FAF7F2] border-[1.5px] border-[#18181B] rounded-2xl flex items-center justify-between text-xs animate-in fade-in">
-          <div>
-            <span className="text-[10px] font-bold font-display uppercase tracking-wider text-slate-500 block">
-              {selectedDayInfo.dateStr} Summary
+        <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl flex items-center justify-between text-xs animate-in fade-in">
+          <span className="font-bold text-[#24201D] font-mono-num">
+            {selectedDayInfo.dateStr}
+          </span>
+          <div className="flex items-center gap-3 text-[10px] font-bold text-[#6B635B]">
+            <span className="flex items-center gap-1">
+              <Check className="w-3 h-3 text-[#3D6B52]" /> {selectedDayInfo.tasksDone} tasks
             </span>
-            <div className="flex items-center gap-3 mt-1 font-bold text-[#18181B]">
-              <span className="flex items-center gap-1">
-                <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
-                {selectedDayInfo.tasksDone} Tasks
-              </span>
-              <span className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-purple-600 stroke-[2.5]" />
-                {selectedDayInfo.focusMins}m Focus
-              </span>
-              <span className="flex items-center gap-1">
-                <Flame className="w-3.5 h-3.5 text-amber-600 stroke-[2.5]" />
-                {selectedDayInfo.habitsDone} Habits
-              </span>
-            </div>
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3 text-[#3D6B52]" /> {selectedDayInfo.focusMins}m
+            </span>
+            <span className="flex items-center gap-1">
+              <Flame className="w-3 h-3 text-[#C25E40]" /> {selectedDayInfo.habitsDone} habits
+            </span>
           </div>
         </div>
       )}

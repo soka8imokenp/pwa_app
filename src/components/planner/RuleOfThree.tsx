@@ -67,14 +67,14 @@ export const RuleOfThree: React.FC<RuleOfThreeProps> = ({
       {/* Header Bar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-[#F3E8FF] dark:bg-[#381E68] border-2 border-[#1E1B4B] dark:border-purple-300 rounded-xl shadow-[2px_2px_0px_#1E1B4B] dark:shadow-[2px_2px_0px_#A855F7]">
-            <Star className="w-5 h-5 text-amber-500 fill-amber-400" />
+          <div className="p-2 bg-[#FBECCF] border-[1.75px] border-[#24201D] rounded-xl shadow-[1.5px_1.5px_0px_#24201D]">
+            <Star className="w-5 h-5 text-[#D97706] fill-[#F59E0B]" />
           </div>
           <div>
-            <h2 className="text-xl font-black text-slate-900 dark:text-purple-50 tracking-tight flex items-center gap-2">
+            <h2 className="text-xl font-black text-[#24201D] tracking-tight flex items-center gap-2">
               Rule of 3 • Daily Priorities
             </h2>
-            <p className="text-xs font-bold text-slate-600 dark:text-purple-300">
+            <p className="text-xs font-bold text-[#6B635B]">
               Only 3 essential outcomes for maximum focus
             </p>
           </div>
@@ -83,7 +83,7 @@ export const RuleOfThree: React.FC<RuleOfThreeProps> = ({
         {/* Progress Badge */}
         <div className="flex items-center gap-2">
           <BrutalBadge
-            variant={allCompleted ? 'lime' : completedCount > 0 ? 'lavender' : 'slate'}
+            variant={allCompleted ? 'lime' : completedCount > 0 ? 'yellow' : 'slate'}
             size="md"
           >
             {completedCount}/3 COMPLETED
@@ -100,16 +100,16 @@ export const RuleOfThree: React.FC<RuleOfThreeProps> = ({
             return (
               <div
                 key={task.id || slotIndex}
-                className={`relative border-[2.5px] border-[#1E1B4B] dark:border-purple-300 rounded-2xl p-4.5 transition-all duration-200 flex flex-col justify-between min-h-[160px] ${
+                className={`relative border-[2px] border-[#24201D] rounded-2xl p-4.5 transition-all duration-200 flex flex-col justify-between min-h-[160px] ${
                   task.isCompleted
-                    ? 'bg-[#F3E8FF]/60 dark:bg-[#1E1533]/60 shadow-[3px_3px_0px_#1E1B4B] dark:shadow-[3px_3px_0px_#7E22CE] opacity-90'
-                    : 'bg-white dark:bg-[#171426] shadow-[4px_4px_0px_#1E1B4B] dark:shadow-[4px_4px_0px_#A855F7] hover:-translate-y-0.5'
+                    ? 'bg-[#EEF5F0]/90 shadow-[2.5px_2.5px_0px_#24201D] opacity-95'
+                    : 'bg-white shadow-[3.5px_3.5px_0px_#24201D] hover:-translate-y-0.5'
                 }`}
               >
                 {/* Slot Number Pill & Category */}
                 <div className="flex items-center justify-between gap-2 mb-3">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-6 h-6 rounded-lg bg-[#C084FC] text-slate-950 border border-[#1E1B4B] font-black text-xs flex items-center justify-center font-mono-num shadow-[1px_1px_0px_#1E1B4B]">
+                    <span className="w-6 h-6 rounded-lg bg-[#3D6B52] text-white border border-[#24201D] font-black text-xs flex items-center justify-center font-mono-num shadow-[1px_1px_0px_#24201D]">
                       #{slotIndex + 1}
                     </span>
                     <BrutalBadge variant={getCategoryBadgeVariant(task.category)} size="sm">
@@ -118,7 +118,7 @@ export const RuleOfThree: React.FC<RuleOfThreeProps> = ({
                   </div>
 
                   {task.estimatedMinutes && (
-                    <span className="text-[11px] font-bold text-slate-600 dark:text-purple-300 font-mono-num">
+                    <span className="text-[11px] font-bold text-[#6B635B] font-mono-num">
                       ~{task.estimatedMinutes}m
                     </span>
                   )}
@@ -128,10 +128,10 @@ export const RuleOfThree: React.FC<RuleOfThreeProps> = ({
                 <div className="flex items-start gap-3 my-2">
                   <button
                     onClick={() => handleCheckboxClick(task)}
-                    className={`mt-0.5 w-6 h-6 rounded-lg border-2 border-[#1E1B4B] dark:border-purple-200 flex items-center justify-center transition-all cursor-pointer shadow-[1.5px_1.5px_0px_#1E1B4B] ${
+                    className={`mt-0.5 w-6 h-6 rounded-lg border-2 border-[#24201D] flex items-center justify-center transition-all cursor-pointer shadow-[1.5px_1.5px_0px_#24201D] ${
                       task.isCompleted
-                        ? 'bg-[#A3E635] text-slate-950'
-                        : 'bg-white dark:bg-[#251F3A] hover:bg-purple-100'
+                        ? 'bg-[#3D6B52] text-white'
+                        : 'bg-white hover:bg-[#F4F0EA]'
                     }`}
                     aria-label={task.isCompleted ? 'Mark as incomplete' : 'Mark as complete'}
                   >
@@ -142,8 +142,8 @@ export const RuleOfThree: React.FC<RuleOfThreeProps> = ({
                     onClick={() => handleCheckboxClick(task)}
                     className={`text-sm font-extrabold cursor-pointer select-none leading-snug flex-1 ${
                       task.isCompleted
-                        ? 'line-through text-slate-500 dark:text-purple-400 font-semibold'
-                        : 'text-slate-900 dark:text-purple-50'
+                        ? 'line-through text-stone-500 font-semibold'
+                        : 'text-[#24201D]'
                     }`}
                   >
                     {task.title}
@@ -151,12 +151,12 @@ export const RuleOfThree: React.FC<RuleOfThreeProps> = ({
                 </div>
 
                 {/* Card Footer Actions */}
-                <div className="flex items-center justify-between pt-3 border-t-2 border-[#1E1B4B]/10 dark:border-purple-300/15 mt-2">
+                <div className="flex items-center justify-between pt-3 border-t-2 border-[#24201D]/10 mt-2">
                   <BrutalButton
                     variant="peach"
                     size="sm"
                     onClick={() => onStartFocusOnTask(task)}
-                    className="text-[11px] py-1 px-2.5 flex items-center gap-1 shadow-[1.5px_1.5px_0px_#1E1B4B]"
+                    className="text-[11px] py-1 px-2.5 flex items-center gap-1 shadow-[1.5px_1.5px_0px_#24201D]"
                   >
                     <Play className="w-3 h-3 fill-current" />
                     <span>Focus</span>
@@ -166,7 +166,7 @@ export const RuleOfThree: React.FC<RuleOfThreeProps> = ({
                     <button
                       onClick={() => onDemoteToBacklog(task)}
                       title="Move to Backlog"
-                      className="p-1.5 rounded-lg text-slate-600 hover:text-purple-900 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
+                      className="p-1.5 rounded-lg text-stone-600 hover:text-[#24201D] hover:bg-stone-200/70 transition-colors"
                     >
                       <ArrowDownCircle className="w-4 h-4" />
                     </button>
@@ -174,7 +174,7 @@ export const RuleOfThree: React.FC<RuleOfThreeProps> = ({
                       <button
                         onClick={() => onDeleteTask(task.id!)}
                         title="Delete Task"
-                        className="p-1.5 rounded-lg text-slate-600 hover:text-rose-700 dark:text-purple-300 hover:bg-rose-100 dark:hover:bg-rose-950/40 transition-colors"
+                        className="p-1.5 rounded-lg text-stone-600 hover:text-rose-700 hover:bg-rose-100 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -190,15 +190,15 @@ export const RuleOfThree: React.FC<RuleOfThreeProps> = ({
             <button
               key={`empty-${slotIndex}`}
               onClick={() => onOpenAddTask(slotIndex)}
-              className="border-[2.5px] border-dashed border-[#1E1B4B]/40 dark:border-purple-400/40 hover:border-[#1E1B4B] dark:hover:border-purple-300 bg-white/40 dark:bg-[#151322]/40 hover:bg-[#FAF5FF] dark:hover:bg-[#1E1833] rounded-2xl p-4.5 transition-all duration-200 flex flex-col items-center justify-center min-h-[160px] group cursor-pointer shadow-[2px_2px_0px_rgba(30,27,75,0.1)] hover:shadow-[4px_4px_0px_#1E1B4B] dark:hover:shadow-[4px_4px_0px_#A855F7] text-center"
+              className="border-[2px] border-dashed border-[#24201D]/35 hover:border-[#24201D] bg-white/60 hover:bg-[#FAF8F5] rounded-2xl p-4.5 transition-all duration-200 flex flex-col items-center justify-center min-h-[160px] group cursor-pointer shadow-[1.5px_1.5px_0px_rgba(36,32,29,0.08)] hover:shadow-[3.5px_3.5px_0px_#24201D] text-center"
             >
-              <div className="w-10 h-10 rounded-2xl bg-[#E9D5FF] dark:bg-[#381E68] border-2 border-[#1E1B4B] dark:border-purple-300 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform shadow-[2px_2px_0px_#1E1B4B]">
-                <Plus className="w-5 h-5 text-slate-900 dark:text-purple-100" />
+              <div className="w-10 h-10 rounded-2xl bg-[#DDE8DE] border-[1.75px] border-[#24201D] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform shadow-[1.5px_1.5px_0px_#24201D]">
+                <Plus className="w-5 h-5 text-[#24201D]" />
               </div>
-              <span className="text-xs font-black text-slate-900 dark:text-purple-100">
+              <span className="text-xs font-black text-[#24201D]">
                 Priority Slot #{slotIndex + 1}
               </span>
-              <span className="text-[11px] font-bold text-purple-900/70 dark:text-purple-300 mt-0.5">
+              <span className="text-[11px] font-bold text-[#6B635B] mt-0.5">
                 Click to add key outcome
               </span>
             </button>

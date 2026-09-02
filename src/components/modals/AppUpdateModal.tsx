@@ -162,20 +162,20 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-[#18181B]/45 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
-      <div className="w-full max-w-sm bg-white border-[2px] border-[#18181B] rounded-[2.5rem] shadow-[4px_4px_0px_#18181B] p-5 space-y-4 animate-in zoom-in-95 duration-150 relative">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-[#24201D]/45 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
+      <div className="w-full max-w-sm bg-white border-[2px] border-[#24201D] rounded-[2.5rem] shadow-[4px_4px_0px_#24201D] p-5 space-y-4 animate-in zoom-in-95 duration-150 relative">
         
         {/* Top Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-[#18181B]/15">
+        <div className="flex items-center justify-between pb-3 border-b border-[#24201D]/15">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-[#FFE873] border-[1.75px] border-[#18181B] flex items-center justify-center shadow-xs">
-              <Download className="w-5 h-5 text-[#18181B] stroke-[2.5]" />
+            <div className="w-10 h-10 rounded-2xl bg-[#F0BB58] border-[1.75px] border-[#24201D] flex items-center justify-center shadow-xs">
+              <Download className="w-5 h-5 text-[#24201D] stroke-[2.5]" />
             </div>
             <div>
-              <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
+              <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
                 New Update Available
               </h3>
-              <p className="text-[10px] font-bold text-slate-400">
+              <p className="text-[10px] font-bold text-[#6B635B]">
                 Official GitHub Release
               </p>
             </div>
@@ -186,7 +186,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
               playClickSound();
               onClose();
             }}
-            className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border border-[#18181B] flex items-center justify-center text-slate-500 hover:text-[#18181B] shadow-2xs active:scale-95 transition-all cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-stone-500 hover:text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
           >
             <X className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -194,43 +194,43 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
 
         {/* Version Compare Cards */}
         <div className="grid grid-cols-2 gap-2">
-          <div className="p-2.5 bg-[#FAF7F2] border border-[#18181B]/20 rounded-2xl text-center">
-            <span className="text-[9px] font-extrabold uppercase text-slate-400 block">
+          <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-2xl text-center">
+            <span className="text-[9px] font-extrabold uppercase text-[#6B635B] block">
               Installed
             </span>
-            <span className="text-xs font-black font-mono-num text-slate-600">
+            <span className="text-xs font-black font-mono-num text-[#24201D]">
               {CURRENT_APP_VERSION}
             </span>
           </div>
 
-          <div className="p-2.5 bg-[#D1FBE4] border-[1.5px] border-[#18181B] rounded-2xl text-center shadow-2xs">
-            <span className="text-[9px] font-extrabold uppercase text-emerald-800 block">
+          <div className="p-2.5 bg-[#DDE8DE] border-[1.5px] border-[#24201D] rounded-2xl text-center shadow-2xs">
+            <span className="text-[9px] font-extrabold uppercase text-[#2D503C] block">
               New Version
             </span>
-            <span className="text-xs font-black font-mono-num text-emerald-950">
+            <span className="text-xs font-black font-mono-num text-[#2D503C]">
               {updateInfo.version}
             </span>
           </div>
         </div>
 
         {/* File Details Card */}
-        <div className="p-3 bg-[#FAF7F2] border-[1.5px] border-[#18181B] rounded-2xl space-y-2 shadow-2xs">
-          <div className="flex items-center justify-between text-[11px] font-bold text-[#18181B]">
+        <div className="p-3 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-2xl space-y-2 shadow-2xs">
+          <div className="flex items-center justify-between text-[11px] font-bold text-[#24201D]">
             <div className="flex items-center gap-1.5 truncate max-w-[190px]">
-              <FileDown className="w-3.5 h-3.5 text-purple-700 shrink-0 stroke-[2.25]" />
+              <FileDown className="w-3.5 h-3.5 text-[#3D6B52] shrink-0 stroke-[2.25]" />
               <span className="truncate">{updateInfo.fileName}</span>
             </div>
-            <span className="font-mono-num text-slate-500 shrink-0 text-[10px]">
+            <span className="font-mono-num text-[#6B635B] shrink-0 text-[10px]">
               {updateInfo.fileSizeMb}
             </span>
           </div>
 
           {/* Release Notes */}
-          <div className="pt-2 border-t border-[#18181B]/10">
-            <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-0.5">
+          <div className="pt-2 border-t border-[#24201D]/10">
+            <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] block mb-0.5">
               Release Notes
             </span>
-            <p className="text-[11px] font-medium text-slate-700 leading-snug whitespace-pre-wrap max-h-24 overflow-y-auto pr-1">
+            <p className="text-[11px] font-medium text-stone-700 leading-snug whitespace-pre-wrap max-h-24 overflow-y-auto pr-1">
               {updateInfo.releaseNotes}
             </p>
           </div>
@@ -238,24 +238,24 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
 
         {/* In-App Download Progress Display */}
         {downloadStatus === 'downloading' && (
-          <div className="p-3.5 bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-2xl space-y-2 animate-in fade-in duration-150">
-            <div className="flex items-center justify-between text-xs font-black text-[#18181B]">
+          <div className="p-3.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl space-y-2 animate-in fade-in duration-150">
+            <div className="flex items-center justify-between text-xs font-black text-[#24201D]">
               <span className="flex items-center gap-1.5">
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-700" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#854D0E]" />
                 <span>Downloading APK...</span>
               </span>
-              <span className="font-mono-num font-black text-amber-900">{progressPercent}%</span>
+              <span className="font-mono-num font-black text-[#854D0E]">{progressPercent}%</span>
             </div>
 
             {/* Progress Track */}
-            <div className="w-full h-3 bg-white border border-[#18181B] rounded-full p-0.5 overflow-hidden">
+            <div className="w-full h-3 bg-white border border-[#24201D] rounded-full p-0.5 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-[#FFE873] via-[#FED7AA] to-[#2CE68D] border-r border-[#18181B] rounded-full transition-all duration-150"
+                className="h-full bg-gradient-to-r from-[#F0BB58] via-[#E09F3E] to-[#3D6B52] border-r border-[#24201D] rounded-full transition-all duration-150"
                 style={{ width: `${Math.max(5, progressPercent)}%` }}
               />
             </div>
 
-            <div className="flex justify-between text-[10px] font-bold text-slate-500 font-mono-num">
+            <div className="flex justify-between text-[10px] font-bold text-[#6B635B] font-mono-num">
               <span>{downloadedMb} MB downloaded</span>
               <span>Total: {totalMb}</span>
             </div>
@@ -264,12 +264,12 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
 
         {/* Download Completed Success Box */}
         {downloadStatus === 'completed' && (
-          <div className="p-3 bg-[#D1FBE4] border-[1.75px] border-[#18181B] rounded-2xl text-center space-y-1 animate-in zoom-in-95 duration-150 shadow-2xs">
-            <div className="flex items-center justify-center gap-1.5 text-xs font-black text-emerald-950">
-              <CheckCircle2 className="w-4 h-4 text-emerald-700 stroke-[2.5]" />
+          <div className="p-3 bg-[#DDE8DE] border-[1.75px] border-[#24201D] rounded-2xl text-center space-y-1 animate-in zoom-in-95 duration-150 shadow-2xs">
+            <div className="flex items-center justify-center gap-1.5 text-xs font-black text-[#2D503C]">
+              <CheckCircle2 className="w-4 h-4 text-[#3D6B52] stroke-[2.5]" />
               <span>Download Complete!</span>
             </div>
-            <p className="text-[10px] font-bold text-emerald-800">
+            <p className="text-[10px] font-bold text-[#2D503C]">
               Tap Install below to apply the update.
             </p>
           </div>
@@ -277,12 +277,12 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
 
         {/* Error Notification Box */}
         {downloadStatus === 'error' && (
-          <div className="p-3 bg-[#FEE2E2] border-[1.5px] border-[#DC2626] rounded-2xl text-left space-y-1 text-[10px] text-[#991B1B]">
+          <div className="p-3 bg-[#F7E3DC] border-[1.5px] border-[#C25E40] rounded-2xl text-left space-y-1 text-[10px] text-[#C25E40]">
             <div className="flex items-center gap-1 font-black">
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
               <span>Download Interrupted</span>
             </div>
-            <p className="leading-tight text-slate-700">
+            <p className="leading-tight text-stone-700">
               {errorMsg || 'Connection error. Tap Retry Download below.'}
             </p>
           </div>
@@ -293,7 +293,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
           {downloadStatus === 'idle' && (
             <button
               onClick={handleStartInAppDownload}
-              className="w-full py-3.5 px-4 rounded-2xl bg-[#FFE873] hover:bg-[#FED7AA] text-[#18181B] border-[2px] border-[#18181B] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[2px] border-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <Download className="w-4 h-4 stroke-[2.5]" />
               <span>Download & Install APK</span>
@@ -303,7 +303,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
           {downloadStatus === 'downloading' && (
             <button
               disabled
-              className="w-full py-3.5 px-4 rounded-2xl bg-[#FAF7F2] text-slate-500 border-[2px] border-[#18181B]/40 font-black font-display text-xs uppercase tracking-wider cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 rounded-2xl bg-[#FAF8F5] text-stone-500 border-[2px] border-[#24201D]/40 font-black font-display text-xs uppercase tracking-wider cursor-not-allowed flex items-center justify-center gap-2"
             >
               <Loader2 className="w-4 h-4 animate-spin" />
               <span>Downloading ({progressPercent}%)...</span>
@@ -313,7 +313,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
           {downloadStatus === 'completed' && (
             <button
               onClick={handleInstall}
-              className="w-full py-3.5 px-4 rounded-2xl bg-[#2CE68D] hover:bg-[#20C075] text-[#18181B] border-[2px] border-[#18181B] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[2px] border-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <PackageCheck className="w-4 h-4 stroke-[2.5]" />
               <span>Install</span>
@@ -323,7 +323,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
           {downloadStatus === 'error' && (
             <button
               onClick={handleStartInAppDownload}
-              className="w-full py-3.5 px-4 rounded-2xl bg-[#FFE873] hover:bg-[#FED7AA] text-[#18181B] border-[2px] border-[#18181B] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#18181B] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 rounded-2xl bg-[#F0BB58] hover:bg-[#E09F3E] text-[#24201D] border-[2px] border-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <RotateCcw className="w-4 h-4 stroke-[2.5]" />
               <span>Retry Download</span>

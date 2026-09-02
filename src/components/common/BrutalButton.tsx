@@ -19,13 +19,13 @@ export const BrutalButton: React.FC<BrutalButtonProps> = ({
   ...props
 }) => {
   const variantStyles = {
-    primary: 'bg-[#C084FC] text-[#18181B] hover:bg-[#B366FA] border-[#18181B]',
-    secondary: 'bg-white text-[#18181B] hover:bg-[#F3E8FF] border-[#18181B]',
-    lime: 'bg-[#BEF264] text-[#18181B] hover:bg-[#A3E635] border-[#18181B]',
-    peach: 'bg-[#FED7AA] text-[#18181B] hover:bg-[#FDBA74] border-[#18181B]',
-    danger: 'bg-[#FECDD3] text-[#18181B] hover:bg-[#FDA4AF] border-[#18181B]',
-    ghost: 'bg-transparent border-transparent shadow-none hover:bg-purple-100/50',
-    outline: 'bg-transparent text-[#18181B] border-[#18181B] hover:bg-white',
+    primary: 'bg-[#3D6B52] text-white hover:bg-[#345B45] border-[#24201D] shadow-[2px_2px_0px_#24201D]',
+    secondary: 'bg-white text-[#24201D] hover:bg-[#F4F0EA] border-[#24201D] shadow-[2px_2px_0px_#24201D]',
+    lime: 'bg-[#DDE8DE] text-[#24201D] hover:bg-[#C9DCCB] border-[#24201D] shadow-[2px_2px_0px_#24201D]',
+    peach: 'bg-[#C25E40] text-white hover:bg-[#AC5035] border-[#24201D] shadow-[2px_2px_0px_#24201D]',
+    danger: 'bg-[#F9E2E5] text-[#8C2B39] hover:bg-[#F4CCD1] border-[#24201D] shadow-[2px_2px_0px_#24201D]',
+    ghost: 'bg-transparent border-transparent shadow-none hover:bg-[#3D6B52]/10',
+    outline: 'bg-transparent text-[#24201D] border-[#24201D] hover:bg-white shadow-[1.5px_1.5px_0px_#24201D]',
   };
 
   const sizeStyles = {

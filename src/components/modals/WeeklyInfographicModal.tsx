@@ -130,7 +130,7 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
       const blob = await toBlob(cardRef.current, {
         pixelRatio: 2.5,
         cacheBust: true,
-        backgroundColor: '#FAF7F2',
+        backgroundColor: '#FAF8F5',
       });
 
       if (blob && navigator.share && navigator.canShare) {
@@ -169,20 +169,20 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#18181B]/50 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
-      <div className="w-full max-w-md bg-white border-[2px] border-[#18181B] rounded-[2.5rem] shadow-[4px_4px_0px_#18181B] p-5 space-y-4 max-h-[95vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#24201D]/45 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
+      <div className="w-full max-w-md bg-white border-[2px] border-[#24201D] rounded-[2.5rem] shadow-[4px_4px_0px_#24201D] p-5 space-y-4 max-h-[95vh] overflow-y-auto">
         
         {/* Top Actions Bar */}
-        <div className="flex items-center justify-between pb-1 border-b border-[#18181B]/15">
+        <div className="flex items-center justify-between pb-1 border-b border-[#24201D]/15">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-[#E8DCFF] border border-[#18181B] flex items-center justify-center shadow-2xs">
-              <Trophy className="w-4 h-4 text-purple-900 stroke-[2.25]" />
+            <div className="w-8 h-8 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-2xs">
+              <Trophy className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
             </div>
             <div>
-              <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
+              <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
                 Weekly Infographic
               </h3>
-              <p className="text-[10px] text-slate-400 font-bold">
+              <p className="text-[10px] text-[#6B635B] font-bold">
                 Export & Share your progress card
               </p>
             </div>
@@ -193,122 +193,122 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
               playClickSound();
               onClose();
             }}
-            className="w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border border-[#18181B] flex items-center justify-center text-slate-700 hover:text-[#18181B] cursor-pointer shadow-2xs active:scale-95 transition-all"
+            className="w-8 h-8 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-stone-700 hover:text-[#24201D] cursor-pointer shadow-2xs active:scale-95 transition-all"
           >
             <X className="w-4 h-4 stroke-[2.5]" />
           </button>
         </div>
 
-        {/* 🎨 The Visual Infographic Card to Rasterize */}
+        {/* The Visual Infographic Card to Rasterize */}
         <div
           ref={cardRef}
-          className="p-5 bg-[#FAF7F2] border-[2px] border-[#18181B] rounded-[2rem] shadow-[3px_3px_0px_#18181B] space-y-4 text-center relative overflow-hidden"
+          className="p-5 bg-[#FAF8F5] border-[2px] border-[#24201D] rounded-[2rem] shadow-[3px_3px_0px_#24201D] space-y-4 text-center relative overflow-hidden"
         >
-          {/* Subtle Neo-Brutalist Dots Accent Background */}
+          {/* Subtle Japanese Paper Dots Accent Background */}
           <div
             className="absolute inset-0 opacity-15 pointer-events-none"
             style={{
-              backgroundImage: 'radial-gradient(#18181B 1.2px, transparent 1.2px)',
+              backgroundImage: 'radial-gradient(#24201D 1.2px, transparent 1.2px)',
               backgroundSize: '16px 16px',
             }}
           />
 
           {/* Header Brand Badge */}
-          <div className="relative z-10 flex items-center justify-between pb-2 border-b border-[#18181B]/20">
+          <div className="relative z-10 flex items-center justify-between pb-2 border-b border-[#24201D]/20">
             <div className="flex items-center gap-2 text-left">
-              <div className="w-9 h-9 rounded-xl bg-[#FFE873] border-[1.5px] border-[#18181B] flex items-center justify-center shadow-2xs font-display font-black text-sm">
+              <div className="w-9 h-9 rounded-xl bg-[#F0BB58] border-[1.5px] border-[#24201D] flex items-center justify-center shadow-2xs font-display font-black text-sm text-[#24201D]">
                 DS
               </div>
               <div>
-                <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
+                <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
                   Daily Sumire
                 </h4>
-                <p className="text-[9px] font-bold text-slate-500 font-mono-num">
+                <p className="text-[9px] font-bold text-[#6B635B] font-mono-num">
                   {weekRangeLabel}
                 </p>
               </div>
             </div>
 
-            <span className="px-2.5 py-1 bg-[#D1FBE4] border border-[#18181B] rounded-full text-[9px] font-black text-emerald-950 shadow-2xs uppercase">
+            <span className="px-2.5 py-1 bg-[#DDE8DE] border border-[#24201D] rounded-full text-[9px] font-black text-[#2D503C] shadow-2xs uppercase">
               Level {level}
             </span>
           </div>
 
           {/* Title & User Hero */}
           <div className="relative z-10 space-y-0.5 pt-1">
-            <span className="text-[10px] font-black uppercase tracking-wider text-purple-900 bg-[#E8DCFF] px-2.5 py-0.5 rounded-full border border-[#18181B]">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#854D0E] bg-[#FBECCF] px-2.5 py-0.5 rounded-full border border-[#24201D]">
               Weekly Performance Digest
             </span>
-            <h2 className="text-lg font-black font-display uppercase tracking-tight text-[#18181B] pt-1">
+            <h2 className="text-lg font-black font-display uppercase tracking-tight text-[#24201D] pt-1">
               {userName}
             </h2>
-            <p className="text-[11px] font-bold text-slate-500">
-              Consistency Score: <span className="font-mono-num text-[#18181B] font-black">{averageScore}%</span> average
+            <p className="text-[11px] font-bold text-[#6B635B]">
+              Consistency Score: <span className="font-mono-num text-[#24201D] font-black">{averageScore}%</span> average
             </p>
           </div>
 
-          {/* 4 Pastel Metric Badges Grid */}
+          {/* 4 Metric Badges Grid */}
           <div className="relative z-10 grid grid-cols-2 gap-2">
             {/* 1. Tasks */}
-            <div className="p-3 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-2xs text-left">
+            <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs text-left">
               <div className="flex items-center justify-between">
-                <Target className="w-4 h-4 text-purple-700" />
-                <span className="text-[9px] font-black text-slate-400 uppercase">Tasks</span>
+                <Target className="w-4 h-4 text-[#3D6B52]" />
+                <span className="text-[9px] font-black text-stone-400 uppercase">Tasks</span>
               </div>
-              <p className="text-base font-black font-mono-num text-[#18181B] mt-1">
+              <p className="text-base font-black font-mono-num text-[#24201D] mt-1">
                 {completedTasks}/{totalTasks}
               </p>
-              <p className="text-[9px] font-bold text-slate-500 truncate">
+              <p className="text-[9px] font-bold text-[#6B635B] truncate">
                 Completed this week
               </p>
             </div>
 
             {/* 2. Focus Time */}
-            <div className="p-3 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-2xs text-left">
+            <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs text-left">
               <div className="flex items-center justify-between">
-                <Clock className="w-4 h-4 text-sky-700" />
-                <span className="text-[9px] font-black text-slate-400 uppercase">Deep Flow</span>
+                <Clock className="w-4 h-4 text-[#476C85]" />
+                <span className="text-[9px] font-black text-stone-400 uppercase">Deep Flow</span>
               </div>
-              <p className="text-base font-black font-mono-num text-[#18181B] mt-1">
+              <p className="text-base font-black font-mono-num text-[#24201D] mt-1">
                 {totalFocusHours}h
               </p>
-              <p className="text-[9px] font-bold text-slate-500 truncate">
+              <p className="text-[9px] font-bold text-[#6B635B] truncate">
                 Focused work logged
               </p>
             </div>
 
             {/* 3. Habits */}
-            <div className="p-3 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-2xs text-left">
+            <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs text-left">
               <div className="flex items-center justify-between">
-                <Flame className="w-4 h-4 text-amber-600 fill-amber-400" />
-                <span className="text-[9px] font-black text-slate-400 uppercase">Habits</span>
+                <Flame className="w-4 h-4 text-[#C25E40] fill-[#F0BB58]" />
+                <span className="text-[9px] font-black text-stone-400 uppercase">Habits</span>
               </div>
-              <p className="text-base font-black font-mono-num text-[#18181B] mt-1">
+              <p className="text-base font-black font-mono-num text-[#24201D] mt-1">
                 {totalHabitChecks}
               </p>
-              <p className="text-[9px] font-bold text-slate-500 truncate">
+              <p className="text-[9px] font-bold text-[#6B635B] truncate">
                 Streak completions
               </p>
             </div>
 
             {/* 4. Experience Points */}
-            <div className="p-3 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-2xs text-left">
+            <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs text-left">
               <div className="flex items-center justify-between">
-                <Zap className="w-4 h-4 text-amber-700" />
-                <span className="text-[9px] font-black text-slate-400 uppercase">XP Earned</span>
+                <Zap className="w-4 h-4 text-[#E09F3E]" />
+                <span className="text-[9px] font-black text-stone-400 uppercase">XP Earned</span>
               </div>
-              <p className="text-base font-black font-mono-num text-[#18181B] mt-1">
+              <p className="text-base font-black font-mono-num text-[#24201D] mt-1">
                 +{totalXP}
               </p>
-              <p className="text-[9px] font-bold text-slate-500 truncate">
+              <p className="text-[9px] font-bold text-[#6B635B] truncate">
                 Productivity points
               </p>
             </div>
           </div>
 
           {/* 7-Day Consistency Pills */}
-          <div className="relative z-10 p-3 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-2xs space-y-1.5">
-            <div className="flex items-center justify-between text-[9px] font-black uppercase text-slate-400 px-1">
+          <div className="relative z-10 p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs space-y-1.5">
+            <div className="flex items-center justify-between text-[9px] font-black uppercase text-stone-400 px-1">
               <span>7-Day Heatmap</span>
               <span>Mon - Sun</span>
             </div>
@@ -318,52 +318,47 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
                 <div
                   key={day.dateStr}
                   className={`py-1.5 px-0.5 rounded-xl border flex flex-col items-center justify-center text-center ${
-                    day.score >= 70
-                      ? 'bg-[#BEF264] border-[#18181B] shadow-2xs'
-                      : day.score > 0
-                      ? 'bg-[#FFE873] border-[#18181B]'
-                      : 'bg-[#FAF7F2] text-slate-400 border-slate-200'
+                    day.score >= 50
+                      ? 'bg-[#3D6B52] border-[#24201D] text-white shadow-2xs'
+                      : day.completed
+                      ? 'bg-[#DDE8DE] border-[#3D6B52]/40 text-[#2D503C]'
+                      : 'bg-[#F4F0EA] border-[#24201D]/20 text-stone-400'
                   }`}
-                >
-                  <span className="text-[8px] font-extrabold uppercase">{day.dayShort}</span>
-                  <span className="text-[9px] font-black font-mono-num">{day.dayNum}</span>
+                                 <span className="text-[8px] font-black uppercase">{day.dayShort}</span>
+                  <span className="text-[10px] font-mono-num font-black mt-0.5">{day.dayNum}</span>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Footer Signature */}
-          <div className="relative z-10 flex items-center justify-between pt-1 text-[9px] font-black text-slate-400">
-            <span className="flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3 text-emerald-700 stroke-[2.5]" />
-              <span>Offline-First Vault</span>
-            </span>
-            <span className="uppercase tracking-wider">
-              Sumire Ecosystem
-            </span>
-          </div>
         </div>
 
-        {/* Action Buttons: Share & Download */}
-        <div className="grid grid-cols-2 gap-2 pt-1">
+        {/* Bottom Actions Buttons */}
+        <div className="flex items-center gap-2 pt-1">
           <button
-            type="button"
             onClick={handleDownload}
             disabled={isExporting}
-            className="py-2.5 px-3 bg-[#FAF7F2] hover:bg-slate-100 disabled:opacity-50 border-[1.75px] border-[#18181B] rounded-2xl text-xs font-black text-[#18181B] shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+            className="flex-1 py-3 px-4 bg-[#FAF8F5] hover:bg-stone-100 border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black text-[#24201D] shadow-2xs flex items-center justify-center gap-2 cursor-pointer active:translate-y-0.5 transition-all disabled:opacity-50"
           >
             <Download className="w-4 h-4 stroke-[2.25]" />
-            <span>{isExporting ? 'Generating...' : 'Save PNG'}</span>
+            <span>Download PNG</span>
           </button>
 
           <button
-            type="button"
             onClick={handleNativeShare}
             disabled={isExporting}
-            className="py-2.5 px-3 bg-[#FFE873] hover:bg-[#FED7AA] disabled:opacity-50 border-[1.75px] border-[#18181B] rounded-2xl text-xs font-black text-[#18181B] shadow-[2px_2px_0px_#18181B] flex items-center justify-center gap-1.5 cursor-pointer active:translate-y-0.5 transition-all"
+            className="flex-1 py-3 px-4 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black shadow-[2px_2px_0px_#24201D] flex items-center justify-center gap-2 cursor-pointer active:translate-y-0.5 transition-all disabled:opacity-50"
           >
-            {isCopied ? <Check className="w-4 h-4 stroke-[3]" /> : <Share2 className="w-4 h-4 stroke-[2.25]" />}
-            <span>{isCopied ? 'Copied Image!' : 'Share Image'}</span>
+            {isCopied ? (
+              <>
+                <Check className="w-4 h-4 stroke-[3]" />
+                <span>Copied Image!</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="w-4 h-4 stroke-[2.25]" />
+                <span>Share Card</span>
+              </>
+            )}
           </button>
         </div>
 

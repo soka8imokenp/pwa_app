@@ -136,30 +136,30 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
     }
   };
 
-  const SLOT_COLORS = ['#FFE873', '#E8DCFF', '#FED7AA'];
+  const SLOT_COLORS = ['#FBECCF', '#DDE8DE', '#F7E3DC'];
 
   return (
     <div className="w-full space-y-3.5 pb-24 font-body select-none">
       
       {/* 1. Daily Progress & Header */}
-      <div className="p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] flex items-center justify-between gap-3">
+      <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between gap-3">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block">
             Today's Focus
           </span>
-          <h2 className="text-sm font-bold font-display text-[#18181B] mt-0.5">
+          <h2 className="text-sm font-bold font-display text-[#24201D] mt-0.5">
             {completedCount} of {priorityTasks.length} Priorities Completed
           </h2>
         </div>
 
         <div className="flex items-center gap-2.5">
-          <div className="w-20 bg-slate-100 border-[1.5px] border-[#18181B] h-3 rounded-full overflow-hidden p-0.5 shadow-2xs">
+          <div className="w-20 bg-stone-100 border-[1.5px] border-[#24201D] h-3 rounded-full overflow-hidden p-0.5 shadow-2xs">
             <div
-              className="bg-[#FFE873] h-full rounded-full transition-all duration-300 border-[1px] border-[#18181B]"
+              className="bg-[#3D6B52] h-full rounded-full transition-all duration-300 border-[1px] border-[#24201D]"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
-          <span className="text-xs font-bold font-mono-num text-[#18181B]">
+          <span className="text-xs font-bold font-mono-num text-[#24201D]">
             {progressPercent}%
           </span>
         </div>
@@ -183,13 +183,13 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
       {/* 4. Top 3 Priorities Section */}
       <div className="space-y-2.5">
         <div className="flex items-center justify-between px-1">
-          <span className="text-xs font-black font-display uppercase tracking-wider text-slate-500">
+          <span className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
             Top 3 Priorities
           </span>
           {priorityTasks.length < 3 && (
             <button
               onClick={() => onOpenAddTask(priorityTasks.length)}
-              className="text-xs font-bold text-[#18181B] flex items-center gap-1 hover:underline cursor-pointer"
+              className="text-xs font-bold text-[#24201D] flex items-center gap-1 hover:underline cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" /> Add Slot
             </button>
@@ -198,20 +198,20 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
 
         {/* Priority Task Cards */}
         {priorityTasks.map((task, idx) => {
-          const slotBg = SLOT_COLORS[idx] || '#FAF7F2';
+          const slotBg = SLOT_COLORS[idx] || '#F4F0EA';
 
           return (
             <div
               key={task.id || idx}
-              className={`p-3.5 bg-white border-[1.75px] border-[#18181B] rounded-2xl shadow-[2px_2px_0px_#18181B] transition-all space-y-2.5 ${
-                task.isCompleted ? 'bg-slate-50 opacity-75' : ''
+              className={`p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] transition-all space-y-2.5 ${
+                task.isCompleted ? 'bg-stone-50/80 opacity-80' : ''
               }`}
             >
               <div className="flex items-start justify-between gap-2.5">
                 <div className="flex items-start gap-2.5 min-w-0">
                   {/* Slot Number Badge */}
                   <span
-                    className="w-6 h-6 rounded-lg border border-[#18181B] flex items-center justify-center text-xs font-black text-[#18181B] shadow-2xs shrink-0 mt-0.5"
+                    className="w-6 h-6 rounded-lg border border-[#24201D] flex items-center justify-center text-xs font-black text-[#24201D] shadow-2xs shrink-0 mt-0.5"
                     style={{ backgroundColor: slotBg }}
                   >
                     {idx + 1}
@@ -220,26 +220,26 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                   {/* Title & Metadata */}
                   <div className="min-w-0">
                     <h3
-                      className={`text-sm font-bold text-[#18181B] leading-snug break-words ${
-                        task.isCompleted ? 'line-through text-slate-400' : ''
+                      className={`text-sm font-bold text-[#24201D] leading-snug break-words ${
+                        task.isCompleted ? 'line-through text-stone-400' : ''
                       }`}
                     >
                       {task.title}
                     </h3>
 
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#6B635B] uppercase">
                         {getCategoryIcon(task.category)}
                         {task.category || 'general'}
                       </span>
-                      <span className="text-[10px] text-slate-400">•</span>
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500">
+                      <span className="text-[10px] text-stone-400">•</span>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#6B635B]">
                         <Clock className="w-3 h-3" />
                         {task.estimatedMinutes || 30}m
                       </span>
 
                       {task.isRecurring && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#BEF264] border border-[#18181B] text-[9px] font-bold text-[#18181B]">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#DDE8DE] border border-[#24201D] text-[9px] font-bold text-[#24201D]">
                           <Repeat className="w-2.5 h-2.5" /> Routine
                         </span>
                       )}
@@ -250,10 +250,10 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                 {/* Mark Done Checkbox */}
                 <button
                   onClick={() => handleDoneClick(task)}
-                  className={`w-8 h-8 rounded-xl border-[1.75px] border-[#18181B] flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                  className={`w-8 h-8 rounded-xl border-[1.75px] border-[#24201D] flex items-center justify-center shrink-0 transition-all cursor-pointer ${
                     task.isCompleted
-                      ? 'bg-[#D1FBE4] text-[#18181B] shadow-[1px_1px_0px_#18181B]'
-                      : 'bg-white hover:bg-slate-50 shadow-[1px_1px_0px_#18181B]'
+                      ? 'bg-[#3D6B52] text-white shadow-[1px_1px_0px_#24201D]'
+                      : 'bg-white hover:bg-[#F4F0EA] shadow-[1px_1px_0px_#24201D]'
                   }`}
                 >
                   {task.isCompleted && <Check className="w-4 h-4 stroke-[3]" />}
@@ -262,8 +262,8 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
 
               {/* Subtasks Checklist (Interactive) */}
               {task.subtasks && task.subtasks.length > 0 && (
-                <div className="p-2.5 bg-[#FAF7F2] border border-[#18181B]/15 rounded-xl space-y-1.5">
-                  <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/15 rounded-xl space-y-1.5">
+                  <div className="flex items-center justify-between text-[10px] font-bold text-[#6B635B] uppercase tracking-wider">
                     <span>Checklist</span>
                     <span>
                       {task.subtasks.filter((s) => s.isCompleted).length}/{task.subtasks.length}
@@ -274,16 +274,16 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                       key={st.id}
                       type="button"
                       onClick={() => handleSubTaskClick(task.id, st.id)}
-                      className="w-full flex items-center gap-2 text-xs font-medium text-slate-700 text-left hover:bg-white/80 p-1 rounded-lg transition-colors cursor-pointer"
+                      className="w-full flex items-center gap-2 text-xs font-medium text-[#24201D] text-left hover:bg-white/80 p-1 rounded-lg transition-colors cursor-pointer"
                     >
                       <div
-                        className={`w-4 h-4 rounded border border-[#18181B] flex items-center justify-center shrink-0 ${
-                          st.isCompleted ? 'bg-[#18181B] text-white' : 'bg-white'
+                        className={`w-4 h-4 rounded border border-[#24201D] flex items-center justify-center shrink-0 ${
+                          st.isCompleted ? 'bg-[#3D6B52] text-white' : 'bg-white'
                         }`}
                       >
                         {st.isCompleted && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                       </div>
-                      <span className={`truncate ${st.isCompleted ? 'line-through text-slate-400' : ''}`}>
+                      <span className={`truncate ${st.isCompleted ? 'line-through text-stone-400' : ''}`}>
                         {st.title}
                       </span>
                     </button>
@@ -292,19 +292,19 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
               )}
 
               {/* Focus Button & Move to Backlog */}
-              <div className="flex items-center justify-between gap-2 pt-1 border-t border-[#18181B]/10">
+              <div className="flex items-center justify-between gap-2 pt-1 border-t border-[#24201D]/10">
                 <button
                   onClick={() => onStartFocus(task)}
-                  className="px-3 py-1 bg-[#E8DCFF] hover:bg-[#D8C4FF] border border-[#18181B] rounded-lg text-xs font-bold text-[#18181B] flex items-center gap-1.5 shadow-2xs cursor-pointer active:translate-y-0.5"
+                  className="px-3 py-1 bg-[#F7E3DC] hover:bg-[#EED5CE] border border-[#24201D] rounded-lg text-xs font-bold text-[#24201D] flex items-center gap-1.5 shadow-2xs cursor-pointer active:translate-y-0.5"
                 >
-                  <Play className="w-3 h-3 fill-[#18181B]" />
+                  <Play className="w-3 h-3 fill-[#24201D]" />
                   <span>Start Focus</span>
                 </button>
 
                 <button
                   onClick={() => onDemoteToBacklog(task)}
                   title="Move to Backlog"
-                  className="px-2 py-1 bg-[#FAF7F2] hover:bg-slate-100 border border-[#18181B] rounded-lg text-[10px] font-bold text-slate-600 flex items-center gap-1 cursor-pointer shadow-2xs"
+                  className="px-2 py-1 bg-[#F4F0EA] hover:bg-stone-200 border border-[#24201D] rounded-lg text-[10px] font-bold text-[#6B635B] flex items-center gap-1 cursor-pointer shadow-2xs"
                 >
                   <ArrowDown className="w-3 h-3" />
                   <span>Backlog</span>
@@ -323,13 +323,13 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
             value={quickTitle}
             onChange={(e) => setQuickTitle(e.target.value)}
             placeholder="Quick add new task..."
-            className="w-full px-3.5 py-2.5 bg-white border-[1.75px] border-[#18181B] rounded-xl text-xs font-bold text-[#18181B] placeholder:text-slate-400 shadow-[1.5px_1.5px_0px_#18181B] focus:outline-none"
+            className="w-full px-3.5 py-2.5 bg-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-stone-400 shadow-[1.5px_1.5px_0px_#24201D] focus:outline-none"
           />
           <button
             type="button"
             onClick={handleToggleVoice}
-            className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg border-[1.25px] border-[#18181B] ${
-              isVoiceActive ? 'bg-red-400 text-white animate-pulse' : 'bg-slate-100 text-slate-700'
+            className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg border-[1.25px] border-[#24201D] ${
+              isVoiceActive ? 'bg-[#C25E40] text-white animate-pulse' : 'bg-stone-100 text-[#24201D]'
             }`}
           >
             {isVoiceActive ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
@@ -339,7 +339,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
         <button
           type="submit"
           disabled={!quickTitle.trim()}
-          className="px-4 py-2.5 bg-[#FFE873] hover:bg-[#FED7AA] border-[1.75px] border-[#18181B] rounded-xl text-xs font-black text-[#18181B] shadow-[1.5px_1.5px_0px_#18181B] cursor-pointer disabled:opacity-50 active:translate-y-0.5 transition-all"
+          className="px-4 py-2.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-black shadow-[1.5px_1.5px_0px_#24201D] cursor-pointer disabled:opacity-50 active:translate-y-0.5 transition-all"
         >
           Add
         </button>

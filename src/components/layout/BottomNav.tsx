@@ -36,7 +36,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       <div
         className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none h-28 select-none"
         style={{
-          background: 'linear-gradient(to top, rgba(250, 247, 242, 0.96) 0%, rgba(250, 247, 242, 0.8) 55%, rgba(250, 247, 242, 0) 100%)',
+          background: 'linear-gradient(to top, rgba(244, 240, 234, 0.96) 0%, rgba(244, 240, 234, 0.8) 55%, rgba(244, 240, 234, 0) 100%)',
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
           maskImage: 'linear-gradient(to top, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 0) 100%)',
@@ -44,27 +44,27 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         }}
       />
 
-      {/* Floating Symmetrical 5-Item Neo-Brutalist Dock */}
+      {/* Floating Symmetrical 5-Item Japanese Neo-Brutalist Dock */}
       <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none pb-[calc(env(safe-area-inset-bottom,0px)+14px)] px-3 select-none">
-        <nav className="w-full max-w-md bg-white/95 backdrop-blur-md border-[1.75px] border-[#18181B] rounded-2xl shadow-[0_10px_25px_rgba(0,0,0,0.06),2px_2px_0px_#18181B] p-1 flex items-center justify-between pointer-events-auto font-body gap-1">
+        <nav className="w-full max-w-md bg-white/95 backdrop-blur-md border-[1.75px] border-[#24201D] rounded-2xl shadow-[0_10px_25px_rgba(36,32,29,0.06),2px_2px_0px_#24201D] p-1 flex items-center justify-between pointer-events-auto font-body gap-1">
           
           {/* 1. Today Priorities */}
           <button
             onClick={() => handleTabClick('priorities')}
             className={`flex-1 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${
               activeTab === 'priorities'
-                ? 'bg-[#FFE873] border-[1.5px] border-[#18181B] shadow-[1px_1px_0px_#18181B]'
-                : 'hover:bg-slate-50 border-[1.5px] border-transparent text-slate-500'
+                ? 'bg-[#F0BB58] border-[1.5px] border-[#24201D] shadow-[1px_1px_0px_#24201D]'
+                : 'hover:bg-[#F4F0EA] border-[1.5px] border-transparent text-[#78716C]'
             }`}
           >
             <CheckSquare
               className={`w-4 h-4 stroke-[2] ${
-                activeTab === 'priorities' ? 'text-[#18181B]' : 'text-slate-500'
+                activeTab === 'priorities' ? 'text-[#24201D]' : 'text-[#78716C]'
               }`}
             />
             <span
               className={`text-[10px] mt-0.5 tracking-tight leading-none ${
-                activeTab === 'priorities' ? 'font-bold text-[#18181B]' : 'font-medium text-slate-500'
+                activeTab === 'priorities' ? 'font-bold text-[#24201D]' : 'font-medium text-[#78716C]'
               }`}
             >
               Today
@@ -76,18 +76,18 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             onClick={() => handleTabClick('habits')}
             className={`flex-1 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${
               activeTab === 'habits'
-                ? 'bg-[#D1FBE4] border-[1.5px] border-[#18181B] shadow-[1px_1px_0px_#18181B]'
-                : 'hover:bg-slate-50 border-[1.5px] border-transparent text-slate-500'
+                ? 'bg-[#DDE8DE] border-[1.5px] border-[#24201D] shadow-[1px_1px_0px_#24201D]'
+                : 'hover:bg-[#F4F0EA] border-[1.5px] border-transparent text-[#78716C]'
             }`}
           >
             <Zap
               className={`w-4 h-4 stroke-[2] ${
-                activeTab === 'habits' ? 'text-[#18181B]' : 'text-slate-500'
+                activeTab === 'habits' ? 'text-[#24201D]' : 'text-[#78716C]'
               }`}
             />
             <span
               className={`text-[10px] mt-0.5 tracking-tight leading-none ${
-                activeTab === 'habits' ? 'font-bold text-[#18181B]' : 'font-medium text-slate-500'
+                activeTab === 'habits' ? 'font-bold text-[#24201D]' : 'font-medium text-[#78716C]'
               }`}
             >
               Habits
@@ -100,11 +100,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               playClickSound();
               onOpenSumire();
             }}
-            className="flex-1 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer hover:bg-slate-50 border-[1.5px] border-transparent text-slate-500 active:scale-95"
+            className="flex-1 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer hover:bg-[#F4F0EA] border-[1.5px] border-transparent text-[#78716C] active:scale-95"
             title="Sumire Companion"
           >
-            <MessageSquareText className="w-4 h-4 stroke-[2] text-slate-500" />
-            <span className="text-[10px] mt-0.5 tracking-tight leading-none font-medium text-slate-500">
+            <MessageSquareText className="w-4 h-4 stroke-[2] text-[#78716C]" />
+            <span className="text-[10px] mt-0.5 tracking-tight leading-none font-medium text-[#78716C]">
               Sumire
             </span>
           </button>
@@ -114,18 +114,18 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             onClick={() => handleTabClick('focus')}
             className={`flex-1 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${
               activeTab === 'focus'
-                ? 'bg-[#FED7AA] border-[1.5px] border-[#18181B] shadow-[1px_1px_0px_#18181B]'
-                : 'hover:bg-slate-50 border-[1.5px] border-transparent text-slate-500'
+                ? 'bg-[#F7E3DC] border-[1.5px] border-[#24201D] shadow-[1px_1px_0px_#24201D]'
+                : 'hover:bg-[#F4F0EA] border-[1.5px] border-transparent text-[#78716C]'
             }`}
           >
             <Timer
               className={`w-4 h-4 stroke-[2] ${
-                activeTab === 'focus' ? 'text-[#18181B]' : 'text-slate-500'
+                activeTab === 'focus' ? 'text-[#24201D]' : 'text-[#78716C]'
               }`}
             />
             <span
               className={`text-[10px] mt-0.5 tracking-tight leading-none ${
-                activeTab === 'focus' ? 'font-bold text-[#18181B]' : 'font-medium text-slate-500'
+                activeTab === 'focus' ? 'font-bold text-[#24201D]' : 'font-medium text-[#78716C]'
               }`}
             >
               Focus
@@ -140,18 +140,18 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             }}
             className={`flex-1 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${
               isSecondaryActive
-                ? 'bg-[#BAE6FD] border-[1.5px] border-[#18181B] shadow-[1px_1px_0px_#18181B]'
-                : 'hover:bg-slate-50 border-[1.5px] border-transparent text-slate-500'
+                ? 'bg-[#DEE8EF] border-[1.5px] border-[#24201D] shadow-[1px_1px_0px_#24201D]'
+                : 'hover:bg-[#F4F0EA] border-[1.5px] border-transparent text-[#78716C]'
             }`}
           >
             <LayoutGrid
               className={`w-4 h-4 stroke-[2] ${
-                isSecondaryActive ? 'text-[#18181B]' : 'text-slate-500'
+                isSecondaryActive ? 'text-[#24201D]' : 'text-[#78716C]'
               }`}
             />
             <span
               className={`text-[10px] mt-0.5 tracking-tight leading-none ${
-                isSecondaryActive ? 'font-bold text-[#18181B]' : 'font-medium text-slate-500'
+                isSecondaryActive ? 'font-bold text-[#24201D]' : 'font-medium text-[#78716C]'
               }`}
             >
               {activeTab === 'backlog' ? 'Backlog' : activeTab === 'stats' ? 'Stats' : activeTab === 'links' ? 'Hub' : 'Menu'}

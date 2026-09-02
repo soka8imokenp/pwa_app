@@ -94,8 +94,8 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-[#18181B]/45 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
-      <div className="w-full max-w-sm bg-white border-[2px] border-[#18181B] rounded-[2.5rem] shadow-[4px_4px_0px_#18181B] p-6 flex flex-col items-center justify-between text-center relative overflow-hidden">
+    <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-[#24201D]/45 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
+      <div className="w-full max-w-sm bg-white border-[2px] border-[#24201D] rounded-[2.5rem] shadow-[4px_4px_0px_#24201D] p-6 flex flex-col items-center justify-between text-center relative overflow-hidden">
         
         {/* Close Button Top Right */}
         <button
@@ -103,12 +103,12 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
             playClickSound();
             onClose();
           }}
-          className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-[#FAF7F2] hover:bg-slate-100 border border-[#18181B] flex items-center justify-center text-slate-500 hover:text-[#18181B] shadow-2xs active:scale-95 transition-all cursor-pointer z-20"
+          className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-stone-500 hover:text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer z-20"
         >
           <X className="w-4 h-4 stroke-[2.5]" />
         </button>
 
-        {/* 1. Animated Lottie Flame (Clean floating flame) */}
+        {/* 1. Animated Lottie Flame */}
         <div className="w-36 h-36 flex items-center justify-center my-2 relative">
           <LottiePlayer
             animationData={fireAnimation}
@@ -118,12 +118,12 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
           />
         </div>
 
-        {/* 2. Streak Title in Our Style */}
+        {/* 2. Streak Title */}
         <div className="space-y-1 mb-4">
-          <h2 className="text-2xl sm:text-3xl font-black font-display text-[#18181B] uppercase tracking-tight leading-none">
+          <h2 className="text-2xl sm:text-3xl font-black font-display text-[#24201D] uppercase tracking-tight leading-none">
             {streakCount > 0 ? `${streakCount} Day Streak!` : 'Start Your Streak!'}
           </h2>
-          <span className="inline-block px-3 py-0.5 rounded-full bg-[#E8DCFF] border border-[#18181B] text-[10px] font-black uppercase tracking-wider text-[#18181B] shadow-2xs">
+          <span className="inline-block px-3 py-0.5 rounded-full bg-[#FBECCF] border border-[#24201D] text-[10px] font-black uppercase tracking-wider text-[#854D0E] shadow-2xs">
             {streakCount > 0
               ? isActiveToday
                 ? 'Streak Secured for Today! 🔥'
@@ -132,8 +132,8 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
           </span>
         </div>
 
-        {/* 3. Weekly Progress Card (Our Signature Neo-Brutalist Card) */}
-        <div className="w-full bg-[#FAF7F2] border-[1.75px] border-[#18181B] rounded-2xl p-4 mb-5 space-y-3 text-left shadow-2xs">
+        {/* 3. Weekly Progress Card */}
+        <div className="w-full bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl p-4 mb-5 space-y-3 text-left shadow-2xs">
           
           {/* Weekday Row */}
           <div className="grid grid-cols-7 gap-1 text-center">
@@ -143,10 +143,10 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
                   key={day.dayLabel}
                   className={`py-1 rounded-lg border text-[10px] font-black uppercase transition-all ${
                     day.active
-                      ? 'bg-[#FFE873] text-[#18181B] border-[#18181B] shadow-2xs'
+                      ? 'bg-[#F0BB58] text-[#24201D] border-[#24201D] shadow-2xs'
                       : day.isToday
-                      ? 'bg-[#18181B] text-white border-[#18181B] shadow-2xs -translate-y-0.5'
-                      : 'bg-white text-slate-400 border-[#18181B]/20'
+                      ? 'bg-[#24201D] text-[#FAF8F5] border-[#24201D] shadow-2xs -translate-y-0.5'
+                      : 'bg-white text-stone-400 border-[#24201D]/20'
                   }`}
                 >
                   {day.dayLabel}
@@ -155,29 +155,29 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
             })}
           </div>
 
-          {/* Progress Bar with Signature Gradient Fill */}
-          <div className="relative w-full h-4 bg-white border-[1.75px] border-[#18181B] rounded-full p-0.5 shadow-inner overflow-hidden flex items-center">
+          {/* Progress Bar with Signature Matcha Fill */}
+          <div className="relative w-full h-4 bg-white border-[1.75px] border-[#24201D] rounded-full p-0.5 shadow-inner overflow-hidden flex items-center">
             <div
-              className="h-full bg-gradient-to-r from-[#FFE873] via-[#FED7AA] to-[#FDBA74] border-r border-[#18181B] rounded-full relative flex items-center justify-end pr-1 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-[#F0BB58] via-[#E09F3E] to-[#C25E40] border-r border-[#24201D] rounded-full relative flex items-center justify-end pr-1 transition-all duration-500"
               style={{ width: `${progressPercent}%` }}
             >
-              {progressPercent > 0 && <div className="w-1.5 h-1.5 bg-[#18181B] rounded-full shadow-2xs" />}
+              {progressPercent > 0 && <div className="w-1.5 h-1.5 bg-[#24201D] rounded-full shadow-2xs" />}
             </div>
           </div>
 
           {/* Week Counter Label */}
           <div className="flex items-center justify-between">
-            <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+            <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B]">
               Weekly Goal
             </span>
-            <span className="px-2 py-0.5 bg-white border border-[#18181B] rounded-md text-[9px] font-black font-mono-num uppercase tracking-wider text-[#18181B] shadow-2xs">
+            <span className="px-2 py-0.5 bg-white border border-[#24201D] rounded-md text-[9px] font-black font-mono-num uppercase tracking-wider text-[#24201D] shadow-2xs">
               WEEK {weekNumber}
             </span>
           </div>
 
           {/* Divider & Motivational Subtext */}
-          <div className="pt-2 border-t border-[#18181B]/15">
-            <p className="text-xs font-bold text-slate-600 text-center leading-snug">
+          <div className="pt-2 border-t border-[#24201D]/15">
+            <p className="text-xs font-bold text-[#6B635B] text-center leading-snug">
               {streakCount > 0
                 ? isActiveToday
                   ? "Great job! You've kept your flame burning today."
@@ -194,17 +194,17 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
           <button
             onClick={handleShare}
             title="Share Streak"
-            className="w-12 h-12 rounded-2xl bg-[#FAF7F2] hover:bg-slate-100 border-[2px] border-[#18181B] flex items-center justify-center text-[#18181B] shadow-[2px_2px_0px_#18181B] cursor-pointer active:translate-y-0.5 active:shadow-none transition-all shrink-0"
+            className="w-12 h-12 rounded-2xl bg-[#FAF8F5] hover:bg-stone-100 border-[2px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-[2px_2px_0px_#24201D] cursor-pointer active:translate-y-0.5 active:shadow-none transition-all shrink-0"
           >
             <Share2 className="w-4 h-4 stroke-[2.25]" />
           </button>
 
-          {/* Signature Action Button */}
+          {/* Action Button */}
           <button
             onClick={handleConfirm}
-            className="flex-1 py-3.5 px-6 rounded-2xl bg-[#FFE873] hover:bg-[#FED7AA] border-[2px] border-[#18181B] text-[#18181B] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#18181B] active:translate-y-0.5 active:shadow-none cursor-pointer transition-all flex items-center justify-center gap-2"
+            className="flex-1 py-3.5 px-6 rounded-2xl bg-[#F0BB58] hover:bg-[#E5A943] border-[2px] border-[#24201D] text-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer transition-all flex items-center justify-center gap-2"
           >
-            <Flame className="w-4 h-4 stroke-[2.5] text-amber-800 fill-amber-500" />
+            <Flame className="w-4 h-4 stroke-[2.5] text-[#854D0E] fill-[#F0BB58]" />
             <span>{streakCount > 0 ? 'I CAN DO IT!' : "LET'S GO!"}</span>
           </button>
         </div>

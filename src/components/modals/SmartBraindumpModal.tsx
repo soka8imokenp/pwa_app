@@ -112,6 +112,8 @@ export const SmartBraindumpModal: React.FC<SmartBraindumpModalProps> = ({
       particleCount: 80,
       spread: 70,
       origin: { y: 0.6 },
+    });
+
     setInputText('');
     setParsedTasks([]);
     onClose();

@@ -8,7 +8,6 @@ import {
   Clock,
   Target,
   Trophy,
-  CheckCircle2,
   Zap,
 } from 'lucide-react';
 import { toPng, toBlob } from 'html-to-image';
@@ -99,7 +98,7 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
       const dataUrl = await toPng(cardRef.current, {
         pixelRatio: 2.5,
         cacheBust: true,
-        backgroundColor: '#FAF7F2',
+        backgroundColor: '#FAF8F5',
       });
 
       const link = document.createElement('a');
@@ -112,7 +111,7 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
         particleCount: 70,
         spread: 60,
         origin: { y: 0.6 },
-        colors: ['#FFE873', '#BEF264', '#E8DCFF'],
+        colors: ['#F0BB58', '#3D6B52', '#C25E40'],
       });
     } catch (err) {
       console.error('Failed to export image', err);
@@ -324,7 +323,8 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
                       ? 'bg-[#DDE8DE] border-[#3D6B52]/40 text-[#2D503C]'
                       : 'bg-[#F4F0EA] border-[#24201D]/20 text-stone-400'
                   }`}
-                                 <span className="text-[8px] font-black uppercase">{day.dayShort}</span>
+                >
+                  <span className="text-[8px] font-black uppercase">{day.dayShort}</span>
                   <span className="text-[10px] font-mono-num font-black mt-0.5">{day.dayNum}</span>
                 </div>
               ))}

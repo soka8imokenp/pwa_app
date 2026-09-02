@@ -67,7 +67,6 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
   };
 
   return (
-  return (
     <div className="fixed inset-0 z-[100] bg-[#F4F0EA] flex flex-col justify-between px-6 pt-[calc(env(safe-area-inset-top,0px)+20px)] pb-[calc(env(safe-area-inset-bottom,0px)+28px)] select-none font-body animate-in fade-in duration-200">
       
       {/* Top Header */}

@@ -546,7 +546,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         <SecuritySetupModal
           isOpen={isSecurityModalOpen}
           onClose={() => setIsSecurityModalOpen(false)}
-          onSuccess={() => {
+          onSecurityUpdated={() => {
             setPinConfigured(isPinSet());
           }}
         />

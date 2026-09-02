@@ -7,8 +7,10 @@
     --card-surface: #FAF8F5;
     --ink-black: #24201D;
     --ink-muted: #6B635B;
+    --border-color: #24201D;
+    --shadow-color: #24201D;
 
-    /* Japanese Editorial Matcha Palette (Light Paper) */
+    /* Japanese Editorial Matcha Palette (Warm Paper Light) */
     --neo-matcha: #3D6B52;
     --neo-matcha-soft: #DDE8DE;
     --neo-matcha-dark: #2F5440;
@@ -42,32 +44,34 @@
     --card-surface: #272420;
     --ink-black: #F5EFE6;
     --ink-muted: #A89F91;
+    --border-color: #3E3730;
+    --shadow-color: #3E3730;
 
     /* Obsidian Matcha Palette (Deep Matte & Neon Matcha) */
     --neo-matcha: #4E8A68;
-    --neo-matcha-soft: #203629;
+    --neo-matcha-soft: #1E382A;
     --neo-matcha-dark: #6FC494;
 
     --neo-terracotta: #D97354;
-    --neo-terracotta-soft: #3D221B;
+    --neo-terracotta-soft: #3C1F18;
 
     --neo-ochre: #E5A84B;
-    --neo-ochre-soft: #382B17;
+    --neo-ochre-soft: #382A14;
 
     --neo-indigo: #5C88A6;
-    --neo-indigo-soft: #1B2B36;
+    --neo-indigo-soft: #1C2D38;
 
     --neo-sand: #36312B;
     --neo-sand-soft: #2A2520;
 
     --neo-plum: #D4697B;
-    --neo-plum-soft: #3C1E24;
+    --neo-plum-soft: #3A1C22;
 
-    --neo-yellow: #E5A84B;
-    --neo-violet: #203629;
-    --neo-lime: #203629;
-    --neo-peach: #3D221B;
-    --neo-cyan: #1B2B36;
+    --neo-yellow: #D99B36;
+    --neo-violet: #1E382A;
+    --neo-lime: #1E382A;
+    --neo-peach: #3C1F18;
+    --neo-cyan: #1C2D38;
   }
 
   html, body {
@@ -82,7 +86,8 @@
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 
-  html.dark, body.dark {
+  html.dark, body.dark, .dark {
+    color-scheme: dark;
     background-color: #141312;
     color: #F5EFE6;
   }
@@ -92,11 +97,19 @@
   }
 }
 
-/* Typography Classes */
+/* ========================================================================= */
+/* Typography Classes                                                        */
+/* ========================================================================= */
+
 .font-display {
   font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
   letter-spacing: -0.035em;
   font-weight: 700;
+}
+
+.dark .font-display {
+  letter-spacing: -0.025em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 .font-body {
@@ -108,7 +121,10 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Refined Japanese Editorial Neo-Card Tokens */
+/* ========================================================================= */
+/* Refined Japanese Editorial Neo-Card & Button Tokens                       */
+/* ========================================================================= */
+
 .neo-card {
   background-color: #FFFFFF;
   border: 1.75px solid #24201D;
@@ -157,161 +173,221 @@
 /* ========================================================================= */
 
 .dark .neo-card {
-  background-color: #1E1B18;
-  border-color: #3E3730;
-  box-shadow: 2px 2px 0px #3E3730;
+  background-color: #1E1B18 !important;
+  border-color: #3E3730 !important;
+  box-shadow: 2px 2px 0px #3E3730 !important;
+  color: #F5EFE6 !important;
 }
 
 .dark .neo-btn {
-  border-color: #3E3730;
-  box-shadow: 1.5px 1.5px 0px #3E3730;
+  border-color: #3E3730 !important;
+  box-shadow: 1.5px 1.5px 0px #3E3730 !important;
 }
 
 .dark .neo-badge {
-  border-color: #3E3730;
-  box-shadow: 1px 1px 0px #3E3730;
+  border-color: #3E3730 !important;
+  box-shadow: 1px 1px 0px #3E3730 !important;
 }
 
-/* Background canvas and surfaces */
-.dark .bg-\[\#F4F0EA\] {
+/* 1. Background Canvas & Page Containers */
+.dark [class*="bg-[#F4F0EA]"],
+.dark [class*="bg-[#FAF7F2]"],
+.dark .bg-subtle-grid {
   background-color: #141312 !important;
 }
 
-.dark .bg-white {
+/* 2. Elevated Cards & Modal Panels */
+.dark [class*="bg-white"] {
   background-color: #1E1B18 !important;
 }
 
-.dark .bg-\[\#FAF8F5\] {
+/* 3. Sub-surfaces & Nested Cards */
+.dark [class*="bg-[#FAF8F5]"],
+.dark [class*="bg-stone-50"],
+.dark [class*="bg-slate-50"] {
   background-color: #272420 !important;
 }
 
-.dark .bg-stone-50 {
-  background-color: #201D1A !important;
+.dark [class*="bg-stone-100"],
+.dark [class*="bg-slate-100"] {
+  background-color: #2E2924 !important;
 }
 
-.dark .bg-stone-100 {
-  background-color: #2D2924 !important;
+/* 4. Interactive Buttons in Dark Mode */
+.dark [class*="bg-[#3D6B52]"],
+.dark [class*="bg-[#345B45]"] {
+  background-color: #4E8A68 !important;
+  color: #FFFFFF !important;
 }
 
-.dark .hover\:bg-stone-100:hover {
-  background-color: #2D2924 !important;
+.dark [class*="hover:bg-[#345B45]"]:hover {
+  background-color: #5BA07A !important;
 }
 
-.dark .hover\:bg-stone-50:hover {
-  background-color: #24201D !important;
-}
-
-.dark .hover\:bg-\[\#FAF8F5\]:hover {
-  background-color: #2E2A25 !important;
-}
-
-.dark .hover\:bg-\[\#F4F0EA\]:hover {
-  background-color: #201D1A !important;
-}
-
-/* Soft accent surfaces in Dark Mode */
-.dark .bg-\[\#DDE8DE\] {
-  background-color: #1F3628 !important;
-  color: #A3E6B8 !important;
-}
-
-.dark .bg-\[\#FBECCF\] {
-  background-color: #382A14 !important;
-  color: #FCD34D !important;
-}
-
-.dark .bg-\[\#F7E3DC\] {
-  background-color: #3C1F18 !important;
-  color: #FCA5A5 !important;
-}
-
-.dark .bg-\[\#DEE8EF\] {
-  background-color: #1C2D38 !important;
-  color: #93C5FD !important;
-}
-
-.dark .bg-\[\#F0BB58\] {
+.dark [class*="bg-[#F0BB58]"],
+.dark [class*="bg-[#FFE873]"],
+.dark [class*="bg-[#E09F3E]"] {
   background-color: #D99B36 !important;
   color: #141312 !important;
 }
 
-/* Borders in Dark Mode */
-.dark .border-\[\#24201D\] {
-  border-color: #3E3730 !important;
+.dark [class*="hover:bg-[#E5A943]"]:hover,
+.dark [class*="hover:bg-[#FED7AA]"]:hover {
+  background-color: #E6AA45 !important;
 }
 
-.dark .border-\[\#24201D\]\/15 {
-  border-color: rgba(245, 239, 230, 0.12) !important;
-}
-
-.dark .border-\[\#24201D\]\/20 {
-  border-color: rgba(245, 239, 230, 0.16) !important;
-}
-
-.dark .border-\[\#24201D\]\/30 {
-  border-color: rgba(245, 239, 230, 0.22) !important;
-}
-
-.dark .border-stone-200 {
-  border-color: #3A342E !important;
-}
-
-.dark .border-stone-100 {
-  border-color: #2E2924 !important;
-}
-
-/* Text colors in Dark Mode */
-.dark .text-\[\#24201D\] {
+.dark [class*="bg-[#24201D]"],
+.dark [class*="bg-[#18181B]"] {
+  background-color: #2D2823 !important;
   color: #F5EFE6 !important;
 }
 
-.dark .text-\[\#6B635B\] {
-  color: #A89F91 !important;
+.dark [class*="hover:bg-stone-100"]:hover,
+.dark [class*="hover:bg-slate-100"]:hover,
+.dark [class*="hover:bg-stone-50"]:hover,
+.dark [class*="hover:bg-slate-50"]:hover {
+  background-color: #2F2A25 !important;
 }
 
-.dark .text-\[\#2D503C\] {
-  color: #6EE7B7 !important;
+.dark [class*="hover:bg-[#FAF8F5]"]:hover,
+.dark [class*="hover:bg-[#F4F0EA]"]:hover {
+  background-color: #2E2924 !important;
 }
 
-.dark .text-\[\#854D0E\] {
+.dark [class*="hover:bg-white"]:hover {
+  background-color: #2A2520 !important;
+}
+
+/* 5. Soft Category Chips, Badges & Tints in Dark Mode */
+.dark [class*="bg-[#DDE8DE]"],
+.dark [class*="bg-[#D1FBE4]"],
+.dark [class*="bg-[#EEF5F0]"],
+.dark [class*="bg-[#E8EFE9]"] {
+  background-color: #1E382A !important;
+  color: #86EFAC !important;
+}
+
+.dark [class*="bg-[#FBECCF]"],
+.dark [class*="bg-[#FEF08A]"],
+.dark [class*="bg-[#FCF7ED]"] {
+  background-color: #382A14 !important;
   color: #FCD34D !important;
 }
 
-.dark .text-\[\#C25E40\] {
+.dark [class*="bg-[#F7E3DC]"],
+.dark [class*="bg-[#FED7AA]"],
+.dark [class*="bg-[#FAF0EC]"] {
+  background-color: #3C1F18 !important;
   color: #FCA5A5 !important;
 }
 
-.dark .text-stone-400 {
-  color: #7E766D !important;
+.dark [class*="bg-[#DEE8EF]"],
+.dark [class*="bg-[#EFF5F9]"],
+.dark [class*="bg-[#E8DCFF]"] {
+  background-color: #1C2D38 !important;
+  color: #93C5FD !important;
 }
 
-.dark .text-stone-500 {
-  color: #9B9287 !important;
+.dark [class*="bg-[#F9E2E5]"] {
+  background-color: #3A1C22 !important;
+  color: #FDA4AF !important;
 }
 
-.dark .text-stone-600 {
-  color: #BDB3A7 !important;
+/* 6. Typography & Text Hierarchy in Dark Mode */
+.dark [class*="text-[#24201D]"],
+.dark [class*="text-[#18181B]"],
+.dark [class*="text-stone-900"],
+.dark [class*="text-slate-900"],
+.dark [class*="text-zinc-900"] {
+  color: #F5EFE6 !important;
 }
 
-.dark .text-stone-700 {
+.dark [class*="text-[#6B635B]"],
+.dark [class*="text-stone-500"],
+.dark [class*="text-slate-500"] {
+  color: #A89F91 !important;
+}
+
+.dark [class*="text-stone-600"],
+.dark [class*="text-slate-600"] {
+  color: #BCB2A5 !important;
+}
+
+.dark [class*="text-stone-700"],
+.dark [class*="text-slate-700"] {
   color: #DDD4C8 !important;
 }
 
-/* Shadows in Dark Mode */
-.dark .shadow-\[2px_2px_0px_\#24201D\],
-.dark .shadow-\[1\.5px_1\.5px_0px_\#24201D\],
-.dark .shadow-\[1px_1px_0px_\#24201D\],
-.dark .shadow-\[3px_3px_0px_\#24201D\],
-.dark .shadow-\[4px_4px_0px_\#24201D\] {
+.dark [class*="text-stone-400"],
+.dark [class*="text-slate-400"] {
+  color: #7E766D !important;
+}
+
+.dark [class*="text-stone-300"],
+.dark [class*="text-slate-300"] {
+  color: #575048 !important;
+}
+
+.dark [class*="text-[#2D503C]"],
+.dark [class*="text-emerald-700"],
+.dark [class*="text-emerald-800"],
+.dark [class*="text-emerald-900"] {
+  color: #86EFAC !important;
+}
+
+.dark [class*="text-[#854D0E]"],
+.dark [class*="text-amber-700"],
+.dark [class*="text-amber-600"] {
+  color: #FCD34D !important;
+}
+
+.dark [class*="text-[#C25E40]"],
+.dark [class*="text-orange-700"],
+.dark [class*="text-rose-700"] {
+  color: #FCA5A5 !important;
+}
+
+/* 7. Borders & Dividers in Dark Mode */
+.dark [class*="border-[#24201D]"],
+.dark [class*="border-[#18181B]"],
+.dark [class*="border-stone-200"],
+.dark [class*="border-slate-200"],
+.dark [class*="border-stone-300"],
+.dark [class*="border-slate-300"] {
+  border-color: #3E3730 !important;
+}
+
+.dark [class*="border-[#24201D]/15"],
+.dark [class*="border-[#18181B]/15"],
+.dark [class*="border-[#24201D]/20"],
+.dark [class*="border-[#18181B]/20"],
+.dark [class*="border-[#24201D]/30"],
+.dark [class*="border-[#18181B]/30"] {
+  border-color: rgba(245, 239, 230, 0.14) !important;
+}
+
+/* 8. Neo-Brutalist Shadows in Dark Mode */
+.dark [class*="shadow-[2px_2px_0px_#24201D]"],
+.dark [class*="shadow-[2px_2px_0px_#18181B]"],
+.dark [class*="shadow-[1.5px_1.5px_0px_#24201D]"],
+.dark [class*="shadow-[1.5px_1.5px_0px_#18181B]"],
+.dark [class*="shadow-[1px_1px_0px_#24201D]"],
+.dark [class*="shadow-[1px_1px_0px_#18181B]"],
+.dark [class*="shadow-[3px_3px_0px_#24201D]"],
+.dark [class*="shadow-[3px_3px_0px_#18181B]"],
+.dark [class*="shadow-[4px_4px_0px_#24201D]"],
+.dark [class*="shadow-[4px_4px_0px_#18181B]"],
+.dark .shadow-2xs {
   box-shadow: 2px 2px 0px #3E3730 !important;
 }
 
-/* Inputs & Form Controls in Dark Mode */
+/* 9. Inputs, Textareas & Selection Controls in Dark Mode */
 .dark input[type="text"],
 .dark input[type="search"],
 .dark input[type="number"],
 .dark input[type="password"],
-.dark textarea {
+.dark textarea,
+.dark select {
   background-color: #272420 !important;
   color: #F5EFE6 !important;
   border-color: #3E3730 !important;
@@ -322,14 +398,18 @@
   color: #7E766D !important;
 }
 
-/* Modal Backdrops & Overlays */
+/* 10. Modal Backdrops & Dialog Overlays in Dark Mode */
 .dark .bg-\[\#24201D\]\/45,
+.dark .bg-\[\#18181B\]\/40,
 .dark .bg-black\/45,
 .dark .bg-black\/40 {
-  background-color: rgba(10, 9, 8, 0.72) !important;
+  background-color: rgba(10, 9, 8, 0.78) !important;
 }
 
-/* Animations */
+/* ========================================================================= */
+/* Micro Animations                                                          */
+/* ========================================================================= */
+
 @keyframes neo-float {
   0%, 100% {
     transform: translateY(0px);

@@ -117,6 +117,12 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
     onSelectDate(dateStr);
   };
 
+  const handleJumpToDayAndClose = () => {
+    playClickSound();
+    onSelectDate(activeDate);
+    onClose();
+  };
+
   const handleQuickAddEvent = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEventTitle.trim()) return;

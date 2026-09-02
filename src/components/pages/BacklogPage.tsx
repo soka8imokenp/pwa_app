@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Inbox,
   Search,
   Plus,
   ArrowUp,

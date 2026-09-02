@@ -125,17 +125,7 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
   return (
     <div className="fixed inset-0 z-[999] bg-[#F4F0EA] select-none flex flex-col items-center justify-between pt-[calc(env(safe-area-inset-top,0px)+14px)] pb-[calc(env(safe-area-inset-bottom,0px)+44px)] px-6 sm:px-8 font-body overflow-y-auto animate-in fade-in duration-300">
       
-      {/* Background Architectural Grid & Subtle Aura */}
-      <div
-        className="absolute inset-0 opacity-[0.035] pointer-events-none"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, #24201D 1px, transparent 1px),
-            linear-gradient(to bottom, #24201D 1px, transparent 1px)
-          `,
-          backgroundSize: '28px 28px',
-        }}
-      />
+      {/* Subtle Japanese Washi Aura */}
       <div className="absolute top-1/3 -left-32 w-80 h-80 bg-[#3D6B52]/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-[#E09F3E]/8 rounded-full blur-3xl pointer-events-none" />
 

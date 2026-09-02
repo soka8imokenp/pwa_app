@@ -187,17 +187,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
   return (
     <div className="min-h-screen bg-[#F4F0EA] text-[#24201D] flex flex-col justify-between px-5 py-6 max-w-md mx-auto select-none font-body relative overflow-hidden">
       
-      {/* Background Architectural Grid & Glow */}
-      <div
-        className="absolute inset-0 opacity-[0.035] pointer-events-none"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, #24201D 1px, transparent 1px),
-            linear-gradient(to bottom, #24201D 1px, transparent 1px)
-          `,
-          backgroundSize: '28px 28px',
-        }}
-      />
+      {/* Background Soft Organic Glows */}
       <div className="absolute -top-20 -left-20 w-80 h-80 bg-[#3D6B52]/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-2/3 -right-20 w-80 h-80 bg-[#E09F3E]/10 rounded-full blur-3xl pointer-events-none" />
 

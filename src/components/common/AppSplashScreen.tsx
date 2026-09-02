@@ -56,18 +56,6 @@ export const AppSplashScreen: React.FC<AppSplashScreenProps> = ({
           : 'opacity-100 scale-100'
       }`}
     >
-      {/* Background Architectural Texture */}
-      <div
-        className="absolute inset-0 opacity-[0.035] pointer-events-none"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, #24201D 1px, transparent 1px),
-            linear-gradient(to bottom, #24201D 1px, transparent 1px)
-          `,
-          backgroundSize: '28px 28px',
-        }}
-      />
-
       {/* Ambient Breathing Glows */}
       <div className="absolute top-1/4 -left-20 w-80 h-80 bg-[#3D6B52]/12 rounded-full blur-3xl pointer-events-none animate-pulse" />
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-[#E09F3E]/10 rounded-full blur-3xl pointer-events-none" />

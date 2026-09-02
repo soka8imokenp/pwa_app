@@ -215,7 +215,7 @@ export function App() {
   const displayName = `${currentUser.firstName} ${currentUser.lastName}`.trim() || currentUser.username || 'Sam Smith';
 
   return (
-    <div className="min-h-screen bg-[#F4F0EA] text-[#24201D] flex justify-center bg-subtle-grid relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#F4F0EA] text-[#24201D] flex justify-center relative overflow-x-hidden">
       {showSplash && <AppSplashScreen onFinish={() => setShowSplash(false)} />}
 
       {/* Dynamic Background Elements */}

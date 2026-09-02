@@ -11,7 +11,7 @@ import {
   Calendar,
   Lock,
   Moon,
-  Sparkles,
+  Flower2,
 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 import { isPinSet } from '../../lib/securityService';
@@ -87,7 +87,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
           </button>
         </div>
 
-        {/* Featured: Sumire AI Companion */}
+        {/* Featured: Sumire Companion */}
         {onOpenSumire && (
           <button
             onClick={() => {
@@ -99,17 +99,17 @@ export const MenuModal: React.FC<MenuModalProps> = ({
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#3D6B52] text-white border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
-                <Sparkles className="w-5 h-5 text-[#F0BB58]" />
+                <Flower2 className="w-5 h-5 text-[#FBECCF] stroke-[2.25]" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
                   <h4 className="text-xs font-black text-[#2D503C] font-display uppercase tracking-wide">
-                    Sumire AI Companion
+                    Sumire Companion
                   </h4>
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#3D6B52] animate-ping" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#3D6B52]" />
                 </div>
                 <p className="text-[10px] text-[#2D503C]/80 font-medium">
-                  Smart coaching, goal breakdown & reflections
+                  Goal breakdown, reflections & mindful coaching
                 </p>
               </div>
             </div>

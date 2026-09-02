@@ -206,13 +206,16 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
     if (!onQuickCreateTask) return;
 
     playSuccessChime();
+    const taskDate = selectedDate || new Date().toISOString().split('T')[0];
+    const category: Task['category'] = item.tag === 'urgent' ? 'admin' : 'general';
+
     await onQuickCreateTask({
       title: item.text,
-      category: item.tag === 'urgent' ? 'work' : 'general',
+      category,
       estimatedMinutes: 25,
       isPriority: item.isStarred || false,
       isCompleted: false,
-      date: selectedDate,
+      date: taskDate,
     });
 
     handleDeleteItem(item.id);
@@ -225,14 +228,16 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
   const handleImportAllPending = async () => {
     if (!onQuickCreateTask || activeItems.length === 0) return;
     playSuccessChime();
+    const taskDate = selectedDate || new Date().toISOString().split('T')[0];
     for (const item of activeItems) {
+      const category: Task['category'] = item.tag === 'urgent' ? 'admin' : 'general';
       await onQuickCreateTask({
         title: item.text,
-        category: item.tag === 'urgent' ? 'work' : 'general',
+        category,
         estimatedMinutes: 25,
         isPriority: item.isStarred || false,
         isCompleted: false,
-        date: selectedDate,
+        date: taskDate,
       });
     }
     setItems((prev) => prev.filter((i) => i.isCompleted));

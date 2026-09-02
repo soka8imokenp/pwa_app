@@ -470,7 +470,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   Sound Effects & Chimes
                 </span>
                 <span className="text-[10px] font-semibold text-[#6B635B] block">
-                  Tactile Wood, Marimba Pop & Zen Bowl
+                  Muted Velvet & Tactile Low-Pass Audio
                 </span>
               </div>
             </div>
@@ -500,22 +500,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {!isSoundMuted && (
             <div className="pt-2 border-t border-stone-100">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] block mb-1.5">
-                Preview Audio & Tactile FX
+                Preview Muted Audio Suite
               </span>
               <div className="grid grid-cols-4 gap-1.5">
                 <button
                   type="button"
                   onClick={() => playClickSound()}
                   className="py-1.5 px-1 bg-[#FAF8F5] hover:bg-[#F4F0EA] border border-[#24201D] rounded-xl text-[10px] font-bold text-[#24201D] shadow-2xs active:translate-y-0.5 transition-all text-center cursor-pointer"
-                  title="Test Tactile Wood Tap"
+                  title="Test Muted Felt Tap"
                 >
-                  🪵 Wood
+                  🪵 Tap
                 </button>
                 <button
                   type="button"
                   onClick={() => playTaskCheckSound()}
                   className="py-1.5 px-1 bg-[#DDE8DE] hover:bg-[#C9DCCB] border border-[#24201D] rounded-xl text-[10px] font-bold text-[#2D503C] shadow-2xs active:translate-y-0.5 transition-all text-center cursor-pointer"
-                  title="Test Matcha Pop"
+                  title="Test Velvet Pop"
                 >
                   🍵 Pop
                 </button>
@@ -523,7 +523,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   type="button"
                   onClick={() => playSuccessChime()}
                   className="py-1.5 px-1 bg-[#FBECCF] hover:bg-[#F7E2BB] border border-[#24201D] rounded-xl text-[10px] font-bold text-[#854D0E] shadow-2xs active:translate-y-0.5 transition-all text-center cursor-pointer"
-                  title="Test Zen Victory Chime"
+                  title="Test Warm Felt Chord"
                 >
                   ✨ Chime
                 </button>
@@ -531,9 +531,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   type="button"
                   onClick={() => playTimerFinishAlarm()}
                   className="py-1.5 px-1 bg-[#DEE8EF] hover:bg-[#C8DCE8] border border-[#24201D] rounded-xl text-[10px] font-bold text-[#476C85] shadow-2xs active:translate-y-0.5 transition-all text-center cursor-pointer"
-                  title="Test Zen Singing Bowl"
+                  title="Test Deep Mindful Gong"
                 >
-                  🔔 Bowl
+                  🔔 Gong
                 </button>
               </div>
             </div>

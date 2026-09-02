@@ -244,8 +244,8 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                   <Lock className="w-4 h-4 text-[#C25E40] stroke-[2.25]" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-[#24201D]">Заблокировать приложение</h4>
-                  <p className="text-[10px] text-[#6B635B] font-medium">Мгновенная блокировка PIN-кодом</p>
+                  <h4 className="text-xs font-black text-[#24201D]">Lock Application</h4>
+                  <p className="text-[10px] text-[#6B635B] font-medium">Instant PIN code security lock</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-stone-400 group-hover:translate-x-0.5 transition-transform" />

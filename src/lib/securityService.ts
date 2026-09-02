@@ -141,7 +141,7 @@ export async function registerBiometrics(): Promise<boolean> {
  * Authenticates user via native device Fingerprint / Face Unlock
  */
 export async function authenticateWithBiometrics(): Promise<boolean> {
-  if (typeof window === 'undefined' || !isBiometricsEnabled()) {
+  if (typeof window === 'undefined') {
     return false;
   }
 
@@ -152,6 +152,7 @@ export async function authenticateWithBiometrics(): Promise<boolean> {
       subtitle: 'Вход по отпечатку пальца',
       description: 'Прикоснитесь к сканеру отпечатков пальцев',
     });
+    setBiometricsEnabled(true);
     return true;
   } catch (err) {
     console.warn('Native biometric authentication failed or cancelled:', err);

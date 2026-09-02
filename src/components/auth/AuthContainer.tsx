@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   Sparkles,
   ShieldCheck,
-  Mail,
 } from 'lucide-react';
 import rabbitAnimation from '../../assets/rabbit-hi.json';
 import { LottiePlayer } from '../common/LottiePlayer';
@@ -58,7 +57,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     setErrorMsg(null);
 
     if (!identifier.trim() || !password.trim()) {
-      setErrorMsg('Пожалуйста, введите имя пользователя и пароль.');
+      setErrorMsg('Please enter your username and password.');
       return;
     }
 
@@ -103,7 +102,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     setErrorMsg(null);
 
     if (!fullName.trim() || !email.trim() || !regUsername.trim() || !regPassword.trim()) {
-      setErrorMsg('Пожалуйста, заполните все поля.');
+      setErrorMsg('Please fill in all fields.');
       return;
     }
 
@@ -171,7 +170,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
   const handleForgot = (e: React.FormEvent) => {
     e.preventDefault();
     if (!forgotEmail.trim() || !forgotEmail.includes('@')) {
-      setErrorMsg('Пожалуйста, введите корректный email.');
+      setErrorMsg('Please enter a valid email address.');
       return;
     }
     playClickSound();
@@ -206,14 +205,14 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       <div className="w-full flex items-center justify-between z-10 pt-2">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-[#3D6B52] text-white border-[1.75px] border-[#24201D] flex items-center justify-center font-black text-xs shadow-[1.5px_1.5px_0px_#24201D] font-display">
-            菫
+            DS
           </div>
           <div>
             <span className="text-xs font-black uppercase tracking-wider font-display text-[#24201D] block leading-none">
-              Daily Sumire
+              Daily Planner
             </span>
             <span className="text-[9px] font-bold text-[#6B635B] uppercase tracking-wider">
-              Focus Sanctuary
+              Focus & Habits
             </span>
           </div>
         </div>
@@ -223,7 +222,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
           onClick={handleGuest}
           className="text-xs font-bold text-[#6B635B] hover:text-[#24201D] px-3 py-1.5 bg-white border-[1.5px] border-[#24201D] rounded-xl shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1"
         >
-          <span>Гость</span>
+          <span>Guest</span>
           <Sparkles className="w-3 h-3 text-[#E09F3E]" />
         </button>
       </div>
@@ -257,7 +256,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
                   : 'text-[#6B635B] hover:text-[#24201D]'
               }`}
             >
-              Вход
+              Sign In
             </button>
             <button
               type="button"
@@ -268,7 +267,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
                   : 'text-[#6B635B] hover:text-[#24201D]'
               }`}
             >
-              Регистрация
+              Sign Up
             </button>
           </div>
         )}
@@ -287,7 +286,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             {/* Identifier Input */}
             <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
               <label className="block text-[10px] font-black uppercase tracking-wider text-[#6B635B] mb-1 font-display">
-                Логин или Email
+                Username or Email
               </label>
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4 text-[#6B635B] shrink-0" />
@@ -296,7 +295,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
                   required
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="alex or alex@sumire.app"
+                  placeholder="alex or alex@example.com"
                   className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
                 />
               </div>
@@ -306,14 +305,14 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
               <div className="flex items-center justify-between mb-1">
                 <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display">
-                  Пароль
+                  Password
                 </label>
                 <button
                   type="button"
                   onClick={() => switchMode('forgot-password')}
                   className="text-[10px] font-bold text-[#3D6B52] hover:underline cursor-pointer"
                 >
-                  Забыли?
+                  Forgot?
                 </button>
               </div>
               <div className="flex items-center gap-2">
@@ -342,7 +341,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
               disabled={isLoading}
               className="w-full py-3.5 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
             >
-              <span>{isLoading ? 'Вход в аккаунт...' : 'Войти'}</span>
+              <span>{isLoading ? 'Signing in...' : 'Sign In'}</span>
               <ArrowRight className="w-4 h-4 stroke-[2.5]" />
             </button>
           </form>
@@ -354,14 +353,14 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             {/* Full Name */}
             <div className="p-2.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
               <label className="block text-[9px] font-black uppercase text-[#6B635B] mb-0.5 font-display">
-                Ваше Имя
+                Full Name
               </label>
               <input
                 type="text"
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="Алекс Смирнов"
+                placeholder="Alex Smith"
                 className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
               />
             </div>
@@ -399,14 +398,14 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             {/* Password */}
             <div className="p-2.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
               <label className="block text-[9px] font-black uppercase text-[#6B635B] mb-0.5 font-display">
-                Пароль
+                Password
               </label>
               <input
                 type="password"
                 required
                 value={regPassword}
                 onChange={(e) => setRegPassword(e.target.value)}
-                placeholder="Не менее 4 символов"
+                placeholder="At least 4 characters"
                 className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
               />
             </div>
@@ -417,7 +416,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
               disabled={isLoading}
               className="w-full py-3.5 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2 mt-1"
             >
-              <span>{isLoading ? 'Создание...' : 'Создать аккаунт'}</span>
+              <span>{isLoading ? 'Creating account...' : 'Create Account'}</span>
               <ArrowRight className="w-4 h-4 stroke-[2.5]" />
             </button>
           </form>
@@ -432,30 +431,30 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
                   <CheckCircle2 className="w-5 h-5 text-[#2D503C]" />
                 </div>
                 <h3 className="text-xs font-black font-display text-[#24201D]">
-                  Ссылка отправлена
+                  Reset Link Sent
                 </h3>
                 <p className="text-[11px] text-[#6B635B] font-medium">
-                  Проверьте почту <b>{forgotEmail}</b>.
+                  Check your inbox for <b>{forgotEmail}</b>.
                 </p>
                 <button
                   type="button"
                   onClick={() => switchMode('login')}
                   className="w-full py-2 bg-[#F0BB58] border border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] shadow-2xs cursor-pointer"
                 >
-                  Вернуться ко входу
+                  Back to Sign In
                 </button>
               </div>
             ) : (
               <form onSubmit={handleForgot} className="w-full space-y-3">
                 <div className="text-center mb-1">
                   <h2 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                    Восстановление пароля
+                    Reset Password
                   </h2>
                 </div>
 
                 <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
                   <label className="block text-[10px] font-black uppercase text-[#6B635B] mb-1 font-display">
-                    Ваш Email
+                    Your Email
                   </label>
                   <input
                     type="email"
@@ -471,7 +470,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
                   type="submit"
                   className="w-full py-3 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] font-black text-xs uppercase shadow-[2px_2px_0px_#24201D] cursor-pointer"
                 >
-                  Отправить ссылку
+                  Send Reset Link
                 </button>
 
                 <button
@@ -479,7 +478,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
                   onClick={() => switchMode('login')}
                   className="w-full py-1 text-xs font-bold text-[#6B635B] hover:text-[#24201D] cursor-pointer"
                 >
-                  ← Назад ко входу
+                  ← Back to Sign In
                 </button>
               </form>
             )}
@@ -492,7 +491,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       <div className="w-full text-center z-10 pt-2 border-t border-[#24201D]/10">
         <div className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#6B635B]">
           <ShieldCheck className="w-3.5 h-3.5 text-[#3D6B52]" />
-          <span>Daily Sumire • Kyoto Personal Vault</span>
+          <span>Daily Planner • Encrypted Personal Vault</span>
         </div>
       </div>
 

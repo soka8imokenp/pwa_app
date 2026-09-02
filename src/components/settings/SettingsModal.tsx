@@ -561,9 +561,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <span className="text-[10px] font-semibold text-[#6B635B] block">
                   {pinConfigured
                     ? bioActive
-                      ? 'PIN + Отпечаток пальца'
-                      : '4-значный PIN активен'
-                    : 'Защита отключена'}
+                      ? 'PIN + Biometrics Active'
+                      : '4-digit PIN Active'
+                    : 'Security disabled'}
                 </span>
               </div>
             </div>
@@ -580,7 +580,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   : 'bg-[#F0BB58] text-[#24201D] shadow-2xs'
               }`}
             >
-              {pinConfigured ? 'Настроить' : 'Включить PIN'}
+              {pinConfigured ? 'Configure' : 'Enable PIN'}
             </button>
           </div>
 
@@ -590,10 +590,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 {bioActive ? (
                   <div className="flex items-center gap-1 text-[10px] font-bold text-[#2D503C] bg-[#DDE8DE] px-2 py-0.5 rounded-md border border-[#24201D]">
                     <Fingerprint className="w-3 h-3" />
-                    <span>Биометрия включена</span>
+                    <span>Biometrics Active</span>
                   </div>
                 ) : (
-                  <span className="text-[10px] font-bold text-stone-400">PIN активен</span>
+                  <span className="text-[10px] font-bold text-stone-400">PIN Active</span>
                 )}
               </div>
 
@@ -608,7 +608,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   className="px-2.5 py-1 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] rounded-lg text-[10px] font-black text-[#24201D] flex items-center gap-1 cursor-pointer active:scale-95 transition-all"
                 >
                   <Lock className="w-3 h-3 text-stone-700 stroke-[2.25]" />
-                  <span>Заблокировать сейчас</span>
+                  <span>Lock App Now</span>
                 </button>
               )}
             </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Lock, Fingerprint, Delete, Shield, Sparkles } from 'lucide-react';
+import { Lock, Fingerprint, Delete, Shield } from 'lucide-react';
 import {
   verifyPin,
   isBiometricsEnabled,
@@ -30,7 +30,6 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
   const [pin, setPin] = useState<string>('');
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [bioAvailable, setBioAvailable] = useState(false);
   const [isAuthenticatingBio, setIsAuthenticatingBio] = useState(false);
   const [avatarId, setAvatarId] = useState<string>('sumire-scout');
 
@@ -43,22 +42,19 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
 
   const activeAvatar = getAvatarById(avatarId);
 
-  // Check if biometrics is enabled
+  // Auto-attempt biometrics on mount if enabled
   useEffect(() => {
-    const bioEnabled = isBiometricsEnabled();
-    setBioAvailable(bioEnabled);
-
-    // Auto-trigger biometric prompt after brief layout mount delay if enabled
-    if (bioEnabled) {
+    if (isBiometricsEnabled()) {
       const timer = setTimeout(() => {
         handleBiometricUnlock();
-      }, 300);
+      }, 350);
       return () => clearTimeout(timer);
     }
   }, []);
 
   const handleBiometricUnlock = async () => {
     if (isAuthenticatingBio) return;
+    playClickSound();
     setIsAuthenticatingBio(true);
     try {
       const ok = await authenticateWithBiometrics();
@@ -93,7 +89,7 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
           onUnlock();
         } else {
           setIsError(true);
-          setErrorMessage('Неверный PIN-код');
+          setErrorMessage('Incorrect PIN code');
           if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
           setTimeout(() => {
             setPin('');
@@ -127,7 +123,8 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
   }, [handleDigitPress, pin]);
 
   return (
-    <div className="fixed inset-0 z-[999] bg-[#F4F0EA] select-none flex flex-col items-center justify-between p-6 sm:p-8 font-body overflow-hidden animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[999] bg-[#F4F0EA] select-none flex flex-col items-center justify-between pt-[calc(env(safe-area-inset-top,0px)+14px)] pb-[calc(env(safe-area-inset-bottom,0px)+44px)] px-6 sm:px-8 font-body overflow-y-auto animate-in fade-in duration-300">
+      
       {/* Background Architectural Grid & Subtle Aura */}
       <div
         className="absolute inset-0 opacity-[0.035] pointer-events-none"
@@ -142,49 +139,49 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
       <div className="absolute top-1/3 -left-32 w-80 h-80 bg-[#3D6B52]/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-[#E09F3E]/8 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Top Brand / Security Status Header */}
-      <div className="relative z-10 w-full flex items-center justify-center pt-2">
+      {/* Top Security Status Header */}
+      <div className="relative z-10 w-full flex items-center justify-center">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border-[1.5px] border-[#24201D] rounded-full shadow-[1.5px_1.5px_0px_#24201D]">
           <Shield className="w-3.5 h-3.5 text-[#3D6B52] stroke-[2.5]" />
           <span className="text-[10px] font-black uppercase tracking-widest text-[#24201D] font-display">
-            Sumire Secure Vault
+            Secure Vault
           </span>
         </div>
       </div>
 
-      {/* Center Hero: User Avatar / Seal & PIN Indicators */}
-      <div className="relative z-10 flex flex-col items-center text-center max-w-xs w-full space-y-4 my-auto">
+      {/* Center Hero: Avatar Medallion, PIN Dots & Biometric Button */}
+      <div className="relative z-10 flex flex-col items-center text-center max-w-xs w-full space-y-3.5 my-auto py-2">
         
         {/* Avatar / Lock Medallion */}
         <div className="relative">
           <div
-            className="w-18 h-18 rounded-[1.75rem] border-[2px] border-[#24201D] flex items-center justify-center shadow-[3px_3px_0px_#24201D] p-1.5 animate-neo-float relative"
+            className="w-16 h-16 rounded-[1.5rem] border-[2px] border-[#24201D] flex items-center justify-center shadow-[3px_3px_0px_#24201D] p-1.5 animate-neo-float relative"
             style={{ backgroundColor: activeAvatar.bg }}
           >
             {activeAvatar.renderSvg('w-full h-full')}
           </div>
-          <div className="absolute -bottom-1 -right-1 p-1.5 bg-[#3D6B52] text-white border-[1.5px] border-[#24201D] rounded-xl shadow-[1.5px_1.5px_0px_#24201D]">
+          <div className="absolute -bottom-1 -right-1 p-1 bg-[#3D6B52] text-white border-[1.5px] border-[#24201D] rounded-lg shadow-[1px_1px_0px_#24201D]">
             <Lock className="w-3 h-3 stroke-[2.5]" />
           </div>
         </div>
 
         {/* User Greeting & Error Status */}
-        <div className="space-y-1">
-          <h2 className="text-xl font-black font-display text-[#24201D] tracking-tight">
-            {userName ? `Привет, ${userName}` : 'Вход в хранилище'}
+        <div className="space-y-0.5">
+          <h2 className="text-lg font-black font-display text-[#24201D] tracking-tight">
+            {userName ? `Welcome back, ${userName}` : 'Unlock Vault'}
           </h2>
           <p
             className={`text-xs font-bold transition-colors ${
               errorMessage ? 'text-rose-600 animate-shake' : 'text-[#6B635B]'
             }`}
           >
-            {errorMessage || 'Введите персональный 4-значный PIN'}
+            {errorMessage || 'Enter 4-digit PIN or Touch ID'}
           </p>
         </div>
 
         {/* 4 Tactile PIN Dots */}
         <div
-          className={`flex items-center justify-center gap-4.5 py-3 ${
+          className={`flex items-center justify-center gap-4.5 py-2 ${
             isError ? 'animate-shake' : ''
           }`}
         >
@@ -204,17 +201,30 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
             );
           })}
         </div>
+
+        {/* Dedicated Quick Biometric Access Banner */}
+        <button
+          type="button"
+          onClick={handleBiometricUnlock}
+          disabled={isAuthenticatingBio}
+          className="w-full py-2.5 px-4 bg-[#DDE8DE] hover:bg-[#C9DCCB] active:bg-[#3D6B52] active:text-white text-[#2D503C] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2 group mt-1"
+        >
+          <Fingerprint className="w-4 h-4 stroke-[2.5] group-hover:scale-110 transition-transform text-[#3D6B52] group-active:text-white" />
+          <span className="text-xs font-black font-display uppercase tracking-wider">
+            {isAuthenticatingBio ? 'Scanning...' : 'Unlock with Fingerprint'}
+          </span>
+        </button>
       </div>
 
-      {/* Luxury Tactile Keypad Grid */}
-      <div className="relative z-10 w-full max-w-[290px] pb-4 space-y-2.5">
+      {/* Luxury Tactile Keypad Grid with Generous Bottom Buffer */}
+      <div className="relative z-10 w-full max-w-[290px] mb-2 space-y-2.5">
         <div className="grid grid-cols-3 gap-2.5">
           {KEYPAD_DIGITS.map(({ num, letters }) => (
             <button
               key={num}
               type="button"
               onClick={() => handleDigitPress(num)}
-              className="h-14 rounded-2xl bg-white hover:bg-[#FAF8F5] active:bg-[#F0BB58] border-[1.75px] border-[#24201D] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex flex-col items-center justify-center transition-all group"
+              className="h-13 sm:h-14 rounded-2xl bg-white hover:bg-[#FAF8F5] active:bg-[#F0BB58] border-[1.75px] border-[#24201D] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex flex-col items-center justify-center transition-all group"
             >
               <span className="text-xl font-black font-display text-[#24201D] leading-none group-active:scale-95 transition-transform">
                 {num}
@@ -227,24 +237,24 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
             </button>
           ))}
 
-          {/* Row 4: Biometric button, '0', Delete button */}
-          {bioAvailable ? (
-            <button
-              type="button"
-              onClick={handleBiometricUnlock}
-              className="h-14 rounded-2xl bg-[#DDE8DE] hover:bg-[#C8DBC9] active:bg-[#3D6B52] active:text-white border-[1.75px] border-[#24201D] text-[#2D503C] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex items-center justify-center transition-all"
-              title="Biometric Unlock (Touch ID / Face ID)"
-            >
-              <Fingerprint className="w-6 h-6 stroke-[2.25]" />
-            </button>
-          ) : (
-            <div className="h-14" />
-          )}
+          {/* Row 4: Biometric Scanner Button (Always Present), '0', Delete Button */}
+          <button
+            type="button"
+            onClick={handleBiometricUnlock}
+            disabled={isAuthenticatingBio}
+            className="h-13 sm:h-14 rounded-2xl bg-[#DDE8DE] hover:bg-[#C9DCCB] active:bg-[#3D6B52] active:text-white border-[1.75px] border-[#24201D] text-[#2D503C] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex flex-col items-center justify-center transition-all group"
+            title="Biometric Fingerprint / Touch ID"
+          >
+            <Fingerprint className="w-5 h-5 stroke-[2.25] group-hover:scale-110 transition-transform" />
+            <span className="text-[8px] font-extrabold tracking-wider uppercase mt-0.5">
+              Touch ID
+            </span>
+          </button>
 
           <button
             type="button"
             onClick={() => handleDigitPress('0')}
-            className="h-14 rounded-2xl bg-white hover:bg-[#FAF8F5] active:bg-[#F0BB58] border-[1.75px] border-[#24201D] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex flex-col items-center justify-center transition-all"
+            className="h-13 sm:h-14 rounded-2xl bg-white hover:bg-[#FAF8F5] active:bg-[#F0BB58] border-[1.75px] border-[#24201D] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex flex-col items-center justify-center transition-all"
           >
             <span className="text-xl font-black font-display text-[#24201D] leading-none">
               0
@@ -254,8 +264,8 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
           <button
             type="button"
             onClick={handleDelete}
-            className="h-14 rounded-2xl bg-white hover:bg-rose-50 active:bg-rose-100 border-[1.75px] border-[#24201D] text-[#6B635B] hover:text-rose-700 shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex items-center justify-center transition-all"
-            title="Удалить"
+            className="h-13 sm:h-14 rounded-2xl bg-white hover:bg-rose-50 active:bg-rose-100 border-[1.75px] border-[#24201D] text-[#6B635B] hover:text-rose-700 shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex items-center justify-center transition-all"
+            title="Delete digit"
           >
             <Delete className="w-5 h-5 stroke-[2.25]" />
           </button>

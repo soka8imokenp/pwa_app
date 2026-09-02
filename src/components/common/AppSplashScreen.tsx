@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Shield, Feather } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { LottiePlayer } from './LottiePlayer';
 import rabbitAnimation from '../../assets/rabbit-hi.json';
 
@@ -21,7 +21,6 @@ export const AppSplashScreen: React.FC<AppSplashScreenProps> = ({
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
       const rawPct = (elapsed / minDurationMs) * 100;
-      // Smooth easing curve
       const pct = Math.min(100, Math.round(rawPct));
       setProgress(pct);
 
@@ -78,7 +77,7 @@ export const AppSplashScreen: React.FC<AppSplashScreenProps> = ({
         <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-white/80 backdrop-blur-md border-[1.5px] border-[#24201D] rounded-full shadow-[1.5px_1.5px_0px_#24201D]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#3D6B52] animate-ping" />
           <span className="text-[10px] font-black uppercase tracking-widest text-[#24201D] font-display">
-            Kyoto Edition • v1.6
+            Daily Planner • v1.6
           </span>
         </div>
       </div>
@@ -88,10 +87,7 @@ export const AppSplashScreen: React.FC<AppSplashScreenProps> = ({
         
         {/* Luxury Mascot & Seal Container */}
         <div className="relative">
-          {/* Outer Decorative Ring */}
           <div className="w-32 h-32 rounded-[2.5rem] bg-white border-[2px] border-[#24201D] shadow-[4px_4px_0px_#24201D] flex items-center justify-center p-3 relative transition-transform">
-            
-            {/* Inner Silk Well */}
             <div className="w-full h-full rounded-[2rem] bg-gradient-to-b from-[#F4EFEA] to-[#E8E0D2] border-[1.5px] border-[#24201D]/20 flex items-center justify-center overflow-hidden relative shadow-inner">
               <LottiePlayer
                 animationData={rabbitAnimation}
@@ -101,20 +97,12 @@ export const AppSplashScreen: React.FC<AppSplashScreenProps> = ({
               />
             </div>
           </div>
-
-          {/* Floating Japanese Seal Kanji Stamp */}
-          <div className="absolute -bottom-2 -right-2 px-2.5 py-1 bg-[#3D6B52] text-white border-[1.75px] border-[#24201D] rounded-xl shadow-[2px_2px_0px_#24201D] flex items-center gap-1.5 animate-neo-float">
-            <Sparkles className="w-3 h-3 text-[#F0BB58]" />
-            <span className="text-[10px] font-black font-display tracking-wider uppercase">
-              菫 SUMIRE
-            </span>
-          </div>
         </div>
 
         {/* Brand Headline & Editorial Tagline */}
         <div className="space-y-1.5">
           <h1 className="text-2xl font-black font-display tracking-wider text-[#24201D] uppercase">
-            Daily Sumire
+            Daily Planner
           </h1>
           <p className="text-xs font-bold text-[#6B635B] tracking-wide">
             Mindful Rhythm • Focus • Habits

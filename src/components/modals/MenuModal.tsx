@@ -10,6 +10,7 @@ import {
   Share2,
   Calendar,
   Lock,
+  Moon,
 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 import { isPinSet } from '../../lib/securityService';

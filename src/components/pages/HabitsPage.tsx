@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Plus,
   Trash2,
@@ -12,7 +12,7 @@ import {
   Target,
   Heart,
   Coffee,
-  Layers,
+  Sparkles,
 } from 'lucide-react';
 import type { HabitWithStats } from '../../types';
 import { playTaskCheckSound, playSuccessChime, playClickSound } from '../../lib/sound';
@@ -58,11 +58,10 @@ export const renderHabitLucideIcon = (iconKey?: string) => {
 };
 
 const STARTER_TEMPLATES = [
-  { title: 'Hydrate 2.5L Water', icon: 'water', color: '#DEE8EF' },
-  { title: 'Read 20 Pages', icon: 'book', color: '#FBECCF' },
-  { title: 'Morning Workout & Stretch', icon: 'stretch', color: '#DDE8DE' },
-  { title: 'Deep Focus Session', icon: 'zap', color: '#F7E3DC' },
-  { title: 'Sleep Before 11:30 PM', icon: 'sleep', color: '#E8E0D2' },
+  { title: 'Hydrate 2.5L Water', icon: 'water', color: '#DEE8EF', desc: 'Daily hydration & vitality' },
+  { title: 'Read 20 Pages', icon: 'book', color: '#FBECCF', desc: 'Mind expansion & learning' },
+  { title: 'Morning Movement & Stretch', icon: 'stretch', color: '#DDE8DE', desc: 'Energy flow & posture' },
+  { title: 'Deep Work Focus Block', icon: 'zap', color: '#F7E3DC', desc: 'Distraction-free output' },
 ];
 
 export const HabitsPage: React.FC<HabitsPageProps> = ({
@@ -73,11 +72,6 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
   onOpenAddHabit,
   onQuickAddHabit,
 }) => {
-  const [quickTitle, setQuickTitle] = useState('');
-  const [quickIcon, setQuickIcon] = useState('zap');
-  const [quickColor, setQuickColor] = useState('#DDE8DE');
-  const [isQuickAdding, setIsQuickAdding] = useState(false);
-
   const completedTodayCount = habits.filter((h) => h.completedToday).length;
   const totalHabits = habits.length;
   const bestStreak = totalHabits > 0 ? Math.max(...habits.map((h) => h.currentStreak), 0) : 0;
@@ -103,22 +97,13 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
     }
   };
 
-  const handleQuickAddSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!quickTitle.trim() || !onQuickAddHabit) return;
-    playClickSound();
-    onQuickAddHabit(quickTitle.trim(), quickIcon, quickColor);
-    setQuickTitle('');
-    setIsQuickAdding(false);
-  };
-
   const handleApplyTemplate = (tmpl: typeof STARTER_TEMPLATES[0]) => {
     if (!onQuickAddHabit) return;
     playSuccessChime();
     onQuickAddHabit(tmpl.title, tmpl.icon, tmpl.color);
     confetti({
-      particleCount: 30,
-      spread: 45,
+      particleCount: 35,
+      spread: 50,
       origin: { y: 0.7 },
       colors: ['#3D6B52', '#E09F3E', '#DEE8EF'],
     });
@@ -170,153 +155,95 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
         )}
       </div>
 
-      {/* 2. Habits Header & Add Button */}
+      {/* 2. Habits Section Header & Clean New Habit Button */}
       <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-1.5">
-          <Layers className="w-4 h-4 text-[#6B635B]" />
-          <span className="text-xs font-black font-display text-[#24201D] uppercase tracking-wider">
-            Daily Habits ({totalHabits})
-          </span>
-        </div>
+        <h3 className="text-xs font-black font-display text-[#24201D] uppercase tracking-wider">
+          Daily Habits
+        </h3>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              playClickSound();
-              setIsQuickAdding(!isQuickAdding);
-            }}
-            className="px-2.5 py-1 bg-[#F4F0EA] hover:bg-stone-200 border border-[#24201D] rounded-xl text-[10px] font-black text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer flex items-center gap-1"
-          >
-            <Plus className="w-3 h-3 stroke-[2.5]" />
-            <span>Quick</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              playClickSound();
-              onOpenAddHabit();
-            }}
-            className="px-3 py-1 bg-[#3D6B52] hover:bg-[#345B45] text-white border border-[#24201D] rounded-xl text-[10px] font-black shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1"
-          >
-            <Plus className="w-3 h-3 stroke-[2.5]" />
-            <span>New Habit</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => {
+            playClickSound();
+            onOpenAddHabit();
+          }}
+          className="px-3.5 py-1.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.5px] border-[#24201D] rounded-xl text-xs font-black shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1.5"
+        >
+          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+          <span>New Habit</span>
+        </button>
       </div>
 
-      {/* Inline Quick Add Form */}
-      {isQuickAdding && (
-        <form
-          onSubmit={handleQuickAddSubmit}
-          className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5 animate-in fade-in duration-150"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-[#6B635B] font-display">
-              Fast Add Habit
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsQuickAdding(false)}
-              className="text-[10px] font-bold text-[#6B635B] hover:text-[#24201D] cursor-pointer"
-            >
-              Cancel
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              required
-              autoFocus
-              value={quickTitle}
-              onChange={(e) => setQuickTitle(e.target.value)}
-              placeholder="e.g. Read 15 mins or Meditate"
-              className="flex-1 px-3 py-2 bg-[#F4F0EA] border border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-[#A89F91] outline-none shadow-2xs"
-            />
-            <button
-              type="submit"
-              disabled={!quickTitle.trim()}
-              className="px-3.5 py-2 bg-[#3D6B52] text-white disabled:opacity-40 rounded-xl text-xs font-black shadow-2xs active:scale-95 cursor-pointer"
-            >
-              Create
-            </button>
-          </div>
-
-          {/* Quick Icons */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-            {['zap', 'water', 'book', 'stretch', 'sleep', 'target', 'coffee'].map((k) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => {
-                  playClickSound();
-                  setQuickIcon(k);
-                }}
-                className={`w-7 h-7 rounded-lg border flex items-center justify-center cursor-pointer transition-all ${
-                  quickIcon === k
-                    ? 'bg-[#3D6B52] text-white border-[#24201D] shadow-2xs scale-105'
-                    : 'bg-[#F4F0EA] border-[#24201D]/20 hover:border-[#24201D]'
-                }`}
-              >
-                {renderHabitLucideIcon(k)}
-              </button>
-            ))}
-          </div>
-        </form>
-      )}
-
-      {/* 3. Habits List */}
+      {/* 3. Habits List or Refined Create Habit Streak Card */}
       <div className="space-y-2.5">
         {totalHabits === 0 ? (
-          <div className="p-6 bg-white border-[1.75px] border-dashed border-[#24201D]/25 rounded-2xl text-center space-y-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#FBECCF] border border-[#24201D] flex items-center justify-center mx-auto shadow-2xs">
-              <Flame className="w-5 h-5 text-[#C25E40] fill-[#E09F3E]" />
+          <div className="p-5 sm:p-6 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] text-center space-y-4">
+            
+            {/* Minimalist Top Flame Capsule */}
+            <div className="w-12 h-12 rounded-2xl bg-[#FBECCF] border-[1.75px] border-[#24201D] flex items-center justify-center mx-auto shadow-2xs">
+              <Flame className="w-6 h-6 text-[#C25E40] fill-[#E09F3E]" />
             </div>
-            <div>
-              <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                No Habits Tracked Yet
+
+            <div className="space-y-1">
+              <h4 className="text-sm font-black font-display text-[#24201D]">
+                Build Your Daily Streaks
               </h4>
-              <p className="text-[10px] text-[#6B635B] font-bold mt-0.5">
-                Pick a template below or create your custom daily streak!
+              <p className="text-xs text-[#6B635B] font-medium max-w-xs mx-auto leading-relaxed">
+                Start small with daily routines that compound over time into unbreakable habits.
               </p>
             </div>
 
-            {/* Quick Template Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-              {STARTER_TEMPLATES.map((tmpl) => (
-                <button
-                  key={tmpl.title}
-                  type="button"
-                  onClick={() => handleApplyTemplate(tmpl)}
-                  className="p-2 bg-[#F4F0EA] hover:bg-[#DDE8DE] border border-[#24201D] rounded-xl flex items-center justify-between text-left shadow-2xs active:scale-95 transition-all cursor-pointer"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div
-                      className="w-7 h-7 rounded-lg border border-[#24201D] flex items-center justify-center shrink-0"
-                      style={{ backgroundColor: tmpl.color }}
-                    >
-                      {renderHabitLucideIcon(tmpl.icon)}
+            {/* Quick Starter Cards */}
+            <div className="space-y-2 pt-1 text-left">
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block px-1">
+                Popular Daily Routines
+              </span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {STARTER_TEMPLATES.map((tmpl) => (
+                  <button
+                    key={tmpl.title}
+                    type="button"
+                    onClick={() => handleApplyTemplate(tmpl)}
+                    className="p-3 bg-[#F4F0EA] hover:bg-[#E8EFE9] border-[1.5px] border-[#24201D] rounded-xl flex items-center justify-between text-left shadow-2xs active:translate-y-0.5 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className="w-8 h-8 rounded-xl border border-[#24201D] flex items-center justify-center shrink-0 shadow-2xs"
+                        style={{ backgroundColor: tmpl.color }}
+                      >
+                        {renderHabitLucideIcon(tmpl.icon)}
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-xs font-bold text-[#24201D] block truncate">
+                          {tmpl.title}
+                        </span>
+                        <span className="text-[10px] text-[#6B635B] block truncate">
+                          {tmpl.desc}
+                        </span>
+                      </div>
                     </div>
-                    <span className="text-xs font-bold text-[#24201D] truncate">
-                      {tmpl.title}
-                    </span>
-                  </div>
-                  <Plus className="w-3.5 h-3.5 text-[#6B635B] stroke-[2.5] shrink-0" />
-                </button>
-              ))}
+                    <Plus className="w-4 h-4 text-[#2D503C] stroke-[2.5] shrink-0 group-hover:scale-110 transition-transform" />
+                  </button>
+                ))}
+              </div>
             </div>
 
+            {/* Main Create CTA Button */}
             <div className="pt-2">
               <button
                 type="button"
-                onClick={onOpenAddHabit}
-                className="px-5 py-2.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border border-[#24201D] rounded-xl text-xs font-black shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 cursor-pointer"
+                onClick={() => {
+                  playClickSound();
+                  onOpenAddHabit();
+                }}
+                className="w-full py-3 px-4 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wide"
               >
-                + Create Custom Habit
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>Create Custom Habit</span>
               </button>
             </div>
+
           </div>
         ) : (
           habits.map((habit) => (
@@ -354,7 +281,7 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  {/* Huge Satisfying Check Button */}
+                  {/* Satisfying Check Button */}
                   <button
                     type="button"
                     onClick={() => habit.id && handleToggle(habit.id, selectedDate, habit.completedToday)}

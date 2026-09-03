@@ -1,5 +1,5 @@
 import { getStoredGeminiApiKey } from './aiService';
-import type { HealthProfile, CalculatedHealthMetrics, MealType } from '../types/health';
+import type { HealthProfile, CalculatedHealthMetrics, MealType, WeightLog } from '../types/health';
 
 export interface EstimatedMealResult {
   name: string;

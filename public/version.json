@@ -1,12 +1,12 @@
 {
-  "version": "1.8.21",
-  "buildNumber": 27,
+  "version": "1.8.22",
+  "buildNumber": 28,
   "releaseDate": "2026-09-03",
   "changelog": [
+    "Fix TypeScript build error: Added missing WeightLog type import to aiHealthService.ts",
     "Weight Trend Chart Redesign: Added clear horizontal reference gridlines, target line badge, and interactive data point callouts",
     "AI Clinical Health Analysis: Dynamic personalized AI analysis and recommendations with instant refresh support",
-    "Brutalist Input Polish: Restyled Log Weight Modal with LCD steppers, quick dates, and Health Profile with custom selector cards",
-    "Clean Layout: Removed legacy 'Gold Standard Models' badge for minimal aesthetic"
+    "Brutalist Input Polish: Restyled Log Weight Modal with LCD steppers, quick dates, and Health Profile with custom selector cards"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.21/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.22/Daily-Sumire-app-debug.apk"
 }

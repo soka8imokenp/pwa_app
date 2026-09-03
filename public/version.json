@@ -1,8 +1,9 @@
 {
-  "version": "1.8.31",
-  "buildNumber": 37,
+  "version": "1.8.32",
+  "buildNumber": 38,
   "releaseDate": "2026-09-03",
   "changelog": [
+    "Fix TypeScript build error: Added WeightLog and HealthGoal imports to healthFormulas.ts",
     "7-Day Moving Average Trend: Smooth biological trend line filtering daily water/sodium scale noise",
     "Weekly Pace & Goal Milestone ETA: Dynamic pace tracker and estimated finish date",
     "Waist-to-Height Ratio (WHtR): Clinical visceral fat gold-standard indicator (<0.50)",
@@ -10,5 +11,5 @@
     "Interactive Metric Science Modals: Deep clinical explanation modals for all metabolic markers",
     "CSV Weigh-In Data Export: One-click export of complete weigh-in history to .csv"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.31/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.32/Daily-Sumire-app-debug.apk"
 }

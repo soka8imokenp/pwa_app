@@ -1,4 +1,4 @@
-import type { HealthProfile, CalculatedHealthMetrics, BmiCategory } from '../types/health';
+import type { HealthProfile, CalculatedHealthMetrics, BmiCategory, WeightLog, HealthGoal } from '../types/health';
 
 /**
  * Calculates BMI according to WHO standards: weight(kg) / (height(m))^2

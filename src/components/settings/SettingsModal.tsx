@@ -19,7 +19,7 @@ import {
   Lock,
   Unlock,
   Mic,
-  Sparkles,
+  ArrowUpCircle,
 } from 'lucide-react';
 import {
   exportDatabaseToJson,
@@ -414,37 +414,45 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* 4. Voice Recognition Language Settings */}
-        <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-[#FBECCF] border border-[#24201D] flex items-center justify-center shadow-xs">
+        {/* 4. Voice Dictation Language Capsule */}
+        <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-[2rem] space-y-2.5 shadow-[2px_2px_0px_#24201D]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-full bg-[#FBECCF] border border-[#24201D] flex items-center justify-center text-xs shadow-2xs shrink-0">
               <Mic className="w-4 h-4 text-[#854D0E] stroke-[2.25]" />
             </div>
             <div>
-              <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                Voice Dictation Language
-              </h4>
-              <p className="text-[10px] text-[#6B635B] font-bold">
-                Bilingual speech recognition & punctuation
-              </p>
+              <span className="text-xs font-black font-display text-[#24201D] block">
+                Voice Language
+              </span>
+              <span className="text-[10px] font-semibold text-[#6B635B] block">
+                Bilingual recognition & dictation
+              </span>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
+          {/* Sleek Segmented Switcher */}
+          <div className="p-1 bg-[#F4F0EA] border border-[#24201D]/30 rounded-2xl flex items-center gap-1">
             {VOICE_LANGUAGES.map((v) => {
               const isSelected = voiceLang === v.id;
+              const shortLabel = v.id === 'auto' ? 'Auto' : v.id === 'ru-RU' ? 'RU' : v.id === 'en-US' ? 'EN' : 'JP';
+              const fullLabel = v.id === 'auto' ? 'Bilingual' : v.id === 'ru-RU' ? 'Русский' : v.id === 'en-US' ? 'English' : '日本語';
+
               return (
                 <button
                   key={v.id}
                   type="button"
                   onClick={() => handleSelectVoiceLang(v.id)}
-                  className={`py-2 px-2.5 rounded-xl border-[1.5px] text-xs font-black transition-all cursor-pointer text-center ${
+                  title={v.label}
+                  className={`flex-1 py-1.5 px-1 rounded-xl text-xs font-black transition-all cursor-pointer flex flex-col items-center justify-center ${
                     isSelected
-                      ? 'bg-[#3D6B52] text-white border-[#24201D] shadow-2xs'
-                      : 'bg-[#FAF8F5] text-[#24201D] border-stone-200 hover:border-[#24201D]'
+                      ? 'bg-[#3D6B52] text-white border border-[#24201D] shadow-2xs'
+                      : 'text-[#6B635B] hover:text-[#24201D] hover:bg-white/60'
                   }`}
                 >
-                  <span className="block text-[11px] leading-tight">{v.label}</span>
+                  <span className="text-[11px] font-bold leading-tight">{shortLabel}</span>
+                  <span className={`text-[8px] font-medium leading-tight ${isSelected ? 'text-white/80' : 'text-[#8A8175]'}`}>
+                    {fullLabel}
+                  </span>
                 </button>
               );
             })}
@@ -555,23 +563,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* 6. Version & App Update Capsule */}
-        <div className="p-3 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between gap-3">
+        <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-[2rem] shadow-[2px_2px_0px_#24201D] flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-white border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0">
-              <Sparkles className="w-4 h-4 text-[#E09F3E]" />
+            <div className="w-9 h-9 rounded-full bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center text-xs shadow-2xs shrink-0">
+              <ArrowUpCircle className="w-4.5 h-4.5 text-[#2D503C] stroke-[2.25]" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-black font-display text-[#24201D] truncate">
-                  Daily Planner
-                </span>
-                <span className="text-[9px] font-mono-num font-black px-1.5 py-0.5 rounded bg-white border border-[#24201D]/30 text-[#6B635B]">
-                  v{CURRENT_APP_VERSION}
-                </span>
-              </div>
-              <p className="text-[9px] font-bold text-[#6B635B]">
-                Release build & updates
-              </p>
+              <span className="text-xs font-black font-mono-num text-[#24201D] block">
+                {CURRENT_APP_VERSION.replace(/^v+/, 'v')}
+              </span>
+              <span className="text-[10px] font-semibold text-[#6B635B] block">
+                Release build
+              </span>
             </div>
           </div>
 

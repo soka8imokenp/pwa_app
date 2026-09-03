@@ -1,11 +1,10 @@
 {
-  "version": "1.8.12",
-  "buildNumber": 18,
+  "version": "1.8.13",
+  "buildNumber": 19,
   "releaseDate": "2026-09-03",
   "changelog": [
-    "Settings UI Polish: removed technical badges and model labels per user design preference",
-    "Renamed Debrief Time to Time and updated Japanese language badge from JA to JP",
-    "Redesigned Version & Check Updates capsule with prominent tactile button and unified Daily Planner info"
+    "Settings UI Redesign: streamlined Voice Language switcher into cohesive segmented pill control",
+    "Updates Capsule Polish: simplified to single-v version display and Release build label with ArrowUpCircle icon"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.12/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.13/Daily-Sumire-app-debug.apk"
 }

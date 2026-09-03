@@ -19,6 +19,7 @@ import {
   Lock,
   Unlock,
   Mic,
+  Sparkles,
 } from 'lucide-react';
 import {
   exportDatabaseToJson,
@@ -359,30 +360,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* 3. Gemini AI API Key Capsule */}
         <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-xs">
-                <Bot className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
-              </div>
-              <div>
-                <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                  Gemini AI API Key
-                </h4>
-                <p className="text-[10px] text-[#6B635B] font-bold">
-                  Model: gemini-2.5-flash
-                </p>
-              </div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-xs">
+              <Bot className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
             </div>
-
-            <span
-              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#24201D] ${
-                geminiKeyInput.trim()
-                  ? 'bg-[#DDE8DE] text-[#2D503C]'
-                  : 'bg-[#FBECCF] text-[#854D0E]'
-              }`}
-            >
-              {geminiKeyInput.trim() ? 'Configured' : 'Not Set'}
-            </span>
+            <div>
+              <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
+                Gemini AI API Key
+              </h4>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -430,24 +416,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* 4. Voice Recognition Language Settings */}
         <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#FBECCF] border border-[#24201D] flex items-center justify-center shadow-xs">
-                <Mic className="w-4 h-4 text-[#854D0E] stroke-[2.25]" />
-              </div>
-              <div>
-                <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                  Voice Dictation Language
-                </h4>
-                <p className="text-[10px] text-[#6B635B] font-bold">
-                  Bilingual speech recognition & punctuation
-                </p>
-              </div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-[#FBECCF] border border-[#24201D] flex items-center justify-center shadow-xs">
+              <Mic className="w-4 h-4 text-[#854D0E] stroke-[2.25]" />
             </div>
-
-            <span className="text-[10px] font-mono-num font-black px-2 py-0.5 rounded-full border border-[#24201D] bg-[#DDE8DE] text-[#2D503C]">
-              {voiceLang === 'auto' ? 'AUTO (RU/EN)' : voiceLang.split('-')[0].toUpperCase()}
-            </span>
+            <div>
+              <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
+                Voice Dictation Language
+              </h4>
+              <p className="text-[10px] text-[#6B635B] font-bold">
+                Bilingual speech recognition & punctuation
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
@@ -503,7 +483,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {eveningDebriefEnabled && (
             <div className="flex items-center justify-between pt-2 border-t border-stone-100">
               <span className="text-[10px] font-black uppercase text-[#6B635B]">
-                Debrief Time
+                Time
               </span>
               <div className="flex items-center gap-1.5">
                 {['20:00', '21:00', '22:00', '23:00'].map((time) => (
@@ -526,17 +506,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* 5. Offline Database Vault & Backup */}
         <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-[2rem] space-y-2.5 shadow-[2px_2px_0px_#24201D]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Database className="w-4 h-4 text-[#3D6B52] stroke-[2.25]" />
-              <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                Offline Data Vault
-              </h4>
-            </div>
-            <span className="text-[9px] font-black text-[#2D503C] bg-[#DDE8DE] px-2 py-0.5 rounded-full border border-[#24201D] flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3" />
-              <span>100% Offline</span>
-            </span>
+          <div className="flex items-center gap-2">
+            <Database className="w-4 h-4 text-[#3D6B52] stroke-[2.25]" />
+            <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
+              Offline Data Vault
+            </h4>
           </div>
 
           <p className="text-[11px] font-medium text-[#6B635B] leading-relaxed">
@@ -580,22 +554,40 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* 6. Version Check */}
-        <div className="pt-1 flex items-center justify-between px-2 text-[10px] text-[#6B635B] font-bold">
-          <span>Daily Planner • v{CURRENT_APP_VERSION}</span>
+        {/* 6. Version & App Update Capsule */}
+        <div className="p-3 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-white border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0">
+              <Sparkles className="w-4 h-4 text-[#E09F3E]" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-black font-display text-[#24201D] truncate">
+                  Daily Planner
+                </span>
+                <span className="text-[9px] font-mono-num font-black px-1.5 py-0.5 rounded bg-white border border-[#24201D]/30 text-[#6B635B]">
+                  v{CURRENT_APP_VERSION}
+                </span>
+              </div>
+              <p className="text-[9px] font-bold text-[#6B635B]">
+                Release build & updates
+              </p>
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={handleCheckAppUpdate}
             disabled={updateChecking}
-            className="hover:text-[#24201D] underline cursor-pointer flex items-center gap-1"
+            className="px-3.5 py-2 bg-[#3D6B52] hover:bg-[#345B45] text-white disabled:opacity-50 border-[1.5px] border-[#24201D] rounded-xl text-xs font-black flex items-center gap-1.5 shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer shrink-0"
           >
-            {updateChecking && <RefreshCw className="w-2.5 h-2.5 animate-spin" />}
-            <span>Check update</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${updateChecking ? 'animate-spin' : ''}`} />
+            <span>{updateChecking ? 'Checking...' : 'Check Updates'}</span>
           </button>
         </div>
 
         {updateStatus && (
-          <p className="text-[10px] font-bold text-center text-[#2D503C] bg-[#DDE8DE] p-2 rounded-xl border border-[#24201D]">
+          <p className="text-[10px] font-bold text-center text-[#2D503C] bg-[#DDE8DE] p-2.5 rounded-xl border border-[#24201D] shadow-2xs animate-in fade-in">
             {updateStatus}
           </p>
         )}

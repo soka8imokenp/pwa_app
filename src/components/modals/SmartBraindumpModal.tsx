@@ -8,6 +8,7 @@ import {
   getVoiceLanguage,
   setVoiceLanguage,
   splitVoiceIntoTasks,
+  getVoiceLanguageBadge,
   VoiceLanguage,
 } from '../../lib/speechRecognition';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
@@ -197,7 +198,7 @@ export const SmartBraindumpModal: React.FC<SmartBraindumpModalProps> = ({
                   title={`Voice Language: ${voiceLang.toUpperCase()}. Tap to switch.`}
                   className="px-2 py-1 rounded-full bg-white hover:bg-stone-100 border border-[#24201D]/30 text-[9px] font-black font-mono-num text-[#24201D] shadow-xs active:scale-95 transition-all cursor-pointer"
                 >
-                  {voiceLang === 'auto' ? 'AUTO' : voiceLang.split('-')[0].toUpperCase()}
+                  {getVoiceLanguageBadge(voiceLang)}
                 </button>
                 <button
                   type="button"

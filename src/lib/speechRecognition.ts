@@ -14,8 +14,15 @@ export const VOICE_LANGUAGES: VoiceLanguageOption[] = [
   { id: 'auto', label: 'Auto (RU / EN)', badge: 'AUTO' },
   { id: 'ru-RU', label: 'Русский (RU)', badge: 'RU' },
   { id: 'en-US', label: 'English (EN)', badge: 'EN' },
-  { id: 'ja-JP', label: '日本語 (JA)', badge: 'JA' },
+  { id: 'ja-JP', label: '日本語 (JP)', badge: 'JP' },
 ];
+
+export function getVoiceLanguageBadge(lang: VoiceLanguage): string {
+  if (lang === 'ja-JP') return 'JP';
+  if (lang === 'ru-RU') return 'RU';
+  if (lang === 'en-US') return 'EN';
+  return 'AUTO';
+}
 
 export function getVoiceLanguage(): VoiceLanguage {
   if (typeof window === 'undefined') return 'auto';

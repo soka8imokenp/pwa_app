@@ -22,6 +22,7 @@ import {
   getVoiceLanguage,
   setVoiceLanguage,
   splitVoiceIntoTasks,
+  getVoiceLanguageBadge,
   VoiceLanguage,
 } from '../../lib/speechRecognition';
 import confetti from 'canvas-confetti';
@@ -389,7 +390,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                       title={`Voice Recognition Language: ${voiceLang.toUpperCase()}. Tap to switch.`}
                       className="px-1.5 py-0.5 rounded bg-white hover:bg-stone-100 border border-[#24201D]/30 text-[9px] font-black font-mono-num text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
                     >
-                      {voiceLang === 'auto' ? 'AUTO' : voiceLang.split('-')[0].toUpperCase()}
+                      {getVoiceLanguageBadge(voiceLang)}
                     </button>
                     <button
                       type="button"

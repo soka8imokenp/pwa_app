@@ -15,6 +15,7 @@ import {
   isSpeechRecognitionSupported,
   getVoiceLanguage,
   setVoiceLanguage,
+  getVoiceLanguageBadge,
   VoiceLanguage,
 } from '../../lib/speechRecognition';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
@@ -370,7 +371,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
                 title={`Voice Recognition Language: ${voiceLang.toUpperCase()}. Tap to switch.`}
                 className="absolute -top-2 -right-1 px-1 py-0.2 rounded bg-white hover:bg-stone-100 border border-[#24201D] text-[8px] font-black font-mono-num text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
               >
-                {voiceLang === 'auto' ? 'AUTO' : voiceLang.split('-')[0].toUpperCase()}
+                {getVoiceLanguageBadge(voiceLang)}
               </button>
             </div>
 

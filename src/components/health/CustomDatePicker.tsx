@@ -15,7 +15,6 @@ import {
 } from 'date-fns';
 import { Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
-import { getTodayString, getRelativeDayLabel, shiftDate } from '../../lib/dateUtils';
 
 interface CustomDatePickerProps {
   selectedDate: string;
@@ -26,7 +25,7 @@ interface CustomDatePickerProps {
 export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   selectedDate,
   onChangeDate,
-  label = 'Weigh-In Date',
+  label = 'Date',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const parsedDate = React.useMemo(() => {
@@ -38,10 +37,6 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   }, [selectedDate]);
 
   const [viewMonth, setViewMonth] = useState<Date>(parsedDate);
-
-  const todayStr = getTodayString();
-  const yesterdayStr = shiftDate(todayStr, -1);
-  const twoDaysAgoStr = shiftDate(todayStr, -2);
 
   const handlePrevMonth = () => {
     playClickSound();
@@ -71,43 +66,11 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 
   return (
     <div className="w-full space-y-1.5 font-body select-none">
-      <div className="flex items-center justify-between">
+      {label && (
         <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] flex items-center gap-1 font-display">
           <Calendar className="w-3 h-3 text-[#3D6B52]" /> {label}
         </label>
-        
-        {/* Quick Day Chips */}
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => {
-              playClickSound();
-              onChangeDate(todayStr);
-            }}
-            className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase transition-all cursor-pointer ${
-              selectedDate === todayStr
-                ? 'bg-[#24201D] text-white'
-                : 'bg-[#FAF8F5] text-[#6B635B] border border-[#24201D]/20 hover:border-[#24201D]'
-            }`}
-          >
-            Today
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              playClickSound();
-              onChangeDate(yesterdayStr);
-            }}
-            className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase transition-all cursor-pointer ${
-              selectedDate === yesterdayStr
-                ? 'bg-[#24201D] text-white'
-                : 'bg-[#FAF8F5] text-[#6B635B] border border-[#24201D]/20 hover:border-[#24201D]'
-            }`}
-          >
-            Yesterday
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Main Trigger Capsule */}
       <button
@@ -125,17 +88,13 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
           <span className="text-xs font-black font-display text-[#24201D]">
             {format(parsedDate, 'EEEE, MMM d, yyyy')}
           </span>
-          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-white border border-[#24201D]/20 text-[#6B635B] font-mono-num">
-            {getRelativeDayLabel(selectedDate)}
-          </span>
         </div>
 
-        <div className="flex items-center gap-1 text-[#6B635B]">
-          <span className="text-[10px] font-bold">Calendar</span>
+        <div className="flex items-center text-[#6B635B]">
           {isOpen ? (
-            <ChevronUp className="w-3.5 h-3.5 stroke-[2.5]" />
+            <ChevronUp className="w-4 h-4 stroke-[2.5]" />
           ) : (
-            <ChevronDown className="w-3.5 h-3.5 stroke-[2.5]" />
+            <ChevronDown className="w-4 h-4 stroke-[2.5]" />
           )}
         </div>
       </button>
@@ -201,32 +160,6 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
                 </button>
               );
             })}
-          </div>
-
-          {/* Bottom Fast Selector Chips */}
-          <div className="flex items-center justify-between pt-1 border-t border-[#24201D]/10">
-            <button
-              type="button"
-              onClick={() => {
-                playClickSound();
-                onChangeDate(twoDaysAgoStr);
-                setIsOpen(false);
-              }}
-              className="text-[9px] font-bold text-[#6B635B] hover:text-[#24201D] cursor-pointer"
-            >
-              -2 Days ago
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                playClickSound();
-                onChangeDate(todayStr);
-                setIsOpen(false);
-              }}
-              className="text-[9px] font-bold text-[#3D6B52] hover:underline cursor-pointer"
-            >
-              Jump to Today
-            </button>
           </div>
         </div>
       )}

@@ -77,9 +77,6 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
               <h2 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D]">
                 Log Body Weight
               </h2>
-              <p className="text-[10px] font-bold text-[#6B635B]">
-                Precision weigh-in & BMI calculation
-              </p>
             </div>
           </div>
 
@@ -180,13 +177,13 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
           <CustomDatePicker
             selectedDate={date}
             onChangeDate={(newDate) => setDate(newDate)}
-            label="Weigh-In Date"
+            label="Date"
           />
 
-          {/* Context Note with Presets */}
+          {/* Note Input */}
           <div className="space-y-1.5">
             <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] flex items-center gap-1 font-display">
-              <FileText className="w-3 h-3 text-[#3D6B52]" /> Note / Context (optional)
+              <FileText className="w-3 h-3 text-[#3D6B52]" /> Note
             </label>
             <input
               type="text"
@@ -225,7 +222,7 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
               className="w-full py-3 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black shadow-[2px_2px_0px_#24201D] cursor-pointer active:translate-y-0.5 transition-all font-display uppercase tracking-wider flex items-center justify-center gap-2"
             >
               <Scale className="w-4 h-4 stroke-[2.5]" />
-              <span>Save Weigh-In Record</span>
+              <span>Save Record</span>
             </button>
           </div>
         </form>

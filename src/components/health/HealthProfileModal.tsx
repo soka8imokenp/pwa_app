@@ -1,13 +1,7 @@
-import React, { useState, useMemo } from 'react';
-import { X, User, Target, Activity, Info, Check, Flame, Droplets, Dumbbell } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, User, Target, Activity, Info, Check } from 'lucide-react';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import type { HealthProfile, ActivityLevel, HealthGoal, Gender } from '../../types/health';
-import {
-  calculateBmi,
-  getBmiCategory,
-  calculateBmr,
-  calculateTdee,
-} from '../../lib/healthFormulas';
 
 interface HealthProfileModalProps {
   isOpen: boolean;
@@ -31,27 +25,10 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Real-time live calculations based on current inputs
   const heightM = Math.max(1, height) / 100;
   const idealMin = Number((18.5 * heightM * heightM).toFixed(1));
   const idealMax = Number((24.9 * heightM * heightM).toFixed(1));
-  const targetBmi = calculateBmi(targetWeight, height);
-  const { label: targetBmiLabel, color: targetBmiColor } = getBmiCategory(targetBmi);
-
-  // Live estimated metabolic targets
-  const liveBmr = calculateBmr(profile.currentWeight || targetWeight, height, age, gender);
-  const liveTdee = calculateTdee(liveBmr, activityLevel);
-  let liveTargetKcal = liveTdee;
-  if (goal === 'lose') {
-    liveTargetKcal = Math.max(1200, Math.round(liveTdee - 400));
-  } else if (goal === 'gain') {
-    liveTargetKcal = Math.round(liveTdee + 350);
-  }
-
-  const liveProteinGrams = Math.round((profile.currentWeight || targetWeight) * (goal === 'maintain' ? 1.5 : 1.8));
-  const liveWaterLiters = (((profile.currentWeight || targetWeight) * 35) / 1000).toFixed(1);
   const weightDeltaToTarget = Number(((profile.currentWeight || 70) - targetWeight).toFixed(1));
-  const estimatedWeeks = Math.max(1, Math.ceil(Math.abs(weightDeltaToTarget) / 0.45));
 
   const handleStepAge = (delta: number) => {
     playClickSound();
@@ -96,9 +73,6 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
               <h2 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D]">
                 Health Profile Setup
               </h2>
-              <p className="text-[10px] font-bold text-[#6B635B]">
-                Configure metabolic parameters & targets
-              </p>
             </div>
           </div>
 
@@ -114,43 +88,13 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
           </button>
         </div>
 
-        {/* Live Projected Metrics Banner */}
-        <div className="p-3 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-2xl shadow-2xs space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display">
-              Live Projected Plan
-            </span>
-            <span
-              className="text-[10px] font-black px-2 py-0.5 rounded-md text-white shadow-2xs"
-              style={{ backgroundColor: targetBmiColor }}
-            >
-              Goal BMI {targetBmi} ({targetBmiLabel.split(' ')[0]})
-            </span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 text-center pt-0.5">
-            <div className="p-1.5 bg-white border border-[#24201D]/20 rounded-xl">
-              <span className="text-[9px] font-bold text-[#6B635B] block">Calorie Target</span>
-              <span className="text-xs font-black font-mono-num text-[#24201D]">{liveTargetKcal} kcal</span>
-            </div>
-            <div className="p-1.5 bg-white border border-[#24201D]/20 rounded-xl">
-              <span className="text-[9px] font-bold text-[#6B635B] block">Daily Protein</span>
-              <span className="text-xs font-black font-mono-num text-[#24201D]">{liveProteinGrams}g</span>
-            </div>
-            <div className="p-1.5 bg-white border border-[#24201D]/20 rounded-xl">
-              <span className="text-[9px] font-bold text-[#6B635B] block">Est. Time</span>
-              <span className="text-xs font-black font-mono-num text-[#24201D]">~{estimatedWeeks} wks</span>
-            </div>
-          </div>
-        </div>
-
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3.5">
           
           {/* Biological Sex */}
           <div>
             <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block mb-1 font-display">
-              Biological Sex (for metabolic BMR formula)
+              Biological Sex
             </label>
             <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs">
               {(['male', 'female'] as const).map((g) => (

@@ -1,12 +1,11 @@
 {
-  "version": "1.8.23",
-  "buildNumber": 29,
+  "version": "1.8.24",
+  "buildNumber": 30,
   "releaseDate": "2026-09-03",
   "changelog": [
-    "Custom Brutalist Date Picker: Built inline custom month calendar dropdown replacing native date inputs",
-    "Live Health Goals & Milestones: Real percentage calculations based on starting weight vs target, with milestone bar",
-    "Health Profile Setup Polish: Added live projected plan cards, steppers for height/age/target weight, and tactile inputs",
-    "Weight Logging Polish: Tactile LCD display, custom calendar dropdown, and single-tap context chips"
+    "Clean UI polish: Removed redundant subtitles, helper labels, and clutter from Log Body Weight and Health Profile setup",
+    "Streamlined Calendar: Clean date selector with inline month dropdown, without redundant badges or chip clutter",
+    "Minimal Note Input: Simplified note label and contextual tags"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.23/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.24/Daily-Sumire-app-debug.apk"
 }

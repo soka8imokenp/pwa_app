@@ -60,7 +60,7 @@ export const InAppMusicPlayer: React.FC = () => {
             title: t.title || 'Unknown Track',
             artist: t.artist || 'Daily Sumire',
             duration: t.duration || '03:30',
-            coverUrl: t.coverUrl?.startsWith('http') ? t.coverUrl : `${VERCEL_BASE_ORIGIN}${t.coverUrl || '/icon.png'}`,
+            coverUrl: t.coverUrl?.startsWith('http') ? t.coverUrl : `${VERCEL_BASE_ORIGIN}${t.coverUrl || '/icon-192x192.png'}`,
             audioUrl: resolveAudioUrl(t.audioUrl),
           }));
 

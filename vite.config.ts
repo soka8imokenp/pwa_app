@@ -10,25 +10,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      manifest: false,
       devOptions: {
         enabled: false,
-      },
-      includeAssets: ['favicon.svg'],
-      manifest: {
-        name: 'KAIRO Planner & Habits',
-        short_name: 'KAIRO',
-        description: 'Offline-First Soft Brutalism Day Planner & Habit Tracker',
-        theme_color: '#FAF7F2',
-        background_color: '#FAF7F2',
-        display: 'standalone',
-        icons: [
-          {
-            src: 'favicon.svg',
-            sizes: '192x192 512x512',
-            type: 'image/svg+xml',
-            purpose: 'any maskable'
-          }
-        ]
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}']
@@ -39,6 +24,12 @@ export default defineConfig({
     host: true,
     port: 5173,
     allowedHosts: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+      },
+    },
     hmr: {
       overlay: true,
     }

@@ -14,21 +14,40 @@ import {
   Info,
   RefreshCw,
   Bot,
+  Download,
+  HelpCircle,
+  X,
+  Dumbbell,
+  Apple,
 } from 'lucide-react';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import type { HealthProfile, CalculatedHealthMetrics, WeightLog } from '../../types/health';
 import { LogWeightModal } from './LogWeightModal';
 import { HealthProfileModal } from './HealthProfileModal';
 import { generateClinicalHealthSummaryAI } from '../../lib/aiHealthService';
+import {
+  computeWeightMovingAverage,
+  computeWeeklyPace,
+  computeProjectedGoalDate,
+} from '../../lib/healthFormulas';
 
 interface HealthBodyPageProps {
   profile: HealthProfile;
   metrics: CalculatedHealthMetrics;
   weightLogs: WeightLog[];
   selectedDate: string;
-  onSaveWeight: (weight: number, note?: string, date?: string) => Promise<void>;
+  onSaveWeight: (weight: number, note?: string, date?: string, bodyFat?: number, waistCm?: number) => Promise<void>;
   onDeleteWeightLog: (id: number) => Promise<void>;
   onUpdateProfile: (updates: Partial<HealthProfile>) => Promise<void>;
+}
+
+interface MetricDetailModalInfo {
+  title: string;
+  value: string;
+  category: string;
+  description: string;
+  formula: string;
+  clinicalTip: string;
 }
 
 export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
@@ -42,8 +61,9 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
 }) => {
   const [isLogWeightOpen, setIsLogWeightOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | 'all'>('7d');
+  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
   const [selectedPointIndex, setSelectedPointIndex] = useState<number | null>(null);
+  const [activeMetricDetail, setActiveMetricDetail] = useState<MetricDetailModalInfo | null>(null);
 
   // AI-generated clinical summary state
   const [aiSummary, setAiSummary] = useState<string>(() => {
@@ -54,7 +74,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
   });
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
-  const { currentWeight, targetWeight, height } = profile;
+  const { currentWeight, targetWeight, height, waistCm } = profile;
   const {
     bmi,
     bmiCategoryLabel,
@@ -68,12 +88,19 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
     targetWaterMl,
     targetDailyCalories,
     targetProteinGrams,
+    waistToHeightRatio,
+    waistRiskCategory,
   } = metrics;
 
   // Sorted weigh-in history (ASC by date)
   const sortedAllLogs = useMemo(() => {
     return [...weightLogs].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
   }, [weightLogs]);
+
+  // Smoothed Moving Average Logs
+  const logsWithMovingAvg = useMemo(() => {
+    return computeWeightMovingAverage(sortedAllLogs, 7);
+  }, [sortedAllLogs]);
 
   // Real initial starting weight from the earliest recorded log
   const startingWeight = sortedAllLogs.length > 0 ? sortedAllLogs[0].weight : currentWeight;
@@ -94,13 +121,21 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
       if (totalToGain <= 0) return currentWeight >= targetWeight ? 100 : 0;
       return Math.min(100, Math.max(0, Math.round((gained / totalToGain) * 100)));
     } else {
-      // Maintenance
       const diff = Math.abs(currentWeight - targetWeight);
       if (diff <= 0.5) return 100;
       if (diff <= 1.5) return 85;
       return Math.max(0, Math.round(100 - diff * 15));
     }
   }, [startingWeight, currentWeight, targetWeight, profile.goal]);
+
+  // Weekly Pace & Projected Milestone
+  const weeklyPaceInfo = useMemo(() => {
+    return computeWeeklyPace(sortedAllLogs);
+  }, [sortedAllLogs]);
+
+  const projectedGoal = useMemo(() => {
+    return computeProjectedGoalDate(currentWeight, targetWeight, profile.goal, weeklyPaceInfo.paceKgPerWeek);
+  }, [currentWeight, targetWeight, profile.goal, weeklyPaceInfo]);
 
   // Delta vs previous weigh-in log
   const previousLog = sortedAllLogs.length > 1 ? sortedAllLogs[sortedAllLogs.length - 2] : null;
@@ -111,10 +146,11 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
 
   // Time-range filtered logs for chart
   const filteredLogs = useMemo(() => {
-    if (timeRange === '7d') return sortedAllLogs.slice(-7);
-    if (timeRange === '30d') return sortedAllLogs.slice(-30);
-    return sortedAllLogs;
-  }, [sortedAllLogs, timeRange]);
+    if (timeRange === '7d') return logsWithMovingAvg.slice(-7);
+    if (timeRange === '30d') return logsWithMovingAvg.slice(-30);
+    if (timeRange === '90d') return logsWithMovingAvg.slice(-90);
+    return logsWithMovingAvg;
+  }, [logsWithMovingAvg, timeRange]);
 
   // Generate / refresh AI clinical summary
   const handleGenerateSummary = async () => {
@@ -141,56 +177,95 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
     }
   }, [profile.currentWeight, profile.targetWeight, profile.goal, profile.height, profile.age]);
 
+  // Export Weigh-In Logs to CSV
+  const handleExportCSV = () => {
+    playClickSound();
+    if (sortedAllLogs.length === 0) return;
+
+    const headers = ['Date', 'Weight(kg)', 'BMI', 'BodyFat(%)', 'Waist(cm)', 'Note'];
+    const rows = sortedAllLogs.map((l) => [
+      l.date,
+      l.weight,
+      l.bmi,
+      l.bodyFatPercentage ?? '',
+      l.waistCm ?? '',
+      `"${(l.note || '').replace(/"/g, '""')}"`,
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `sumire_health_weights_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    playSuccessChime();
+  };
+
   // Chart Geometry Calculation
   const chartData = useMemo(() => {
     const rawWeights = filteredLogs.map((l) => l.weight);
-    const allVals = rawWeights.length > 0 ? [...rawWeights, targetWeight] : [currentWeight, targetWeight];
+    const avgWeights = filteredLogs.map((l) => l.movingAvg);
+    const allVals = rawWeights.length > 0 ? [...rawWeights, ...avgWeights, targetWeight] : [currentWeight, targetWeight];
 
     const minWeightVal = Math.min(...allVals);
     const maxWeightVal = Math.max(...allVals);
 
-    // Padding above and below to prevent clipping
-    const chartMin = Number((minWeightVal - 1.5).toFixed(1));
-    const chartMax = Number((maxWeightVal + 1.5).toFixed(1));
+    const chartMin = Number((minWeightVal - 1.2).toFixed(1));
+    const chartMax = Number((maxWeightVal + 1.2).toFixed(1));
     const chartRange = chartMax - chartMin || 1;
 
-    const svgWidth = 320;
-    const svgHeight = 150;
+    const svgWidth = 330;
+    const svgHeight = 160;
     const paddingTop = 25;
-    const paddingBottom = 30;
+    const paddingBottom = 32;
     const plotHeight = svgHeight - paddingTop - paddingBottom;
     const paddingLeft = 38;
     const paddingRight = 15;
     const plotWidth = svgWidth - paddingLeft - paddingRight;
 
-    // Y position helper
     const getY = (val: number) => {
       const ratio = (val - chartMin) / chartRange;
       return paddingTop + (1 - ratio) * plotHeight;
     };
 
-    // Calculate points
+    // Calculate raw points and moving avg points
     const pts = filteredLogs.map((l, i) => {
       const xRatio = filteredLogs.length > 1 ? i / (filteredLogs.length - 1) : 0.5;
       const x = paddingLeft + xRatio * plotWidth;
       const y = getY(l.weight);
-      return { x, y, weight: l.weight, date: l.date, note: l.note };
+      const avgY = getY(l.movingAvg);
+      return {
+        x,
+        y,
+        avgY,
+        weight: l.weight,
+        movingAvg: l.movingAvg,
+        date: l.date,
+        note: l.note,
+        bodyFat: l.bodyFatPercentage,
+        waist: l.waistCm,
+      };
     });
 
-    let linePath = '';
+    let rawLinePath = '';
+    let avgLinePath = '';
     let areaPath = '';
 
     if (pts.length > 1) {
-      linePath = pts.reduce((acc, p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`), '');
+      rawLinePath = pts.reduce((acc, p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`), '');
+      avgLinePath = pts.reduce((acc, p, i) => (i === 0 ? `M ${p.x} ${p.avgY}` : `${acc} L ${p.x} ${p.avgY}`), '');
+
       const firstPt = pts[0];
       const lastPt = pts[pts.length - 1];
       const bottomY = paddingTop + plotHeight;
-      areaPath = `${linePath} L ${lastPt.x} ${bottomY} L ${firstPt.x} ${bottomY} Z`;
+      areaPath = `${rawLinePath} L ${lastPt.x} ${bottomY} L ${firstPt.x} ${bottomY} Z`;
     }
 
     const targetYPos = getY(targetWeight);
 
-    // Reference Grid Lines
     const gridYVals = [
       { val: chartMax, y: paddingTop },
       { val: Number(((chartMax + chartMin) / 2).toFixed(1)), y: paddingTop + plotHeight / 2 },
@@ -199,7 +274,8 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
 
     return {
       points: pts,
-      linePath,
+      rawLinePath,
+      avgLinePath,
       areaPath,
       targetYPos,
       gridYVals,
@@ -294,9 +370,10 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
               <span className="text-xs font-bold text-[#6B635B]">kg</span>
             </div>
 
-            <span className="text-[10px] font-bold text-[#6B635B] block">
-              Height: {height} cm
-            </span>
+            <div className="flex items-center justify-between text-[10px] font-bold text-[#6B635B] pt-0.5">
+              <span>Height: {height} cm</span>
+              {waistCm ? <span>Waist: {waistCm} cm</span> : null}
+            </div>
           </div>
 
           {/* BMI Category */}
@@ -346,8 +423,8 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
           </div>
         </div>
 
-        {/* Live Goal Progress & Milestones */}
-        <div className="p-3.5 bg-[#FBECCF] border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs space-y-2">
+        {/* Live Goal Progress & Pace Milestones */}
+        <div className="p-3.5 bg-[#FBECCF] border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs space-y-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-[#854D0E]" />
@@ -356,7 +433,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
               </span>
             </div>
             <span className="text-xs font-black font-mono-num text-[#24201D] px-2 py-0.5 rounded-lg bg-white border border-[#24201D]/20 shadow-2xs">
-              {progressPercent}% Complete
+              {progressPercent}% Done
             </span>
           </div>
 
@@ -375,15 +452,25 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             <span>Target: <b className="font-mono-num text-[#24201D]">{targetWeight}kg</b></span>
           </div>
 
-          {/* Status Text */}
-          <div className="text-[11px] font-bold text-[#24201D] pt-0.5">
-            {Math.abs(weightDiff) === 0 ? (
-              <span>Goal Reached! Excellent consistency maintaining your target.</span>
-            ) : isLossGoal ? (
-              <span>{Math.abs(weightDiff)} kg left to lose (~{Math.max(1, Math.ceil(Math.abs(weightDiff) / 0.45))} weeks at safe deficit)</span>
-            ) : (
-              <span>{Math.abs(weightDiff)} kg left to gain (~{Math.max(1, Math.ceil(Math.abs(weightDiff) / 0.35))} weeks at clean surplus)</span>
-            )}
+          {/* Rate of Change & ETA Badge */}
+          <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#854D0E]/20">
+            <div className="p-2 bg-white/80 border border-[#24201D]/20 rounded-xl space-y-0.5">
+              <span className="text-[9px] font-bold text-[#6B635B] uppercase block font-display">
+                Weekly Pace:
+              </span>
+              <span className={`text-[11px] font-black font-mono-num block ${weeklyPaceInfo.isOptimal ? 'text-[#2D503C]' : 'text-[#854D0E]'}`}>
+                {weeklyPaceInfo.paceLabel}
+              </span>
+            </div>
+
+            <div className="p-2 bg-white/80 border border-[#24201D]/20 rounded-xl space-y-0.5">
+              <span className="text-[9px] font-bold text-[#6B635B] uppercase block font-display">
+                Projected Finish:
+              </span>
+              <span className="text-[11px] font-black font-mono-num text-[#24201D] block">
+                {projectedGoal.dateString}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -392,86 +479,209 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
       {/* 2. Clinical Body Composition & Metabolic Grid */}
       <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
-            Metabolic Rate & Body Stats
-          </h3>
+          <div>
+            <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
+              Metabolic Rate & Body Composition
+            </h3>
+            <span className="text-[9px] text-stone-400 font-bold block">
+              Tap any metric to view clinical science & recommendations
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          {/* Waist-to-Height Ratio (WHtR) - Gold Standard */}
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              setActiveMetricDetail({
+                title: 'Waist-to-Height Ratio (WHtR)',
+                value: waistToHeightRatio ? String(waistToHeightRatio) : 'N/A',
+                category: waistRiskCategory || 'Enter waist in Profile',
+                description: 'The Waist-to-Height Ratio (WHtR) is recognized by the WHO and UK NICE as the most accurate clinical metric for assessing central visceral fat and cardiovascular health, outperforming BMI alone.',
+                formula: 'Waist Circumference (cm) ÷ Height (cm)',
+                clinicalTip: 'Keep your waist circumference under half your height (WHtR < 0.50) to minimize metabolic syndrome and visceral adiposity risk.',
+              });
+            }}
+            className="p-2.5 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] font-bold text-[#6B635B] uppercase">WHtR Ratio</span>
+              <HelpCircle className="w-3 h-3 text-stone-400" />
+            </div>
+            <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
+              {waistToHeightRatio ?? '—'}
+            </span>
+            <span className={`text-[9px] font-bold ${waistToHeightRatio && waistToHeightRatio < 0.5 ? 'text-[#3D6B52]' : 'text-[#DC2626]'}`}>
+              {waistRiskCategory || 'Set in profile'}
+            </span>
+          </button>
+
           {/* Body Fat % */}
-          <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl">
-            <span className="text-[9px] font-bold text-[#6B635B] uppercase block">Est. Body Fat</span>
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              setActiveMetricDetail({
+                title: 'Body Fat Percentage',
+                value: `${bodyFatPercentage}%`,
+                category: profile.gender === 'male' ? (bodyFatPercentage < 15 ? 'Athletic' : bodyFatPercentage <= 20 ? 'Fitness' : 'Acceptable') : (bodyFatPercentage < 22 ? 'Athletic' : bodyFatPercentage <= 28 ? 'Fitness' : 'Acceptable'),
+                description: 'Estimated total adipose tissue mass relative to total body weight. Can be updated directly from smart bioimpedance scales or calculated via Deurenberg adult formula.',
+                formula: 'Deurenberg: 1.20 × BMI + 0.23 × Age - 10.8 × Sex - 5.4',
+                clinicalTip: 'Optimal range for longevity: 12-18% for men, 18-24% for women. Avoid rapid crashes below 8% (men) or 14% (women) to preserve hormonal health.',
+              });
+            }}
+            className="p-2.5 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] font-bold text-[#6B635B] uppercase">Body Fat %</span>
+              <HelpCircle className="w-3 h-3 text-stone-400" />
+            </div>
             <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
               {bodyFatPercentage}%
             </span>
-            <span className="text-[9px] text-stone-400">Deurenberg formula</span>
-          </div>
+            <span className="text-[9px] text-stone-400">Scale or formula</span>
+          </button>
 
           {/* Muscle Mass */}
-          <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl">
-            <span className="text-[9px] font-bold text-[#6B635B] uppercase block">Lean Muscle</span>
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              setActiveMetricDetail({
+                title: 'Lean Muscle & Tissue Mass',
+                value: `${muscleMassKg} kg`,
+                category: 'Metabolic Engine',
+                description: 'Lean body mass represents all non-fat tissues: skeletal muscle, organs, bone, and intracellular water. Muscle is your primary glucose sink and metabolic engine.',
+                formula: 'Total Body Weight × (1 - Body Fat% ÷ 100)',
+                clinicalTip: 'Consume at least 1.6–2.2g of protein per kg of body weight during calorie restriction to safeguard lean tissue against catabolism.',
+              });
+            }}
+            className="p-2.5 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] font-bold text-[#6B635B] uppercase">Lean Mass</span>
+              <HelpCircle className="w-3 h-3 text-stone-400" />
+            </div>
             <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
               {muscleMassKg} <span className="text-xs">kg</span>
             </span>
             <span className="text-[9px] text-stone-400">Active lean tissue</span>
-          </div>
+          </button>
 
-          {/* BMR */}
-          <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl">
-            <span className="text-[9px] font-bold text-[#6B635B] uppercase block">Basal BMR</span>
+          {/* Basal BMR */}
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              setActiveMetricDetail({
+                title: 'Basal Metabolic Rate (BMR)',
+                value: `${bmr} kcal`,
+                category: 'Mifflin-St Jeor Formula',
+                description: 'The baseline energy your body expends completely at rest just to maintain vital physiological processes: breathing, heart contractions, cellular repair, and brain activity.',
+                formula: 'Mifflin-St Jeor: 10 × weight(kg) + 6.25 × height(cm) - 5 × age + s',
+                clinicalTip: 'Never consume less than your BMR for extended periods. Chronic sub-BMR diets cause hormonal downregulation, thyroid slowing, and metabolic adaptation.',
+              });
+            }}
+            className="p-2.5 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] font-bold text-[#6B635B] uppercase">Basal BMR</span>
+              <HelpCircle className="w-3 h-3 text-stone-400" />
+            </div>
             <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
               {bmr} <span className="text-xs">kcal</span>
             </span>
-            <span className="text-[9px] text-stone-400">Mifflin-St Jeor</span>
-          </div>
+            <span className="text-[9px] text-stone-400">Baseline resting burn</span>
+          </button>
 
-          {/* TDEE */}
-          <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl">
-            <span className="text-[9px] font-bold text-[#6B635B] uppercase block">Daily TDEE</span>
+          {/* Daily TDEE */}
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              setActiveMetricDetail({
+                title: 'Total Daily Energy Expenditure (TDEE)',
+                value: `${tdee} kcal`,
+                category: `Activity: ${profile.activityLevel}`,
+                description: 'Total energy burned throughout a 24-hour cycle, combining your BMR, non-exercise activity thermogenesis (NEAT), exercise activity (EAT), and the thermic effect of food (TEF).',
+                formula: 'BMR × Activity Multiplier (1.2 to 1.725)',
+                clinicalTip: 'To lose fat steadily, eat 300-500 kcal below TDEE. To gain lean mass, eat 250-400 kcal above TDEE.',
+              });
+            }}
+            className="p-2.5 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] font-bold text-[#6B635B] uppercase">Daily TDEE</span>
+              <HelpCircle className="w-3 h-3 text-stone-400" />
+            </div>
             <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
               {tdee} <span className="text-xs">kcal</span>
             </span>
-            <span className="text-[9px] text-stone-400">With {profile.activityLevel} activity</span>
-          </div>
-
-          {/* Water Target */}
-          <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl">
-            <span className="text-[9px] font-bold text-[#6B635B] uppercase block">Daily Water</span>
-            <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
-              {(targetWaterMl / 1000).toFixed(1)} <span className="text-xs">L</span>
-            </span>
-            <span className="text-[9px] text-stone-400">{Math.round(targetWaterMl / 250)} glasses/day</span>
-          </div>
+            <span className="text-[9px] text-stone-400">Maintenance baseline</span>
+          </button>
 
           {/* Calorie Target */}
-          <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl">
-            <span className="text-[9px] font-bold text-[#6B635B] uppercase block">Calorie Target</span>
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              setActiveMetricDetail({
+                title: 'Prescribed Intake Target',
+                value: `${targetDailyCalories} kcal`,
+                category: `Goal: ${profile.goal}`,
+                description: 'Your personalized daily caloric budget calibrated to hit your target weight safely, preserving metabolic efficiency and avoiding lean muscle loss.',
+                formula: `TDEE ${profile.goal === 'lose' ? '- 400 kcal' : profile.goal === 'gain' ? '+ 350 kcal' : '± 0 kcal'}`,
+                clinicalTip: `Prioritize ${targetProteinGrams}g of protein daily (${(targetDailyCalories * 0.3 / 4).toFixed(0)} kcal) to promote satiety and support thermogenesis.`,
+              });
+            }}
+            className="p-2.5 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] font-bold text-[#6B635B] uppercase">Daily Calories</span>
+              <HelpCircle className="w-3 h-3 text-stone-400" />
+            </div>
             <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
               {targetDailyCalories} <span className="text-xs">kcal</span>
             </span>
             <span className="text-[9px] text-stone-400">{targetProteinGrams}g protein/day</span>
-          </div>
+          </button>
         </div>
       </div>
 
-      {/* 3. Weight History Line Chart with Clear Markers */}
+      {/* 3. Weight History Line Chart with Moving Average Trend */}
       <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
-            <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B] leading-none">
-              Weight Trend
-            </h3>
-            <span className="text-[10px] font-bold text-stone-400 mt-0.5 block">
-              Target line: {targetWeight} kg
-            </span>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] leading-none">
+                Weight Trend & Moving Average
+              </h3>
+              <span className="px-1.5 py-0.5 rounded bg-[#DDE8DE] border border-[#24201D] text-[9px] font-bold text-[#2D503C]">
+                7D Smoothed
+              </span>
+            </div>
+            <div className="flex items-center gap-3 text-[9px] font-bold text-stone-400 mt-1">
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-[#3D6B52] inline-block" /> Raw Scale
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-0.5 bg-[#2563EB] inline-block" /> 7D Trend Avg
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-0.5 bg-[#DC2626] border-t border-dashed border-[#DC2626] inline-block" /> Target ({targetWeight}kg)
+              </span>
+            </div>
           </div>
 
-          {/* Filter Pills */}
+          {/* Filter Range Pills */}
           <div className="flex items-center gap-1 p-0.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl shadow-2xs">
             {(
               [
                 { id: '7d', label: '7D' },
                 { id: '30d', label: '30D' },
+                { id: '90d', label: '90D' },
                 { id: 'all', label: 'ALL' },
               ] as const
             ).map((t) => (
@@ -500,26 +710,37 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
           
           {/* Selected Point Callout Tooltip */}
           {selectedPointIndex !== null && chartData.points[selectedPointIndex] && (
-            <div className="absolute top-2 right-2 bg-white border border-[#24201D] rounded-lg px-2 py-1 shadow-2xs z-10 animate-in fade-in duration-100 flex items-center gap-1.5">
-              <span className="text-[10px] font-bold text-[#6B635B]">
-                {chartData.points[selectedPointIndex].date}:
-              </span>
-              <span className="text-xs font-black font-mono-num text-[#24201D]">
-                {chartData.points[selectedPointIndex].weight} kg
-              </span>
-              {chartData.points[selectedPointIndex].note && (
-                <span className="text-[9px] text-[#3D6B52] font-medium">
-                  ({chartData.points[selectedPointIndex].note})
+            <div className="absolute top-2 right-2 bg-white border border-[#24201D] rounded-xl px-2.5 py-1.5 shadow-2xs z-10 animate-in fade-in duration-100 space-y-0.5">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-[#6B635B]">
+                  {chartData.points[selectedPointIndex].date}:
                 </span>
-              )}
+                <span className="text-xs font-black font-mono-num text-[#24201D]">
+                  {chartData.points[selectedPointIndex].weight} kg
+                </span>
+                <span className="text-[10px] font-mono-num text-[#2563EB] font-bold">
+                  (7D: {chartData.points[selectedPointIndex].movingAvg}kg)
+                </span>
+              </div>
+              <div className="text-[9px] text-[#6B635B] flex items-center gap-2">
+                {chartData.points[selectedPointIndex].bodyFat && (
+                  <span>Fat: <b>{chartData.points[selectedPointIndex].bodyFat}%</b></span>
+                )}
+                {chartData.points[selectedPointIndex].waist && (
+                  <span>Waist: <b>{chartData.points[selectedPointIndex].waist}cm</b></span>
+                )}
+                {chartData.points[selectedPointIndex].note && (
+                  <span className="text-[#3D6B52]">"{chartData.points[selectedPointIndex].note}"</span>
+                )}
+              </div>
             </div>
           )}
 
-          <svg viewBox={`0 0 ${chartData.svgWidth} ${chartData.svgHeight}`} className="w-full h-36 overflow-visible">
+          <svg viewBox={`0 0 ${chartData.svgWidth} ${chartData.svgHeight}`} className="w-full h-40 overflow-visible">
             <defs>
               <linearGradient id="weightAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3D6B52" stopOpacity="0.30" />
-                <stop offset="100%" stopColor="#3D6B52" stopOpacity="0.02" />
+                <stop offset="0%" stopColor="#3D6B52" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#3D6B52" stopOpacity="0.01" />
               </linearGradient>
             </defs>
 
@@ -571,15 +792,28 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
               Goal {targetWeight}kg
             </text>
 
-            {/* Area Fill */}
+            {/* Area Fill under raw line */}
             {chartData.areaPath && (
               <path d={chartData.areaPath} fill="url(#weightAreaGrad)" />
             )}
 
-            {/* Line Path */}
-            {chartData.linePath && (
+            {/* Moving Average Line (Blue, smooth trend) */}
+            {chartData.avgLinePath && (
               <path
-                d={chartData.linePath}
+                d={chartData.avgLinePath}
+                fill="none"
+                stroke="#2563EB"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeOpacity="0.85"
+              />
+            )}
+
+            {/* Raw Weight Line (Green) */}
+            {chartData.rawLinePath && (
+              <path
+                d={chartData.rawLinePath}
                 fill="none"
                 stroke="#3D6B52"
                 strokeWidth="2.5"
@@ -616,23 +850,12 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
                   <circle
                     cx={p.x}
                     cy={p.y}
-                    r={isSelected ? 6 : 4}
+                    r={isSelected ? 6 : 3.5}
                     fill={isSelected ? '#3D6B52' : '#FFFFFF'}
                     stroke="#24201D"
-                    strokeWidth={isSelected ? 2.5 : 1.75}
+                    strokeWidth={isSelected ? 2.5 : 1.5}
                     className="transition-all"
                   />
-                  <text
-                    x={p.x}
-                    y={p.y - 7}
-                    fill="#24201D"
-                    fontSize="8"
-                    fontWeight="black"
-                    textAnchor="middle"
-                    className="font-mono-num"
-                  >
-                    {p.weight}
-                  </text>
                   <text
                     x={p.x}
                     y={chartData.svgHeight - 8}
@@ -693,15 +916,28 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
         </div>
       </div>
 
-      {/* 5. Weigh-In History Records */}
+      {/* 5. Weigh-In History Records with CSV Export */}
       <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
-            Weigh-In Log History ({weightLogs.length})
-          </h3>
-          <span className="text-[10px] font-bold text-[#6B635B]">
-            Latest {Math.min(10, weightLogs.length)} records
-          </span>
+          <div>
+            <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B] leading-none">
+              Weigh-In Log History ({weightLogs.length})
+            </h3>
+            <span className="text-[10px] font-bold text-stone-400 mt-0.5 block">
+              Latest {Math.min(10, weightLogs.length)} records
+            </span>
+          </div>
+
+          {weightLogs.length > 0 && (
+            <button
+              type="button"
+              onClick={handleExportCSV}
+              className="px-2.5 py-1 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] text-[10px] font-bold text-[#24201D] flex items-center gap-1 shadow-2xs active:scale-95 transition-all cursor-pointer"
+            >
+              <Download className="w-3 h-3 text-[#3D6B52]" />
+              <span>Export CSV</span>
+            </button>
+          )}
         </div>
 
         {weightLogs.length === 0 ? (
@@ -725,9 +961,14 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white border border-[#24201D]/20 text-[#6B635B] font-mono-num">
                         BMI {log.bmi}
                       </span>
+                      {log.bodyFatPercentage && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#DDE8DE] border border-[#24201D]/20 text-[#2D503C] font-mono-num">
+                          {log.bodyFatPercentage}% Fat
+                        </span>
+                      )}
                     </div>
                     <span className="text-[10px] text-[#6B635B] block">
-                      {log.date} {log.note ? `• ${log.note}` : ''}
+                      {log.date} {log.waistCm ? `• Waist: ${log.waistCm}cm` : ''} {log.note ? `• ${log.note}` : ''}
                     </span>
                   </div>
                 </div>
@@ -750,6 +991,86 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
         )}
       </div>
 
+      {/* 6. Metric Detail Science Modal */}
+      {activeMetricDetail && (
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-[#24201D]/55 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
+          <div className="w-full max-w-sm bg-white border-[2px] border-[#24201D] rounded-3xl shadow-[4px_4px_0px_#24201D] p-5 space-y-4">
+            
+            <div className="flex items-center justify-between pb-2 border-b border-[#24201D]/15">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-2xs">
+                  <Activity className="w-4 h-4 text-[#2D503C]" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black font-display uppercase tracking-tight text-[#24201D]">
+                    {activeMetricDetail.title}
+                  </h3>
+                  <span className="text-[10px] font-bold text-[#6B635B]">
+                    Clinical Reference
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  playClickSound();
+                  setActiveMetricDetail(null);
+                }}
+                className="w-7 h-7 rounded-xl bg-[#FAF8F5] hover:bg-stone-200 border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs cursor-pointer active:scale-95 transition-all"
+              >
+                <X className="w-4 h-4 stroke-[2.5]" />
+              </button>
+            </div>
+
+            <div className="p-3.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-2xl space-y-1">
+              <span className="text-[9px] font-black uppercase text-[#6B635B] tracking-wider block font-display">
+                Current Value:
+              </span>
+              <div className="flex items-baseline justify-between">
+                <span className="text-2xl font-black font-mono-num text-[#24201D]">
+                  {activeMetricDetail.value}
+                </span>
+                <span className="px-2 py-0.5 rounded-lg bg-white border border-[#24201D]/25 text-[10px] font-bold text-[#24201D]">
+                  {activeMetricDetail.category}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2 text-xs leading-relaxed text-[#24201D]">
+              <p className="text-stone-700 font-medium">
+                {activeMetricDetail.description}
+              </p>
+
+              <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 text-[11px] font-mono-num text-stone-600">
+                <span className="font-bold text-[#24201D] block mb-0.5 font-body text-[10px] uppercase">
+                  Formula:
+                </span>
+                {activeMetricDetail.formula}
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-[#FBECCF] border border-[#24201D] text-[11px] text-[#854D0E] font-medium leading-normal">
+                <span className="font-black uppercase text-[10px] block mb-0.5 font-display">
+                  Clinical Recommendation:
+                </span>
+                {activeMetricDetail.clinicalTip}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                playClickSound();
+                setActiveMetricDetail(null);
+              }}
+              className="w-full py-2.5 bg-[#24201D] text-white rounded-xl text-xs font-black uppercase tracking-wider font-display shadow-2xs active:translate-y-0.5 cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Modals */}
       <LogWeightModal
         isOpen={isLogWeightOpen}
@@ -757,6 +1078,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
         currentWeight={currentWeight}
         heightCm={height}
         selectedDate={selectedDate}
+        defaultWaist={waistCm}
         onSaveWeight={onSaveWeight}
       />
 

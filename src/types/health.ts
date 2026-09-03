@@ -16,6 +16,7 @@ export interface HealthProfile {
   height: number; // in cm (e.g. 178)
   currentWeight: number; // in kg (e.g. 75.5)
   targetWeight: number; // in kg (e.g. 72.0)
+  waistCm?: number; // in cm (e.g. 82)
   activityLevel: ActivityLevel;
   goal: HealthGoal;
   updatedAt: number;
@@ -27,6 +28,7 @@ export interface WeightLog {
   weight: number; // in kg
   bmi: number;
   bodyFatPercentage?: number;
+  waistCm?: number;
   note?: string;
   createdAt: number;
 }
@@ -82,4 +84,6 @@ export interface CalculatedHealthMetrics {
   muscleMassKg: number;
   waterPercentage: number;
   boneMassKg: number;
+  waistToHeightRatio?: number;
+  waistRiskCategory?: string;
 }

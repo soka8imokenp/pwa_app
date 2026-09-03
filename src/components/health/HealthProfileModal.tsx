@@ -20,6 +20,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
   const [gender, setGender] = useState<Gender>(profile.gender || 'male');
   const [height, setHeight] = useState<number>(profile.height || 175);
   const [targetWeight, setTargetWeight] = useState<number>(profile.targetWeight || 70);
+  const [waistCm, setWaistCm] = useState<number>(profile.waistCm || 82);
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>(profile.activityLevel || 'moderate');
   const [goal, setGoal] = useState<HealthGoal>(profile.goal || 'lose');
 
@@ -40,6 +41,11 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
     setHeight((prev) => Math.max(120, Math.min(230, prev + delta)));
   };
 
+  const handleStepWaist = (delta: number) => {
+    playClickSound();
+    setWaistCm((prev) => Math.max(45, Math.min(180, prev + delta)));
+  };
+
   const handleStepTargetWeight = (delta: number) => {
     playClickSound();
     setTargetWeight((prev) => Math.max(35, Math.min(220, Number((prev + delta).toFixed(1)))));
@@ -53,6 +59,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
       gender,
       height: Number(height),
       targetWeight: Number(targetWeight),
+      waistCm: Number(waistCm),
       activityLevel,
       goal,
     });
@@ -161,6 +168,38 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
                   type="button"
                   onClick={() => handleStepHeight(1)}
                   className="w-7 h-7 rounded-lg bg-white hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-sm font-black text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* Waist */}
+            <div className="p-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1 col-span-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block font-display">
+                  Waist Circumference (cm)
+                </label>
+                <span className="text-[9px] font-bold text-stone-400">At navel level</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => handleStepWaist(-1)}
+                  className="w-8 h-8 rounded-lg bg-white hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-sm font-black text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer"
+                >
+                  -
+                </button>
+                <div className="text-center">
+                  <span className="text-base font-black font-mono-num text-[#24201D]">{waistCm} cm</span>
+                  <span className="text-[9px] text-[#3D6B52] font-bold block">
+                    WHtR: {(waistCm / height).toFixed(2)} {waistCm / height < 0.5 ? '(Healthy)' : '(Elevated)'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleStepWaist(1)}
+                  className="w-8 h-8 rounded-lg bg-white hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-sm font-black text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer"
                 >
                   +
                 </button>

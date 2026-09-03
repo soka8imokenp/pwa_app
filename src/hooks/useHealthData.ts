@@ -68,18 +68,28 @@ export function useHealthData(selectedDate: string) {
     await db.healthProfile.put(updated);
   };
 
-  const logWeight = async (weight: number, note?: string, date = selectedDate) => {
+  const logWeight = async (
+    weight: number,
+    note?: string,
+    date = selectedDate,
+    bodyFat?: number,
+    waistCm?: number
+  ) => {
     const bmi = calculateBmi(weight, profile.height);
     await db.weightLogs.add({
       date,
       weight,
       bmi,
+      bodyFatPercentage: bodyFat,
+      waistCm,
       note,
       createdAt: Date.now(),
     });
 
-    // Also update current weight on profile
-    await updateProfile({ currentWeight: weight });
+    // Also update current weight and waist on profile
+    const profileUpdates: Partial<HealthProfile> = { currentWeight: weight };
+    if (waistCm && waistCm > 0) profileUpdates.waistCm = waistCm;
+    await updateProfile(profileUpdates);
   };
 
   const deleteWeightLog = async (id: number) => {

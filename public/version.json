@@ -1,10 +1,11 @@
 {
-  "version": "1.8.13",
-  "buildNumber": 19,
+  "version": "1.8.14",
+  "buildNumber": 20,
   "releaseDate": "2026-09-03",
   "changelog": [
-    "Settings UI Redesign: streamlined Voice Language switcher into cohesive segmented pill control",
-    "Updates Capsule Polish: simplified to single-v version display and Release build label with ArrowUpCircle icon"
+    "Quick Scratchpad: removed auto button from input field and removed add a new note link from active panel",
+    "Priorities Page: removed + Add Slot button from header and linked Add button directly to Create New Task modal",
+    "Create New Task Modal: overhauled with built-in voice dictation, smart template presets, aesthetic category styling, segmented time chips, and numbered checklists"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.13/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.14/Daily-Sumire-app-debug.apk"
 }

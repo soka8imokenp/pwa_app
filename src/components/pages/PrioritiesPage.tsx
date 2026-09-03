@@ -171,14 +171,6 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
           <span className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
             Top 3 Priorities
           </span>
-          {priorityTasks.length < 3 && (
-            <button
-              onClick={() => onOpenAddTask(priorityTasks.length)}
-              className="text-xs font-bold text-[#24201D] flex items-center gap-1 hover:underline cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 stroke-[2.5]" /> Add Slot
-            </button>
-          )}
         </div>
 
         {/* Priority Task Cards */}
@@ -322,11 +314,15 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
         </div>
 
         <button
-          type="submit"
-          disabled={!quickTitle.trim()}
-          className="px-4 py-2.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-black shadow-[1.5px_1.5px_0px_#24201D] cursor-pointer disabled:opacity-50 active:translate-y-0.5 transition-all"
+          type="button"
+          onClick={() => {
+            playClickSound();
+            onOpenAddTask(priorityTasks.length);
+          }}
+          className="px-4 py-2.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-black shadow-[1.5px_1.5px_0px_#24201D] cursor-pointer active:translate-y-0.5 transition-all flex items-center gap-1.5 shrink-0"
         >
-          Add
+          <Plus className="w-3.5 h-3.5 stroke-[3]" />
+          <span>Add</span>
         </button>
       </form>
 

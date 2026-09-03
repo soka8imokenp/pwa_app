@@ -379,32 +379,22 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder="Type idea, task, or quick memo..."
-                    className="w-full pl-3 pr-20 py-2.5 bg-[#F4F0EA] border border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-[#A89F91] outline-none shadow-2xs"
+                    className="w-full pl-3 pr-9 py-2.5 bg-[#F4F0EA] border border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-[#A89F91] outline-none shadow-2xs"
                   />
                   
-                  {/* Language switch badge & Voice Mic Button */}
-                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={cycleVoiceLang}
-                      title={`Voice Recognition Language: ${voiceLang.toUpperCase()}. Tap to switch.`}
-                      className="px-1.5 py-0.5 rounded bg-white hover:bg-stone-100 border border-[#24201D]/30 text-[9px] font-black font-mono-num text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
-                    >
-                      {getVoiceLanguageBadge(voiceLang)}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleToggleVoice}
-                      title={isVoiceRecording ? 'Stop recording' : 'Voice input'}
-                      className={`p-1 rounded-lg border text-stone-700 active:scale-90 transition-all cursor-pointer ${
-                        isVoiceRecording
-                          ? 'bg-rose-500 text-white border-rose-600 animate-pulse'
-                          : 'bg-white hover:bg-stone-100 border-[#24201D]/30'
-                      }`}
-                    >
-                      {isVoiceRecording ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3 text-[#C25E40]" />}
-                    </button>
-                  </div>
+                  {/* Voice Mic Button */}
+                  <button
+                    type="button"
+                    onClick={handleToggleVoice}
+                    title={isVoiceRecording ? 'Stop recording' : 'Voice input'}
+                    className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-lg border text-stone-700 active:scale-90 transition-all cursor-pointer ${
+                      isVoiceRecording
+                        ? 'bg-rose-500 text-white border-rose-600 animate-pulse'
+                        : 'bg-white hover:bg-stone-100 border-[#24201D]/30'
+                    }`}
+                  >
+                    {isVoiceRecording ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3 text-[#C25E40]" />}
+                  </button>
                 </div>
 
                 <button
@@ -452,15 +442,8 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
           {/* SLIDE 1: ACTIVE ITEMS PANEL */}
           <div className="w-full shrink-0 px-0.5 space-y-2">
             {activeItems.length === 0 ? (
-              <div className="py-8 text-center border border-dashed border-[#24201D]/20 rounded-xl bg-[#F4F0EA] space-y-2">
+              <div className="py-8 text-center border border-dashed border-[#24201D]/20 rounded-xl bg-[#F4F0EA]">
                 <p className="text-xs font-bold text-[#24201D]">All clear! No active items.</p>
-                <button
-                  type="button"
-                  onClick={() => goToSlide(0)}
-                  className="text-[11px] font-black text-[#3D6B52] underline cursor-pointer"
-                >
-                  + Add a new note or memo
-                </button>
               </div>
             ) : (
               <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 scrollbar-thin">

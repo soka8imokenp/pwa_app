@@ -83,7 +83,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
   };
 
   return (
-    <div className="w-full space-y-4 pb-20 font-body select-none">
+    <div className="w-full space-y-4 pb-3 font-body select-none">
       {/* 1. Top Level & XP Card */}
       <div className="p-5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
         <div className="flex items-center justify-between">

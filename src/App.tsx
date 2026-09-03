@@ -162,6 +162,7 @@ export function App() {
     toggleSubTaskComplete,
     promoteTaskToPriority,
     demoteTaskToBacklog,
+    reorderPriorityTasks,
     deleteTask,
     updateTaskDate,
     addHabit,
@@ -248,7 +249,7 @@ export function App() {
         )}
 
         {/* Page Body View with safe bottom padding for dock */}
-        <main className="flex-1 w-full pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+120px)]">
+        <main className="flex-1 w-full pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+74px)]">
           {activeTab === 'priorities' && (
             <PrioritiesPage
               selectedDate={selectedDate}
@@ -262,6 +263,7 @@ export function App() {
               onDeleteTask={deleteTask}
               onOpenAddTask={handleOpenAddTask}
               onStartFocus={handleStartFocus}
+              onReorderPriority={reorderPriorityTasks}
               onLogFocusSession={logFocusSession}
               onQuickCreateTask={addTask}
             />

@@ -16,7 +16,6 @@ import {
   Clock,
   Mic,
   MicOff,
-  Sparkles,
   ArrowRight,
 } from 'lucide-react';
 import type { Task, SubTask } from '../../types';
@@ -207,10 +206,9 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
         {/* Quick Smart Templates */}
         <div className="space-y-1">
-          <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-[#6B635B]">
-            <Sparkles className="w-3 h-3 text-[#E09F3E]" />
-            <span>Quick Templates</span>
-          </div>
+          <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block">
+            Quick Templates
+          </span>
           <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none">
             {SMART_TEMPLATES.map((tmpl) => (
               <button

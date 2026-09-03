@@ -181,7 +181,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
   };
 
   return (
-    <div className="w-full space-y-5 pb-20 font-body select-none">
+    <div className="w-full space-y-5 pb-3 font-body select-none">
       {/* 1. Header Card */}
       <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between gap-3">
         <div>

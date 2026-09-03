@@ -110,7 +110,7 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
   };
 
   return (
-    <div className="w-full space-y-3.5 pb-24 font-body select-none">
+    <div className="w-full space-y-3.5 pb-3 font-body select-none">
       
       {/* 1. Habit Progress & Streaks Card */}
       <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5">

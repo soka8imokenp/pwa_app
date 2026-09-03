@@ -16,6 +16,7 @@ export interface Task {
   subtasks?: SubTask[];
   isRecurring?: boolean;
   recurringDays?: string[];
+  order?: number;
 }
 
 export interface Habit {

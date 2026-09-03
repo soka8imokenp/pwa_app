@@ -27,7 +27,17 @@ export function usePlannerData(selectedDate: string) {
   }, [allTasks, selectedDate]);
 
   const priorityTasks = useMemo(() => {
-    return dateTasks.filter((t) => t.isPriority).slice(0, 3);
+    return dateTasks
+      .filter((t) => t.isPriority)
+      .sort((a, b) => {
+        if (typeof a.order === 'number' && typeof b.order === 'number') {
+          return a.order - b.order;
+        }
+        if (typeof a.order === 'number') return -1;
+        if (typeof b.order === 'number') return 1;
+        return (a.id || 0) - (b.id || 0);
+      })
+      .slice(0, 3);
   }, [dateTasks]);
 
   const backlogTasks = useMemo(() => {
@@ -110,13 +120,37 @@ export function usePlannerData(selectedDate: string) {
   const promoteTaskToPriority = async (task: Task) => {
     if (!task.id) return;
     if (priorityTasks.length >= 3) return;
-    await db.tasks.update(task.id, { isPriority: true });
+    await db.tasks.update(task.id, { isPriority: true, order: priorityTasks.length });
     triggerTwoWaySync();
   };
 
   const demoteTaskToBacklog = async (task: Task) => {
     if (!task.id) return;
-    await db.tasks.update(task.id, { isPriority: false });
+    await db.tasks.update(task.id, { isPriority: false, order: undefined });
+    triggerTwoWaySync();
+  };
+
+  const reorderPriorityTasks = async (sourceIndex: number, targetIndex: number) => {
+    if (
+      sourceIndex < 0 ||
+      sourceIndex >= priorityTasks.length ||
+      targetIndex < 0 ||
+      targetIndex >= priorityTasks.length ||
+      sourceIndex === targetIndex
+    ) {
+      return;
+    }
+
+    const updated = [...priorityTasks];
+    const [movedTask] = updated.splice(sourceIndex, 1);
+    updated.splice(targetIndex, 0, movedTask);
+
+    await Promise.all(
+      updated.map((t, idx) => {
+        if (!t.id) return Promise.resolve();
+        return db.tasks.update(t.id, { order: idx });
+      })
+    );
     triggerTwoWaySync();
   };
 
@@ -232,6 +266,7 @@ export function usePlannerData(selectedDate: string) {
     toggleSubTaskComplete,
     promoteTaskToPriority,
     demoteTaskToBacklog,
+    reorderPriorityTasks,
     deleteTask,
     updateTaskDate,
     addHabit,

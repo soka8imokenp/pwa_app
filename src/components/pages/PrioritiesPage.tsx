@@ -14,6 +14,8 @@ import {
   Mic,
   MicOff,
   Repeat,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import type { Task, FocusSession, HabitLog } from '../../types';
 import { playTaskCheckSound, playSuccessChime, playClickSound } from '../../lib/sound';
@@ -34,6 +36,7 @@ interface PrioritiesPageProps {
   onDeleteTask: (taskId: number) => void;
   onOpenAddTask: (prioritySlotIndex?: number) => void;
   onStartFocus: (task: Task) => void;
+  onReorderPriority?: (sourceIndex: number, targetIndex: number) => void;
   onLogFocusSession?: (session: Omit<FocusSession, 'id'>) => Promise<any>;
   onQuickCreateTask?: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<any>;
 }
@@ -46,6 +49,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
   onDemoteToBacklog,
   onOpenAddTask,
   onStartFocus,
+  onReorderPriority,
   onQuickCreateTask,
 }) => {
   const [quickTitle, setQuickTitle] = useState('');
@@ -136,7 +140,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
   const SLOT_COLORS = ['#FBECCF', '#DDE8DE', '#F7E3DC'];
 
   return (
-    <div className="w-full space-y-3.5 pb-24 font-body select-none">
+    <div className="w-full space-y-3.5 pb-3 font-body select-none">
       
       {/* 1. Daily Progress & Header */}
       <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between gap-3">
@@ -186,13 +190,45 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
             >
               <div className="flex items-start justify-between gap-2.5">
                 <div className="flex items-start gap-2.5 min-w-0">
-                  {/* Slot Number Badge */}
-                  <span
-                    className="w-6 h-6 rounded-lg border border-[#24201D] flex items-center justify-center text-xs font-black text-[#24201D] shadow-2xs shrink-0 mt-0.5"
-                    style={{ backgroundColor: slotBg }}
-                  >
-                    {idx + 1}
-                  </span>
+                  {/* Slot Number Badge with Quick Move Arrows */}
+                  <div className="flex flex-col items-center gap-0.5 shrink-0 mt-0.5">
+                    <span
+                      className="w-6 h-6 rounded-lg border border-[#24201D] flex items-center justify-center text-xs font-black text-[#24201D] shadow-2xs"
+                      style={{ backgroundColor: slotBg }}
+                    >
+                      {idx + 1}
+                    </span>
+                    {priorityTasks.length > 1 && (
+                      <div className="flex items-center gap-0.5">
+                        {idx > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              playClickSound();
+                              onReorderPriority?.(idx, idx - 1);
+                            }}
+                            title={`Move to slot #${idx}`}
+                            className="p-0.5 rounded hover:bg-stone-200 text-[#24201D] active:scale-90 transition-all cursor-pointer"
+                          >
+                            <ChevronUp className="w-3 h-3 stroke-[2.5]" />
+                          </button>
+                        )}
+                        {idx < priorityTasks.length - 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              playClickSound();
+                              onReorderPriority?.(idx, idx + 1);
+                            }}
+                            title={`Move to slot #${idx + 2}`}
+                            className="p-0.5 rounded hover:bg-stone-200 text-[#24201D] active:scale-90 transition-all cursor-pointer"
+                          >
+                            <ChevronDown className="w-3 h-3 stroke-[2.5]" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
                   {/* Title & Metadata */}
                   <div className="min-w-0">
@@ -268,7 +304,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                 </div>
               )}
 
-              {/* Focus Button & Move to Backlog */}
+              {/* Focus Button, Slot Reorder Switcher & Move to Backlog */}
               <div className="flex items-center justify-between gap-2 pt-1 border-t border-[#24201D]/10">
                 <button
                   onClick={() => onStartFocus(task)}
@@ -277,6 +313,37 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                   <Play className="w-3 h-3 fill-[#24201D]" />
                   <span>Start Focus</span>
                 </button>
+
+                {/* Direct Slot 1, 2, 3 Selector */}
+                {priorityTasks.length > 1 && (
+                  <div className="flex items-center gap-1 bg-[#F4F0EA] px-1.5 py-0.5 rounded-lg border border-[#24201D]/25">
+                    <span className="text-[9px] font-bold text-[#6B635B] uppercase font-mono-num mr-0.5">
+                      Slot
+                    </span>
+                    {priorityTasks.map((_, targetSlot) => {
+                      const isCurrent = targetSlot === idx;
+                      return (
+                        <button
+                          key={targetSlot}
+                          type="button"
+                          disabled={isCurrent}
+                          onClick={() => {
+                            playClickSound();
+                            onReorderPriority?.(idx, targetSlot);
+                          }}
+                          title={isCurrent ? `Currently in slot #${targetSlot + 1}` : `Move to slot #${targetSlot + 1}`}
+                          className={`w-5 h-4.5 rounded text-[10px] font-black font-mono-num flex items-center justify-center transition-all ${
+                            isCurrent
+                              ? 'bg-[#24201D] text-white shadow-2xs cursor-default'
+                              : 'text-[#6B635B] hover:text-[#24201D] hover:bg-white/80 cursor-pointer active:scale-95'
+                          }`}
+                        >
+                          {targetSlot + 1}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
 
                 <button
                   onClick={() => onDemoteToBacklog(task)}

@@ -402,6 +402,12 @@ export function App() {
           onUpdateProfile={(updated) => setCurrentUser(updated)}
           onLogout={handleLogout}
           streakCount={overallStreak}
+          allTasks={allTasks}
+          allHabits={allHabits}
+          allHabitLogs={allHabitLogs}
+          allFocusSessions={allFocusSessions}
+          activityStats={activityStats}
+          selectedDate={selectedDate}
         />
 
         <SettingsModal

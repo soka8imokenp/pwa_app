@@ -22,6 +22,13 @@ export interface UserProfile {
   lastName: string;
   email: string;
   username: string;
+  bio?: string;
+  motto?: string;
+  role?: string;
+  focusDailyGoalHours?: number;
+  workStyle?: 'deep_focus' | 'balanced' | 'sprint' | 'zen';
+  joinedDate?: string;
+  avatarId?: string;
 }
 
 interface AuthContainerProps {

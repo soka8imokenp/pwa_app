@@ -26,7 +26,7 @@ import {
   Compass,
 } from 'lucide-react';
 import type { UserProfile } from '../auth/AuthContainer';
-import type { Task, Habit, HabitLog, FocusSession } from '../../types';
+import type { Task, Habit, HabitLog, FocusSession, HabitWithStats } from '../../types';
 import type { OverallActivityStats } from '../../lib/streaks';
 import { AVATAR_OPTIONS, getAvatarById } from '../../data/avatars';
 import { playClickSound, playSuccessChime } from '../../lib/sound';

@@ -20,6 +20,7 @@ import {
   Unlock,
   Mic,
   ArrowUpCircle,
+  Apple,
 } from 'lucide-react';
 import {
   exportDatabaseToJson,
@@ -53,6 +54,8 @@ interface SettingsModalProps {
   onDataChanged: () => void;
   onShowUpdateModal?: (info: AppUpdateInfo) => void;
   onLockApp?: () => void;
+  appMode?: 'planner' | 'health';
+  onChangeAppMode?: (mode: 'planner' | 'health') => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -62,6 +65,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onToggleSound,
   onDataChanged,
   onShowUpdateModal,
+  appMode = 'planner',
+  onChangeAppMode,
 }) => {
   const [feedback, setFeedback] = useState<{ text: string; success: boolean } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -273,6 +278,61 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <AlertCircle className="w-4 h-4 text-[#C25E40] stroke-[2.5] shrink-0" />
             )}
             <span>{feedback.text}</span>
+          </div>
+        )}
+
+        {/* 0. Active App Mode Capsule */}
+        {onChangeAppMode && (
+          <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-[2rem] shadow-[2px_2px_0px_#24201D] space-y-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full bg-[#FAF8F5] border border-[#24201D] flex items-center justify-center text-xs shadow-2xs">
+                <Apple className="w-4 h-4 text-[#24201D] stroke-[2.25]" />
+              </div>
+              <div>
+                <span className="text-xs font-black font-display text-[#24201D] block">
+                  Active App Mode
+                </span>
+                <span className="text-[10px] font-semibold text-[#6B635B] block">
+                  Switch between Planner and Health & Body OS
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#FAF8F5] border border-[#24201D] rounded-xl shadow-2xs">
+              <button
+                type="button"
+                onClick={() => {
+                  playClickSound();
+                  onChangeAppMode('planner');
+                  setFeedback({ text: 'Active mode set to Daily Planner!', success: true });
+                  setTimeout(() => setFeedback(null), 2000);
+                }}
+                className={`py-1.5 px-2 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  appMode === 'planner'
+                    ? 'bg-[#24201D] text-white shadow-2xs'
+                    : 'text-[#6B635B] hover:text-[#24201D]'
+                }`}
+              >
+                <span>🎯 Daily Planner</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  playClickSound();
+                  onChangeAppMode('health');
+                  setFeedback({ text: 'Active mode set to Health & Body OS!', success: true });
+                  setTimeout(() => setFeedback(null), 2000);
+                }}
+                className={`py-1.5 px-2 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  appMode === 'health'
+                    ? 'bg-[#3D6B52] text-white shadow-2xs'
+                    : 'text-[#6B635B] hover:text-[#24201D]'
+                }`}
+              >
+                <span>🍏 Health & Body</span>
+              </button>
+            </div>
           </div>
         )}
 

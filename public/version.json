@@ -1,13 +1,13 @@
 {
-  "version": "1.8.19",
-  "buildNumber": 25,
+  "version": "1.8.20",
+  "buildNumber": 26,
   "releaseDate": "2026-09-03",
   "changelog": [
-    "Dual-OS Architecture: Seamless tactile mode switcher between Daily Planner and Health & Body OS",
-    "Clinical Body & BMI Hub: WHO BMI standards, Mifflin-St Jeor BMR/TDEE calculations, Deurenberg body composition, and SVG weight trend graph",
-    "Nutrition & Hydration Tracker: Energy budget, macro bars, interactive 250ml water glasses, and AI voice/text meal logging",
-    "Activity & Workouts: Workout session logging with calorie burn calculation",
-    "Sumire Health AI Coach: Evidence-based personalized nutrition and metabolic guidance"
+    "Body & BMI Hub Polish: added quick weigh-in +/- steppers, note preset tags, and real-time weight delta badges",
+    "Clinical Insight Card: personalized WHO-grounded clinical health advice based on exact BMI and goals",
+    "Time-Range Chart Filter: 7D, 30D, and ALL filters for weight history trend curve",
+    "Health Profile Setup: live projected target BMI calculation and WHO ideal weight range hint",
+    "Settings & Full Backup: integrated Health & Body OS in Settings and unified JSON backup/restore"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.19/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.20/Daily-Sumire-app-debug.apk"
 }

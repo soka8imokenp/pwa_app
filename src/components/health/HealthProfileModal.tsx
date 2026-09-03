@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, User, Target, Activity } from 'lucide-react';
+import { X, User, Target, Activity, Heart, Info, Scale } from 'lucide-react';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import type { HealthProfile, ActivityLevel, HealthGoal, Gender } from '../../types/health';
+import { calculateBmi, getBmiCategory } from '../../lib/healthFormulas';
 
 interface HealthProfileModalProps {
   isOpen: boolean;
@@ -24,6 +25,13 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
   const [goal, setGoal] = useState<HealthGoal>(profile.goal || 'lose');
 
   if (!isOpen) return null;
+
+  // Real-time calculations for preview
+  const heightM = height / 100;
+  const idealMin = Number((18.5 * heightM * heightM).toFixed(1));
+  const idealMax = Number((24.9 * heightM * heightM).toFixed(1));
+  const targetBmi = calculateBmi(targetWeight, height);
+  const { label: targetBmiLabel, color: targetBmiColor } = getBmiCategory(targetBmi);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +62,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
                 Health Profile Setup
               </h2>
               <p className="text-[10px] font-bold text-[#6B635B]">
-                Personalize BMI & calorie targets
+                Personalize metabolic targets & BMI
               </p>
             </div>
           </div>
@@ -76,7 +84,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
           {/* Gender Tabs */}
           <div>
             <label className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block mb-1">
-              Gender
+              Biological Sex (for metabolic BMR formula)
             </label>
             <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#FAF8F5] border border-[#24201D] rounded-xl shadow-2xs">
               {(['male', 'female'] as const).map((g) => (
@@ -87,13 +95,13 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
                     playClickSound();
                     setGender(g);
                   }}
-                  className={`py-1.5 rounded-lg text-xs font-black capitalize transition-all cursor-pointer ${
+                  className={`py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                     gender === g
                       ? 'bg-[#24201D] text-white shadow-2xs'
                       : 'text-[#6B635B] hover:text-[#24201D]'
                   }`}
                 >
-                  {g === 'male' ? 'Male / Мужской' : 'Female / Женский'}
+                  <span>{g === 'male' ? '♂ Male' : '♀ Female'}</span>
                 </button>
               ))}
             </div>
@@ -130,11 +138,31 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
             </div>
           </div>
 
-          {/* Target Weight */}
+          {/* Ideal Weight Hint */}
+          <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center justify-between">
+            <span className="text-[10px] font-bold text-[#6B635B] flex items-center gap-1">
+              <Info className="w-3 h-3 text-[#3D6B52]" /> Healthy WHO range:
+            </span>
+            <span className="text-xs font-black font-mono-num text-[#24201D]">
+              {idealMin} – {idealMax} kg
+            </span>
+          </div>
+
+          {/* Target Weight with Live Projected BMI Preview */}
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block mb-1 flex items-center gap-1">
-              <Target className="w-3 h-3 text-[#3D6B52]" /> Target Weight (kg)
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] flex items-center gap-1">
+                <Target className="w-3 h-3 text-[#3D6B52]" /> Target Weight (kg)
+              </label>
+              {targetBmi > 0 && (
+                <span
+                  className="text-[10px] font-black px-1.5 py-0.2 rounded text-white shadow-2xs"
+                  style={{ backgroundColor: targetBmiColor }}
+                >
+                  BMI {targetBmi} ({targetBmiLabel.split(' ')[0]})
+                </span>
+              )}
+            </div>
             <input
               type="number"
               step="0.5"
@@ -156,7 +184,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
                 [
                   { id: 'lose', label: 'Fat Loss', sub: '-400 kcal' },
                   { id: 'maintain', label: 'Maintain', sub: 'TDEE' },
-                  { id: 'gain', label: 'Muscle', sub: '+350 kcal' },
+                  { id: 'gain', label: 'Muscle Gain', sub: '+350 kcal' },
                 ] as const
               ).map((item) => (
                 <button
@@ -182,13 +210,13 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
           {/* Activity Level */}
           <div>
             <label className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block mb-1 flex items-center gap-1">
-              <Activity className="w-3 h-3" /> Activity Level
+              <Activity className="w-3 h-3" /> Daily Activity Level
             </label>
             <div className="space-y-1">
               {(
                 [
-                  { id: 'sedentary', label: 'Sedentary', desc: 'Desk job, little exercise (x1.2)' },
-                  { id: 'light', label: 'Light Active', desc: '1–3 light workouts / week (x1.375)' },
+                  { id: 'sedentary', label: 'Sedentary', desc: 'Desk job, little exercise (x1.20)' },
+                  { id: 'light', label: 'Light Active', desc: '1–3 workouts / week (x1.375)' },
                   { id: 'moderate', label: 'Moderately Active', desc: '3–5 workouts / week (x1.55)' },
                   { id: 'very_active', label: 'Very Active', desc: '6–7 hard workouts / week (x1.725)' },
                 ] as const

@@ -525,6 +525,8 @@ export function App() {
           onDataChanged={() => {}}
           onShowUpdateModal={(info) => setAvailableUpdate(info)}
           onLockApp={handleLockApp}
+          appMode={appMode}
+          onChangeAppMode={handleSetAppMode}
         />
 
         {/* Telegram Auto-Update Modal */}

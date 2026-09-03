@@ -156,17 +156,49 @@ export async function getHealthCoachAdviceWithAI(
   const startingWeight = context?.weightLogs && context.weightLogs.length > 0 ? context.weightLogs[0].weight : profile.currentWeight;
   const deltaKg = Number((profile.currentWeight - profile.targetWeight).toFixed(1));
 
-  if (apiKey && navigator.onLine) {
-    try {
-      const waistInfo = profile.waistCm
-        ? `- Waist: ${profile.waistCm} cm (WHtR: ${(profile.waistCm / profile.height).toFixed(2)})`
-        : '';
+/**
+ * Generates personalized health advice from Sumire Health AI using the exact Gemini model loop with multimodal photo support
+ */
+export async function getHealthCoachAdviceWithAI(
+  profile: HealthProfile,
+  metrics: CalculatedHealthMetrics,
+  question: string,
+  context?: HealthTelemetryContext,
+  imageAttachment?: { base64Data: string; mimeType: string },
+  chatHistory: Array<{ sender: 'user' | 'sumire'; text: string }> = []
+): Promise<string> {
+  const apiKey = getStoredGeminiApiKey().trim();
 
-      const prompt = `You are Sumire Health AI — an elite, knowledgeable, empathetic, evidence-based personal health, nutrition, and metabolic coach.
+  if (!apiKey) {
+    throw new Error(
+      'Пожалуйста, укажите Google Gemini API Key в Настройках приложения (кнопка ⚙️ вверху экрана), чтобы Sumire могла анализировать ваши фото и отвечать на любые вопросы в реальном времени.'
+    );
+  }
+
+  // Prepare Live RAG Context Telemetry
+  const mealsList = context?.todaysMeals && context.todaysMeals.length > 0
+    ? context.todaysMeals.map(m => `${m.name} (${m.kcal} kcal, P:${m.proteinGrams}g, C:${m.carbsGrams}g, F:${m.fatGrams}g)`).join('; ')
+    : 'No meals logged yet today';
+
+  const workoutsList = context?.todaysWorkouts && context.todaysWorkouts.length > 0
+    ? context.todaysWorkouts.map(w => `${w.title} (${w.durationMinutes}m, +${w.caloriesBurned} kcal, cat: ${w.category})`).join('; ')
+    : 'No workouts logged yet today';
+
+  const recentWeights = context?.weightLogs && context.weightLogs.length > 0
+    ? context.weightLogs.slice(-5).map(l => `${l.date}: ${l.weight}kg`).join(', ')
+    : `${profile.currentWeight} kg`;
+
+  const startingWeight = context?.weightLogs && context.weightLogs.length > 0 ? context.weightLogs[0].weight : profile.currentWeight;
+  const deltaKg = Number((profile.currentWeight - profile.targetWeight).toFixed(1));
+  const waistInfo = profile.waistCm
+    ? `- Waist: ${profile.waistCm} cm (WHtR: ${(profile.waistCm / profile.height).toFixed(2)})`
+    : '';
+
+  const systemInstructionText = `You are Sumire Health AI — an elite, knowledgeable, empathetic, evidence-based personal health, nutrition, and metabolic coach.
 
 USER'S LIVE BIOMETRICS & METABOLIC TELEMETRY:
 - Demographics: Biological Sex: ${profile.gender}, Age: ${profile.age} y.o., Height: ${profile.height} cm
-- Weight Progress: Current ${profile.currentWeight} kg -> Target: ${profile.targetWeight} kg (Goal: ${profile.goal})
+- Weight Progress: Current ${profile.currentWeight} kg -> Target: ${profile.targetWeight} kg (Goal: ${profile.goal}, Delta: ${deltaKg > 0 ? `${deltaKg} kg to lose` : `${Math.abs(deltaKg)} kg to gain`})
   ${waistInfo}
 - Body Mass Index (BMI): ${metrics.bmi} (${metrics.bmiCategoryLabel}) | Healthy WHO Range for ${profile.height}cm: ${metrics.idealWeightMin}–${metrics.idealWeightMax} kg
 - Body Composition: ~${metrics.bodyFatPercentage}% Body Fat, ${metrics.muscleMassKg} kg Lean Tissue
@@ -176,132 +208,111 @@ USER'S LIVE BIOMETRICS & METABOLIC TELEMETRY:
   - Meals logged today: ${mealsList}
 - Today's Hydration: ${context?.todaysWaterTotalMl || 0} / ${metrics.targetWaterMl} ml
 - Today's Workouts: ${workoutsList} (Active Burn: +${context?.todaysActiveCaloriesBurned || 0} kcal)
-- Recent Weigh-ins: ${recentWeights}
+- Recent Weigh-in History: ${recentWeights}
 
-COACHING ROLE & PHILOSOPHY:
-1. FULL CONVERSATIONAL FREEDOM:
-   - You are a real, warm, articulate nutrition and health expert, NOT a rigid robot.
-   - You can discuss ANY health, diet, food, lifestyle, fitness, metabolic, and weight questions with depth, practical examples, and nuance.
-   - When asked about specific treats or foods (e.g. "Can I eat ice cream / chocolate / pizza / fast food?"):
-     * Explain flexible dieting (IIFYM / 80/20 rule), how many calories/sugar it typically contains (e.g. 180-220 kcal for a portion of ice cream), how to easily fit it into the user's daily budget of ${metrics.targetDailyCalories} kcal, and why total restriction leads to psychological burnout and binge cycles.
-   - When asked about weight targets (e.g. "Should I drop my weight to 65 kg?"):
-     * Calculate what BMI that would produce for height ${profile.height} cm: weight / (height/100)^2.
-     * Compare with the WHO healthy range (${metrics.idealWeightMin}–${metrics.idealWeightMax} kg), consider muscle mass preservation vs fat loss, and give a thoughtful, personalized recommendation.
-   - When asked about cravings, supplements, recovery, meal timing, intermittent fasting, or workouts:
-     * Provide evidence-based, actionable explanations with pros, cons, and tips.
-2. TAILORED DATA GROUNDING:
-   - Naturally reference their personal stats (height, BMR, TDEE, today's calories/protein) when relevant to make the answer personalized and grounded.
-3. BOUNDARIES:
-   - Only decline topics that are 100% completely unrelated to human life, body, health, wellness, or food (e.g., coding software, political elections, writing poetry). If anything can be linked to stress, sleep, energy, or lifestyle, answer it through the lens of health!
-4. STYLE:
-   - Clear, supportive, knowledgeable, friendly, and structured (use bullet points where helpful).
-   - DO NOT use the word "sparkle" or the icon "✨".
-   - Respond in the user's language (Russian if Russian, English if English).
+COACHING CAPABILITIES & GUIDELINES:
+1. DIETARY & FOOD ANALYSIS (INCLUDING PHOTOS):
+   - You analyze any food, meal, dessert, plate photo, nutrition label, or recipe.
+   - When given a photo of food / plate / snack / nutritional label:
+     * Accurately identify the ingredients, components, and portion size.
+     * Estimate total calories (kcal) and macronutrients (protein, carbs, fat).
+     * Provide constructive feedback: explain how it fits into their daily budget (${metrics.targetDailyCalories} kcal, ${metrics.targetProteinGrams}g protein) and how to balance the rest of the day.
+   - You embrace flexible dieting (IIFYM / 80/20 rule): treats like ice cream, chocolate, pizza, or burgers can be enjoyed in moderation without guilt if daily macros and calories allow.
+2. WEIGHT, BODY COMPOSITION & TARGETS:
+   - When asked if they should change their weight target (e.g. "Should I drop my weight to 65 kg?"):
+     * Calculate resulting BMI for height ${profile.height} cm: targetWeight / (height/100)^2.
+     * Compare with WHO healthy range (${metrics.idealWeightMin}–${metrics.idealWeightMax} kg).
+     * Analyze muscle retention, metabolic health, and give a thoughtful, honest recommendation.
+3. CONVERSATIONAL FREEDOM:
+   - Speak naturally, warmly, intelligently, and constructively like a top-tier private nutritionist and fitness coach.
+   - Seamlessly connect personal stats to your recommendations.
+4. TONE & STYLE:
+   - Supportive, evidence-based, articulate, and practical (use bullet points for readability).
+   - NEVER use the word "sparkle" or the icon "✨".
+   - Respond in the user's language (Russian if Russian, English if English).`;
 
-User Question: "${question}"`;
+  // Build multi-turn contents payload
+  const contents: any[] = [];
 
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.3 },
-          }),
-        }
-      );
+  // Previous conversation turns (up to 8)
+  chatHistory.slice(-8).forEach((msg) => {
+    if (msg.sender === 'user') {
+      contents.push({ role: 'user', parts: [{ text: msg.text }] });
+    } else if (msg.sender === 'sumire') {
+      contents.push({ role: 'model', parts: [{ text: msg.text }] });
+    }
+  });
+
+  // Current turn with optional image attachment
+  const currentParts: any[] = [];
+  if (imageAttachment && imageAttachment.base64Data) {
+    currentParts.push({
+      inlineData: {
+        mimeType: imageAttachment.mimeType || 'image/jpeg',
+        data: imageAttachment.base64Data,
+      },
+    });
+  }
+
+  currentParts.push({
+    text: question || (imageAttachment ? 'Оцени это блюдо на фото, его калорийность, состав и дай рекомендации для моего рациона.' : ''),
+  });
+
+  contents.push({
+    role: 'user',
+    parts: currentParts,
+  });
+
+  const candidateModels = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+  ];
+
+  let lastError: any = null;
+  let responseData: any = null;
+
+  for (const model of candidateModels) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: systemInstructionText }],
+          },
+          contents,
+          generationConfig: {
+            temperature: 0.35,
+            maxOutputTokens: 1000,
+          },
+        }),
+      });
 
       if (res.ok) {
-        const data = await res.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) return text.trim();
+        responseData = await res.json();
+        break;
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        lastError = errJson;
       }
-    } catch (err) {
-      console.warn('AI health advice fallback:', err);
+    } catch (e) {
+      lastError = e;
     }
   }
 
-  // Multi-Intent Conversational Offline Engine
-  const lowerQ = question.toLowerCase();
-
-  // Intent 1: Ice Cream, Sweets, Treats & Cheat Meals
-  if (/морожен|сладк|шоколад|чипсы|пицц|бутер|бургер|вкусняш|читмил|сахар|торт|печень|десерт|ice cream|chocolate|sweet|pizza|cheat/i.test(lowerQ)) {
-    const remainingKcal = Math.max(0, metrics.targetDailyCalories - (context?.todaysTotalKcal || 0));
-    return `Да, мороженое и любимые десерты можно и нужно вписывать в рацион! В доказательной диетологии ключевую роль играет принцип гибкой диеты (правило 80/20).
-
-Как это работает для тебя:
-• Калорийность: порция классического пломбира (80–100г) содержит около 180–220 ккал и 15–20г углеводов.
-• Твой суточный лимит: ${metrics.targetDailyCalories} ккал. Если сегодня уже съедено ${context?.todaysTotalKcal || 0} ккал, у тебя остается в запасе ${remainingKcal} ккал — мороженое идеально помещается в баланс!
-• Практический совет: съешь десерт после сбалансированного приема пищи (с белком и клетчаткой). Это сгладит скачок глюкозы и избавит от чувства вины. Главное — вписаться в суточную калорийность и добрать ${metrics.targetProteinGrams}г белка.`;
+  if (!responseData) {
+    const errorMsg = lastError?.error?.message || 'Не удалось связаться с сервисом Gemini. Пожалуйста, проверьте API-ключ в настройках или подключение к сети.';
+    throw new Error(errorMsg);
   }
 
-  // Intent 2: Target Weight Evaluation (e.g. "спустить вес до 65")
-  const targetMatch = lowerQ.match(/(\d{2,3})/);
-  if (/спустить|сбросить до|снизить до|похудеть до|весить|цель|target|60|65|70|75|80/i.test(lowerQ) && targetMatch) {
-    const desiredWeight = parseFloat(targetMatch[1]);
-    if (desiredWeight >= 40 && desiredWeight <= 150) {
-      const heightM = profile.height / 100;
-      const desiredBmi = Number((desiredWeight / (heightM * heightM)).toFixed(1));
-      const isHealthyBmi = desiredBmi >= 18.5 && desiredBmi <= 24.9;
-
-      return `Разберем цель ${desiredWeight} кг для твоего роста ${profile.height} см:
-
-• Прогноз BMI: при весе ${desiredWeight} кг твой индекс массы тела составит ${desiredBmi}.
-• Коридор здоровья по ВОЗ: ${metrics.idealWeightMin} – ${metrics.idealWeightMax} кг. ${isHealthyBmi ? 'Этот вес находится в границах здоровой нормы.' : desiredBmi < 18.5 ? 'Внимание: этот вес ниже границы дефицита массы (<18.5) и может снизить гормональный фон.' : 'Этот вес относится к избыточной массе.'}
-• Оценка композиции: сейчас твой вес ${profile.currentWeight} кг. До цели ${desiredWeight} кг нужно ${profile.currentWeight > desiredWeight ? `сбросить ${Number((profile.currentWeight - desiredWeight).toFixed(1))} кг` : `набрать ${Number((desiredWeight - profile.currentWeight).toFixed(1))} кг`}.
-• Рекомендация: при интенсивном снижении важно сохранить мышечную ткань (${metrics.muscleMassKg} кг). Рекомендую двигаться плавно с темпом ~0.4–0.5 кг в неделю, удерживая белок не ниже ${metrics.targetProteinGrams}г/день.`;
-    }
+  const text = responseData.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) {
+    throw new Error('Пустой ответ от модели Gemini. Попробуйте переформулировать вопрос.');
   }
 
-  // Intent 3: Protein & Nutrition
-  if (/белок|протеин|protein|мясо|творог|яйц|рыб/i.test(lowerQ)) {
-    return `Белок — ключевой нутриент для сохранения метаболизма и мышц при цели (${profile.goal}):
-
-• Твоя суточная норма: ${metrics.targetProteinGrams}г в день (~${(metrics.targetProteinGrams * 4)} ккал).
-• Сегодня съедено: ${context?.todaysProteinGrams || 0}г из ${metrics.targetProteinGrams}г.
-• Топ источников: куриное филе (31г/100г), творог 5% (16г/100г), яйца (6г/шт), тунец (24г/100г), сывороточный протеин (24г/порция).
-• Совет: распределяй белок равномерно по 25–40г на каждый основной прием пищи для постоянного синтеза мышечного белка (MPS).`;
-  }
-
-  // Intent 4: Water & Hydration
-  if (/вод|пить|жидкост|water|hydration/i.test(lowerQ)) {
-    return `Твоя физиологическая норма воды рассчитана по стандарту 35 мл на 1 кг веса (${profile.currentWeight} кг):
-
-• Суточный ориентир: ${(metrics.targetWaterMl / 1000).toFixed(1)} литра (${metrics.targetWaterMl} мл).
-• Сегодня выпито: ${context?.todaysWaterTotalMl || 0} мл (${Math.round((context?.todaysWaterTotalMl || 0) / 250)} стаканов).
-• Зачем это нужно: достаточное количество воды снижает ложное чувство голода, выводит избыточный натрий (предотвращает отеки) и ускоряет липолиз.`;
-  }
-
-  // Intent 5: Cravings & Late-night eating
-  if (/на ночь|вечер|голод|аппетит|тяга|сорват|жор|craving/i.test(lowerQ)) {
-    return `Вечерняя тяга к еде обычно вызвана двумя причинами: недостатком белка и сложных углеводов в течение дня, либо стрессовым скачком кортизола.
-
-Как решить это без срывов:
-1. Не бойся есть вечером: метаболизм ночью не «засыпает», важен суммарный суточный баланс калорий (${metrics.targetDailyCalories} ккал).
-2. Идеальный вечерний перекус: 150г нежирного творога или греческого йогурта с ягодами (казеин медленно усваивается и защитит от ночного голода).
-3. Проверь обед: если днем был сильный дефицит, организм логично требует быстрой энергии вечером.`;
-  }
-
-  // Intent 6: Training & Workouts
-  if (/трениров|зал|мышц|кардио|спорт|упражнен|workout|gym/i.test(lowerQ)) {
-    return `Физическая активность для твоего профиля (цель: ${profile.goal}, активность: ${profile.activityLevel}):
-
-• Расход энергии: твой суточный расход TDEE составляет ${metrics.tdee} ккал. За сегодня тренировками сожжено +${context?.todaysActiveCaloriesBurned || 0} ккал.
-• Силовые тренировки: 3 раза в неделю стимулируют сохранение ${metrics.muscleMassKg} кг активной мышечной массы.
-• Шаги и кардио: 8000–10000 шагов в день обеспечивают мягкий расход жира без перегрузки суставов и ЦНС.`;
-  }
-
-  // General Evidence-Based Health Response
-  const diffKg = Math.abs(Number((profile.currentWeight - profile.targetWeight).toFixed(1)));
-  const remainingKcal = Math.max(0, metrics.targetDailyCalories - (context?.todaysTotalKcal || 0));
-
-  return `Я внимательно изучила твои параметры и готова разобрать любой вопрос по рациону, продуктам или тренировкам:
-
-• Твой статус: вес ${profile.currentWeight} кг (цель ${profile.targetWeight} кг, дельта ${diffKg} кг), BMI ${metrics.bmi} (${metrics.bmiCategoryLabel}).
-• Сегодняшний баланс: ${context?.todaysTotalKcal || 0} / ${metrics.targetDailyCalories} ккал (осталось ${remainingKcal} ккал), белок ${context?.todaysProteinGrams || 0}/${metrics.targetProteinGrams}г.
-
-Ты можешь спросить меня о конкретных продуктах (мороженое, фрукты, кофе), скорректировать цель по весу или составить план питания. Что именно разберем?`;
+  return text.trim();
 }
 
 /**
@@ -312,7 +323,7 @@ export async function generateClinicalHealthSummaryAI(
   metrics: CalculatedHealthMetrics,
   weightLogs: WeightLog[] = []
 ): Promise<string> {
-  const apiKey = getStoredGeminiApiKey();
+  const apiKey = getStoredGeminiApiKey().trim();
 
   // Determine actual trend from history
   let trendSnippet = 'Вес стабилен.';
@@ -332,8 +343,13 @@ export async function generateClinicalHealthSummaryAI(
     : '';
 
   if (apiKey && navigator.onLine) {
-    try {
-      const prompt = `You are a clinical physician and metabolic endocrinologist.
+    const candidateModels = [
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash',
+    ];
+
+    const prompt = `You are a clinical physician and metabolic endocrinologist.
 Analyze this patient's comprehensive health profile:
 - Demographics: ${profile.gender}, ${profile.age} y.o., Height: ${profile.height} cm, Weight: ${profile.currentWeight} kg -> Goal: ${profile.targetWeight} kg (${profile.goal})
 - BMI: ${metrics.bmi} (${metrics.bmiCategoryLabel}) | Ideal WHO Corridor: ${metrics.idealWeightMin}–${metrics.idealWeightMax} kg${waistSnippet}
@@ -347,25 +363,28 @@ Write an elegant, structured clinical analysis in Russian (3 concise sections):
 3. [Назначения]: Clear prescription for daily caloric budget (${metrics.targetDailyCalories} kcal), protein (${metrics.targetProteinGrams}g), and water (${(metrics.targetWaterMl/1000).toFixed(1)}L).
 Tone: Serious, empathetic, clinical, encouraging. NO sparkles ("✨") or emoji floods.`;
 
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.25 },
-          }),
-        }
-      );
+    for (const model of candidateModels) {
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.25 },
+            }),
+          }
+        );
 
-      if (res.ok) {
-        const data = await res.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) return text.trim();
+        if (res.ok) {
+          const data = await res.json();
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) return text.trim();
+        }
+      } catch (err) {
+        // try next candidate model
       }
-    } catch (err) {
-      console.warn('AI clinical summary fallback:', err);
     }
   }
 

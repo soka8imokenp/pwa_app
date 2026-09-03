@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Bot, Send, User, RotateCcw, Flame, Droplets, Zap, Dumbbell, Apple } from 'lucide-react';
+import { Bot, Send, User, RotateCcw, Image as ImageIcon, X } from 'lucide-react';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import type { HealthProfile, CalculatedHealthMetrics, WeightLog, MealLog, WorkoutLog } from '../../types/health';
 import { getHealthCoachAdviceWithAI, type HealthTelemetryContext } from '../../lib/aiHealthService';
@@ -22,6 +22,7 @@ interface CoachMessage {
   id: string;
   sender: 'user' | 'sumire';
   text: string;
+  imagePreview?: string;
   timestamp: number;
 }
 
@@ -44,15 +45,15 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
     const diffKg = Math.abs(Number((profile.currentWeight - profile.targetWeight).toFixed(1)));
     const direction = profile.currentWeight > profile.targetWeight ? 'сбросить' : 'набрать';
 
-    return `${greeting} Я твой персональный клинический ассистент Sumire Health AI.
-Я анализирую твои биометрические данные в реальном времени:
+    return `${greeting} Я твой персональный клинический ассистент и нутрициолог Sumire Health AI.
+Я анализирую твои биометрические данные и динамику в реальном времени:
 • Текущий вес: ${profile.currentWeight} кг (Цель: ${profile.targetWeight} кг, осталось ${direction} ${diffKg} кг)
 • BMI: ${metrics.bmi} (${metrics.bmiCategoryLabel})
 • Метаболизм: BMR ${metrics.bmr} ккал • TDEE ${metrics.tdee} ккал
 • Целевой суточный рацион: ${metrics.targetDailyCalories} ккал (${metrics.targetProteinGrams}г белка)
 • Статус за сегодня: ${todaysTotalKcal} ккал съедено, ${todaysWaterTotalMl} мл воды, +${todaysActiveCaloriesBurned} ккал активности
 
-Я специализируюсь исключительно на вопросах BMI, состава тела, правильного питания, калорий и тренировок. Какой вопрос разберем?`;
+Ты можешь присылать мне фотографии своей еды (тарелки, перекусы, этикетки) с описанием, задавать любые вопросы о гибкой диете, продуктах, лакомствах, смене целевого веса или тренировках. Я проанализирую состав и дам персональный фидбек!`;
   };
 
   const [messages, setMessages] = useState<CoachMessage[]>(() => {
@@ -79,7 +80,14 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
 
   const [inputQuery, setInputQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [attachedImage, setAttachedImage] = useState<{
+    base64Data: string;
+    mimeType: string;
+    previewUrl: string;
+  } | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Save conversation history to local storage
   useEffect(() => {
@@ -122,29 +130,55 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
     ]
   );
 
-  const handleSend = async (queryText?: string) => {
-    const textToSend = queryText || inputQuery;
-    if (!textToSend.trim() || isLoading) return;
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64Data = result.split(',')[1];
+      setAttachedImage({
+        base64Data,
+        mimeType: file.type || 'image/jpeg',
+        previewUrl: result,
+      });
+      playClickSound();
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleSend = async () => {
+    const textToSend = inputQuery.trim();
+    if ((!textToSend && !attachedImage) || isLoading) return;
 
     playClickSound();
+    const currentAttachment = attachedImage;
 
     const userMsg: CoachMessage = {
       id: `u-${Date.now()}`,
       sender: 'user',
-      text: textToSend.trim(),
+      text: textToSend || 'Оцени это блюдо / фото:',
+      imagePreview: currentAttachment?.previewUrl,
       timestamp: Date.now(),
     };
 
     setMessages((prev) => [...prev, userMsg]);
     setInputQuery('');
+    setAttachedImage(null);
     setIsLoading(true);
 
     try {
       const responseText = await getHealthCoachAdviceWithAI(
         profile,
         metrics,
-        textToSend.trim(),
-        telemetryContext
+        textToSend || 'Оцени это блюдо на прикрепленной фотографии: определи ингредиенты, оцени примерную калорийность, баланс БЖУ и как это вписывается в мой дневной рацион.',
+        telemetryContext,
+        currentAttachment
+          ? { base64Data: currentAttachment.base64Data, mimeType: currentAttachment.mimeType }
+          : undefined,
+        messages
       );
 
       const botMsg: CoachMessage = {
@@ -156,8 +190,15 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
 
       playSuccessChime();
       setMessages((prev) => [...prev, botMsg]);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error('Health Coach AI Error:', err);
+      const errorMsg: CoachMessage = {
+        id: `s-err-${Date.now()}`,
+        sender: 'sumire',
+        text: err?.message || 'Не удалось связаться с сервисом Gemini. Пожалуйста, проверьте API-ключ в настройках или интернет-соединение.',
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
     }
@@ -177,16 +218,8 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
     }
   };
 
-  const quickPrompts = [
-    'Можно ли есть мороженое на диете?',
-    'Стоит ли мне снизить цель до 65 кг?',
-    'Как убрать вечернюю тягу к сладкому?',
-    'Оцени мой рацион и баланс калорий за сегодня',
-    'Что лучше съесть после силовой тренировки?',
-  ];
-
   return (
-    <div className="w-full space-y-3.5 pb-3 font-body select-none">
+    <div className="w-full space-y-3 pb-3 font-body select-none">
       
       {/* 1. Sumire Coach Header Banner */}
       <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
@@ -205,7 +238,7 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
                 </span>
               </div>
               <p className="text-[10px] font-bold text-[#6B635B] mt-0.5">
-                Specialized in BMI, nutrition, calories & recovery
+                Powered by Gemini • Diet, photo food feedback & body analytics
               </p>
             </div>
           </div>
@@ -248,28 +281,9 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
         </div>
       </div>
 
-      {/* 2. Quick Topic Inquiries */}
-      <div className="space-y-1.5">
-        <span className="text-[10px] font-black text-[#6B635B] uppercase tracking-wider block px-1 font-display">
-          Quick Health Inquiries:
-        </span>
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-          {quickPrompts.map((prompt, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => handleSend(prompt)}
-              className="px-3 py-1.5 rounded-xl bg-white border border-[#24201D] text-[11px] font-bold text-[#24201D] shadow-2xs hover:bg-[#FAF8F5] active:translate-y-0.5 cursor-pointer whitespace-nowrap shrink-0 transition-all"
-            >
-              {prompt}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 3. Messages Stream */}
-      <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3 min-h-[340px] flex flex-col justify-between">
-        <div className="space-y-3 overflow-y-auto max-h-[420px] pr-1">
+      {/* 2. Messages Stream */}
+      <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3 min-h-[380px] flex flex-col justify-between">
+        <div className="space-y-3 overflow-y-auto max-h-[460px] pr-1">
           {messages.map((m) => (
             <div
               key={m.id}
@@ -288,7 +302,16 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
                     : 'bg-[#FAF8F5] border-[#24201D]/25 text-[#24201D] shadow-2xs whitespace-pre-line rounded-tl-none font-medium'
                 }`}
               >
-                {m.text}
+                {m.imagePreview && (
+                  <div className="mb-2 rounded-xl overflow-hidden border border-[#24201D] shadow-2xs max-w-[220px]">
+                    <img
+                      src={m.imagePreview}
+                      alt="Uploaded food"
+                      className="w-full max-h-48 object-cover block"
+                    />
+                  </div>
+                )}
+                <div>{m.text}</div>
               </div>
 
               {m.sender === 'user' && (
@@ -305,7 +328,7 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
                 <Bot className="w-3.5 h-3.5 text-[#2D503C] animate-pulse" />
               </div>
               <div className="px-3.5 py-2 rounded-2xl bg-[#FAF8F5] border border-[#24201D]/20 text-xs font-bold text-[#6B635B] animate-pulse">
-                Sumire is analyzing your health telemetry...
+                Sumire is analyzing your request...
               </div>
             </div>
           )}
@@ -313,30 +336,81 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Bar */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSend();
-          }}
-          className="pt-2 border-t border-[#24201D]/15 flex items-center gap-2"
-        >
-          <input
-            type="text"
-            placeholder="Ask about BMI, diet, calories, workouts..."
-            value={inputQuery}
-            onChange={(e) => setInputQuery(e.target.value)}
-            className="flex-1 px-3.5 py-2.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-stone-400 shadow-2xs focus:outline-none"
-          />
+        {/* Input Bar with Photo Support */}
+        <div className="pt-2 border-t border-[#24201D]/15">
+          {/* Attached Image Preview */}
+          {attachedImage && (
+            <div className="relative inline-block mb-2">
+              <img
+                src={attachedImage.previewUrl}
+                alt="Attached preview"
+                className="w-16 h-16 object-cover rounded-xl border-[1.75px] border-[#24201D] shadow-2xs block"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  playClickSound();
+                  setAttachedImage(null);
+                }}
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#24201D] text-white flex items-center justify-center cursor-pointer shadow-2xs"
+              >
+                <X className="w-3 h-3 stroke-[3]" />
+              </button>
+            </div>
+          )}
 
-          <button
-            type="submit"
-            disabled={!inputQuery.trim() || isLoading}
-            className="w-10 h-10 rounded-xl bg-[#3D6B52] hover:bg-[#345B45] disabled:opacity-40 text-white border-[1.75px] border-[#24201D] flex items-center justify-center shadow-2xs cursor-pointer active:translate-y-0.5 transition-all shrink-0"
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend();
+            }}
+            className="flex items-center gap-2"
           >
-            <Send className="w-4 h-4 stroke-[2.5]" />
-          </button>
-        </form>
+            {/* Hidden File Input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+
+            {/* Photo Attachment Button */}
+            <button
+              type="button"
+              onClick={() => {
+                playClickSound();
+                fileInputRef.current?.click();
+              }}
+              title="Attach photo of food / meal"
+              className={`w-10 h-10 rounded-xl border-[1.75px] border-[#24201D] flex items-center justify-center shadow-2xs cursor-pointer active:translate-y-0.5 transition-all shrink-0 ${
+                attachedImage
+                  ? 'bg-[#F0BB58] text-[#24201D]'
+                  : 'bg-[#FAF8F5] hover:bg-stone-200 text-[#24201D]'
+              }`}
+            >
+              <ImageIcon className="w-4 h-4 stroke-[2.25]" />
+            </button>
+
+            {/* Query Text Input */}
+            <input
+              type="text"
+              placeholder={attachedImage ? 'Add a note about this food (optional)...' : 'Ask about meals, ice cream, target weight, diet...'}
+              value={inputQuery}
+              onChange={(e) => setInputQuery(e.target.value)}
+              className="flex-1 px-3.5 py-2.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-stone-400 shadow-2xs focus:outline-none"
+            />
+
+            {/* Send Button */}
+            <button
+              type="submit"
+              disabled={(!inputQuery.trim() && !attachedImage) || isLoading}
+              className="w-10 h-10 rounded-xl bg-[#3D6B52] hover:bg-[#345B45] disabled:opacity-40 text-white border-[1.75px] border-[#24201D] flex items-center justify-center shadow-2xs cursor-pointer active:translate-y-0.5 transition-all shrink-0"
+            >
+              <Send className="w-4 h-4 stroke-[2.5]" />
+            </button>
+          </form>
+        </div>
       </div>
 
     </div>

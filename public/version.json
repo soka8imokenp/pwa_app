@@ -1,12 +1,12 @@
 {
-  "version": "1.8.33",
-  "buildNumber": 39,
+  "version": "1.8.34",
+  "buildNumber": 40,
   "releaseDate": "2026-09-03",
   "changelog": [
-    "Removed redundant Active App Mode panel from Settings modal",
-    "AI Clinical Health Analysis: Real-time clinical summary with auto-update on new weigh-in logs",
-    "Conversational Freedom for Sumire Health AI: In-depth answers for flexible dieting, ice cream, target weight changes, cravings, and supplements",
-    "Multi-Intent Offline Health Engine: Smart conversational answers even when offline or without API key"
+    "Removed background fallback script: Sumire Health AI now communicates exclusively through the real Gemini engine",
+    "Multimodal Photo Support: Upload or take photos of food/meals/dishes and receive instant nutritional breakdown and feedback",
+    "Unified Gemini Model Fallback: Identical architecture to the planner with multi-turn conversation memory",
+    "Removed Quick Health Inquiries chip row for a cleaner, modern chat interface"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.33/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.34/Daily-Sumire-app-debug.apk"
 }

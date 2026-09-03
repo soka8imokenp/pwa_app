@@ -162,40 +162,52 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
 
       {/* Bottom Floating Controls */}
       <div className="flex items-center justify-center gap-3 max-w-sm mx-auto w-full mb-2">
-        <button
-          onClick={onTogglePlay}
-          className={`flex-1 py-3.5 px-5 rounded-2xl border-[2px] border-[#24201D] font-extrabold font-display text-xs sm:text-sm uppercase tracking-wider shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer ${
-            isRunning ? 'bg-[#C25E40] text-white' : 'bg-[#3D6B52] text-white'
-          }`}
-        >
-          {isRunning ? (
-            <>
-              <Pause className="w-4 h-4 fill-current stroke-[2.25]" />
-              <span>Pause Session</span>
-            </>
-          ) : (
-            <>
-              <Play className="w-4 h-4 fill-current stroke-[2.25]" />
-              <span>Resume Flow</span>
-            </>
-          )}
-        </button>
+        {!isRunning && elapsedFocusSeconds === 0 ? (
+          <button
+            onClick={onTogglePlay}
+            className="w-full py-3.5 px-5 rounded-2xl border-[2px] border-[#24201D] font-extrabold font-display text-xs sm:text-sm uppercase tracking-wider shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer bg-[#3D6B52] text-white"
+          >
+            <Play className="w-4 h-4 fill-current stroke-[2.25]" />
+            <span>Start Flow</span>
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={onTogglePlay}
+              className={`flex-1 py-3.5 px-5 rounded-2xl border-[2px] border-[#24201D] font-extrabold font-display text-xs sm:text-sm uppercase tracking-wider shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                isRunning ? 'bg-[#C25E40] text-white' : 'bg-[#F0BB58] text-[#24201D]'
+              }`}
+            >
+              {isRunning ? (
+                <>
+                  <Pause className="w-4 h-4 fill-current stroke-[2.25]" />
+                  <span>Pause Session</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 fill-current stroke-[2.25]" />
+                  <span>Resume Flow</span>
+                </>
+              )}
+            </button>
 
-        <button
-          onClick={onReset}
-          title="Reset Timer"
-          className="w-12 h-12 rounded-2xl bg-white hover:bg-stone-100 border-[2px] border-[#24201D] flex items-center justify-center text-stone-700 shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0"
-        >
-          <RotateCcw className="w-4 h-4 stroke-[2.5]" />
-        </button>
+            <button
+              onClick={onReset}
+              title="Reset Timer"
+              className="w-12 h-12 rounded-2xl bg-white hover:bg-stone-100 border-[2px] border-[#24201D] flex items-center justify-center text-stone-700 shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0"
+            >
+              <RotateCcw className="w-4 h-4 stroke-[2.5]" />
+            </button>
 
-        <button
-          onClick={onComplete}
-          title="Complete & Log Session"
-          className="w-12 h-12 rounded-2xl bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[2px] border-[#24201D] flex items-center justify-center text-[#2D503C] shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0"
-        >
-          <Check className="w-5 h-5 stroke-[3]" />
-        </button>
+            <button
+              onClick={onComplete}
+              title="Complete & Log Session"
+              className="w-12 h-12 rounded-2xl bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[2px] border-[#24201D] flex items-center justify-center text-[#2D503C] shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0"
+            >
+              <Check className="w-5 h-5 stroke-[3]" />
+            </button>
+          </>
+        )}
       </div>
 
     </div>

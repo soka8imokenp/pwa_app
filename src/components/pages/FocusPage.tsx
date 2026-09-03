@@ -11,6 +11,7 @@ import {
   Save,
   Trash2,
   AlertCircle,
+  Flower2,
 } from 'lucide-react';
 import type { Task, FocusSession } from '../../types';
 import { playClickSound, playTimerFinishAlarm, playSuccessChime } from '../../lib/sound';
@@ -172,6 +173,9 @@ export const FocusPage: React.FC<FocusPageProps> = ({
 
   // Save / Stop Early with Real Actual Elapsed Time
   const handleStopAndLogSession = async () => {
+    const totalElapsed = mode === 'stopwatch' ? stopwatchSeconds : elapsedFocusSeconds;
+    if (totalElapsed < 3) return;
+
     playClickSound();
     setIsRunning(false);
 
@@ -242,7 +246,8 @@ export const FocusPage: React.FC<FocusPageProps> = ({
 
   const displayTime = mode === 'stopwatch' ? formatTime(stopwatchSeconds) : formatTime(secondsLeft);
   const totalFocusTodayMins = todaysSessions.reduce((acc, s) => acc + s.durationMinutes, 0);
-  const currentElapsedMinutes = Math.max(1, Math.round(elapsedFocusSeconds / 60));
+  const currentElapsedMinutes = Math.max(1, Math.round((mode === 'stopwatch' ? stopwatchSeconds : elapsedFocusSeconds) / 60));
+  const hasActiveSession = isRunning || elapsedFocusSeconds > 0 || (mode === 'stopwatch' && stopwatchSeconds > 0);
 
   return (
     <div className="w-full space-y-3.5 pb-24 font-body select-none">
@@ -253,8 +258,8 @@ export const FocusPage: React.FC<FocusPageProps> = ({
         {/* Top Header with Zen Mode Icon in Top-Right Corner */}
         <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#24201D]/15">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-[#FBECCF] border border-[#24201D] flex items-center justify-center shadow-2xs">
-              <Zap className="w-3.5 h-3.5 text-[#24201D] stroke-[2.25]" />
+            <div className="w-7 h-7 rounded-xl bg-[#EDE9FE] border border-[#24201D] flex items-center justify-center shadow-2xs">
+              <Flower2 className="w-4 h-4 text-[#7E22CE] stroke-[2.25]" />
             </div>
             <div>
               <h2 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
@@ -367,88 +372,63 @@ export const FocusPage: React.FC<FocusPageProps> = ({
           </div>
         )}
 
-        {/* Interactive Pause Prompt Banner */}
-        {!isRunning && elapsedFocusSeconds >= 10 && (
-          <div className="p-3 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-black font-display text-[#24201D]">
-                Session Paused ({currentElapsedMinutes}m elapsed)
+        {/* Primary Controls Bar: Start / Pause / Resume + Conditional Reset & Complete Checkmark */}
+        <div className="pt-2 border-t border-[#24201D]/15">
+          {!hasActiveSession ? (
+            /* IDLE STATE: Only Big Prominent Start Button */
+            <button
+              onClick={handleTogglePlay}
+              className="w-full py-3.5 px-4 rounded-2xl border-[1.75px] border-[#24201D] bg-[#3D6B52] hover:bg-[#345B45] text-white flex items-center justify-center gap-2 font-black text-xs uppercase tracking-wider shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer"
+            >
+              <Play className="w-4 h-4 fill-white" />
+              <span>
+                {mode === 'break' ? 'Start Rest Break' : mode === 'stopwatch' ? 'Start Stopwatch' : 'Start Focus Flow'}
               </span>
-              <span className="text-[10px] font-bold text-[#6B635B]">
-                Save result to database?
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
+            </button>
+          ) : (
+            /* ACTIVE / PAUSED STATE: Action Controls Reveal */
+            <div className="flex items-center justify-center gap-2 w-full animate-in fade-in zoom-in-95 duration-150">
+              {/* Start / Pause / Resume Button */}
               <button
-                type="button"
-                onClick={handleStopAndLogSession}
-                className="flex-1 py-2 px-3 rounded-xl bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[1.5px] border-[#24201D] text-xs font-black text-[#2D503C] shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer active:translate-y-0.5"
-              >
-                <Check className="w-3.5 h-3.5 stroke-[3]" />
-                <span>Save</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={handleTogglePlay}
-                className="py-2 px-3.5 rounded-xl bg-[#F0BB58] hover:bg-[#E5A943] border-[1.5px] border-[#24201D] text-xs font-black text-[#24201D] shadow-2xs flex items-center justify-center gap-1 cursor-pointer active:translate-y-0.5"
+                className={`flex-1 py-3 px-4 rounded-2xl border-[1.75px] border-[#24201D] flex items-center justify-center gap-2 font-black text-xs uppercase tracking-wider shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer ${
+                  isRunning
+                    ? 'bg-[#C25E40] text-white hover:bg-[#AC5035]'
+                    : 'bg-[#F0BB58] hover:bg-[#E5A943] text-[#24201D]'
+                }`}
               >
-                <Play className="w-3.5 h-3.5 fill-[#24201D]" />
-                <span>Resume</span>
+                {isRunning ? (
+                  <>
+                    <Pause className="w-4 h-4 fill-white" />
+                    <span>Pause</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 fill-[#24201D]" />
+                    <span>Resume</span>
+                  </>
+                )}
               </button>
 
+              {/* Reset / Discard Button (Only appears when session is active or paused) */}
               <button
-                type="button"
                 onClick={handleReset}
-                title="Discard session"
-                className="w-8 h-8 rounded-xl bg-white hover:bg-rose-50 border-[1.5px] border-[#24201D] flex items-center justify-center text-stone-400 hover:text-rose-600 shadow-2xs cursor-pointer active:translate-y-0.5"
+                title="Reset / Discard Session"
+                className="w-11 h-11 rounded-2xl bg-white hover:bg-rose-50 border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] hover:text-rose-600 shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 cursor-pointer shrink-0 transition-colors"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
+                <RotateCcw className="w-4 h-4 stroke-[2.25]" />
+              </button>
+
+              {/* Complete & Log Session Checkmark Button */}
+              <button
+                onClick={handleStopAndLogSession}
+                title={`Complete & Log Session (${currentElapsedMinutes}m)`}
+                className="w-11 h-11 rounded-2xl bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[1.75px] border-[#24201D] flex items-center justify-center text-[#2D503C] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 cursor-pointer shrink-0 transition-all"
+              >
+                <Check className="w-5 h-5 stroke-[3]" />
               </button>
             </div>
-          </div>
-        )}
-
-        {/* Primary Controls Bar: Start / Pause + Reset + Complete & Log Checkmark */}
-        <div className="flex items-center justify-center gap-2 pt-2 border-t border-[#24201D]/15">
-          {/* Start / Pause Button */}
-          <button
-            onClick={handleTogglePlay}
-            className={`flex-1 py-3 px-4 rounded-2xl border-[1.75px] border-[#24201D] flex items-center justify-center gap-2 font-black text-xs uppercase tracking-wider shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer ${
-              isRunning ? 'bg-[#C25E40] text-white hover:bg-[#AC5035]' : 'bg-[#3D6B52] hover:bg-[#345B45] text-white'
-            }`}
-          >
-            {isRunning ? (
-              <>
-                <Pause className="w-4 h-4 fill-white" />
-                <span>Pause</span>
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4 fill-white" />
-                <span>{elapsedFocusSeconds > 0 ? 'Resume' : 'Start Focus'}</span>
-              </>
-            )}
-          </button>
-
-          {/* Reset Button */}
-          <button
-            onClick={handleReset}
-            title="Reset Timer"
-            className="w-11 h-11 rounded-2xl bg-white hover:bg-stone-100 border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 cursor-pointer shrink-0"
-          >
-            <RotateCcw className="w-4 h-4 stroke-[2.25]" />
-          </button>
-
-          {/* Complete & Log Session Checkmark Button */}
-          <button
-            onClick={handleStopAndLogSession}
-            title={`Complete & Log Session (${currentElapsedMinutes}m)`}
-            className="w-11 h-11 rounded-2xl bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[1.75px] border-[#24201D] flex items-center justify-center text-[#2D503C] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 cursor-pointer shrink-0"
-          >
-            <Check className="w-5 h-5 stroke-[3]" />
-          </button>
+          )}
         </div>
 
       </div>

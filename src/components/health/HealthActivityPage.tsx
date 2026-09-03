@@ -14,6 +14,7 @@ import {
   Check,
   X,
   Timer,
+  Trophy,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { playClickSound, playSuccessChime, playTaskCheckSound } from '../../lib/sound';
@@ -54,6 +55,7 @@ const MET_VALUES: Record<WorkoutCategory, number> = {
   cardio: 7.5,
   walk: 3.8,
   stretch: 2.8,
+  sports: 7.0,
 };
 
 const INTENSITY_MULTIPLIERS: Record<IntensityLevel, number> = {
@@ -161,12 +163,19 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
           bg: '#DDE8DE',
         };
       case 'stretch':
-      default:
         return {
           label: 'Mobility',
           icon: <Heart className="w-3.5 h-3.5 stroke-[2.25]" />,
           color: '#7C3AED',
           bg: '#F3E8FF',
+        };
+      case 'sports':
+      default:
+        return {
+          label: 'Sports',
+          icon: <Trophy className="w-3.5 h-3.5 stroke-[2.25]" />,
+          color: '#2563EB',
+          bg: '#DBEAFE',
         };
     }
   };
@@ -347,8 +356,8 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
         </div>
 
         {/* Minimalist Line SVG Category Selector */}
-        <div className="grid grid-cols-5 gap-1 p-1 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs">
-          {(['gym', 'run', 'cardio', 'walk', 'stretch'] as const).map((c) => {
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 p-1 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs">
+          {(['gym', 'run', 'cardio', 'walk', 'stretch', 'sports'] as const).map((c) => {
             const config = getCategoryConfig(c);
             const isSelected = category === c;
             return (
@@ -450,7 +459,7 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
 
               <div className="flex items-center justify-between pt-1">
                 <div className="flex items-center gap-1">
-                  {(['gym', 'run', 'cardio', 'walk', 'stretch'] as const).map((t) => (
+                  {(['gym', 'run', 'cardio', 'walk', 'stretch', 'sports'] as const).map((t) => (
                     <button
                       key={t}
                       type="button"

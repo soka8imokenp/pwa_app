@@ -1,12 +1,12 @@
 {
-  "version": "1.8.27",
-  "buildNumber": 33,
+  "version": "1.8.28",
+  "buildNumber": 34,
   "releaseDate": "2026-09-03",
   "changelog": [
+    "Fix TypeScript build error: Added sports category to MET_VALUES, getCategoryConfig, and category grid in HealthActivityPage",
     "Scientific MET Calorie Burn: Dynamic calculation using actual body weight, workout category, and intensity level",
     "Customizable Workout Presets: Added Edit mode with custom template creator for workouts",
-    "Daily Movement Target Progress: Added active burn progress bar tied to user profile activity level",
-    "Minimalist Line SVG Icons: Clean icons for strength, running, cardio, walking, and mobility"
+    "Daily Movement Target Progress: Added active burn progress bar tied to user profile activity level"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.27/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.28/Daily-Sumire-app-debug.apk"
 }

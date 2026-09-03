@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Mic, MicOff, Check, X, ArrowRight, Wand2, Plus, Code, Palette, BookOpen, Activity, Crown } from 'lucide-react';
+import type { Task } from '../../types';
 import {
   startVoiceDictation,
   stopVoiceDictation,

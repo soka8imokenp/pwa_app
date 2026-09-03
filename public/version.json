@@ -1,10 +1,10 @@
 {
-  "version": "1.8.17",
-  "buildNumber": 23,
+  "version": "1.8.18",
+  "buildNumber": 24,
   "releaseDate": "2026-09-03",
   "changelog": [
-    "Priorities Clean Up: removed redundant dummy quick-add input bar that caused input confusion",
-    "Smart Slot Card: added clean dashed Add Priority Goal slot card button and Add Slot header pill"
+    "Priorities Header: removed redundant +add slot button as requested",
+    "Streak Celebration Polish: confetti and chime now trigger only once on first open or upon a new streak achievement instead of every open"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.17/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.18/Daily-Sumire-app-debug.apk"
 }

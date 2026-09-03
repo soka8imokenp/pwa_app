@@ -20,7 +20,19 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
   activityStats,
 }) => {
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return;
+
+    const SEEN_KEY = 'kairo_streak_modal_first_opened';
+    const LAST_CELEBRATED_KEY = 'kairo_last_celebrated_streak';
+
+    const hasOpenedBefore = localStorage.getItem(SEEN_KEY) === 'true';
+    const lastCelebrated = Number(localStorage.getItem(LAST_CELEBRATED_KEY)) || 0;
+
+    // Trigger celebration only on 1st time ever, or when achieving a higher streak / milestone
+    const isFirstTime = !hasOpenedBefore;
+    const isNewAchievement = streakCount > 0 && streakCount > lastCelebrated;
+
+    if (isFirstTime || isNewAchievement) {
       playSuccessChime();
       if (streakCount > 0) {
         confetti({
@@ -30,6 +42,12 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
           colors: ['#FFE873', '#FED7AA', '#E8DCFF', '#BEF264', '#18181B'],
         });
       }
+      localStorage.setItem(SEEN_KEY, 'true');
+      if (streakCount > 0) {
+        localStorage.setItem(LAST_CELEBRATED_KEY, String(streakCount));
+      }
+    } else {
+      playClickSound();
     }
   }, [isOpen, streakCount]);
 
@@ -82,14 +100,6 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
 
   const handleConfirm = () => {
     playClickSound();
-    if (streakCount > 0) {
-      confetti({
-        particleCount: 25,
-        spread: 50,
-        origin: { y: 0.8 },
-        colors: ['#FFE873', '#FED7AA', '#18181B'],
-      });
-    }
     onClose();
   };
 

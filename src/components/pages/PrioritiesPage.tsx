@@ -151,19 +151,6 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
           <span className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
             Top 3 Priorities ({localPriorities.length}/3)
           </span>
-          {localPriorities.length < 3 && (
-            <button
-              type="button"
-              onClick={() => {
-                playClickSound();
-                onOpenAddTask(localPriorities.length);
-              }}
-              className="px-2.5 py-1 bg-[#3D6B52] hover:bg-[#345B45] text-white border border-[#24201D] rounded-xl text-[10px] font-black shadow-2xs flex items-center gap-1 cursor-pointer active:translate-y-0.5 transition-all uppercase tracking-wider font-display"
-            >
-              <Plus className="w-3 h-3 stroke-[3]" />
-              <span>Add Slot</span>
-            </button>
-          )}
         </div>
 
         {/* Priority Task Cards */}

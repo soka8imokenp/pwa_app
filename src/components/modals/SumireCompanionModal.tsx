@@ -9,6 +9,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { askSumireAI, AIChatMessage } from '../../lib/aiService';
+import { compressImageFile } from '../../lib/imageCompression';
 import {
   startVoiceDictation,
   stopVoiceDictation,
@@ -80,22 +81,17 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
     ]);
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      const base64Data = result.split(',')[1];
-      setAttachedImage({
-        base64Data,
-        mimeType: file.type || 'image/jpeg',
-        previewUrl: result,
-      });
+    try {
+      const compressed = await compressImageFile(file, 1024, 0.8);
+      setAttachedImage(compressed);
       playClickSound();
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Image compression failed:', err);
+    }
     e.target.value = '';
   };
 

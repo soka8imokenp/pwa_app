@@ -2,6 +2,7 @@ import { format } from 'date-fns';
 import { db } from './db';
 import { getTodayString } from './dateUtils';
 import type { Task, Habit, HabitLog, FocusSession } from '../types';
+import { calculateComprehensiveMetrics } from './healthFormulas';
 
 export interface PlannerContextSnapshot {
   date: string;
@@ -129,6 +130,40 @@ export async function buildPlannerRAGContext(targetDate: string = getTodayString
   if (scratchpadNotes.trim()) {
     lines.push(`\n### User's Scratchpad Quick Memo:`);
     lines.push(`"""\n${scratchpadNotes.trim().slice(0, 600)}\n"""`);
+  }
+
+  // 5. Health & Nutrition Telemetry
+  try {
+    const profileList = await db.healthProfile.toArray();
+    if (profileList.length > 0) {
+      const profile = profileList[0];
+      const metrics = calculateComprehensiveMetrics(profile);
+      const todaysMeals = await db.mealLogs.where('date').equals(targetDate).toArray();
+      const todaysWater = await db.waterLogs.where('date').equals(targetDate).toArray();
+      const todaysWorkouts = await db.workoutLogs.where('date').equals(targetDate).toArray();
+      const recentWeights = await db.weightLogs.orderBy('date').reverse().limit(3).toArray();
+
+      const totalKcal = todaysMeals.reduce((acc, m) => acc + (m.kcal || 0), 0);
+      const totalProtein = todaysMeals.reduce((acc, m) => acc + (m.proteinGrams || 0), 0);
+      const totalWaterMl = todaysWater.reduce((acc, w) => acc + (w.amountMl || 0), 0);
+      const totalBurned = todaysWorkouts.reduce((acc, w) => acc + (w.caloriesBurned || 0), 0);
+      const mealsSummary = todaysMeals.length > 0
+        ? todaysMeals.map((m) => `${m.name} (${m.kcal} kcal)`).join(', ')
+        : 'None logged yet';
+
+      lines.push(`\n### User's Live Health & Nutrition Telemetry:`);
+      lines.push(`- Profile: Age ${profile.age}, ${profile.gender}, Height: ${profile.height} cm, Current Weight: ${profile.currentWeight} kg -> Target: ${profile.targetWeight} kg (Goal: ${profile.goal})`);
+      lines.push(`- BMI: ${metrics.bmi} (${metrics.bmiCategoryLabel}) | Basal BMR: ${metrics.bmr} kcal | TDEE: ${metrics.tdee} kcal`);
+      lines.push(`- Targets: Daily Calories: ${metrics.targetDailyCalories} kcal, Protein: ${metrics.targetProteinGrams}g, Water: ${metrics.targetWaterMl} ml`);
+      lines.push(`- Today's Consumed: ${totalKcal} / ${metrics.targetDailyCalories} kcal, Protein: ${totalProtein} / ${metrics.targetProteinGrams}g, Water: ${totalWaterMl} / ${metrics.targetWaterMl} ml`);
+      lines.push(`- Physical Activity: +${totalBurned} kcal burned today`);
+      lines.push(`- Meals Today: ${mealsSummary}`);
+      if (recentWeights.length > 0) {
+        lines.push(`- Recent Weigh-in History: ${recentWeights.map((w) => `${w.date}: ${w.weight}kg`).join(', ')}`);
+      }
+    }
+  } catch (err) {
+    console.warn('Could not attach health telemetry to RAG context:', err);
   }
 
   return lines.join('\n');

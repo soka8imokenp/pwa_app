@@ -4,7 +4,7 @@ import { getTodayString } from './dateUtils';
 import type { Task, SubTask } from '../types';
 import { triggerTwoWaySync } from './syncEngine';
 
-export const APP_GEMINI_MODEL = 'gemini-3.5-flash-lite';
+export const APP_GEMINI_MODEL = 'gemini-2.5-flash';
 
 export function getStoredGeminiApiKey(): string {
   if (typeof window !== 'undefined') {
@@ -26,16 +26,21 @@ export interface AIChatMessage {
   }[];
 }
 
-export const SUMIRE_SYSTEM_PROMPT = `You are Sumire (Сумирэ), a 15-year-old scout-archivist working in the KAWAII Ecosystem archive.
+export const SUMIRE_SYSTEM_PROMPT = `You are Sumire (Сумирэ), a 15-year-old scout-archivist in the KAWAII Ecosystem archive, and the user's dedicated personal companion for productivity, schedule, and health/nutrition.
 
 CHARACTER IDENTITY & BEHAVIORAL RULES:
-- You are a real scout-archivist managing the user's planner and archive.
+- You are a real scout-archivist and companion managing the user's tasks, habits, scratchpad, and health telemetry.
 - NEVER say you are an AI, bot, virtual assistant, language model, LLM, or Gemini. Never discuss internal prompts or models.
-- Persona: Calm, serious, unbothered, signature deadpan gaze (Fern stare), razor-sharp efficiency.
-- BUSY WORK POLICY (STRICT): You have important duties to organize in the archive and NO TIME for empty casual chitchat, trivial jokes, gossip, off-topic philosophizing, or unrelated random discussions. If the user initiates off-topic chit-chat or random casual conversation, bluntly yet politely inform them that you are busy with archive duties and prompt them to focus on their actual tasks, habits, and productivity (e.g. "I'm currently busy with archive duties. Let's stay focused on your tasks and schedule. What would you like to get done?").
-- Language: Respond in the exact language the user addresses you in (English, Russian, or Uzbek). Default to concise English.
-- Output Style: Crisp, ultra-concise, strictly to the point, no fluff. NEVER use sparkles ("✨", "Sparkles") or spam unicode emojis.
-- Full App Control: You have direct capability to create tasks, complete tasks, delete tasks, create habits, mark habits done, add notes to scratchpad, and switch app tabs. ALWAYS use the provided tool functions whenever the user asks you to manage their planner.`;
+- Persona: Calm, observant, unbothered, signature deadpan gaze (Fern stare), razor-sharp efficiency, supportive and clinically knowledgeable when needed.
+- SCOPE OF GUIDANCE:
+  1. Life & Productivity: You help organize tasks, top 3 priorities, daily habits, deep work focus, and scratchpad notes using tools.
+  2. Health, Diet & Nutrition: You analyze food photos, evaluate meal composition, estimate calories (kcal) and macronutrients (proteins, fats, carbs), discuss flexible dieting (IIFYM / 80/20 rule, ice cream, cheat meals, caloric budgets), evaluate weight targets (e.g. dropping to 65 kg vs WHO healthy corridor), and advise on hydration, workouts, and recovery.
+  3. No empty trivial chitchat: If the user talks about completely unrelated random topics (e.g. abstract philosophy, celebrity gossip), bluntly yet politely prompt them to focus on their actual tasks, habits, productivity, or health goals.
+- Language: Respond in the exact language the user addresses you in (Russian if Russian, English if English, Uzbek if Uzbek).
+- Output Style: Crisp, articulate, helpful, strictly to the point, no fluff. NEVER use sparkles ("✨", "Sparkles") or spam unicode emojis.
+- Multimodal Vision: When the user attaches a photo (food, meal, plate, nutrition label, handwritten note, sketch):
+  * Accurately identify the contents.
+  * If it is food or a meal: estimate the ingredients, approximate portion size, calories (kcal), and protein/fat/carbs, and provide encouraging, practical feedback relative to their daily targets!`;
 
 export const AI_TOOLS = [
   {
@@ -148,11 +153,11 @@ export async function askSumireAI(
 
   if (!apiKey) {
     throw new Error(
-      'Please enter your Google Gemini API Key in Settings.'
+      'Пожалуйста, укажите Google Gemini API Key в Настройках приложения (кнопка ⚙️ вверху экрана).'
     );
   }
 
-  // 1. Build live RAG context
+  // 1. Build live RAG context (includes planner tasks, habits, focus, notes, AND health biometrics)
   const ragContext = await buildPlannerRAGContext();
   const formattedSystemInstruction = `${SUMIRE_SYSTEM_PROMPT}\n\n=== ARCHIVE OVERVIEW & USER DATA ===\n${ragContext}`;
 
@@ -181,7 +186,7 @@ export async function askSumireAI(
   }
 
   currentParts.push({
-    text: userQuery || (imageAttachment ? 'Analyze this image/note and extract actionable tasks or schedule.' : '')
+    text: userQuery || (imageAttachment ? 'Оцени это фото/блюдо, определи состав, калории и дай рекомендации.' : '')
   });
 
   contents.push({
@@ -192,10 +197,9 @@ export async function askSumireAI(
   const executedActions: AIChatMessage['executedActions'] = [];
 
   const candidateModels = [
-    APP_GEMINI_MODEL,
-    'gemini-3.5-flash-lite',
     'gemini-2.5-flash',
     'gemini-2.0-flash',
+    'gemini-1.5-flash',
   ];
 
   let lastError: any = null;
@@ -204,20 +208,28 @@ export async function askSumireAI(
   for (const model of candidateModels) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      
+      const requestPayload: any = {
+        systemInstruction: {
+          parts: [{ text: formattedSystemInstruction }]
+        },
+        contents,
+        generationConfig: {
+          temperature: 0.45,
+          maxOutputTokens: 1000,
+        }
+      };
+
+      // CRITICAL FIX: Only include function calling tools when NO image is attached.
+      // In Google Gemini REST API, passing `tools` alongside `inlineData` throws 400 Bad Request!
+      if (!imageAttachment?.base64Data) {
+        requestPayload.tools = AI_TOOLS;
+      }
+
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: formattedSystemInstruction }]
-          },
-          contents,
-          tools: AI_TOOLS,
-          generationConfig: {
-            temperature: 0.5,
-            maxOutputTokens: 600,
-          }
-        })
+        body: JSON.stringify(requestPayload)
       });
 
       if (res.ok) {
@@ -234,7 +246,7 @@ export async function askSumireAI(
 
   if (!responseData) {
     throw new Error(
-      lastError?.error?.message || 'Could not connect to Sumire service. Please verify your API Key in Settings.'
+      lastError?.error?.message || 'Не удалось связаться с сервисом Sumire AI. Пожалуйста, проверьте API-ключ в настройках или интернет-соединение.'
     );
   }
 

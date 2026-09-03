@@ -4,7 +4,7 @@ import { getTodayString } from './dateUtils';
 import type { Task, SubTask } from '../types';
 import { triggerTwoWaySync } from './syncEngine';
 
-export const APP_GEMINI_MODEL = 'gemini-2.5-flash';
+export const APP_GEMINI_MODEL = 'gemini-3.5-flash-lite';
 
 export function getStoredGeminiApiKey(): string {
   if (typeof window !== 'undefined') {
@@ -197,9 +197,7 @@ export async function askSumireAI(
   const executedActions: AIChatMessage['executedActions'] = [];
 
   const candidateModels = [
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
+    'gemini-3.5-flash-lite',
   ];
 
   let lastError: any = null;

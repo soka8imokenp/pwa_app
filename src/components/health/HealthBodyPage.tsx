@@ -887,7 +887,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
         </div>
       </div>
 
-      {/* 4. Real AI-Powered Clinical Summary Card (Dynamic & Regenerable) */}
+      {/* 4. AI-Powered Scientific Health Facts & Insights */}
       <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -896,10 +896,10 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             </div>
             <div>
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] leading-none">
-                AI Clinical Health Analysis
+                AI Science & Health Facts
               </h3>
               <span className="text-[10px] font-bold text-[#6B635B]">
-                Personalized metabolic recommendation
+                Evidence-based nutrition & fitness science
               </span>
             </div>
           </div>
@@ -908,7 +908,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             type="button"
             onClick={handleGenerateSummary}
             disabled={isGeneratingSummary}
-            title="Refresh AI Analysis"
+            title="Get new scientific insight"
             className="p-1.5 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer disabled:opacity-40"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isGeneratingSummary ? 'animate-spin' : ''}`} />
@@ -919,11 +919,11 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
           {isGeneratingSummary ? (
             <div className="flex items-center gap-2 text-stone-500 py-1">
               <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              <span className="text-xs font-bold">Sumire is analyzing your metabolic trajectory...</span>
+              <span className="text-xs font-bold">Sumire is retrieving sports science insights...</span>
             </div>
           ) : (
             <p className="text-xs font-medium text-[#24201D] whitespace-pre-line leading-relaxed">
-              {aiSummary || 'Tap the refresh icon above to generate your clinical analysis.'}
+              {aiSummary || 'Tap the refresh button to explore an evidence-based science insight.'}
             </p>
           )}
         </div>

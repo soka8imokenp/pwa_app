@@ -83,7 +83,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                     activeHealthTab === 'body' ? 'font-bold text-[#24201D]' : 'font-medium text-[#78716C]'
                   }`}
                 >
-                  Body & BMI
+                  Body
                 </span>
               </button>
 

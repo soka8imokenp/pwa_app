@@ -1,12 +1,12 @@
 {
-  "version": "1.8.36",
-  "buildNumber": 42,
+  "version": "1.8.37",
+  "buildNumber": 43,
   "releaseDate": "2026-09-03",
   "changelog": [
-    "Sumire Companion embedded directly into Health & Body Coach tab",
-    "Fixed photo uploads everywhere: Added automatic client-side canvas compression to 1024px",
-    "Fixed Gemini Vision error: Omitted tools schema when images are attached to prevent HTTP 400 Bad Request",
-    "Unified RAG Context: Sumire now has live access to biometrics (BMI, BMR, TDEE, calories, water, workouts) as well as planner tasks and habits"
+    "Exclusive gemini-3.5-flash-lite model integration across the entire app",
+    "Removed rigid greeting scripts and hardcoded names: Sumire welcomes naturally in current app language (English)",
+    "Renamed 'Body & BMI' dock tab to clean 'Body'",
+    "Transformed AI Clinical Health Analysis into dynamic AI-generated sports, nutrition, and fitness science insights"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.36/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.37/Daily-Sumire-app-debug.apk"
 }

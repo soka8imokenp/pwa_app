@@ -235,7 +235,7 @@ export function computeProjectedGoalDate(
  */
 export const DEFAULT_HEALTH_PROFILE: HealthProfile = {
   id: 'user',
-  name: 'Alex',
+  name: '',
   age: 26,
   gender: 'male',
   height: 178,

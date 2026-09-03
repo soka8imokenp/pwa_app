@@ -34,7 +34,7 @@ Return STRICT JSON ONLY in the following format (no markdown, no backticks, just
 }`;
 
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -237,9 +237,7 @@ COACHING CAPABILITIES & GUIDELINES:
   });
 
   const candidateModels = [
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
+    'gemini-3.5-flash-lite',
   ];
 
   let lastError: any = null;
@@ -288,96 +286,66 @@ COACHING CAPABILITIES & GUIDELINES:
   return text.trim();
 }
 
+export const CURATED_SCIENCE_FACTS = [
+  "⚡ Синтез мышечного белка (MPS): для максимальной стимуляции анаболизма порция белка должна содержать около 2.5–3г лейцина (эквивалент ~25–30г сывороточного протеина или 150г куриной грудки).",
+  "💧 Гидратация и липолиз: обезвоживание всего на 2% снижает физическую выносливость на 10-15% и замедляет окисление жиров клетками печени.",
+  "🔥 NEAT (нетренировочный термогенез): бытовая активность (ходьба, уборка, лестница) сжигает в 3–5 раз больше суточных калорий, чем 45 минут интенсивной тренировки в зале.",
+  "🌙 Сон и гормоны голода: сокращение сна до 5–6 часов увеличивает секрецию грелина (гормона голода) на 15% и снижает лептин (гормон сытости), провоцируя тягу к сладкому.",
+  "🏋️ Эффект EPOC: высокоинтенсивные силовые тренировки вызывают пост-тренировочное потребление кислорода, продолжая сжигать калории в течение 12–24 часов после занятия.",
+  "🥑 Правило гибкой диеты (80/20): включение 15–20% калорий из любимых лакомств при соблюдении суточного бюджета предотвращает срывы и не замедляет сжигание жира.",
+  "☕ Кофеин и выносливость: прием 3 мг кофеина на 1 кг массы тела за 45 минут до кардио ускоряет мобилизацию жирных кислот и повышает порог утомления.",
+  "🥗 Клетчатка и гликемия: употребление порции зеленых овощей перед быстрыми углеводами замедляет всасывание и снижает пик глюкозы в крови на 30%.",
+  "🏃 Пульсовая Зона 2: кардио при 60–70% от максимального пульса стимулирует рост плотности митохондрий и развивает способность организма использовать жиры как топливо.",
+  "🧠 Креатин моногидрат: самая исследованная добавка доказательной медицины. Он ускоряет ресинтез АТФ в мышцах и поддерживает когнитивную выносливость головного мозга.",
+  "🍌 Восстановление гликогена: мышечный гликоген восполняется наиболее активно в первые 2 часа после тренировки благодаря временному повышению активности транспортеров GLUT-4.",
+  "🛡️ Защита мышц на дефиците: потребление белка на уровне 1.6–2.0г на 1 кг массы тела надежно предотвращает катаболизм активной мышечной ткани даже при дефиците калорий."
+];
+
 /**
- * Generates an automated, dynamic clinical health summary based on current BMI, metabolic rate, and weight trend
+ * Generates dynamic, evidence-based science insights about nutrition, sports, and fitness
  */
 export async function generateClinicalHealthSummaryAI(
-  profile: HealthProfile,
-  metrics: CalculatedHealthMetrics,
-  weightLogs: WeightLog[] = []
+  _profile: HealthProfile,
+  _metrics: CalculatedHealthMetrics,
+  _weightLogs: WeightLog[] = []
 ): Promise<string> {
   const apiKey = getStoredGeminiApiKey().trim();
 
-  // Determine actual trend from history
-  let trendSnippet = 'Вес стабилен.';
-  if (weightLogs.length >= 2) {
-    const firstW = weightLogs[0].weight;
-    const lastW = weightLogs[weightLogs.length - 1].weight;
-    const diff = Number((lastW - firstW).toFixed(1));
-    if (diff < 0) {
-      trendSnippet = `Динамика за период: снижение на ${Math.abs(diff)} кг.`;
-    } else if (diff > 0) {
-      trendSnippet = `Динамика за период: прирост на ${diff} кг.`;
-    }
-  }
-
-  const waistSnippet = metrics.waistToHeightRatio
-    ? `, индекс талии WHtR: ${metrics.waistToHeightRatio} (${metrics.waistRiskCategory || 'норма'})`
-    : '';
-
   if (apiKey && navigator.onLine) {
-    const candidateModels = [
-      'gemini-2.5-flash',
-      'gemini-2.0-flash',
-      'gemini-1.5-flash',
-    ];
+    try {
+      const prompt = `You are Sumire Health AI — an elite sports scientist and clinical nutritionist.
+Generate ONE fascinating, concise, evidence-based scientific fact or insight (2 sentences max) in Russian about nutrition, physical fitness, metabolism, or sports physiology.
+The fact must be scientifically proven, surprising, and practical for someone improving their body composition.
+Topics: muscle protein synthesis, NEAT, hydration & fat oxidation, sleep & ghrelin/leptin, EPOC effect, Zone 2 cardio, creatine, caffeine timing, or gut microbiome.
+NO preamble, NO introduction, NO sparkles ("✨"). Output ONLY the science insight text.`;
 
-    const prompt = `You are a clinical physician and metabolic endocrinologist.
-Analyze this patient's comprehensive health profile:
-- Demographics: ${profile.gender}, ${profile.age} y.o., Height: ${profile.height} cm, Weight: ${profile.currentWeight} kg -> Goal: ${profile.targetWeight} kg (${profile.goal})
-- BMI: ${metrics.bmi} (${metrics.bmiCategoryLabel}) | Ideal WHO Corridor: ${metrics.idealWeightMin}–${metrics.idealWeightMax} kg${waistSnippet}
-- Metabolism: BMR ${metrics.bmr} kcal, TDEE ${metrics.tdee} kcal, Prescribed: ${metrics.targetDailyCalories} kcal/day
-- Body Composition: ~${metrics.bodyFatPercentage}% Fat, ${metrics.muscleMassKg} kg Lean Tissue | Protein Target: ${metrics.targetProteinGrams}g/day
-- Weigh-in Trend: ${trendSnippet}
-
-Write an elegant, structured clinical analysis in Russian (3 concise sections):
-1. [Клинический статус]: Evaluate BMI, healthy corridor, and central visceral fat risk.
-2. [Прогноз и темп]: Evaluate timeline to goal (${profile.targetWeight} kg) at safe physiological rate (0.4-0.5 kg/week).
-3. [Назначения]: Clear prescription for daily caloric budget (${metrics.targetDailyCalories} kcal), protein (${metrics.targetProteinGrams}g), and water (${(metrics.targetWaterMl/1000).toFixed(1)}L).
-Tone: Serious, empathetic, clinical, encouraging. NO sparkles ("✨") or emoji floods.`;
-
-    for (const model of candidateModels) {
-      try {
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { temperature: 0.25 },
-            }),
-          }
-        );
-
-        if (res.ok) {
-          const data = await res.json();
-          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) return text.trim();
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 250,
+            },
+          }),
         }
-      } catch (err) {
-        // try next candidate model
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text && text.trim()) return text.trim();
       }
+    } catch (err) {
+      console.warn('AI science insight fallback:', err);
     }
   }
 
-  // Dynamic Algorithmic Clinical Generator (Offline fallback)
-  const diffKg = Math.abs(Number((profile.currentWeight - profile.targetWeight).toFixed(1)));
-  const estimatedWeeks = Math.max(1, Math.ceil(diffKg / 0.45));
-
-  let goalPaceText = '';
-  if (profile.goal === 'lose') {
-    goalPaceText = diffKg > 0
-      ? `Для безопасного снижения ${diffKg} кг без замедления щитовидной железы ориентировочный срок составит ~${estimatedWeeks} недель при дефиците ~400 ккал/день.`
-      : `Целевой вес ${profile.targetWeight} кг достигнут. Рекомендуется фиксация на калораже поддержки (TDEE: ${metrics.tdee} ккал).`;
-  } else if (profile.goal === 'gain') {
-    goalPaceText = `Для чистого набора ${diffKg} кг сухой мышечной массы ориентируйся на профицит 300–350 ккал с прогрессивными силовыми нагрузками.`;
-  } else {
-    goalPaceText = `Режим поддержания стабильного веса. Оптимальный суточный расход энергии: ${metrics.tdee} ккал.`;
-  }
-
-  return `• Клинический статус: Индекс массы тела равен ${metrics.bmi} (${metrics.bmiCategoryLabel}). Здоровый диапазон по ВОЗ для роста ${profile.height} см составляет ${metrics.idealWeightMin}–${metrics.idealWeightMax} кг${waistSnippet}.
-• Динамика и прогноз: ${trendSnippet} ${goalPaceText}
-• Клинические назначения: Суточный рацион — ${metrics.targetDailyCalories} ккал, потребление белка — не ниже ${metrics.targetProteinGrams}г/сутки (для сохранения ${metrics.muscleMassKg} кг мышечной массы), гидратация — ${(metrics.targetWaterMl / 1000).toFixed(1)}л чистой воды.`;
+  // Instant rotation from curated sports science facts
+  const randomIndex = Math.floor(Math.random() * CURATED_SCIENCE_FACTS.length);
+  return CURATED_SCIENCE_FACTS[randomIndex];
 }
 

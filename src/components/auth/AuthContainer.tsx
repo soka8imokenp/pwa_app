@@ -7,7 +7,6 @@ import {
   User,
   AlertCircle,
   CheckCircle2,
-  Sparkles,
   ShieldCheck,
 } from 'lucide-react';
 import rabbitAnimation from '../../assets/rabbit-hi.json';
@@ -220,7 +219,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
           className="text-xs font-bold text-[#6B635B] hover:text-[#24201D] px-3 py-1.5 bg-white border-[1.5px] border-[#24201D] rounded-xl shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1"
         >
           <span>Guest</span>
-          <Sparkles className="w-3 h-3 text-[#E09F3E]" />
+          <ArrowRight className="w-3 h-3 text-[#6B635B]" />
         </button>
       </div>
 

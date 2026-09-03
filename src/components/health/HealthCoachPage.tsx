@@ -50,20 +50,8 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
   onDataChanged,
 }) => {
   const getInitialGreeting = (): string => {
-    const name = profile.name?.trim() || '';
-    const greeting = name ? `Привет, ${name}.` : 'Привет.';
-    const diffKg = Math.abs(Number((profile.currentWeight - profile.targetWeight).toFixed(1)));
-    const direction = profile.currentWeight > profile.targetWeight ? 'сбросить' : 'набрать';
-
-    return `${greeting} Я твой компаньон Sumire.
-Я слежу за твоим архивом, задачами и показателями тела:
-• Вес: ${profile.currentWeight} кг -> Цель ${profile.targetWeight} кг (осталось ${direction} ${diffKg} кг)
-• BMI: ${metrics.bmi} (${metrics.bmiCategoryLabel})
-• Метаболизм: BMR ${metrics.bmr} ккал • TDEE ${metrics.tdee} ккал
-• Целевой суточный рацион: ${metrics.targetDailyCalories} ккал (${metrics.targetProteinGrams}г белка)
-• Сегодня съедено: ${todaysTotalKcal} ккал, вода: ${todaysWaterTotalMl} мл, активность: +${todaysActiveCaloriesBurned} ккал
-
-Присылай мне фото своей еды (тарелки, перекусы, блюда) с вопросом или без — я определю состав, оценю калории и макросы, и подскажу, как это вписать в твой день. Также отвечу на любые вопросы по диете, целям или тренировкам!`;
+    return `Hi! I'm Sumire, your personal companion for productivity, habits, and health.
+How can I assist you today? You can ask me about your schedule, habits, diet, or send a photo of your meal for feedback.`;
   };
 
   const [messages, setMessages] = useState<AIChatMessage[]>(() => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import {
   Check,
@@ -95,6 +95,9 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
   const handleSubTaskClick = (taskId?: number, subTaskId?: string) => {
     if (!taskId || !subTaskId || !onToggleSubTaskComplete) return;
     playTaskCheckSound();
+    onToggleSubTaskComplete(taskId, subTaskId);
+  };
+
   const getCategoryIcon = (category?: string) => {
     switch (category) {
       case 'code':

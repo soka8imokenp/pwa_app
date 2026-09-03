@@ -1,12 +1,13 @@
 {
-  "version": "1.8.25",
-  "buildNumber": 31,
+  "version": "1.8.26",
+  "buildNumber": 32,
   "releaseDate": "2026-09-03",
   "changelog": [
-    "Intake Hub Overhaul: Dynamic active workout calories integration with net energy balance",
-    "Categorized Meals: Grouped daily meals by Breakfast, Lunch, Dinner, and Snacks with subtotals",
-    "Quick Presets Bar: One-tap instant food presets (coffee, eggs, shake, sandwich, salad)",
-    "Enhanced Hydration Tracker: Added +500ml bottle option, undo, and tactile matrix"
+    "Water Hydration Polish: Fixed duplicate plus button (+250 ml and +500 ml)",
+    "Lucide SVG Meal Icons: Minimalist line icons (Coffee, Sun, Moon, Apple) replacing emojis",
+    "Customizable Quick Presets: Added Edit mode to create custom meal presets and delete unused ones",
+    "Brutalist Entry Toggle: Sleek tactile segmented switch between AI Auto and Manual numbers",
+    "Interactive Intake Log: Accordion category breakdowns with macro pills, subtotals, and timestamps"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.25/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.26/Daily-Sumire-app-debug.apk"
 }

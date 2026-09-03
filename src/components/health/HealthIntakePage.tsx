@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Utensils,
   Droplets,
@@ -12,6 +12,14 @@ import {
   Clock,
   Check,
   Zap,
+  Coffee,
+  Sun,
+  Moon,
+  Apple,
+  Settings2,
+  ChevronDown,
+  ChevronUp,
+  X,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { playClickSound, playSuccessChime, playTaskCheckSound } from '../../lib/sound';
@@ -35,6 +43,20 @@ interface HealthIntakePageProps {
   onLogWater: (amountMl?: number, date?: string) => Promise<void>;
   onRemoveLatestWater: () => Promise<void>;
 }
+
+interface QuickPresetItem {
+  id: string;
+  text: string;
+  kcal: number;
+  type: MealType;
+}
+
+const DEFAULT_PRESETS: QuickPresetItem[] = [
+  { id: '1', text: 'Coffee with milk', kcal: 50, type: 'breakfast' },
+  { id: '2', text: '2 Boiled Eggs & Toast', kcal: 220, type: 'breakfast' },
+  { id: '3', text: 'Chicken Breast & Rice', kcal: 450, type: 'lunch' },
+  { id: '4', text: 'Protein Shake', kcal: 180, type: 'snack' },
+];
 
 export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
   metrics,
@@ -61,6 +83,39 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
   const [manualProtein, setManualProtein] = useState('');
   const [manualCarbs, setManualCarbs] = useState('');
   const [manualFat, setManualFat] = useState('');
+
+  // Quick presets management state
+  const [presets, setPresets] = useState<QuickPresetItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('kairo_meal_quick_presets');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          return DEFAULT_PRESETS;
+        }
+      }
+    }
+    return DEFAULT_PRESETS;
+  });
+
+  const [isEditingPresets, setIsEditingPresets] = useState(false);
+  const [newPresetName, setNewPresetName] = useState('');
+  const [newPresetKcal, setNewPresetKcal] = useState('');
+  const [newPresetType, setNewPresetType] = useState<MealType>('snack');
+
+  // Accordion collapsed state for meal categories
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<MealType, boolean>>({
+    breakfast: false,
+    lunch: false,
+    dinner: false,
+    snack: false,
+  });
+
+  const toggleCategory = (cat: MealType) => {
+    playClickSound();
+    setCollapsedCategories((prev) => ({ ...prev, [cat]: !prev[cat] }));
+  };
 
   const { targetDailyCalories, targetProteinGrams, targetCarbsGrams, targetFatGrams, targetWaterMl } = metrics;
 
@@ -124,10 +179,41 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
     }
   };
 
-  const handleQuickPreset = (presetText: string, suggestedType: MealType) => {
+  const handleApplyPreset = (preset: QuickPresetItem) => {
     playClickSound();
-    setMealText(presetText);
-    setMealType(suggestedType);
+    setMealText(preset.text);
+    setMealType(preset.type);
+  };
+
+  const handleAddCustomPreset = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPresetName.trim()) return;
+
+    playSuccessChime();
+    const updated = [
+      ...presets,
+      {
+        id: String(Date.now()),
+        text: newPresetName.trim(),
+        kcal: Number(newPresetKcal) || 200,
+        type: newPresetType,
+      },
+    ];
+    setPresets(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kairo_meal_quick_presets', JSON.stringify(updated));
+    }
+    setNewPresetName('');
+    setNewPresetKcal('');
+  };
+
+  const handleDeletePreset = (id: string) => {
+    playClickSound();
+    const updated = presets.filter((p) => p.id !== id);
+    setPresets(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kairo_meal_quick_presets', JSON.stringify(updated));
+    }
   };
 
   const handleEstimateAndLog = async (e: React.FormEvent) => {
@@ -187,7 +273,7 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
   };
 
   // Group meals by meal type
-  const groupedMeals = React.useMemo(() => {
+  const groupedMeals = useMemo(() => {
     const groups: Record<MealType, MealLog[]> = {
       breakfast: [],
       lunch: [],
@@ -204,21 +290,25 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
     return groups;
   }, [todaysMeals]);
 
-  const mealTypeConfig: Record<MealType, { label: string; icon: string }> = {
-    breakfast: { label: 'Breakfast', icon: '🍳' },
-    lunch: { label: 'Lunch', icon: '🥗' },
-    dinner: { label: 'Dinner', icon: '🍲' },
-    snack: { label: 'Snacks', icon: '🍎' },
+  // Clean minimalistic Lucide SVG Line Icons for meal types
+  const mealTypeConfig: Record<MealType, { label: string; icon: React.ReactNode }> = {
+    breakfast: {
+      label: 'Breakfast',
+      icon: <Coffee className="w-3.5 h-3.5 stroke-[2.25]" />,
+    },
+    lunch: {
+      label: 'Lunch',
+      icon: <Sun className="w-3.5 h-3.5 stroke-[2.25]" />,
+    },
+    dinner: {
+      label: 'Dinner',
+      icon: <Moon className="w-3.5 h-3.5 stroke-[2.25]" />,
+    },
+    snack: {
+      label: 'Snacks',
+      icon: <Apple className="w-3.5 h-3.5 stroke-[2.25]" />,
+    },
   };
-
-  const quickPresets = [
-    { text: 'Coffee with milk', kcal: 50, type: 'breakfast' as MealType },
-    { text: '2 Boiled Eggs & Toast', kcal: 220, type: 'breakfast' as MealType },
-    { text: 'Chicken Breast & Rice', kcal: 450, type: 'lunch' as MealType },
-    { text: 'Protein Shake', kcal: 180, type: 'snack' as MealType },
-    { text: 'Salmon & Steamed Veggies', kcal: 480, type: 'dinner' as MealType },
-    { text: 'Greek Yogurt & Honey', kcal: 160, type: 'snack' as MealType },
-  ];
 
   return (
     <div className="w-full space-y-3.5 pb-3 font-body select-none">
@@ -364,27 +454,26 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
               type="button"
               onClick={handleRemoveWater}
               disabled={todaysWaterTotalMl <= 0}
-              title="Remove 250ml"
+              title="Remove last water"
               className="w-8 h-8 rounded-xl bg-[#FAF8F5] hover:bg-stone-200 disabled:opacity-30 disabled:cursor-not-allowed border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 cursor-pointer"
             >
               <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
             </button>
+
             <button
               type="button"
               onClick={() => handleAddWater(250)}
-              title="Add 250ml Glass"
-              className="px-2.5 py-1.5 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white border border-[#24201D] flex items-center gap-1 text-xs font-black shadow-2xs active:scale-95 cursor-pointer font-display"
+              className="px-3 py-1.5 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white border border-[#24201D] text-xs font-black shadow-2xs active:scale-95 cursor-pointer font-display"
             >
-              <Plus className="w-3 h-3 stroke-[3]" />
-              <span>+250 ml</span>
+              +250 ml
             </button>
+
             <button
               type="button"
               onClick={() => handleAddWater(500)}
-              title="Add 500ml Bottle"
-              className="px-2 py-1.5 rounded-xl bg-white hover:bg-stone-100 text-[#0284C7] border border-[#24201D] text-xs font-black shadow-2xs active:scale-95 cursor-pointer font-display"
+              className="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-100 text-[#0284C7] border border-[#24201D] text-xs font-black shadow-2xs active:scale-95 cursor-pointer font-display"
             >
-              <span>+500</span>
+              +500 ml
             </button>
           </div>
         </div>
@@ -423,27 +512,48 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
             </div>
             <div>
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] leading-none">
-                AI Meal Logger
+                Meal Logger
               </h3>
               <span className="text-[10px] font-bold text-[#6B635B]">
-                Type or speak what you ate
+                AI voice dictation or text
               </span>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              playClickSound();
-              setShowManualInputs(!showManualInputs);
-            }}
-            className="text-[10px] font-bold text-[#3D6B52] hover:underline cursor-pointer"
-          >
-            {showManualInputs ? 'Switch to AI' : 'Manual Entry'}
-          </button>
+          {/* Tactile Brutalist Toggle for Manual / AI Entry */}
+          <div className="flex items-center p-0.5 bg-[#FAF8F5] border border-[#24201D] rounded-xl shadow-2xs">
+            <button
+              type="button"
+              onClick={() => {
+                playClickSound();
+                setShowManualInputs(false);
+              }}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase font-display transition-all cursor-pointer ${
+                !showManualInputs
+                  ? 'bg-[#24201D] text-white shadow-2xs'
+                  : 'text-[#6B635B] hover:text-[#24201D]'
+              }`}
+            >
+              AI Auto
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                playClickSound();
+                setShowManualInputs(true);
+              }}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase font-display transition-all cursor-pointer ${
+                showManualInputs
+                  ? 'bg-[#24201D] text-white shadow-2xs'
+                  : 'text-[#6B635B] hover:text-[#24201D]'
+              }`}
+            >
+              Manual
+            </button>
+          </div>
         </div>
 
-        {/* Meal Type Pills */}
+        {/* Minimalist Line SVG Meal Type Selector */}
         <div className="grid grid-cols-4 gap-1 p-1 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs">
           {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((t) => (
             <button
@@ -453,33 +563,123 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
                 playClickSound();
                 setMealType(t);
               }}
-              className={`py-1.5 rounded-lg text-xs font-black capitalize transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                mealType === t ? 'bg-[#24201D] text-white shadow-2xs' : 'text-[#6B635B] hover:text-[#24201D]'
+              className={`py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                mealType === t
+                  ? 'bg-[#24201D] text-white shadow-2xs'
+                  : 'text-[#6B635B] hover:text-[#24201D]'
               }`}
             >
-              <span>{mealTypeConfig[t].icon}</span>
-              <span className="text-[11px]">{mealTypeConfig[t].label}</span>
+              {mealTypeConfig[t].icon}
+              <span className="text-[11px] font-display">{mealTypeConfig[t].label}</span>
             </button>
           ))}
         </div>
 
-        {/* Quick Food Presets */}
-        <div className="space-y-1">
-          <span className="text-[9px] font-black uppercase text-[#6B635B] font-display">
-            Quick Add Presets:
-          </span>
+        {/* Quick Food Presets Bar with Edit/Manage Button */}
+        <div className="space-y-1.5 pt-0.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase text-[#6B635B] font-display tracking-wider">
+              Quick Add Presets
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                playClickSound();
+                setIsEditingPresets(!isEditingPresets);
+              }}
+              title="Edit Presets"
+              className={`p-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1 text-[10px] font-bold ${
+                isEditingPresets
+                  ? 'bg-[#24201D] text-white border-[#24201D]'
+                  : 'bg-[#FAF8F5] text-[#6B635B] border-[#24201D]/20 hover:border-[#24201D]'
+              }`}
+            >
+              <Settings2 className="w-3 h-3 stroke-[2.25]" />
+              <span>{isEditingPresets ? 'Done' : 'Edit'}</span>
+            </button>
+          </div>
+
+          {/* Presets Chips */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            {quickPresets.map((preset) => (
-              <button
-                key={preset.text}
-                type="button"
-                onClick={() => handleQuickPreset(preset.text, preset.type)}
-                className="px-2 py-0.5 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 hover:border-[#24201D] text-[10px] font-bold text-[#24201D] transition-all cursor-pointer shadow-2xs"
+            {presets.map((preset) => (
+              <div
+                key={preset.id}
+                className="flex items-center bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/25 hover:border-[#24201D] rounded-lg shadow-2xs transition-all"
               >
-                {preset.text} <span className="font-mono-num text-[#6B635B]">({preset.kcal}k)</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => handleApplyPreset(preset)}
+                  className="px-2.5 py-1 text-[11px] font-bold text-[#24201D] cursor-pointer flex items-center gap-1"
+                >
+                  <span>{preset.text}</span>
+                  <span className="font-mono-num text-[10px] text-[#6B635B]">({preset.kcal}k)</span>
+                </button>
+
+                {isEditingPresets && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeletePreset(preset.id)}
+                    title="Delete preset"
+                    className="pr-1.5 pl-0.5 py-1 text-stone-400 hover:text-red-500 cursor-pointer"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
             ))}
           </div>
+
+          {/* Preset Creator (when in editing mode) */}
+          {isEditingPresets && (
+            <form onSubmit={handleAddCustomPreset} className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-2 animate-in fade-in duration-100">
+              <span className="text-[10px] font-black uppercase text-[#24201D] block">
+                Add Custom Preset
+              </span>
+              <div className="grid grid-cols-3 gap-1.5">
+                <input
+                  type="text"
+                  placeholder="Name (e.g. Oatmeal)"
+                  value={newPresetName}
+                  onChange={(e) => setNewPresetName(e.target.value)}
+                  className="col-span-2 px-2.5 py-1.5 bg-white border border-[#24201D] rounded-lg text-xs font-bold text-[#24201D] focus:outline-none"
+                />
+                <input
+                  type="number"
+                  placeholder="Kcal"
+                  value={newPresetKcal}
+                  onChange={(e) => setNewPresetKcal(e.target.value)}
+                  className="px-2 py-1.5 bg-white border border-[#24201D] rounded-lg text-xs font-bold text-[#24201D] font-mono-num focus:outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center gap-1">
+                  {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setNewPresetType(t)}
+                      className={`px-2 py-0.5 rounded text-[9px] font-black uppercase transition-all cursor-pointer ${
+                        newPresetType === t
+                          ? 'bg-[#24201D] text-white'
+                          : 'bg-white text-[#6B635B] border border-[#24201D]/20'
+                      }`}
+                    >
+                      {t.slice(0, 1).toUpperCase() + t.slice(1, 4)}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={!newPresetName.trim()}
+                  className="px-3 py-1 bg-[#3D6B52] disabled:opacity-40 text-white rounded-lg text-xs font-bold shadow-2xs cursor-pointer"
+                >
+                  + Add
+                </button>
+              </div>
+            </form>
+          )}
         </div>
 
         {/* Text Input with embedded voice button */}
@@ -514,9 +714,9 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
 
           {/* Manual inputs toggle */}
           {showManualInputs && (
-            <div className="grid grid-cols-4 gap-1.5 p-2 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl">
+            <div className="grid grid-cols-4 gap-1.5 p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl">
               <div>
-                <span className="text-[9px] font-bold text-[#6B635B] uppercase block">Kcal</span>
+                <span className="text-[9px] font-black uppercase text-[#6B635B] block font-display">Kcal</span>
                 <input
                   type="number"
                   placeholder="350"
@@ -526,7 +726,7 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
                 />
               </div>
               <div>
-                <span className="text-[9px] font-bold text-[#6B635B] uppercase block">Protein</span>
+                <span className="text-[9px] font-black uppercase text-[#6B635B] block font-display">Protein</span>
                 <input
                   type="number"
                   placeholder="25g"
@@ -536,7 +736,7 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
                 />
               </div>
               <div>
-                <span className="text-[9px] font-bold text-[#6B635B] uppercase block">Carbs</span>
+                <span className="text-[9px] font-black uppercase text-[#6B635B] block font-display">Carbs</span>
                 <input
                   type="number"
                   placeholder="40g"
@@ -546,7 +746,7 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
                 />
               </div>
               <div>
-                <span className="text-[9px] font-bold text-[#6B635B] uppercase block">Fat</span>
+                <span className="text-[9px] font-black uppercase text-[#6B635B] block font-display">Fat</span>
                 <input
                   type="number"
                   placeholder="12g"
@@ -569,84 +769,122 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
         </form>
       </div>
 
-      {/* 4. Grouped Daily Meals History */}
+      {/* 4. Interactive Grouped Daily Intake Log */}
       <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
-            Daily Intake Log ({todaysMeals.length})
-          </h3>
-          <span className="text-xs font-black font-mono-num text-[#24201D]">
-            Total: {todaysTotalKcal} kcal
+        <div className="flex items-center justify-between pb-1 border-b border-[#24201D]/15">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-xl bg-[#FAF8F5] border border-[#24201D] flex items-center justify-center shadow-2xs">
+              <Clock className="w-3.5 h-3.5 text-[#24201D]" />
+            </div>
+            <div>
+              <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] leading-none">
+                Daily Intake Log
+              </h3>
+              <span className="text-[10px] font-bold text-[#6B635B]">
+                {todaysMeals.length} records today
+              </span>
+            </div>
+          </div>
+
+          <span className="text-xs font-black font-mono-num text-[#24201D] px-2 py-0.5 bg-[#FAF8F5] border border-[#24201D]/25 rounded-lg shadow-2xs">
+            {todaysTotalKcal} kcal total
           </span>
         </div>
 
         {todaysMeals.length === 0 ? (
-          <p className="text-xs text-stone-400 italic py-2">No meals recorded for this date.</p>
+          <div className="p-6 text-center text-xs font-bold text-stone-400 bg-[#FAF8F5] rounded-xl border border-dashed border-[#24201D]/20">
+            No meals recorded for this date. Use the logger above to begin!
+          </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((category) => {
               const items = groupedMeals[category];
               if (items.length === 0) return null;
 
               const subtotalKcal = items.reduce((acc, m) => acc + (m.kcal || 0), 0);
+              const isCollapsed = collapsedCategories[category];
 
               return (
-                <div key={category} className="space-y-1.5">
-                  <div className="flex items-center justify-between px-1">
-                    <span className="text-[11px] font-black font-display uppercase tracking-wider text-[#24201D] flex items-center gap-1">
-                      <span>{mealTypeConfig[category].icon}</span>
-                      <span>{mealTypeConfig[category].label}</span>
-                    </span>
-                    <span className="text-[10px] font-bold font-mono-num text-[#6B635B]">
-                      {subtotalKcal} kcal
-                    </span>
-                  </div>
+                <div
+                  key={category}
+                  className="bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl overflow-hidden shadow-2xs transition-all"
+                >
+                  {/* Category Header Accordion Trigger */}
+                  <button
+                    type="button"
+                    onClick={() => toggleCategory(category)}
+                    className="w-full px-3 py-2 bg-[#FAF8F5] hover:bg-stone-100 flex items-center justify-between border-b border-[#24201D]/15 cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="text-[#24201D]">{mealTypeConfig[category].icon}</div>
+                      <span className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
+                        {mealTypeConfig[category].label}
+                      </span>
+                      <span className="text-[10px] font-bold text-[#6B635B] font-mono-num">
+                        ({items.length})
+                      </span>
+                    </div>
 
-                  <div className="space-y-1">
-                    {items.map((meal) => (
-                      <div
-                        key={meal.id}
-                        className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl flex items-center justify-between"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-[#24201D] truncate">
-                              {meal.name}
-                            </span>
-                            {meal.time && (
-                              <span className="text-[9px] text-stone-400 font-mono-num">
-                                {meal.time}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black font-mono-num text-[#24201D] px-1.5 py-0.2 bg-white rounded border border-[#24201D]/20 shadow-2xs">
+                        {subtotalKcal} kcal
+                      </span>
+                      {isCollapsed ? (
+                        <ChevronDown className="w-3.5 h-3.5 text-[#6B635B]" />
+                      ) : (
+                        <ChevronUp className="w-3.5 h-3.5 text-[#6B635B]" />
+                      )}
+                    </div>
+                  </button>
+
+                  {/* Category Items List */}
+                  {!isCollapsed && (
+                    <div className="p-2 space-y-1.5 bg-white">
+                      {items.map((meal) => (
+                        <div
+                          key={meal.id}
+                          className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl flex items-center justify-between hover:border-[#24201D] transition-all"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-black text-[#24201D] truncate">
+                                {meal.name}
                               </span>
-                            )}
+                              {meal.time && (
+                                <span className="text-[9px] text-stone-400 font-mono-num">
+                                  {meal.time}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1.5 mt-1 text-[10px] font-bold font-mono-num flex-wrap">
+                              <span className="text-[#24201D] font-black">{meal.kcal} kcal</span>
+                              <span>•</span>
+                              <span className="text-[#EF4444] font-semibold">P: {meal.proteinGrams}g</span>
+                              <span>•</span>
+                              <span className="text-[#3B82F6] font-semibold">C: {meal.carbsGrams}g</span>
+                              <span>•</span>
+                              <span className="text-[#F59E0B] font-semibold">F: {meal.fatGrams}g</span>
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-2 mt-0.5 text-[10px] font-bold font-mono-num text-[#6B635B] flex-wrap">
-                            <span className="text-[#24201D] font-black">{meal.kcal} kcal</span>
-                            <span>•</span>
-                            <span>P: {meal.proteinGrams}g</span>
-                            <span>•</span>
-                            <span>C: {meal.carbsGrams}g</span>
-                            <span>•</span>
-                            <span>F: {meal.fatGrams}g</span>
-                          </div>
+                          {meal.id && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                playClickSound();
+                                onDeleteMealLog(meal.id!);
+                              }}
+                              title="Delete meal"
+                              className="p-1.5 text-stone-400 hover:text-red-500 rounded-lg hover:bg-white transition-all cursor-pointer ml-2"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
-
-                        {meal.id && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              playClickSound();
-                              onDeleteMealLog(meal.id!);
-                            }}
-                            title="Delete meal"
-                            className="p-1.5 text-stone-400 hover:text-red-500 rounded-lg hover:bg-white transition-all cursor-pointer ml-2"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}

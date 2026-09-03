@@ -361,9 +361,16 @@ public class MainActivity extends BridgeActivity {
 
     public class SpeechRecognizerJsInterface {
         private SpeechRecognizer speechRecognizer;
+        private Intent currentIntent;
+        private boolean isContinuousActive = false;
 
         @JavascriptInterface
         public void startDictation(String lang) {
+            startDictation(lang, true);
+        }
+
+        @JavascriptInterface
+        public void startDictation(String lang, boolean continuous) {
             runOnUiThread(() -> {
                 if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.MODIFY_AUDIO_SETTINGS}, 102);
@@ -372,21 +379,39 @@ public class MainActivity extends BridgeActivity {
                 }
 
                 try {
+                    isContinuousActive = continuous;
+
                     if (speechRecognizer != null) {
                         try {
                             speechRecognizer.destroy();
                         } catch (Exception ignored) {}
                     }
 
-                    String targetLang = (lang != null && !lang.isEmpty()) ? lang : Locale.getDefault().toLanguageTag();
+                    String defaultTag = Locale.getDefault().toLanguageTag();
+                    String targetLang = (lang != null && !lang.isEmpty() && !"auto".equalsIgnoreCase(lang)) ? lang : defaultTag;
+
                     speechRecognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
-                    Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, targetLang);
-                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, targetLang);
-                    intent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, false);
-                    intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-                    intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
+                    currentIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                    currentIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                    currentIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, targetLang);
+                    currentIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, targetLang);
+                    currentIntent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, false);
+                    currentIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+                    currentIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
+
+                    // Bilingual / Multi-language support: enable both Russian & English simultaneously
+                    ArrayList<String> extraLanguages = new ArrayList<>();
+                    extraLanguages.add("ru-RU");
+                    extraLanguages.add("en-US");
+                    if (!"ru-RU".equals(targetLang) && !"en-US".equals(targetLang)) {
+                        extraLanguages.add(targetLang);
+                    }
+                    currentIntent.putStringArrayListExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", extraLanguages);
+
+                    // Extended silence detection thresholds: don't cut off on brief pauses
+                    currentIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 3500L);
+                    currentIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2500L);
+                    currentIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1500L);
 
                     speechRecognizer.setRecognitionListener(new RecognitionListener() {
                         @Override
@@ -404,12 +429,20 @@ public class MainActivity extends BridgeActivity {
                         public void onBufferReceived(byte[] buffer) {}
 
                         @Override
-                        public void onEndOfSpeech() {
-                            notifyJs("window.onAndroidSpeechEnd && window.onAndroidSpeechEnd();");
-                        }
+                        public void onEndOfSpeech() {}
 
                         @Override
                         public void onError(int error) {
+                            // In continuous mode, silence or no-match is non-fatal: restart listening if still active
+                            if (isContinuousActive && (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) {
+                                if (speechRecognizer != null && currentIntent != null) {
+                                    try {
+                                        speechRecognizer.startListening(currentIntent);
+                                        return;
+                                    } catch (Exception ignored) {}
+                                }
+                            }
+
                             String msg = "Voice recognition error: " + error;
                             if (error == SpeechRecognizer.ERROR_NO_MATCH) msg = "No speech detected";
                             else if (error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) msg = "Speech timeout";
@@ -425,7 +458,16 @@ public class MainActivity extends BridgeActivity {
                                 String text = matches.get(0).replace("'", "\\'").replace("\n", " ");
                                 notifyJs("window.onAndroidSpeechResult && window.onAndroidSpeechResult('" + text + "', true);");
                             }
-                            notifyJs("window.onAndroidSpeechEnd && window.onAndroidSpeechEnd();");
+
+                            if (isContinuousActive && speechRecognizer != null && currentIntent != null) {
+                                try {
+                                    speechRecognizer.startListening(currentIntent);
+                                } catch (Exception e) {
+                                    notifyJs("window.onAndroidSpeechEnd && window.onAndroidSpeechEnd();");
+                                }
+                            } else {
+                                notifyJs("window.onAndroidSpeechEnd && window.onAndroidSpeechEnd();");
+                            }
                         }
 
                         @Override
@@ -441,7 +483,7 @@ public class MainActivity extends BridgeActivity {
                         public void onEvent(int eventType, Bundle params) {}
                     });
 
-                    speechRecognizer.startListening(intent);
+                    speechRecognizer.startListening(currentIntent);
                 } catch (Exception e) {
                     e.printStackTrace();
                     notifyJs("window.onAndroidSpeechError && window.onAndroidSpeechError('" + e.getMessage() + "');");
@@ -452,6 +494,7 @@ public class MainActivity extends BridgeActivity {
         @JavascriptInterface
         public void stopDictation() {
             runOnUiThread(() -> {
+                isContinuousActive = false;
                 if (speechRecognizer != null) {
                     try {
                         speechRecognizer.stopListening();

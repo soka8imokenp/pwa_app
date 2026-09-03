@@ -9,7 +9,14 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { askSumireAI, AIChatMessage } from '../../lib/aiService';
-import { startVoiceDictation, stopVoiceDictation, isSpeechRecognitionSupported } from '../../lib/speechRecognition';
+import {
+  startVoiceDictation,
+  stopVoiceDictation,
+  isSpeechRecognitionSupported,
+  getVoiceLanguage,
+  setVoiceLanguage,
+  VoiceLanguage,
+} from '../../lib/speechRecognition';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import confetti from 'canvas-confetti';
 
@@ -35,6 +42,18 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [voiceLang, setVoiceLang] = useState<VoiceLanguage>(() => getVoiceLanguage());
+
+  const cycleVoiceLang = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    playClickSound();
+    const order: VoiceLanguage[] = ['auto', 'ru-RU', 'en-US', 'ja-JP'];
+    const nextIdx = (order.indexOf(voiceLang) + 1) % order.length;
+    const nextLang = order[nextIdx];
+    setVoiceLang(nextLang);
+    setVoiceLanguage(nextLang);
+  };
   const [attachedImage, setAttachedImage] = useState<{ base64Data: string; mimeType: string; previewUrl: string } | null>(null);
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
@@ -165,6 +184,10 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
         onEnd: () => {
           setIsRecording(false);
         },
+      }, {
+        lang: voiceLang,
+        continuous: true,
+        autoPunctuate: true,
       });
     }
   };
@@ -326,19 +349,30 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
               <ImageIcon className="w-4 h-4 stroke-[2.25]" />
             </button>
 
-            {/* Voice Dictation Button */}
-            <button
-              type="button"
-              onClick={handleToggleVoice}
-              title={isRecording ? 'Stop recording' : 'Voice input'}
-              className={`w-10 h-10 rounded-xl border-[1.5px] border-[#24201D] flex items-center justify-center shrink-0 transition-all cursor-pointer ${
-                isRecording
-                  ? 'bg-rose-500 text-white animate-pulse shadow-2xs'
-                  : 'bg-[#DDE8DE] hover:bg-[#C9DCCB] text-[#2D503C] shadow-2xs'
-              }`}
-            >
-              {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 stroke-[2.25]" />}
-            </button>
+            {/* Voice Dictation Button & Language Selector */}
+            <div className="relative flex items-center shrink-0">
+              <button
+                type="button"
+                onClick={handleToggleVoice}
+                title={isRecording ? 'Stop recording' : 'Voice input'}
+                className={`w-10 h-10 rounded-xl border-[1.5px] border-[#24201D] flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                  isRecording
+                    ? 'bg-rose-500 text-white animate-pulse shadow-2xs'
+                    : 'bg-[#DDE8DE] hover:bg-[#C9DCCB] text-[#2D503C] shadow-2xs'
+                }`}
+              >
+                {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 stroke-[2.25]" />}
+              </button>
+              
+              <button
+                type="button"
+                onClick={cycleVoiceLang}
+                title={`Voice Recognition Language: ${voiceLang.toUpperCase()}. Tap to switch.`}
+                className="absolute -top-2 -right-1 px-1 py-0.2 rounded bg-white hover:bg-stone-100 border border-[#24201D] text-[8px] font-black font-mono-num text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
+              >
+                {voiceLang === 'auto' ? 'AUTO' : voiceLang.split('-')[0].toUpperCase()}
+              </button>
+            </div>
 
             <input
               type="text"

@@ -1,14 +1,13 @@
 {
-  "version": "1.8.10",
-  "buildNumber": 16,
+  "version": "1.8.11",
+  "buildNumber": 17,
   "releaseDate": "2026-09-03",
   "changelog": [
-    "Profile polish: cleaned up decorative badges, watermarks and labels per user design preference",
-    "Overhauled Profile: Japanese Resident ID card with Role, Zen Motto & Level",
-    "Dedicated Profile Information Editor with rich inputs, motto and role presets",
-    "Lifetime Productivity Matrix: completed tasks, focus hours, habits & active days",
-    "Daily Focus Target progress bar and customizable Work Rhythm",
-    "Encrypted Vault JSON backup export right inside the profile modal"
+    "Multilingual Voice Dictation: support for Auto (Bilingual RU/EN), Russian, English and Japanese",
+    "Continuous Voice Flow: speech recording continues without cutting off on pauses",
+    "Smart Voice Formatting: spoken punctuation words auto-converted to real symbols & auto-capitalization",
+    "Intelligent Task Splitting: continuous voice thoughts split into discrete checklist tasks",
+    "Voice Language Selector chip in Quick Scratchpad, Smart Braindump, Sumire AI & Global Settings"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.10/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.11/Daily-Sumire-app-debug.apk"
 }

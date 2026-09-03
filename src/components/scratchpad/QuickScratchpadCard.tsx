@@ -15,7 +15,15 @@ import {
   Layers,
 } from 'lucide-react';
 import { playClickSound, playSuccessChime, playTaskCheckSound } from '../../lib/sound';
-import { startVoiceDictation, stopVoiceDictation, isSpeechRecognitionSupported } from '../../lib/speechRecognition';
+import {
+  startVoiceDictation,
+  stopVoiceDictation,
+  isSpeechRecognitionSupported,
+  getVoiceLanguage,
+  setVoiceLanguage,
+  splitVoiceIntoTasks,
+  VoiceLanguage,
+} from '../../lib/speechRecognition';
 import confetti from 'canvas-confetti';
 import type { Task } from '../../types';
 
@@ -56,8 +64,20 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
   const [selectedTag, setSelectedTag] = useState<ChecklistTag>('general');
   const [inputText, setInputText] = useState('');
   const [isVoiceRecording, setIsVoiceRecording] = useState(false);
+  const [voiceLang, setVoiceLang] = useState<VoiceLanguage>(() => getVoiceLanguage());
   const [actionNotice, setActionNotice] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const cycleVoiceLang = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    playClickSound();
+    const order: VoiceLanguage[] = ['auto', 'ru-RU', 'en-US', 'ja-JP'];
+    const nextIdx = (order.indexOf(voiceLang) + 1) % order.length;
+    const nextLang = order[nextIdx];
+    setVoiceLang(nextLang);
+    setVoiceLanguage(nextLang);
+  };
 
   // Touch swipe refs
   const touchStartX = useRef<number | null>(null);
@@ -126,25 +146,40 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
     touchEndX.current = null;
   };
 
-  // Add Item
+  // Add Item (supports smart multi-task splitting from continuous voice dictation)
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
     const text = inputText.trim();
     if (!text) return;
 
     playClickSound();
-    const newItem: QuickChecklistItem = {
-      id: Date.now().toString(),
-      text,
-      isCompleted: false,
-      isStarred: false,
-      tag: selectedTag,
-      createdAt: Date.now(),
-    };
 
-    setItems((prev) => [newItem, ...prev]);
+    const parsedTasks = splitVoiceIntoTasks(text);
+    if (parsedTasks.length > 1) {
+      const newItems: QuickChecklistItem[] = parsedTasks.map((taskTitle, idx) => ({
+        id: (Date.now() + idx).toString(),
+        text: taskTitle,
+        isCompleted: false,
+        isStarred: false,
+        tag: selectedTag,
+        createdAt: Date.now() + idx,
+      }));
+      setItems((prev) => [...newItems, ...prev]);
+      setActionNotice(`Added ${parsedTasks.length} items!`);
+    } else {
+      const newItem: QuickChecklistItem = {
+        id: Date.now().toString(),
+        text,
+        isCompleted: false,
+        isStarred: false,
+        tag: selectedTag,
+        createdAt: Date.now(),
+      };
+      setItems((prev) => [newItem, ...prev]);
+      setActionNotice('Item saved to Active!');
+    }
+
     setInputText('');
-    setActionNotice('Item saved to Active!');
     setTimeout(() => setActionNotice(null), 1800);
     // Switch to active slide to view
     setCurrentSlide(1);
@@ -261,6 +296,10 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
         },
         onError: () => setIsVoiceRecording(false),
         onEnd: () => setIsVoiceRecording(false),
+      }, {
+        lang: voiceLang,
+        continuous: true,
+        autoPunctuate: true,
       });
     }
   };
@@ -339,22 +378,32 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder="Type idea, task, or quick memo..."
-                    className="w-full pl-3 pr-8 py-2.5 bg-[#F4F0EA] border border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-[#A89F91] outline-none shadow-2xs"
+                    className="w-full pl-3 pr-20 py-2.5 bg-[#F4F0EA] border border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-[#A89F91] outline-none shadow-2xs"
                   />
                   
-                  {/* Voice Mic Button */}
-                  <button
-                    type="button"
-                    onClick={handleToggleVoice}
-                    title="Voice input"
-                    className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-lg border text-stone-700 active:scale-90 transition-all cursor-pointer ${
-                      isVoiceRecording
-                        ? 'bg-rose-500 text-white border-rose-600 animate-pulse'
-                        : 'bg-white hover:bg-stone-100 border-[#24201D]/30'
-                    }`}
-                  >
-                    {isVoiceRecording ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3 text-[#C25E40]" />}
-                  </button>
+                  {/* Language switch badge & Voice Mic Button */}
+                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={cycleVoiceLang}
+                      title={`Voice Recognition Language: ${voiceLang.toUpperCase()}. Tap to switch.`}
+                      className="px-1.5 py-0.5 rounded bg-white hover:bg-stone-100 border border-[#24201D]/30 text-[9px] font-black font-mono-num text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
+                    >
+                      {voiceLang === 'auto' ? 'AUTO' : voiceLang.split('-')[0].toUpperCase()}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleToggleVoice}
+                      title={isVoiceRecording ? 'Stop recording' : 'Voice input'}
+                      className={`p-1 rounded-lg border text-stone-700 active:scale-90 transition-all cursor-pointer ${
+                        isVoiceRecording
+                          ? 'bg-rose-500 text-white border-rose-600 animate-pulse'
+                          : 'bg-white hover:bg-stone-100 border-[#24201D]/30'
+                      }`}
+                    >
+                      {isVoiceRecording ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3 text-[#C25E40]" />}
+                    </button>
+                  </div>
                 </div>
 
                 <button

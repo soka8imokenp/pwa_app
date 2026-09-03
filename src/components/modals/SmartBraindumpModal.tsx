@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import { Mic, MicOff, Check, X, ArrowRight, Wand2, Plus, Code, Palette, BookOpen, Activity, Crown } from 'lucide-react';
-import type { Task } from '../../types';
-import { startVoiceDictation, stopVoiceDictation, isSpeechRecognitionSupported } from '../../lib/speechRecognition';
+import {
+  startVoiceDictation,
+  stopVoiceDictation,
+  isSpeechRecognitionSupported,
+  getVoiceLanguage,
+  setVoiceLanguage,
+  splitVoiceIntoTasks,
+  VoiceLanguage,
+} from '../../lib/speechRecognition';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import confetti from 'canvas-confetti';
 
@@ -29,9 +36,21 @@ export const SmartBraindumpModal: React.FC<SmartBraindumpModalProps> = ({
 }) => {
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [voiceLang, setVoiceLang] = useState<VoiceLanguage>(() => getVoiceLanguage());
   const [parsedTasks, setParsedTasks] = useState<ParsedItem[]>([]);
 
   if (!isOpen) return null;
+
+  const cycleVoiceLang = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    playClickSound();
+    const order: VoiceLanguage[] = ['auto', 'ru-RU', 'en-US', 'ja-JP'];
+    const nextIdx = (order.indexOf(voiceLang) + 1) % order.length;
+    const nextLang = order[nextIdx];
+    setVoiceLang(nextLang);
+    setVoiceLanguage(nextLang);
+  };
 
   const handleToggleVoice = () => {
     playClickSound();
@@ -42,10 +61,14 @@ export const SmartBraindumpModal: React.FC<SmartBraindumpModalProps> = ({
       setIsListening(true);
       startVoiceDictation({
         onTranscript: (text) => {
-          setInputText((prev) => (prev ? `${prev} ${text}` : text));
+          setInputText(text);
         },
         onError: () => setIsListening(false),
         onEnd: () => setIsListening(false),
+      }, {
+        lang: voiceLang,
+        continuous: true,
+        autoPunctuate: true,
       });
     }
   };
@@ -54,11 +77,14 @@ export const SmartBraindumpModal: React.FC<SmartBraindumpModalProps> = ({
     if (!inputText.trim()) return;
     playClickSound();
 
-    // Split text by lines, commas, or semicolons
-    const lines = inputText
-      .split(/[\n,;]+/)
-      .map((l) => l.trim())
-      .filter((l) => l.length > 2);
+    // Split text by lines, transitions (затем, потом, and then) or punctuation
+    const voiceTasks = splitVoiceIntoTasks(inputText);
+    const lines = voiceTasks.length > 0
+      ? voiceTasks
+      : inputText
+          .split(/[\n,;]+/)
+          .map((l) => l.trim())
+          .filter((l) => l.length > 2);
 
     const items: ParsedItem[] = lines.map((line, idx) => {
       let category: Task['category'] = 'general';
@@ -161,24 +187,34 @@ export const SmartBraindumpModal: React.FC<SmartBraindumpModalProps> = ({
               className="w-full p-3.5 bg-[#FAF8F5] text-xs font-bold text-[#24201D] rounded-2xl border-[1.75px] border-[#24201D] outline-none placeholder:text-stone-400 shadow-2xs resize-none"
             />
 
-            {/* Voice Dictation Button inside textarea */}
+            {/* Voice Dictation & Language Switcher */}
             {isSpeechRecognitionSupported() && (
-              <button
-                type="button"
-                onClick={handleToggleVoice}
-                className={`absolute bottom-3 right-3 p-2 rounded-full border-[1.5px] border-[#24201D] shadow-xs cursor-pointer transition-all ${
-                  isListening
-                    ? 'bg-rose-500 text-white animate-pulse'
-                    : 'bg-white text-stone-600 hover:bg-[#DDE8DE]'
-                }`}
-                title={isListening ? 'Stop recording' : 'Voice Dictate'}
-              >
-                {isListening ? (
-                  <MicOff className="w-4 h-4 stroke-[2.5]" />
-                ) : (
-                  <Mic className="w-4 h-4 stroke-[2.5]" />
-                )}
-              </button>
+              <div className="absolute bottom-3 right-3 flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={cycleVoiceLang}
+                  title={`Voice Language: ${voiceLang.toUpperCase()}. Tap to switch.`}
+                  className="px-2 py-1 rounded-full bg-white hover:bg-stone-100 border border-[#24201D]/30 text-[9px] font-black font-mono-num text-[#24201D] shadow-xs active:scale-95 transition-all cursor-pointer"
+                >
+                  {voiceLang === 'auto' ? 'AUTO' : voiceLang.split('-')[0].toUpperCase()}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleToggleVoice}
+                  className={`p-2 rounded-full border-[1.5px] border-[#24201D] shadow-xs cursor-pointer transition-all ${
+                    isListening
+                      ? 'bg-rose-500 text-white animate-pulse'
+                      : 'bg-white text-stone-600 hover:bg-[#DDE8DE]'
+                  }`}
+                  title={isListening ? 'Stop recording' : 'Voice Dictate'}
+                >
+                  {isListening ? (
+                    <MicOff className="w-4 h-4 stroke-[2.5]" />
+                  ) : (
+                    <Mic className="w-4 h-4 stroke-[2.5]" />
+                  )}
+                </button>
+              </div>
             )}
           </div>
 

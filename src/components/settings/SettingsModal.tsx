@@ -18,6 +18,7 @@ import {
   Moon,
   Lock,
   Unlock,
+  Mic,
 } from 'lucide-react';
 import {
   exportDatabaseToJson,
@@ -25,6 +26,12 @@ import {
   importDatabaseFromJson,
   resetAndSeedDatabase,
 } from '../../lib/exportImport';
+import {
+  getVoiceLanguage,
+  setVoiceLanguage,
+  VOICE_LANGUAGES,
+  VoiceLanguage,
+} from '../../lib/speechRecognition';
 import {
   playSuccessChime,
   playClickSound,
@@ -110,6 +117,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     if (typeof window !== 'undefined') {
       localStorage.setItem('kairo_evening_debrief_time', timeStr);
     }
+  };
+
+  const [voiceLang, setVoiceLang] = useState<VoiceLanguage>(() => getVoiceLanguage());
+
+  const handleSelectVoiceLang = (lang: VoiceLanguage) => {
+    playClickSound();
+    setVoiceLang(lang);
+    setVoiceLanguage(lang);
+    playSuccessChime();
+    setFeedback({ text: `Voice language set to ${lang.toUpperCase()}!`, success: true });
+    setTimeout(() => setFeedback(null), 2500);
   };
 
   const handleSaveGeminiKey = () => {
@@ -410,7 +428,50 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* 4. Evening Debrief Toggle & Time Capsule */}
+        {/* 4. Voice Recognition Language Settings */}
+        <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-[#FBECCF] border border-[#24201D] flex items-center justify-center shadow-xs">
+                <Mic className="w-4 h-4 text-[#854D0E] stroke-[2.25]" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
+                  Voice Dictation Language
+                </h4>
+                <p className="text-[10px] text-[#6B635B] font-bold">
+                  Bilingual speech recognition & punctuation
+                </p>
+              </div>
+            </div>
+
+            <span className="text-[10px] font-mono-num font-black px-2 py-0.5 rounded-full border border-[#24201D] bg-[#DDE8DE] text-[#2D503C]">
+              {voiceLang === 'auto' ? 'AUTO (RU/EN)' : voiceLang.split('-')[0].toUpperCase()}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
+            {VOICE_LANGUAGES.map((v) => {
+              const isSelected = voiceLang === v.id;
+              return (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => handleSelectVoiceLang(v.id)}
+                  className={`py-2 px-2.5 rounded-xl border-[1.5px] text-xs font-black transition-all cursor-pointer text-center ${
+                    isSelected
+                      ? 'bg-[#3D6B52] text-white border-[#24201D] shadow-2xs'
+                      : 'bg-[#FAF8F5] text-[#24201D] border-stone-200 hover:border-[#24201D]'
+                  }`}
+                >
+                  <span className="block text-[11px] leading-tight">{v.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 5. Evening Debrief Toggle & Time Capsule */}
         <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-[2rem] space-y-3 shadow-[2px_2px_0px_#24201D]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">

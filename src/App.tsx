@@ -321,6 +321,7 @@ export function App() {
                   todaysCarbsGrams={todaysCarbsGrams}
                   todaysFatGrams={todaysFatGrams}
                   todaysWaterTotalMl={todaysWaterTotalMl}
+                  todaysActiveCaloriesBurned={todaysActiveCaloriesBurned}
                   selectedDate={selectedDate}
                   onLogMeal={logMeal}
                   onDeleteMealLog={deleteMealLog}

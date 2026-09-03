@@ -1,13 +1,13 @@
 {
-  "version": "1.3.1",
-  "buildNumber": 11,
-  "releaseDate": "2026-08-18",
+  "version": "1.8.8",
+  "buildNumber": 14,
+  "releaseDate": "2026-09-03",
   "changelog": [
-    "Native Android Lock Screen Media Player (like Spotify)",
-    "Notification Shade playback controls (Play/Pause, Next, Prev)",
-    "Background continuous playback with screen off",
-    "Telegram-style smooth gradient blur on navigation",
-    "Persistent audio engine without restart bugs"
+    "Focus Mode UX overhaul: conditional Restart and Complete buttons",
+    "New Sumire Violet flower icon in Focus panel",
+    "Performance optimization: removed dead code and 2MB+ redundant assets",
+    "Unified PWA Workbox precaching and offline support",
+    "Resilient CI/CD build pipeline for Android APK"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/latest/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.8/Daily-Sumire-app-debug.apk"
 }

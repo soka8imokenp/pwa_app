@@ -54,9 +54,31 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
 }) => {
   const [quickTitle, setQuickTitle] = useState('');
   const [isVoiceActive, setIsVoiceActive] = useState(false);
+  const [localPriorities, setLocalPriorities] = useState<Task[]>(priorityTasks);
 
-  const completedCount = priorityTasks.filter((t) => t.isCompleted).length;
-  const progressPercent = priorityTasks.length > 0 ? Math.round((completedCount / priorityTasks.length) * 100) : 0;
+  React.useEffect(() => {
+    setLocalPriorities(priorityTasks);
+  }, [priorityTasks]);
+
+  const handleReorder = (sourceIndex: number, targetIndex: number) => {
+    if (sourceIndex === targetIndex) return;
+    if (sourceIndex < 0 || sourceIndex >= localPriorities.length) return;
+    if (targetIndex < 0 || targetIndex >= localPriorities.length) return;
+
+    playClickSound();
+
+    // 1. Instant optimistic local update
+    const updated = [...localPriorities];
+    const [moved] = updated.splice(sourceIndex, 1);
+    updated.splice(targetIndex, 0, moved);
+    setLocalPriorities(updated);
+
+    // 2. Persist to DB
+    onReorderPriority?.(sourceIndex, targetIndex);
+  };
+
+  const completedCount = localPriorities.filter((t) => t.isCompleted).length;
+  const progressPercent = localPriorities.length > 0 ? Math.round((completedCount / localPriorities.length) * 100) : 0;
 
   const handleDoneClick = (task: Task) => {
     playTaskCheckSound();
@@ -178,85 +200,108 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
         </div>
 
         {/* Priority Task Cards */}
-        {priorityTasks.map((task, idx) => {
+        {localPriorities.map((task, idx) => {
           const slotBg = SLOT_COLORS[idx] || '#F4F0EA';
 
           return (
             <div
               key={task.id || idx}
-              className={`p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] transition-all space-y-2.5 ${
+              className={`p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] transition-all space-y-3 ${
                 task.isCompleted ? 'bg-stone-50/80 opacity-75' : ''
               }`}
             >
-              <div className="flex items-start justify-between gap-2.5">
-                <div className="flex items-start gap-2.5 min-w-0">
-                  {/* Slot Number Badge with Quick Move Arrows */}
-                  <div className="flex flex-col items-center gap-0.5 shrink-0 mt-0.5">
-                    <span
-                      className="w-6 h-6 rounded-lg border border-[#24201D] flex items-center justify-center text-xs font-black text-[#24201D] shadow-2xs"
-                      style={{ backgroundColor: slotBg }}
-                    >
-                      {idx + 1}
-                    </span>
-                    {priorityTasks.length > 1 && (
-                      <div className="flex items-center gap-0.5">
-                        {idx > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              playClickSound();
-                              onReorderPriority?.(idx, idx - 1);
-                            }}
-                            title={`Move to slot #${idx}`}
-                            className="p-0.5 rounded hover:bg-stone-200 text-[#24201D] active:scale-90 transition-all cursor-pointer"
-                          >
-                            <ChevronUp className="w-3 h-3 stroke-[2.5]" />
-                          </button>
-                        )}
-                        {idx < priorityTasks.length - 1 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              playClickSound();
-                              onReorderPriority?.(idx, idx + 1);
-                            }}
-                            title={`Move to slot #${idx + 2}`}
-                            className="p-0.5 rounded hover:bg-stone-200 text-[#24201D] active:scale-90 transition-all cursor-pointer"
-                          >
-                            <ChevronDown className="w-3 h-3 stroke-[2.5]" />
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
+              {/* Top Priority Slot Header Bar */}
+              <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#24201D]/10">
+                <div className="flex items-center gap-2">
+                  {/* Slot Number Badge */}
+                  <span
+                    className="px-2.5 py-1 rounded-xl border border-[#24201D] text-xs font-black font-mono-num shadow-2xs text-[#24201D]"
+                    style={{ backgroundColor: slotBg }}
+                  >
+                    Priority #{idx + 1}
+                  </span>
 
-                  {/* Title & Metadata */}
-                  <div className="min-w-0">
-                    <h3
-                      className={`text-sm font-bold text-[#24201D] leading-snug break-words ${
-                        task.isCompleted ? 'line-through text-stone-400' : ''
-                      }`}
-                    >
-                      {task.title}
-                    </h3>
-
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#6B635B] uppercase">
-                        {getCategoryIcon(task.category)}
-                        {task.category || 'general'}
+                  {/* Direct Switcher: Move to 1, 2, 3 */}
+                  {localPriorities.length > 1 && (
+                    <div className="flex items-center gap-1 bg-[#F4F0EA] p-0.5 rounded-xl border border-[#24201D]/25">
+                      <span className="text-[9px] font-black text-[#6B635B] px-1 uppercase tracking-tight">
+                        Move:
                       </span>
-                      <span className="text-[10px] text-stone-400">•</span>
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#6B635B]">
-                        <Clock className="w-3 h-3" />
-                        {task.estimatedMinutes || 30}m
-                      </span>
-
-                      {task.isRecurring && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#DDE8DE] border border-[#24201D] text-[9px] font-bold text-[#24201D]">
-                          <Repeat className="w-2.5 h-2.5" /> Routine
-                        </span>
-                      )}
+                      {localPriorities.map((_, targetSlot) => {
+                        const isCurrent = targetSlot === idx;
+                        return (
+                          <button
+                            key={targetSlot}
+                            type="button"
+                            disabled={isCurrent}
+                            onClick={() => handleReorder(idx, targetSlot)}
+                            className={`px-2 py-0.5 rounded-lg text-xs font-black font-mono-num transition-all ${
+                              isCurrent
+                                ? 'bg-[#24201D] text-white shadow-2xs cursor-default'
+                                : 'bg-white hover:bg-stone-100 text-[#24201D] border border-[#24201D]/20 cursor-pointer active:scale-90'
+                            }`}
+                          >
+                            #{targetSlot + 1}
+                          </button>
+                        );
+                      })}
                     </div>
+                  )}
+                </div>
+
+                {/* Big, comfortable Up / Down buttons */}
+                {localPriorities.length > 1 && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      disabled={idx === 0}
+                      onClick={() => handleReorder(idx, idx - 1)}
+                      title="Move up"
+                      className="w-7 h-7 rounded-xl bg-[#FAF8F5] hover:bg-[#DDE8DE] disabled:opacity-30 disabled:hover:bg-[#FAF8F5] disabled:cursor-not-allowed border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
+                    >
+                      <ChevronUp className="w-4 h-4 stroke-[2.5]" />
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={idx === localPriorities.length - 1}
+                      onClick={() => handleReorder(idx, idx + 1)}
+                      title="Move down"
+                      className="w-7 h-7 rounded-xl bg-[#FAF8F5] hover:bg-[#DDE8DE] disabled:opacity-30 disabled:hover:bg-[#FAF8F5] disabled:cursor-not-allowed border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
+                    >
+                      <ChevronDown className="w-4 h-4 stroke-[2.5]" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Title, Metadata & Complete Checkbox */}
+              <div className="flex items-start justify-between gap-2.5">
+                <div className="min-w-0 flex-1">
+                  <h3
+                    className={`text-sm font-bold text-[#24201D] leading-snug break-words ${
+                      task.isCompleted ? 'line-through text-stone-400' : ''
+                    }`}
+                  >
+                    {task.title}
+                  </h3>
+
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#6B635B] uppercase">
+                      {getCategoryIcon(task.category)}
+                      {task.category || 'general'}
+                    </span>
+                    <span className="text-[10px] text-stone-400">•</span>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#6B635B]">
+                      <Clock className="w-3 h-3" />
+                      {task.estimatedMinutes || 30}m
+                    </span>
+
+                    {task.isRecurring && (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#DDE8DE] border border-[#24201D] text-[9px] font-bold text-[#24201D]">
+                        <Repeat className="w-2.5 h-2.5" /> Routine
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -304,7 +349,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                 </div>
               )}
 
-              {/* Focus Button, Slot Reorder Switcher & Move to Backlog */}
+              {/* Focus Button & Move to Backlog */}
               <div className="flex items-center justify-between gap-2 pt-1 border-t border-[#24201D]/10">
                 <button
                   onClick={() => onStartFocus(task)}
@@ -313,37 +358,6 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                   <Play className="w-3 h-3 fill-[#24201D]" />
                   <span>Start Focus</span>
                 </button>
-
-                {/* Direct Slot 1, 2, 3 Selector */}
-                {priorityTasks.length > 1 && (
-                  <div className="flex items-center gap-1 bg-[#F4F0EA] px-1.5 py-0.5 rounded-lg border border-[#24201D]/25">
-                    <span className="text-[9px] font-bold text-[#6B635B] uppercase font-mono-num mr-0.5">
-                      Slot
-                    </span>
-                    {priorityTasks.map((_, targetSlot) => {
-                      const isCurrent = targetSlot === idx;
-                      return (
-                        <button
-                          key={targetSlot}
-                          type="button"
-                          disabled={isCurrent}
-                          onClick={() => {
-                            playClickSound();
-                            onReorderPriority?.(idx, targetSlot);
-                          }}
-                          title={isCurrent ? `Currently in slot #${targetSlot + 1}` : `Move to slot #${targetSlot + 1}`}
-                          className={`w-5 h-4.5 rounded text-[10px] font-black font-mono-num flex items-center justify-center transition-all ${
-                            isCurrent
-                              ? 'bg-[#24201D] text-white shadow-2xs cursor-default'
-                              : 'text-[#6B635B] hover:text-[#24201D] hover:bg-white/80 cursor-pointer active:scale-95'
-                          }`}
-                        >
-                          {targetSlot + 1}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
 
                 <button
                   onClick={() => onDemoteToBacklog(task)}

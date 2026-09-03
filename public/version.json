@@ -1,11 +1,10 @@
 {
-  "version": "1.8.15",
-  "buildNumber": 21,
+  "version": "1.8.16",
+  "buildNumber": 22,
   "releaseDate": "2026-09-03",
   "changelog": [
-    "Priorities Reordering: added instant slot switching (Slot 1, 2, 3) and micro-move arrows to reorganize daily priorities",
-    "Quick Templates Polish: removed sparkles icon from templates header in Create New Task modal",
-    "Layout & Scroll Fix: eliminated excessive bottom padding and dead space across all main tab views"
+    "Priorities Switching Overhaul: prominent slot header bar with tactile Move buttons (#1, #2, #3) and large 28px Up/Down arrows",
+    "Instant Optimistic Reordering: zero-latency priority swapping with Dexie v3 order index persistence"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.15/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.16/Daily-Sumire-app-debug.apk"
 }

@@ -25,6 +25,9 @@ export class PlannerDatabase extends Dexie {
       links: '++id, title, category, clicks, createdAt',
       settings: 'key'
     });
+    this.version(3).stores({
+      tasks: '++id, date, isPriority, isCompleted, createdAt, order',
+    });
   }
 }
 

@@ -30,12 +30,12 @@ export function usePlannerData(selectedDate: string) {
     return dateTasks
       .filter((t) => t.isPriority)
       .sort((a, b) => {
-        if (typeof a.order === 'number' && typeof b.order === 'number') {
-          return a.order - b.order;
+        const orderA = typeof a.order === 'number' ? a.order : 999;
+        const orderB = typeof b.order === 'number' ? b.order : 999;
+        if (orderA !== orderB) {
+          return orderA - orderB;
         }
-        if (typeof a.order === 'number') return -1;
-        if (typeof b.order === 'number') return 1;
-        return (a.id || 0) - (b.id || 0);
+        return (Number(a.id) || 0) - (Number(b.id) || 0);
       })
       .slice(0, 3);
   }, [dateTasks]);
@@ -146,9 +146,10 @@ export function usePlannerData(selectedDate: string) {
     updated.splice(targetIndex, 0, movedTask);
 
     await Promise.all(
-      updated.map((t, idx) => {
-        if (!t.id) return Promise.resolve();
-        return db.tasks.update(t.id, { order: idx });
+      updated.map(async (t, idx) => {
+        const numId = Number(t.id);
+        if (isNaN(numId)) return;
+        await db.tasks.update(numId, { order: idx });
       })
     );
     triggerTwoWaySync();

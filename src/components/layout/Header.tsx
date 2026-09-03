@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, Settings } from 'lucide-react';
+import { Flame, Settings, CheckSquare, Apple } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 import { getAvatarById } from '../../data/avatars';
 
 interface HeaderProps {
   streakCount: number;
   userName?: string;
+  appMode?: 'planner' | 'health';
+  onChangeAppMode?: (mode: 'planner' | 'health') => void;
   onOpenSettings: () => void;
   onOpenProfile?: () => void;
   onOpenStreak?: () => void;
@@ -14,6 +16,8 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   streakCount,
   userName = 'Alex',
+  appMode = 'planner',
+  onChangeAppMode,
   onOpenSettings,
   onOpenProfile,
   onOpenStreak,
@@ -36,7 +40,7 @@ export const Header: React.FC<HeaderProps> = ({
   const firstName = userName.split(' ')[0] || 'Friend';
 
   return (
-    <header className="w-full bg-transparent pt-[calc(env(safe-area-inset-top,0px)+14px)] pb-2 px-1 select-none font-body">
+    <header className="w-full bg-transparent pt-[calc(env(safe-area-inset-top,0px)+14px)] pb-1 px-1 select-none font-body space-y-2">
       <div className="flex items-center justify-between gap-3">
         {/* Left: User Profile & Greeting */}
         <div className="flex items-center gap-2.5">
@@ -58,7 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           <div>
             <span className="text-[10px] font-bold text-[#6B635B] uppercase tracking-wider block leading-none font-display">
-              Daily Planner
+              {appMode === 'health' ? 'Health & Body OS' : 'Daily Planner'}
             </span>
             <h1 className="text-sm font-bold font-display text-[#24201D] tracking-tight leading-tight mt-0.5">
               Hey, {firstName}
@@ -106,6 +110,45 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Mode Switcher Pill */}
+      {onChangeAppMode && (
+        <div className="flex items-center justify-center pt-0.5">
+          <div className="p-1 bg-white/90 backdrop-blur-sm border-[1.75px] border-[#24201D] rounded-2xl shadow-[1.5px_1.5px_0px_#24201D] flex items-center gap-1 w-full max-w-sm">
+            <button
+              type="button"
+              onClick={() => {
+                playClickSound();
+                onChangeAppMode('planner');
+              }}
+              className={`flex-1 py-1 px-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer font-display uppercase tracking-wider ${
+                appMode === 'planner'
+                  ? 'bg-[#24201D] text-white shadow-2xs'
+                  : 'text-[#6B635B] hover:text-[#24201D]'
+              }`}
+            >
+              <CheckSquare className="w-3.5 h-3.5" />
+              <span>Planner</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                playClickSound();
+                onChangeAppMode('health');
+              }}
+              className={`flex-1 py-1 px-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer font-display uppercase tracking-wider ${
+                appMode === 'health'
+                  ? 'bg-[#3D6B52] text-white shadow-2xs'
+                  : 'text-[#6B635B] hover:text-[#24201D]'
+              }`}
+            >
+              <Apple className="w-3.5 h-3.5" />
+              <span>Health & Body</span>
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

@@ -1,10 +1,13 @@
 {
-  "version": "1.8.18",
-  "buildNumber": 24,
+  "version": "1.8.19",
+  "buildNumber": 25,
   "releaseDate": "2026-09-03",
   "changelog": [
-    "Priorities Header: removed redundant +add slot button as requested",
-    "Streak Celebration Polish: confetti and chime now trigger only once on first open or upon a new streak achievement instead of every open"
+    "Dual-OS Architecture: Seamless tactile mode switcher between Daily Planner and Health & Body OS",
+    "Clinical Body & BMI Hub: WHO BMI standards, Mifflin-St Jeor BMR/TDEE calculations, Deurenberg body composition, and SVG weight trend graph",
+    "Nutrition & Hydration Tracker: Energy budget, macro bars, interactive 250ml water glasses, and AI voice/text meal logging",
+    "Activity & Workouts: Workout session logging with calorie burn calculation",
+    "Sumire Health AI Coach: Evidence-based personalized nutrition and metabolic guidance"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.18/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.19/Daily-Sumire-app-debug.apk"
 }

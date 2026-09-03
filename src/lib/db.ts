@@ -1,6 +1,8 @@
 import Dexie, { type Table } from 'dexie';
 import { format } from 'date-fns';
 import type { Task, Habit, HabitLog, FocusSession, LinkItem } from '../types';
+import type { HealthProfile, WeightLog, MealLog, WaterLog, WorkoutLog } from '../types/health';
+import { DEFAULT_HEALTH_PROFILE, calculateBmi } from './healthFormulas';
 
 export interface UserSettingRecord {
   key: string;
@@ -14,6 +16,11 @@ export class PlannerDatabase extends Dexie {
   focusSessions!: Table<FocusSession>;
   links!: Table<LinkItem>;
   settings!: Table<UserSettingRecord>;
+  healthProfile!: Table<HealthProfile>;
+  weightLogs!: Table<WeightLog>;
+  mealLogs!: Table<MealLog>;
+  waterLogs!: Table<WaterLog>;
+  workoutLogs!: Table<WorkoutLog>;
 
   constructor() {
     super('PragmaticPlannerDB');
@@ -27,6 +34,13 @@ export class PlannerDatabase extends Dexie {
     });
     this.version(3).stores({
       tasks: '++id, date, isPriority, isCompleted, createdAt, order',
+    });
+    this.version(4).stores({
+      healthProfile: 'id',
+      weightLogs: '++id, date, createdAt',
+      mealLogs: '++id, date, mealType, createdAt',
+      waterLogs: '++id, date, createdAt',
+      workoutLogs: '++id, date, category, createdAt',
     });
   }
 }
@@ -153,6 +167,17 @@ export async function seedDemoDataIfEmpty() {
     ]);
   }
 
-  // NO fake habit logs or focus sessions are seeded!
-  // This guarantees exact 0-day streak on new install.
+  // Seed default health profile if empty
+  const profileCount = await db.healthProfile.count();
+  if (profileCount === 0) {
+    await db.healthProfile.put(DEFAULT_HEALTH_PROFILE);
+    const today = format(new Date(), 'yyyy-MM-dd');
+    await db.weightLogs.add({
+      date: today,
+      weight: DEFAULT_HEALTH_PROFILE.currentWeight,
+      bmi: calculateBmi(DEFAULT_HEALTH_PROFILE.currentWeight, DEFAULT_HEALTH_PROFILE.height),
+      note: 'Initial baseline',
+      createdAt: Date.now(),
+    });
+  }
 }

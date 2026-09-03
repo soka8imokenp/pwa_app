@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/layout/Header';
 import { DateNavigator } from './components/layout/DateNavigator';
-import { BottomNav, TabView } from './components/layout/BottomNav';
+import { BottomNav, TabView, HealthTab } from './components/layout/BottomNav';
 import { BackgroundDecorations } from './components/layout/BackgroundDecorations';
+import { HealthBodyPage } from './components/health/HealthBodyPage';
+import { HealthIntakePage } from './components/health/HealthIntakePage';
+import { HealthActivityPage } from './components/health/HealthActivityPage';
+import { HealthCoachPage } from './components/health/HealthCoachPage';
+import { useHealthData } from './hooks/useHealthData';
 import { PrioritiesPage } from './components/pages/PrioritiesPage';
 import { BacklogPage } from './components/pages/BacklogPage';
 import { HabitsPage } from './components/pages/HabitsPage';
@@ -51,6 +56,45 @@ export function App() {
 
   const [selectedDate, setSelectedDate] = useState(getTodayString());
   const [activeTab, setActiveTab] = useState<TabView>('priorities');
+  const [appMode, setAppMode] = useState<'planner' | 'health'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('kairo_app_mode') as 'planner' | 'health') || 'planner';
+    }
+    return 'planner';
+  });
+  const [activeHealthTab, setActiveHealthTab] = useState<HealthTab>('body');
+
+  const handleSetAppMode = (mode: 'planner' | 'health') => {
+    setAppMode(mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kairo_app_mode', mode);
+    }
+  };
+
+  const {
+    profile: healthProfile,
+    metrics: healthMetrics,
+    allWeightLogs,
+    todaysMeals,
+    todaysWaterLogs,
+    todaysWorkouts,
+    todaysTotalKcal,
+    todaysProteinGrams,
+    todaysCarbsGrams,
+    todaysFatGrams,
+    todaysWaterTotalMl,
+    todaysActiveCaloriesBurned,
+    updateProfile: updateHealthProfile,
+    logWeight,
+    deleteWeightLog,
+    logMeal,
+    deleteMealLog,
+    logWater,
+    removeLatestWater,
+    logWorkout,
+    deleteWorkout,
+  } = useHealthData(selectedDate);
+
   const [soundMutedState, setSoundMutedState] = useState(isSoundMuted());
   const [showSplash, setShowSplash] = useState(true);
 
@@ -231,13 +275,16 @@ export function App() {
         <Header
           streakCount={overallStreak}
           userName={displayName}
+          appMode={appMode}
+          onChangeAppMode={handleSetAppMode}
           onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenProfile={() => setIsProfileOpen(true)}
           onOpenStreak={() => setIsStreakModalOpen(true)}
         />
 
         {/* Date Navigator Strip for Daily Views */}
-        {(activeTab === 'priorities' || activeTab === 'habits') && (
+        {((appMode === 'planner' && (activeTab === 'priorities' || activeTab === 'habits')) ||
+          (appMode === 'health' && (activeHealthTab === 'intake' || activeHealthTab === 'activity'))) && (
           <div className="pt-2">
             <DateNavigator
               selectedDate={selectedDate}
@@ -250,94 +297,150 @@ export function App() {
 
         {/* Page Body View with safe bottom padding for dock */}
         <main className="flex-1 w-full pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+74px)]">
-          {activeTab === 'priorities' && (
-            <PrioritiesPage
-              selectedDate={selectedDate}
-              onSelectDate={setSelectedDate}
-              priorityTasks={priorityTasks}
-              allTasks={allTasks}
-              focusSessions={allFocusSessions}
-              onToggleComplete={toggleTaskComplete}
-              onToggleSubTaskComplete={toggleSubTaskComplete}
-              onDemoteToBacklog={demoteTaskToBacklog}
-              onDeleteTask={deleteTask}
-              onOpenAddTask={handleOpenAddTask}
-              onStartFocus={handleStartFocus}
-              onReorderPriority={reorderPriorityTasks}
-              onLogFocusSession={logFocusSession}
-              onQuickCreateTask={addTask}
-            />
-          )}
+          {appMode === 'health' ? (
+            <>
+              {activeHealthTab === 'body' && (
+                <HealthBodyPage
+                  profile={healthProfile}
+                  metrics={healthMetrics}
+                  weightLogs={allWeightLogs}
+                  selectedDate={selectedDate}
+                  onSaveWeight={logWeight}
+                  onDeleteWeightLog={deleteWeightLog}
+                  onUpdateProfile={updateHealthProfile}
+                />
+              )}
 
-          {activeTab === 'backlog' && (
-            <BacklogPage
-              backlogTasks={backlogTasks}
-              canPromoteToPriority={canAddPriority}
-              onToggleComplete={toggleTaskComplete}
-              onPromoteToPriority={promoteTaskToPriority}
-              onDeleteTask={deleteTask}
-              onQuickAddTask={(title, category, minutes) =>
-                addTask({
-                  title,
-                  category: (category as any) || 'general',
-                  estimatedMinutes: minutes || 30,
-                  isPriority: false,
-                  isCompleted: false,
-                  date: selectedDate,
-                })
-              }
-            />
-          )}
+              {activeHealthTab === 'intake' && (
+                <HealthIntakePage
+                  metrics={healthMetrics}
+                  todaysMeals={todaysMeals}
+                  todaysWaterLogs={todaysWaterLogs}
+                  todaysTotalKcal={todaysTotalKcal}
+                  todaysProteinGrams={todaysProteinGrams}
+                  todaysCarbsGrams={todaysCarbsGrams}
+                  todaysFatGrams={todaysFatGrams}
+                  todaysWaterTotalMl={todaysWaterTotalMl}
+                  selectedDate={selectedDate}
+                  onLogMeal={logMeal}
+                  onDeleteMealLog={deleteMealLog}
+                  onLogWater={logWater}
+                  onRemoveLatestWater={removeLatestWater}
+                />
+              )}
 
-          {activeTab === 'habits' && (
-            <HabitsPage
-              habits={habitsWithStats}
-              selectedDate={selectedDate}
-              onToggleHabitLog={toggleHabitLog}
-              onDeleteHabit={deleteHabit}
-              onOpenAddHabit={() => setIsAddHabitOpen(true)}
-              onQuickAddHabit={(title, icon, color) =>
-                addHabit({ title, icon, color, targetDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] })
-              }
-            />
-          )}
+              {activeHealthTab === 'activity' && (
+                <HealthActivityPage
+                  todaysWorkouts={todaysWorkouts}
+                  todaysActiveCaloriesBurned={todaysActiveCaloriesBurned}
+                  selectedDate={selectedDate}
+                  onLogWorkout={logWorkout}
+                  onDeleteWorkout={deleteWorkout}
+                />
+              )}
 
-          {activeTab === 'links' && (
-            <LinksPage
-              links={allLinks}
-              onAddLink={addLink}
-              onDeleteLink={deleteLink}
-              onIncrementClicks={incrementLinkClicks}
-            />
-          )}
+              {activeHealthTab === 'coach' && (
+                <HealthCoachPage
+                  profile={healthProfile}
+                  metrics={healthMetrics}
+                />
+              )}
+            </>
+          ) : (
+            <>
+              {activeTab === 'priorities' && (
+                <PrioritiesPage
+                  selectedDate={selectedDate}
+                  onSelectDate={setSelectedDate}
+                  priorityTasks={priorityTasks}
+                  allTasks={allTasks}
+                  focusSessions={allFocusSessions}
+                  onToggleComplete={toggleTaskComplete}
+                  onToggleSubTaskComplete={toggleSubTaskComplete}
+                  onDemoteToBacklog={demoteTaskToBacklog}
+                  onDeleteTask={deleteTask}
+                  onOpenAddTask={handleOpenAddTask}
+                  onStartFocus={handleStartFocus}
+                  onReorderPriority={reorderPriorityTasks}
+                  onLogFocusSession={logFocusSession}
+                  onQuickCreateTask={addTask}
+                />
+              )}
 
-          {activeTab === 'focus' && (
-            <FocusPage
-              activeTasks={priorityTasks.concat(backlogTasks)}
-              selectedTask={focusSelectedTask}
-              onClearSelectedTask={() => setFocusSelectedTask(null)}
-              onLogFocusSession={logFocusSession}
-              onDeleteFocusSession={deleteFocusSession}
-              todaysSessions={todaysFocusSessions}
-              selectedDate={selectedDate}
-            />
-          )}
+              {activeTab === 'backlog' && (
+                <BacklogPage
+                  backlogTasks={backlogTasks}
+                  canPromoteToPriority={canAddPriority}
+                  onToggleComplete={toggleTaskComplete}
+                  onPromoteToPriority={promoteTaskToPriority}
+                  onDeleteTask={deleteTask}
+                  onQuickAddTask={(title, category, minutes) =>
+                    addTask({
+                      title,
+                      category: (category as any) || 'general',
+                      estimatedMinutes: minutes || 30,
+                      isPriority: false,
+                      isCompleted: false,
+                      date: selectedDate,
+                    })
+                  }
+                />
+              )}
 
-          {activeTab === 'stats' && (
-            <StatsPage
-              tasks={allTasks}
-              habitLogs={allHabitLogs}
-              focusSessions={allFocusSessions}
-              onSelectDate={setSelectedDate}
-              onOpenInfographic={() => setIsWeeklyInfographicOpen(true)}
-            />
+              {activeTab === 'habits' && (
+                <HabitsPage
+                  habits={habitsWithStats}
+                  selectedDate={selectedDate}
+                  onToggleHabitLog={toggleHabitLog}
+                  onDeleteHabit={deleteHabit}
+                  onOpenAddHabit={() => setIsAddHabitOpen(true)}
+                  onQuickAddHabit={(title, icon, color) =>
+                    addHabit({ title, icon, color, targetDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] })
+                  }
+                />
+              )}
+
+              {activeTab === 'links' && (
+                <LinksPage
+                  links={allLinks}
+                  onAddLink={addLink}
+                  onDeleteLink={deleteLink}
+                  onIncrementClicks={incrementLinkClicks}
+                />
+              )}
+
+              {activeTab === 'focus' && (
+                <FocusPage
+                  activeTasks={priorityTasks.concat(backlogTasks)}
+                  selectedTask={focusSelectedTask}
+                  onClearSelectedTask={() => setFocusSelectedTask(null)}
+                  onLogFocusSession={logFocusSession}
+                  onDeleteFocusSession={deleteFocusSession}
+                  todaysSessions={todaysFocusSessions}
+                  selectedDate={selectedDate}
+                />
+              )}
+
+              {activeTab === 'stats' && (
+                <StatsPage
+                  tasks={allTasks}
+                  habitLogs={allHabitLogs}
+                  focusSessions={allFocusSessions}
+                  onSelectDate={setSelectedDate}
+                  onOpenInfographic={() => setIsWeeklyInfographicOpen(true)}
+                />
+              )}
+            </>
           )}
         </main>
 
         {/* Persistent Symmetrical 4-Item Bottom Nav Dock */}
         <BottomNav
+          appMode={appMode}
           activeTab={activeTab}
           onChangeTab={setActiveTab}
+          activeHealthTab={activeHealthTab}
+          onChangeHealthTab={setActiveHealthTab}
           onOpenMenu={() => setIsMenuOpen(true)}
         />
 

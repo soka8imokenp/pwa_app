@@ -1,0 +1,148 @@
+import { useMemo } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../lib/db';
+import type { HealthProfile, WeightLog, MealLog, WaterLog, WorkoutLog } from '../types/health';
+import { DEFAULT_HEALTH_PROFILE, calculateComprehensiveMetrics, calculateBmi } from '../lib/healthFormulas';
+
+export function useHealthData(selectedDate: string) {
+  // 1. Live queries
+  const profileList = useLiveQuery(() => db.healthProfile.toArray(), []) || [];
+  const profile: HealthProfile = profileList[0] || DEFAULT_HEALTH_PROFILE;
+
+  const allWeightLogs = useLiveQuery(() => db.weightLogs.orderBy('date').toArray(), []) || [];
+  
+  const allMealLogs = useLiveQuery(() => db.mealLogs.toArray(), []) || [];
+  const todaysMeals = useMemo(() => {
+    return allMealLogs.filter((m) => m.date === selectedDate);
+  }, [allMealLogs, selectedDate]);
+
+  const allWaterLogs = useLiveQuery(() => db.waterLogs.toArray(), []) || [];
+  const todaysWaterLogs = useMemo(() => {
+    return allWaterLogs.filter((w) => w.date === selectedDate);
+  }, [allWaterLogs, selectedDate]);
+
+  const allWorkouts = useLiveQuery(() => db.workoutLogs.toArray(), []) || [];
+  const todaysWorkouts = useMemo(() => {
+    return allWorkouts.filter((w) => w.date === selectedDate);
+  }, [allWorkouts, selectedDate]);
+
+  // 2. Computed Metrics
+  const metrics = useMemo(() => {
+    return calculateComprehensiveMetrics(profile);
+  }, [profile]);
+
+  // 3. Todays totals
+  const todaysTotalKcal = useMemo(() => {
+    return todaysMeals.reduce((acc, m) => acc + (m.kcal || 0), 0);
+  }, [todaysMeals]);
+
+  const todaysProteinGrams = useMemo(() => {
+    return todaysMeals.reduce((acc, m) => acc + (m.proteinGrams || 0), 0);
+  }, [todaysMeals]);
+
+  const todaysCarbsGrams = useMemo(() => {
+    return todaysMeals.reduce((acc, m) => acc + (m.carbsGrams || 0), 0);
+  }, [todaysMeals]);
+
+  const todaysFatGrams = useMemo(() => {
+    return todaysMeals.reduce((acc, m) => acc + (m.fatGrams || 0), 0);
+  }, [todaysMeals]);
+
+  const todaysWaterTotalMl = useMemo(() => {
+    return todaysWaterLogs.reduce((acc, w) => acc + (w.amountMl || 0), 0);
+  }, [todaysWaterLogs]);
+
+  const todaysActiveCaloriesBurned = useMemo(() => {
+    return todaysWorkouts.reduce((acc, w) => acc + (w.caloriesBurned || 0), 0);
+  }, [todaysWorkouts]);
+
+  // 4. Action Handlers
+  const updateProfile = async (updates: Partial<HealthProfile>) => {
+    const updated = {
+      ...profile,
+      ...updates,
+      updatedAt: Date.now(),
+    };
+    await db.healthProfile.put(updated);
+  };
+
+  const logWeight = async (weight: number, note?: string, date = selectedDate) => {
+    const bmi = calculateBmi(weight, profile.height);
+    await db.weightLogs.add({
+      date,
+      weight,
+      bmi,
+      note,
+      createdAt: Date.now(),
+    });
+
+    // Also update current weight on profile
+    await updateProfile({ currentWeight: weight });
+  };
+
+  const deleteWeightLog = async (id: number) => {
+    await db.weightLogs.delete(id);
+  };
+
+  const logMeal = async (meal: Omit<MealLog, 'id' | 'createdAt'>) => {
+    await db.mealLogs.add({
+      ...meal,
+      createdAt: Date.now(),
+    });
+  };
+
+  const deleteMealLog = async (id: number) => {
+    await db.mealLogs.delete(id);
+  };
+
+  const logWater = async (amountMl = 250, date = selectedDate) => {
+    await db.waterLogs.add({
+      date,
+      amountMl,
+      createdAt: Date.now(),
+    });
+  };
+
+  const removeLatestWater = async () => {
+    if (todaysWaterLogs.length === 0) return;
+    const latest = todaysWaterLogs[todaysWaterLogs.length - 1];
+    if (latest.id) {
+      await db.waterLogs.delete(latest.id);
+    }
+  };
+
+  const logWorkout = async (workout: Omit<WorkoutLog, 'id' | 'createdAt'>) => {
+    await db.workoutLogs.add({
+      ...workout,
+      createdAt: Date.now(),
+    });
+  };
+
+  const deleteWorkout = async (id: number) => {
+    await db.workoutLogs.delete(id);
+  };
+
+  return {
+    profile,
+    metrics,
+    allWeightLogs,
+    todaysMeals,
+    todaysWaterLogs,
+    todaysWorkouts,
+    todaysTotalKcal,
+    todaysProteinGrams,
+    todaysCarbsGrams,
+    todaysFatGrams,
+    todaysWaterTotalMl,
+    todaysActiveCaloriesBurned,
+    updateProfile,
+    logWeight,
+    deleteWeightLog,
+    logMeal,
+    deleteMealLog,
+    logWater,
+    removeLatestWater,
+    logWorkout,
+    deleteWorkout,
+  };
+}

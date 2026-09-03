@@ -11,15 +11,12 @@ import {
   ArrowDown,
   Clock,
   Layers,
-  Mic,
-  MicOff,
   Repeat,
   ChevronUp,
   ChevronDown,
 } from 'lucide-react';
 import type { Task, FocusSession, HabitLog } from '../../types';
 import { playTaskCheckSound, playSuccessChime, playClickSound } from '../../lib/sound';
-import { startVoiceDictation, stopVoiceDictation, isSpeechRecognitionSupported } from '../../lib/speechRecognition';
 import { DailyMoodAndNote } from '../planner/DailyMoodAndNote';
 import { QuickScratchpadCard } from '../scratchpad/QuickScratchpadCard';
 
@@ -52,8 +49,6 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
   onReorderPriority,
   onQuickCreateTask,
 }) => {
-  const [quickTitle, setQuickTitle] = useState('');
-  const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [localPriorities, setLocalPriorities] = useState<Task[]>(priorityTasks);
 
   React.useEffect(() => {
@@ -100,50 +95,6 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
   const handleSubTaskClick = (taskId?: number, subTaskId?: string) => {
     if (!taskId || !subTaskId || !onToggleSubTaskComplete) return;
     playTaskCheckSound();
-    onToggleSubTaskComplete(taskId, subTaskId);
-  };
-
-  const handleQuickAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!quickTitle.trim() || !onQuickCreateTask) return;
-
-    playClickSound();
-    await onQuickCreateTask({
-      title: quickTitle.trim(),
-      date: selectedDate,
-      isPriority: priorityTasks.length < 3,
-      isCompleted: false,
-      category: 'general',
-      estimatedMinutes: 30,
-    });
-    setQuickTitle('');
-  };
-
-  const handleToggleVoice = () => {
-    if (!isSpeechRecognitionSupported()) {
-      alert('Voice dictation is supported in Chrome/Edge/Android.');
-      return;
-    }
-
-    if (isVoiceActive) {
-      stopVoiceDictation();
-      setIsVoiceActive(false);
-    } else {
-      setIsVoiceActive(true);
-      startVoiceDictation({
-        onTranscript: (transcript: string) => {
-          setQuickTitle(transcript);
-        },
-        onError: () => {
-          setIsVoiceActive(false);
-        },
-        onEnd: () => {
-          setIsVoiceActive(false);
-        },
-      });
-    }
-  };
-
   const getCategoryIcon = (category?: string) => {
     switch (category) {
       case 'code':
@@ -195,8 +146,21 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
       <div className="space-y-2.5">
         <div className="flex items-center justify-between px-1">
           <span className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
-            Top 3 Priorities
+            Top 3 Priorities ({localPriorities.length}/3)
           </span>
+          {localPriorities.length < 3 && (
+            <button
+              type="button"
+              onClick={() => {
+                playClickSound();
+                onOpenAddTask(localPriorities.length);
+              }}
+              className="px-2.5 py-1 bg-[#3D6B52] hover:bg-[#345B45] text-white border border-[#24201D] rounded-xl text-[10px] font-black shadow-2xs flex items-center gap-1 cursor-pointer active:translate-y-0.5 transition-all uppercase tracking-wider font-display"
+            >
+              <Plus className="w-3 h-3 stroke-[3]" />
+              <span>Add Slot</span>
+            </button>
+          )}
         </div>
 
         {/* Priority Task Cards */}
@@ -373,39 +337,22 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
         })}
       </div>
 
-      {/* 4. Minimalist Quick Add Input */}
-      <form onSubmit={handleQuickAdd} className="flex items-center gap-2 pt-1">
-        <div className="relative flex-1">
-          <input
-            type="text"
-            value={quickTitle}
-            onChange={(e) => setQuickTitle(e.target.value)}
-            placeholder="Quick add new task..."
-            className="w-full px-3.5 py-2.5 bg-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-stone-400 shadow-[1.5px_1.5px_0px_#24201D] focus:outline-none"
-          />
-          <button
-            type="button"
-            onClick={handleToggleVoice}
-            className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg border-[1.25px] border-[#24201D] ${
-              isVoiceActive ? 'bg-[#C25E40] text-white animate-pulse' : 'bg-stone-100 text-[#24201D]'
-            }`}
-          >
-            {isVoiceActive ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-          </button>
-        </div>
-
+      {/* 4. Add Priority Goal Slot Button (if < 3) */}
+      {localPriorities.length < 3 && (
         <button
           type="button"
           onClick={() => {
             playClickSound();
-            onOpenAddTask(priorityTasks.length);
+            onOpenAddTask(localPriorities.length);
           }}
-          className="px-4 py-2.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-black shadow-[1.5px_1.5px_0px_#24201D] cursor-pointer active:translate-y-0.5 transition-all flex items-center gap-1.5 shrink-0"
+          className="w-full py-3.5 px-4 bg-[#FAF8F5] hover:bg-[#F4F0EA] border-[1.75px] border-dashed border-[#24201D]/35 hover:border-[#24201D] rounded-2xl flex items-center justify-center gap-2.5 text-xs font-black text-[#24201D] shadow-2xs hover:shadow-[2px_2px_0px_#24201D] cursor-pointer active:translate-y-0.5 transition-all font-display uppercase tracking-wider"
         >
-          <Plus className="w-3.5 h-3.5 stroke-[3]" />
-          <span>Add</span>
+          <div className="w-5 h-5 rounded-lg bg-[#3D6B52] text-white flex items-center justify-center shadow-2xs">
+            <Plus className="w-3.5 h-3.5 stroke-[3]" />
+          </div>
+          <span>Add Priority Goal #{localPriorities.length + 1}</span>
         </button>
-      </form>
+      )}
 
       {/* 5. Bottom Quick Scratchpad Card */}
       <div className="pt-2">

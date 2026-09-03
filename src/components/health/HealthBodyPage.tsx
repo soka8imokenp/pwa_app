@@ -70,31 +70,46 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
     targetProteinGrams,
   } = metrics;
 
-  // Weight progress calculations
-  const weightDiff = Number((currentWeight - targetWeight).toFixed(1));
-  const isLossGoal = profile.goal === 'lose';
-  const progressPercent = Math.min(
-    100,
-    Math.max(
-      0,
-      Math.round(
-        (1 - Math.abs(currentWeight - targetWeight) / Math.max(1, Math.abs(currentWeight - targetWeight) + 5)) * 100
-      )
-    )
-  );
-
-  // Delta vs previous weigh-in log
+  // Sorted weigh-in history (ASC by date)
   const sortedAllLogs = useMemo(() => {
     return [...weightLogs].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
   }, [weightLogs]);
 
+  // Real initial starting weight from the earliest recorded log
+  const startingWeight = sortedAllLogs.length > 0 ? sortedAllLogs[0].weight : currentWeight;
+
+  // Real, non-hardcoded goal progress calculation
+  const weightDiff = Number((currentWeight - targetWeight).toFixed(1));
+  const isLossGoal = profile.goal === 'lose';
+
+  const progressPercent = useMemo(() => {
+    if (profile.goal === 'lose') {
+      const totalToLose = startingWeight - targetWeight;
+      const lost = startingWeight - currentWeight;
+      if (totalToLose <= 0) return currentWeight <= targetWeight ? 100 : 0;
+      return Math.min(100, Math.max(0, Math.round((lost / totalToLose) * 100)));
+    } else if (profile.goal === 'gain') {
+      const totalToGain = targetWeight - startingWeight;
+      const gained = currentWeight - startingWeight;
+      if (totalToGain <= 0) return currentWeight >= targetWeight ? 100 : 0;
+      return Math.min(100, Math.max(0, Math.round((gained / totalToGain) * 100)));
+    } else {
+      // Maintenance
+      const diff = Math.abs(currentWeight - targetWeight);
+      if (diff <= 0.5) return 100;
+      if (diff <= 1.5) return 85;
+      return Math.max(0, Math.round(100 - diff * 15));
+    }
+  }, [startingWeight, currentWeight, targetWeight, profile.goal]);
+
+  // Delta vs previous weigh-in log
   const previousLog = sortedAllLogs.length > 1 ? sortedAllLogs[sortedAllLogs.length - 2] : null;
   const deltaFromPrev = previousLog ? Number((currentWeight - previousLog.weight).toFixed(1)) : null;
 
   // BMI Gauge indicator position (15 to 35 range mapped to 0% - 100%)
   const gaugePercent = Math.min(100, Math.max(0, ((bmi - 15) / 20) * 100));
 
-  // Time-range filtered logs for chart (strictly sorted ASC by date)
+  // Time-range filtered logs for chart
   const filteredLogs = useMemo(() => {
     if (timeRange === '7d') return sortedAllLogs.slice(-7);
     if (timeRange === '30d') return sortedAllLogs.slice(-30);
@@ -124,7 +139,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
     if (!aiSummary) {
       handleGenerateSummary();
     }
-  }, [profile.currentWeight, profile.targetWeight, profile.goal]);
+  }, [profile.currentWeight, profile.targetWeight, profile.goal, profile.height, profile.age]);
 
   // Chart Geometry Calculation
   const chartData = useMemo(() => {
@@ -134,7 +149,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
     const minWeightVal = Math.min(...allVals);
     const maxWeightVal = Math.max(...allVals);
 
-    // Provide healthy padding of at least 1.5kg above and below
+    // Padding above and below to prevent clipping
     const chartMin = Number((minWeightVal - 1.5).toFixed(1));
     const chartMax = Number((maxWeightVal + 1.5).toFixed(1));
     const chartRange = chartMax - chartMin || 1;
@@ -144,7 +159,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
     const paddingTop = 25;
     const paddingBottom = 30;
     const plotHeight = svgHeight - paddingTop - paddingBottom;
-    const paddingLeft = 35;
+    const paddingLeft = 38;
     const paddingRight = 15;
     const plotWidth = svgWidth - paddingLeft - paddingRight;
 
@@ -162,7 +177,6 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
       return { x, y, weight: l.weight, date: l.date, note: l.note };
     });
 
-    // Build SVG path
     let linePath = '';
     let areaPath = '';
 
@@ -211,10 +225,10 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
               <Scale className="w-4 h-4 text-[#2D503C]" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-[#6B635B] uppercase tracking-wider block font-display leading-none">
+              <span className="text-[10px] font-black text-[#6B635B] uppercase tracking-wider block font-display leading-none">
                 Biometrics & Body OS
               </span>
-              <h2 className="text-sm font-bold font-display text-[#24201D] mt-0.5 leading-none">
+              <h2 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none">
                 BMI & Weight Tracker
               </h2>
             </div>
@@ -252,7 +266,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
           {/* Current Weight */}
           <div className="p-3 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B]">
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display">
                 Current Weight
               </span>
               {deltaFromPrev !== null && (
@@ -287,7 +301,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
 
           {/* BMI Category */}
           <div className="p-3 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
               Body Mass Index
             </span>
             <div className="flex items-baseline gap-1 mt-0.5">
@@ -332,28 +346,44 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
           </div>
         </div>
 
-        {/* Target Goal Progress Banner */}
-        <div className="p-3 bg-[#FBECCF] border border-[#24201D] rounded-xl shadow-2xs flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Target className="w-5 h-5 text-[#854D0E]" />
-            <div>
-              <span className="text-[10px] font-bold text-[#854D0E] uppercase tracking-wider block leading-none">
-                Target: {targetWeight} kg ({profile.goal.toUpperCase()})
-              </span>
-              <span className="text-xs font-black text-[#24201D] mt-0.5 block">
-                {Math.abs(weightDiff) === 0
-                  ? 'Target Reached! Keep up the great consistency.'
-                  : isLossGoal
-                  ? `${Math.abs(weightDiff)} kg to lose to reach your goal`
-                  : `${Math.abs(weightDiff)} kg to gain to reach your goal`}
+        {/* Live Goal Progress & Milestones */}
+        <div className="p-3.5 bg-[#FBECCF] border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-[#854D0E]" />
+              <span className="text-[11px] font-black font-display uppercase tracking-wider text-[#854D0E]">
+                Goal: {targetWeight} kg ({profile.goal.toUpperCase()})
               </span>
             </div>
+            <span className="text-xs font-black font-mono-num text-[#24201D] px-2 py-0.5 rounded-lg bg-white border border-[#24201D]/20 shadow-2xs">
+              {progressPercent}% Complete
+            </span>
           </div>
 
-          <div className="text-right">
-            <span className="text-xs font-black font-mono-num text-[#24201D]">
-              {progressPercent}%
-            </span>
+          {/* Progress Bar */}
+          <div className="w-full h-3 bg-white border border-[#24201D] rounded-full overflow-hidden p-0.5 shadow-2xs">
+            <div
+              className="h-full bg-[#3D6B52] rounded-full transition-all duration-500"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+
+          {/* Start vs Current vs Goal Markers */}
+          <div className="flex items-center justify-between text-[10px] font-bold text-[#6B635B] pt-0.5">
+            <span>Start: <b className="font-mono-num text-[#24201D]">{startingWeight}kg</b></span>
+            <span>Now: <b className="font-mono-num text-[#24201D]">{currentWeight}kg</b></span>
+            <span>Target: <b className="font-mono-num text-[#24201D]">{targetWeight}kg</b></span>
+          </div>
+
+          {/* Status Text */}
+          <div className="text-[11px] font-bold text-[#24201D] pt-0.5">
+            {Math.abs(weightDiff) === 0 ? (
+              <span>Goal Reached! Excellent consistency maintaining your target.</span>
+            ) : isLossGoal ? (
+              <span>{Math.abs(weightDiff)} kg left to lose (~{Math.max(1, Math.ceil(Math.abs(weightDiff) / 0.45))} weeks at safe deficit)</span>
+            ) : (
+              <span>{Math.abs(weightDiff)} kg left to gain (~{Math.max(1, Math.ceil(Math.abs(weightDiff) / 0.35))} weeks at clean surplus)</span>
+            )}
           </div>
         </div>
 
@@ -424,7 +454,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
         </div>
       </div>
 
-      {/* 3. Redesigned, Crystal-Clear Weight History Line Chart */}
+      {/* 3. Weight History Line Chart with Clear Markers */}
       <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
         <div className="flex items-center justify-between">
           <div>

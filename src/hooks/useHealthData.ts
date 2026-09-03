@@ -58,9 +58,11 @@ export function useHealthData(selectedDate: string) {
 
   // 4. Action Handlers
   const updateProfile = async (updates: Partial<HealthProfile>) => {
-    const updated = {
+    const updated: HealthProfile = {
+      ...DEFAULT_HEALTH_PROFILE,
       ...profile,
       ...updates,
+      id: 'user',
       updatedAt: Date.now(),
     };
     await db.healthProfile.put(updated);
@@ -82,6 +84,11 @@ export function useHealthData(selectedDate: string) {
 
   const deleteWeightLog = async (id: number) => {
     await db.weightLogs.delete(id);
+    const remaining = await db.weightLogs.orderBy('date').toArray();
+    if (remaining.length > 0) {
+      const latest = remaining[remaining.length - 1];
+      await updateProfile({ currentWeight: latest.weight });
+    }
   };
 
   const logMeal = async (meal: Omit<MealLog, 'id' | 'createdAt'>) => {

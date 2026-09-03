@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
-import { X, User, Target, Activity, Info, Check } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { X, User, Target, Activity, Info, Check, Flame, Droplets, Dumbbell } from 'lucide-react';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import type { HealthProfile, ActivityLevel, HealthGoal, Gender } from '../../types/health';
-import { calculateBmi, getBmiCategory } from '../../lib/healthFormulas';
+import {
+  calculateBmi,
+  getBmiCategory,
+  calculateBmr,
+  calculateTdee,
+} from '../../lib/healthFormulas';
 
 interface HealthProfileModalProps {
   isOpen: boolean;
@@ -26,12 +31,42 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Real-time calculations for preview
-  const heightM = height / 100;
+  // Real-time live calculations based on current inputs
+  const heightM = Math.max(1, height) / 100;
   const idealMin = Number((18.5 * heightM * heightM).toFixed(1));
   const idealMax = Number((24.9 * heightM * heightM).toFixed(1));
   const targetBmi = calculateBmi(targetWeight, height);
   const { label: targetBmiLabel, color: targetBmiColor } = getBmiCategory(targetBmi);
+
+  // Live estimated metabolic targets
+  const liveBmr = calculateBmr(profile.currentWeight || targetWeight, height, age, gender);
+  const liveTdee = calculateTdee(liveBmr, activityLevel);
+  let liveTargetKcal = liveTdee;
+  if (goal === 'lose') {
+    liveTargetKcal = Math.max(1200, Math.round(liveTdee - 400));
+  } else if (goal === 'gain') {
+    liveTargetKcal = Math.round(liveTdee + 350);
+  }
+
+  const liveProteinGrams = Math.round((profile.currentWeight || targetWeight) * (goal === 'maintain' ? 1.5 : 1.8));
+  const liveWaterLiters = (((profile.currentWeight || targetWeight) * 35) / 1000).toFixed(1);
+  const weightDeltaToTarget = Number(((profile.currentWeight || 70) - targetWeight).toFixed(1));
+  const estimatedWeeks = Math.max(1, Math.ceil(Math.abs(weightDeltaToTarget) / 0.45));
+
+  const handleStepAge = (delta: number) => {
+    playClickSound();
+    setAge((prev) => Math.max(14, Math.min(100, prev + delta)));
+  };
+
+  const handleStepHeight = (delta: number) => {
+    playClickSound();
+    setHeight((prev) => Math.max(120, Math.min(230, prev + delta)));
+  };
+
+  const handleStepTargetWeight = (delta: number) => {
+    playClickSound();
+    setTargetWeight((prev) => Math.max(35, Math.min(220, Number((prev + delta).toFixed(1)))));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,8 +83,8 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-[#24201D]/50 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
-      <div className="w-full max-w-sm bg-white border-[2px] border-[#24201D] rounded-3xl shadow-[4px_4px_0px_#24201D] p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-[#24201D]/55 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
+      <div className="w-full max-w-sm bg-white border-[2px] border-[#24201D] rounded-3xl shadow-[4px_4px_0px_#24201D] p-5 space-y-4 max-h-[92vh] overflow-y-auto">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-2 border-b border-[#24201D]/15">
@@ -79,12 +114,42 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
           </button>
         </div>
 
+        {/* Live Projected Metrics Banner */}
+        <div className="p-3 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-2xl shadow-2xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display">
+              Live Projected Plan
+            </span>
+            <span
+              className="text-[10px] font-black px-2 py-0.5 rounded-md text-white shadow-2xs"
+              style={{ backgroundColor: targetBmiColor }}
+            >
+              Goal BMI {targetBmi} ({targetBmiLabel.split(' ')[0]})
+            </span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 text-center pt-0.5">
+            <div className="p-1.5 bg-white border border-[#24201D]/20 rounded-xl">
+              <span className="text-[9px] font-bold text-[#6B635B] block">Calorie Target</span>
+              <span className="text-xs font-black font-mono-num text-[#24201D]">{liveTargetKcal} kcal</span>
+            </div>
+            <div className="p-1.5 bg-white border border-[#24201D]/20 rounded-xl">
+              <span className="text-[9px] font-bold text-[#6B635B] block">Daily Protein</span>
+              <span className="text-xs font-black font-mono-num text-[#24201D]">{liveProteinGrams}g</span>
+            </div>
+            <div className="p-1.5 bg-white border border-[#24201D]/20 rounded-xl">
+              <span className="text-[9px] font-bold text-[#6B635B] block">Est. Time</span>
+              <span className="text-xs font-black font-mono-num text-[#24201D]">~{estimatedWeeks} wks</span>
+            </div>
+          </div>
+        </div>
+
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3.5">
           
           {/* Biological Sex */}
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block mb-1">
+            <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block mb-1 font-display">
               Biological Sex (for metabolic BMR formula)
             </label>
             <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs">
@@ -108,34 +173,54 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
             </div>
           </div>
 
-          {/* Age & Height */}
+          {/* Age & Height Steppers */}
           <div className="grid grid-cols-2 gap-2.5">
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block mb-1">
+            {/* Age */}
+            <div className="p-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1">
+              <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block font-display">
                 Age (years)
               </label>
-              <input
-                type="number"
-                min="14"
-                max="100"
-                value={age}
-                onChange={(e) => setAge(Number(e.target.value))}
-                className="w-full px-3 py-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl text-sm font-bold font-mono-num text-[#24201D] shadow-2xs focus:outline-none"
-              />
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => handleStepAge(-1)}
+                  className="w-7 h-7 rounded-lg bg-white hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-sm font-black text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer"
+                >
+                  -
+                </button>
+                <span className="text-base font-black font-mono-num text-[#24201D]">{age}</span>
+                <button
+                  type="button"
+                  onClick={() => handleStepAge(1)}
+                  className="w-7 h-7 rounded-lg bg-white hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-sm font-black text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
             </div>
 
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block mb-1">
+            {/* Height */}
+            <div className="p-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1">
+              <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block font-display">
                 Height (cm)
               </label>
-              <input
-                type="number"
-                min="120"
-                max="230"
-                value={height}
-                onChange={(e) => setHeight(Number(e.target.value))}
-                className="w-full px-3 py-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl text-sm font-bold font-mono-num text-[#24201D] shadow-2xs focus:outline-none"
-              />
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => handleStepHeight(-1)}
+                  className="w-7 h-7 rounded-lg bg-white hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-sm font-black text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer"
+                >
+                  -
+                </button>
+                <span className="text-base font-black font-mono-num text-[#24201D]">{height}</span>
+                <button
+                  type="button"
+                  onClick={() => handleStepHeight(1)}
+                  className="w-7 h-7 rounded-lg bg-white hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-sm font-black text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
 
@@ -149,41 +234,58 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
             </span>
           </div>
 
-          {/* Target Weight with Live Projected BMI Badge */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] flex items-center gap-1">
-                <Target className="w-3 h-3 text-[#3D6B52]" /> Target Weight (kg)
+          {/* Target Weight with Steppers */}
+          <div className="p-3 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] flex items-center gap-1 font-display">
+                <Target className="w-3 h-3 text-[#3D6B52]" /> Target Goal Weight
               </label>
-              {targetBmi > 0 && (
-                <span
-                  className="text-[10px] font-black px-2 py-0.5 rounded-md text-white shadow-2xs"
-                  style={{ backgroundColor: targetBmiColor }}
-                >
-                  BMI {targetBmi} ({targetBmiLabel.split(' ')[0]})
-                </span>
-              )}
-            </div>
-            <div className="relative">
-              <input
-                type="number"
-                step="0.5"
-                min="35"
-                max="200"
-                value={targetWeight}
-                onChange={(e) => setTargetWeight(Number(e.target.value))}
-                className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl text-base font-black font-mono-num text-[#24201D] shadow-2xs focus:outline-none"
-              />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#6B635B]">
-                KG
+              <span className="text-xs font-bold text-[#6B635B]">
+                {weightDeltaToTarget > 0 ? `${weightDeltaToTarget} kg to lose` : `${Math.abs(weightDeltaToTarget)} kg to gain`}
               </span>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 py-1">
+              <button
+                type="button"
+                onClick={() => handleStepTargetWeight(-0.5)}
+                className="w-9 h-9 rounded-xl bg-white hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-base font-black text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer"
+              >
+                -
+              </button>
+
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-black font-mono-num text-[#24201D]">{targetWeight}</span>
+                <span className="text-xs font-bold text-[#6B635B]">kg</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleStepTargetWeight(0.5)}
+                className="w-9 h-9 rounded-xl bg-white hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-base font-black text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer"
+              >
+                +
+              </button>
+            </div>
+
+            <div className="grid grid-cols-4 gap-1 pt-0.5">
+              {[-1.0, -0.5, 0.5, 1.0].map((step) => (
+                <button
+                  key={step}
+                  type="button"
+                  onClick={() => handleStepTargetWeight(step)}
+                  className="py-1 rounded-md bg-white hover:bg-stone-100 border border-[#24201D] text-[10px] font-black font-mono-num text-[#24201D] shadow-2xs cursor-pointer active:scale-95"
+                >
+                  {step > 0 ? `+${step}` : step}
+                </button>
+              ))}
             </div>
           </div>
 
           {/* Primary Goal Selector */}
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block mb-1">
-              Primary Goal
+            <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block mb-1 font-display">
+              Primary Metabolic Goal
             </label>
             <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs">
               {(
@@ -215,8 +317,8 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
 
           {/* Activity Level Selector */}
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block mb-1 flex items-center gap-1">
-              <Activity className="w-3 h-3" /> Daily Activity Level
+            <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block mb-1 flex items-center gap-1 font-display">
+              <Activity className="w-3 h-3 text-[#3D6B52]" /> Daily Activity Level
             </label>
             <div className="space-y-1.5">
               {(

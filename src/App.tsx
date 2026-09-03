@@ -403,7 +403,7 @@ export function App() {
           onLogout={handleLogout}
           streakCount={overallStreak}
           allTasks={allTasks}
-          allHabits={allHabits}
+          habits={habitsWithStats}
           allHabitLogs={allHabitLogs}
           allFocusSessions={allFocusSessions}
           activityStats={activityStats}

@@ -40,7 +40,7 @@ interface ProfileModalProps {
   onLogout: () => void;
   streakCount?: number;
   allTasks?: Task[];
-  allHabits?: Habit[];
+  habits?: (Habit | HabitWithStats)[];
   allHabitLogs?: HabitLog[];
   allFocusSessions?: FocusSession[];
   activityStats?: OverallActivityStats;
@@ -105,7 +105,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   onLogout,
   streakCount = 0,
   allTasks = [],
-  allHabits = [],
+  habits = [],
   allHabitLogs = [],
   allFocusSessions = [],
   activityStats,
@@ -153,7 +153,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     const totalFocusMinutes = allFocusSessions.reduce((acc, s) => acc + (s.durationMinutes || 0), 0);
     const totalFocusHours = (totalFocusMinutes / 60).toFixed(1);
     const totalHabitCompletions = allHabitLogs.length;
-    const totalActiveDays = activityStats?.totalActiveDays || (streakCount > 0 ? streakCount : 1);
+    const totalActiveDays = activityStats?.activeDatesSet ? activityStats.activeDatesSet.size : (streakCount > 0 ? streakCount : 1);
 
     // Today's focus sessions
     const todaysFocusMinutes = allFocusSessions
@@ -249,7 +249,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         lifetimeFocusMinutes: lifetimeStats.totalFocusMinutes,
       },
       tasks: allTasks,
-      habits: allHabits,
+      habits,
       habitLogs: allHabitLogs,
       focusSessions: allFocusSessions,
     };

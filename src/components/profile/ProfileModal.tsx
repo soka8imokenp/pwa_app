@@ -133,7 +133,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       setLastName(currentUser.lastName || '');
       setEmail(currentUser.email || '');
       setUsername(currentUser.username || '');
-      setRole(currentUser.role || 'Mindful Citizen');
+      setRole(currentUser.role || '');
       setMotto(currentUser.motto || 'Focus on what matters, let the rest flow.');
       setFocusDailyGoalHours(currentUser.focusDailyGoalHours || 4);
       setWorkStyle(currentUser.workStyle || 'deep_focus');
@@ -201,7 +201,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       lastName: lastName.trim(),
       email: email.trim(),
       username: username.trim(),
-      role: role.trim() || 'Mindful Citizen',
+      role: role.trim(),
       motto: motto.trim() || 'Focus on what matters, let the rest flow.',
       focusDailyGoalHours,
       workStyle,
@@ -286,14 +286,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               <User className="w-4.5 h-4.5 text-[#7E22CE] stroke-[2.25]" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                  Resident Profile
-                </h3>
-                <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.2 bg-[#FBECCF] border border-[#24201D] rounded text-[#854D0E]">
-                  住民票
-                </span>
-              </div>
+              <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
+                Resident Profile
+              </h3>
               <p className="text-[10px] font-bold text-[#6B635B]">
                 {activeTab === 'overview' ? 'Identity, Stats & Productivity DNA' : 'Editing Personal Information'}
               </p>
@@ -357,11 +352,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             <>
               {/* 1. Japanese Resident Hero Card */}
               <div className="relative p-4 sm:p-5 bg-white border-[2px] border-[#24201D] rounded-3xl shadow-[3px_3px_0px_#24201D] space-y-3.5 overflow-hidden">
-                {/* Decorative background watermark */}
-                <div className="absolute top-2 right-3 text-[10px] font-mono-num font-black uppercase text-[#24201D]/20 tracking-wider">
-                  KAIRO-ID-{currentUser.username?.slice(0, 4).toUpperCase() || '7749'}
-                </div>
-
                 {/* Avatar & Main Credentials */}
                 <div className="flex items-center gap-4">
                   <div className="relative">
@@ -385,18 +375,16 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     </div>
 
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] font-black text-[#2D503C] bg-[#DDE8DE] px-2 py-0.5 rounded-md border border-[#24201D]/30 flex items-center gap-1">
-                        <Briefcase className="w-2.5 h-2.5" />
-                        <span>{role || 'Mindful Citizen'}</span>
-                      </span>
+                      {role && (
+                        <span className="text-[10px] font-black text-[#2D503C] bg-[#DDE8DE] px-2 py-0.5 rounded-md border border-[#24201D]/30 flex items-center gap-1">
+                          <Briefcase className="w-2.5 h-2.5" />
+                          <span>{role}</span>
+                        </span>
+                      )}
                       <span className="text-[10px] font-bold text-[#6B635B] bg-[#F4F0EA] px-2 py-0.5 rounded-md border border-[#24201D]/20">
                         @{currentUser.username || 'resident'}
                       </span>
                     </div>
-
-                    <p className="text-[11px] font-medium text-[#6B635B] truncate pt-0.5">
-                      {currentUser.email}
-                    </p>
                   </div>
                 </div>
 
@@ -436,13 +424,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               {/* 2. Lifetime Productivity Grid */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between px-1">
-                  <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[#E09F3E]" />
-                    <span>Lifetime Productivity Matrix</span>
+                  <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
+                    Lifetime Productivity Matrix
                   </h4>
-                  <span className="text-[10px] font-bold text-[#6B635B]">
-                    IndexedDB Verified
-                  </span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -534,9 +518,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                       Active Mascot Companion
                     </h4>
                   </div>
-                  <span className="text-[10px] font-bold text-[#2D503C] bg-[#DDE8DE] px-2 py-0.5 rounded-full border border-[#24201D]">
-                    {activeAvatar.name}
-                  </span>
                 </div>
 
                 <div className="grid grid-cols-4 gap-2 pt-1">
@@ -574,9 +555,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     <Shield className="w-3.5 h-3.5 text-[#3D6B52]" />
                     <span>Local Vault Management</span>
                   </h4>
-                  <span className="text-[9px] font-black text-[#2D503C] bg-[#DDE8DE] px-2 py-0.5 rounded-md border border-[#24201D]/20">
-                    Offline First
-                  </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 pt-1">
@@ -853,9 +831,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     <Smile className="w-3.5 h-3.5 text-[#E09F3E]" />
                     <span>Select Mascot Avatar</span>
                   </h4>
-                  <span className="text-[10px] font-bold text-[#2D503C] bg-[#DDE8DE] px-2 py-0.5 rounded-full border border-[#24201D]">
-                    {activeAvatar.name}
-                  </span>
                 </div>
 
                 <div className="grid grid-cols-4 gap-2 pt-1">

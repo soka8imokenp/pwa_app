@@ -1,15 +1,12 @@
 {
-  "version": "1.8.32",
-  "buildNumber": 38,
+  "version": "1.8.33",
+  "buildNumber": 39,
   "releaseDate": "2026-09-03",
   "changelog": [
-    "Fix TypeScript build error: Added WeightLog and HealthGoal imports to healthFormulas.ts",
-    "7-Day Moving Average Trend: Smooth biological trend line filtering daily water/sodium scale noise",
-    "Weekly Pace & Goal Milestone ETA: Dynamic pace tracker and estimated finish date",
-    "Waist-to-Height Ratio (WHtR): Clinical visceral fat gold-standard indicator (<0.50)",
-    "Optional Smart Scale & Measurement Logging: Added Body Fat % and Waist (cm) inputs",
-    "Interactive Metric Science Modals: Deep clinical explanation modals for all metabolic markers",
-    "CSV Weigh-In Data Export: One-click export of complete weigh-in history to .csv"
+    "Removed redundant Active App Mode panel from Settings modal",
+    "AI Clinical Health Analysis: Real-time clinical summary with auto-update on new weigh-in logs",
+    "Conversational Freedom for Sumire Health AI: In-depth answers for flexible dieting, ice cream, target weight changes, cravings, and supplements",
+    "Multi-Intent Offline Health Engine: Smart conversational answers even when offline or without API key"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.32/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.33/Daily-Sumire-app-debug.apk"
 }

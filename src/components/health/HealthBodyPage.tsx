@@ -177,6 +177,19 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
     }
   }, [profile.currentWeight, profile.targetWeight, profile.goal, profile.height, profile.age]);
 
+  const handleSaveWeightInternal = async (
+    weight: number,
+    note?: string,
+    date?: string,
+    bodyFat?: number,
+    waistCmVal?: number
+  ) => {
+    await onSaveWeight(weight, note, date, bodyFat, waistCmVal);
+    setTimeout(() => {
+      handleGenerateSummary();
+    }, 300);
+  };
+
   // Export Weigh-In Logs to CSV
   const handleExportCSV = () => {
     playClickSound();
@@ -1079,7 +1092,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
         heightCm={height}
         selectedDate={selectedDate}
         defaultWaist={waistCm}
-        onSaveWeight={onSaveWeight}
+        onSaveWeight={handleSaveWeightInternal}
       />
 
       <HealthProfileModal

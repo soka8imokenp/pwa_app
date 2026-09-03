@@ -158,45 +158,45 @@ export async function getHealthCoachAdviceWithAI(
 
   if (apiKey && navigator.onLine) {
     try {
-      const prompt = `You are Sumire Health AI — a clinical, evidence-based health, BMI, metabolism, and nutrition intelligence agent.
+      const waistInfo = profile.waistCm
+        ? `- Waist: ${profile.waistCm} cm (WHtR: ${(profile.waistCm / profile.height).toFixed(2)})`
+        : '';
 
-LIVE USER HEALTH TELEMETRY (RAG GROUND TRUTH):
-- User Profile: Age ${profile.age}, Biological Sex: ${profile.gender}, Height: ${profile.height} cm
-- Weight Progress: Current ${profile.currentWeight} kg -> Goal ${profile.targetWeight} kg (Baseline Start: ${startingWeight} kg, Delta: ${deltaKg > 0 ? `${deltaKg} kg to lose` : `${Math.abs(deltaKg)} kg to gain`})
-- Body Mass Index (BMI): ${metrics.bmi} (WHO Category: ${metrics.bmiCategoryLabel})
-- Body Composition: ~${metrics.bodyFatPercentage}% Body Fat, ${metrics.muscleMassKg} kg Lean Muscle Mass
-- Energy Expenditure: Basal BMR ${metrics.bmr} kcal, Daily TDEE ${metrics.tdee} kcal
-- Prescribed Intake for Goal (${profile.goal}): ${metrics.targetDailyCalories} kcal/day
-  - Target Protein: ${metrics.targetProteinGrams}g, Carbs: ${metrics.targetCarbsGrams}g, Fat: ${metrics.targetFatGrams}g
-  - Target Water: ${metrics.targetWaterMl} ml/day
-- Today's Real Consumed Intake:
-  - Total Calories: ${context?.todaysTotalKcal || 0} / ${metrics.targetDailyCalories} kcal
-  - Protein: ${context?.todaysProteinGrams || 0} / ${metrics.targetProteinGrams}g
-  - Carbs: ${context?.todaysCarbsGrams || 0} / ${metrics.targetCarbsGrams}g
-  - Fat: ${context?.todaysFatGrams || 0} / ${metrics.targetFatGrams}g
-  - Meals eaten today: ${mealsList}
+      const prompt = `You are Sumire Health AI — an elite, knowledgeable, empathetic, evidence-based personal health, nutrition, and metabolic coach.
+
+USER'S LIVE BIOMETRICS & METABOLIC TELEMETRY:
+- Demographics: Biological Sex: ${profile.gender}, Age: ${profile.age} y.o., Height: ${profile.height} cm
+- Weight Progress: Current ${profile.currentWeight} kg -> Target: ${profile.targetWeight} kg (Goal: ${profile.goal})
+  ${waistInfo}
+- Body Mass Index (BMI): ${metrics.bmi} (${metrics.bmiCategoryLabel}) | Healthy WHO Range for ${profile.height}cm: ${metrics.idealWeightMin}–${metrics.idealWeightMax} kg
+- Body Composition: ~${metrics.bodyFatPercentage}% Body Fat, ${metrics.muscleMassKg} kg Lean Tissue
+- Energy Expenditure: Basal BMR: ${metrics.bmr} kcal, Total Daily TDEE: ${metrics.tdee} kcal
+- Prescribed Intake: ${metrics.targetDailyCalories} kcal/day (${metrics.targetProteinGrams}g Protein, ${metrics.targetCarbsGrams}g Carbs, ${metrics.targetFatGrams}g Fat, ${metrics.targetWaterMl}ml Water)
+- Today's Consumed Intake: ${context?.todaysTotalKcal || 0} / ${metrics.targetDailyCalories} kcal (Protein: ${context?.todaysProteinGrams || 0}g, Carbs: ${context?.todaysCarbsGrams || 0}g, Fat: ${context?.todaysFatGrams || 0}g)
+  - Meals logged today: ${mealsList}
 - Today's Hydration: ${context?.todaysWaterTotalMl || 0} / ${metrics.targetWaterMl} ml
-- Today's Physical Activity: ${workoutsList} (Active Burn: +${context?.todaysActiveCaloriesBurned || 0} kcal)
-- Recent Weigh-in History: ${recentWeights}
+- Today's Workouts: ${workoutsList} (Active Burn: +${context?.todaysActiveCaloriesBurned || 0} kcal)
+- Recent Weigh-ins: ${recentWeights}
 
-STRICT DOMAIN GUARDRAILS (CRITICAL):
-1. MANDATORY DOMAIN RESTRICTION: You MUST ONLY answer questions strictly and directly related to:
-   - Body Mass Index (BMI), body fat percentage, lean body mass, and weight management.
-   - Clinical nutrition, calories, macronutrients (proteins, carbs, fats), micronutrients, hydration, and meal composition.
-   - Metabolic health, BMR, TDEE, metabolic adaptation, and recovery.
-   - Physical exercise, workouts, energy expenditure, and fitness physiology.
-2. STRICT OFF-TOPIC REFUSAL:
-   If the user asks ANY question outside the scope of health, BMI, nutrition, diet, or physical fitness (for example: coding, software, politics, world history, creative writing, general philosophy, entertainment, math problems, personal non-health chatter, etc.):
-   You MUST politely and strictly DECLINE to answer, and redirect them back to their health/nutrition/BMI goals.
-   Use this exact polite refusal style:
-   "Я твой персональный ассистент по здоровью, питанию и телу — Sumire Health AI.
-   Я специализируюсь исключительно на вопросах BMI, состава тела, правильного питания, калорий, тренировок и метаболизма.
-   Пожалуйста, задай вопрос, касающийся твоего рациона, веса или физической активности."
-3. BEHAVIOR & TONE:
-   - Serious, analytical, empathetic, clinical, and strictly evidence-based.
-   - Use the live telemetry numbers above to provide hyper-personalized insights when relevant.
-   - NEVER use the word or icon "sparkles" ("✨") or emoji floods.
-   - Respond in the exact language of the user's inquiry (Russian if Russian, English if English).
+COACHING ROLE & PHILOSOPHY:
+1. FULL CONVERSATIONAL FREEDOM:
+   - You are a real, warm, articulate nutrition and health expert, NOT a rigid robot.
+   - You can discuss ANY health, diet, food, lifestyle, fitness, metabolic, and weight questions with depth, practical examples, and nuance.
+   - When asked about specific treats or foods (e.g. "Can I eat ice cream / chocolate / pizza / fast food?"):
+     * Explain flexible dieting (IIFYM / 80/20 rule), how many calories/sugar it typically contains (e.g. 180-220 kcal for a portion of ice cream), how to easily fit it into the user's daily budget of ${metrics.targetDailyCalories} kcal, and why total restriction leads to psychological burnout and binge cycles.
+   - When asked about weight targets (e.g. "Should I drop my weight to 65 kg?"):
+     * Calculate what BMI that would produce for height ${profile.height} cm: weight / (height/100)^2.
+     * Compare with the WHO healthy range (${metrics.idealWeightMin}–${metrics.idealWeightMax} kg), consider muscle mass preservation vs fat loss, and give a thoughtful, personalized recommendation.
+   - When asked about cravings, supplements, recovery, meal timing, intermittent fasting, or workouts:
+     * Provide evidence-based, actionable explanations with pros, cons, and tips.
+2. TAILORED DATA GROUNDING:
+   - Naturally reference their personal stats (height, BMR, TDEE, today's calories/protein) when relevant to make the answer personalized and grounded.
+3. BOUNDARIES:
+   - Only decline topics that are 100% completely unrelated to human life, body, health, wellness, or food (e.g., coding software, political elections, writing poetry). If anything can be linked to stress, sleep, energy, or lifestyle, answer it through the lens of health!
+4. STYLE:
+   - Clear, supportive, knowledgeable, friendly, and structured (use bullet points where helpful).
+   - DO NOT use the word "sparkle" or the icon "✨".
+   - Respond in the user's language (Russian if Russian, English if English).
 
 User Question: "${question}"`;
 
@@ -207,7 +207,7 @@ User Question: "${question}"`;
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.25 },
+            generationConfig: { temperature: 0.3 },
           }),
         }
       );
@@ -222,27 +222,86 @@ User Question: "${question}"`;
     }
   }
 
-  // Offline Expert Fallback with Domain Boundary Check
+  // Multi-Intent Conversational Offline Engine
   const lowerQ = question.toLowerCase();
-  const isHealthTopic = /bmi|вес|похуд|набор|масс|калор|ккал|белок|протеин|углевод|жир|вод|трениров|зал|кардио|спорт|питан|диет|завтрак|обед|ужин|еда|мышц|жир|fat|weight|diet|food|eat|protein|calorie|carb|water|workout|exercise|health|burn|muscle/i.test(lowerQ);
 
-  if (!isHealthTopic) {
-    return `Я твой персональный ассистент по здоровью, питанию и телу — Sumire Health AI.
-Я консультирую исключительно по темам BMI, состава тела, рациона питания, калорийности и тренировок.
-Пожалуйста, задай вопрос, касающийся твоего здоровья, рациона или физической формы.`;
+  // Intent 1: Ice Cream, Sweets, Treats & Cheat Meals
+  if (/морожен|сладк|шоколад|чипсы|пицц|бутер|бургер|вкусняш|читмил|сахар|торт|печень|десерт|ice cream|chocolate|sweet|pizza|cheat/i.test(lowerQ)) {
+    const remainingKcal = Math.max(0, metrics.targetDailyCalories - (context?.todaysTotalKcal || 0));
+    return `Да, мороженое и любимые десерты можно и нужно вписывать в рацион! В доказательной диетологии ключевую роль играет принцип гибкой диеты (правило 80/20).
+
+Как это работает для тебя:
+• Калорийность: порция классического пломбира (80–100г) содержит около 180–220 ккал и 15–20г углеводов.
+• Твой суточный лимит: ${metrics.targetDailyCalories} ккал. Если сегодня уже съедено ${context?.todaysTotalKcal || 0} ккал, у тебя остается в запасе ${remainingKcal} ккал — мороженое идеально помещается в баланс!
+• Практический совет: съешь десерт после сбалансированного приема пищи (с белком и клетчаткой). Это сгладит скачок глюкозы и избавит от чувства вины. Главное — вписаться в суточную калорийность и добрать ${metrics.targetProteinGrams}г белка.`;
   }
 
+  // Intent 2: Target Weight Evaluation (e.g. "спустить вес до 65")
+  const targetMatch = lowerQ.match(/(\d{2,3})/);
+  if (/спустить|сбросить до|снизить до|похудеть до|весить|цель|target|60|65|70|75|80/i.test(lowerQ) && targetMatch) {
+    const desiredWeight = parseFloat(targetMatch[1]);
+    if (desiredWeight >= 40 && desiredWeight <= 150) {
+      const heightM = profile.height / 100;
+      const desiredBmi = Number((desiredWeight / (heightM * heightM)).toFixed(1));
+      const isHealthyBmi = desiredBmi >= 18.5 && desiredBmi <= 24.9;
+
+      return `Разберем цель ${desiredWeight} кг для твоего роста ${profile.height} см:
+
+• Прогноз BMI: при весе ${desiredWeight} кг твой индекс массы тела составит ${desiredBmi}.
+• Коридор здоровья по ВОЗ: ${metrics.idealWeightMin} – ${metrics.idealWeightMax} кг. ${isHealthyBmi ? 'Этот вес находится в границах здоровой нормы.' : desiredBmi < 18.5 ? 'Внимание: этот вес ниже границы дефицита массы (<18.5) и может снизить гормональный фон.' : 'Этот вес относится к избыточной массе.'}
+• Оценка композиции: сейчас твой вес ${profile.currentWeight} кг. До цели ${desiredWeight} кг нужно ${profile.currentWeight > desiredWeight ? `сбросить ${Number((profile.currentWeight - desiredWeight).toFixed(1))} кг` : `набрать ${Number((desiredWeight - profile.currentWeight).toFixed(1))} кг`}.
+• Рекомендация: при интенсивном снижении важно сохранить мышечную ткань (${metrics.muscleMassKg} кг). Рекомендую двигаться плавно с темпом ~0.4–0.5 кг в неделю, удерживая белок не ниже ${metrics.targetProteinGrams}г/день.`;
+    }
+  }
+
+  // Intent 3: Protein & Nutrition
+  if (/белок|протеин|protein|мясо|творог|яйц|рыб/i.test(lowerQ)) {
+    return `Белок — ключевой нутриент для сохранения метаболизма и мышц при цели (${profile.goal}):
+
+• Твоя суточная норма: ${metrics.targetProteinGrams}г в день (~${(metrics.targetProteinGrams * 4)} ккал).
+• Сегодня съедено: ${context?.todaysProteinGrams || 0}г из ${metrics.targetProteinGrams}г.
+• Топ источников: куриное филе (31г/100г), творог 5% (16г/100г), яйца (6г/шт), тунец (24г/100г), сывороточный протеин (24г/порция).
+• Совет: распределяй белок равномерно по 25–40г на каждый основной прием пищи для постоянного синтеза мышечного белка (MPS).`;
+  }
+
+  // Intent 4: Water & Hydration
+  if (/вод|пить|жидкост|water|hydration/i.test(lowerQ)) {
+    return `Твоя физиологическая норма воды рассчитана по стандарту 35 мл на 1 кг веса (${profile.currentWeight} кг):
+
+• Суточный ориентир: ${(metrics.targetWaterMl / 1000).toFixed(1)} литра (${metrics.targetWaterMl} мл).
+• Сегодня выпито: ${context?.todaysWaterTotalMl || 0} мл (${Math.round((context?.todaysWaterTotalMl || 0) / 250)} стаканов).
+• Зачем это нужно: достаточное количество воды снижает ложное чувство голода, выводит избыточный натрий (предотвращает отеки) и ускоряет липолиз.`;
+  }
+
+  // Intent 5: Cravings & Late-night eating
+  if (/на ночь|вечер|голод|аппетит|тяга|сорват|жор|craving/i.test(lowerQ)) {
+    return `Вечерняя тяга к еде обычно вызвана двумя причинами: недостатком белка и сложных углеводов в течение дня, либо стрессовым скачком кортизола.
+
+Как решить это без срывов:
+1. Не бойся есть вечером: метаболизм ночью не «засыпает», важен суммарный суточный баланс калорий (${metrics.targetDailyCalories} ккал).
+2. Идеальный вечерний перекус: 150г нежирного творога или греческого йогурта с ягодами (казеин медленно усваивается и защитит от ночного голода).
+3. Проверь обед: если днем был сильный дефицит, организм логично требует быстрой энергии вечером.`;
+  }
+
+  // Intent 6: Training & Workouts
+  if (/трениров|зал|мышц|кардио|спорт|упражнен|workout|gym/i.test(lowerQ)) {
+    return `Физическая активность для твоего профиля (цель: ${profile.goal}, активность: ${profile.activityLevel}):
+
+• Расход энергии: твой суточный расход TDEE составляет ${metrics.tdee} ккал. За сегодня тренировками сожжено +${context?.todaysActiveCaloriesBurned || 0} ккал.
+• Силовые тренировки: 3 раза в неделю стимулируют сохранение ${metrics.muscleMassKg} кг активной мышечной массы.
+• Шаги и кардио: 8000–10000 шагов в день обеспечивают мягкий расход жира без перегрузки суставов и ЦНС.`;
+  }
+
+  // General Evidence-Based Health Response
   const diffKg = Math.abs(Number((profile.currentWeight - profile.targetWeight).toFixed(1)));
-  return `Твой текущий индекс массы тела: ${metrics.bmi} (${metrics.bmiCategoryLabel}). 
-Базовый метаболизм (BMR) составляет ${metrics.bmr} ккал, а суточный расход энергии (TDEE) — ${metrics.tdee} ккал.
+  const remainingKcal = Math.max(0, metrics.targetDailyCalories - (context?.todaysTotalKcal || 0));
 
-Текущая статистика за день:
-• Калории: ${context?.todaysTotalKcal || 0} / ${metrics.targetDailyCalories} ккал (Остаток: ${Math.max(0, metrics.targetDailyCalories - (context?.todaysTotalKcal || 0))} ккал)
-• Белок: ${context?.todaysProteinGrams || 0} / ${metrics.targetProteinGrams}г
-• Вода: ${context?.todaysWaterTotalMl || 0} / ${metrics.targetWaterMl} мл
-• Активный расход тренировками: +${context?.todaysActiveCaloriesBurned || 0} ккал
+  return `Я внимательно изучила твои параметры и готова разобрать любой вопрос по рациону, продуктам или тренировкам:
 
-До цели (${profile.targetWeight} кг) осталось ${diffKg} кг. Держи дефицит калорий и норму белка для сохранения мышечной массы.`;
+• Твой статус: вес ${profile.currentWeight} кг (цель ${profile.targetWeight} кг, дельта ${diffKg} кг), BMI ${metrics.bmi} (${metrics.bmiCategoryLabel}).
+• Сегодняшний баланс: ${context?.todaysTotalKcal || 0} / ${metrics.targetDailyCalories} ккал (осталось ${remainingKcal} ккал), белок ${context?.todaysProteinGrams || 0}/${metrics.targetProteinGrams}г.
+
+Ты можешь спросить меня о конкретных продуктах (мороженое, фрукты, кофе), скорректировать цель по весу или составить план питания. Что именно разберем?`;
 }
 
 /**
@@ -268,22 +327,25 @@ export async function generateClinicalHealthSummaryAI(
     }
   }
 
+  const waistSnippet = metrics.waistToHeightRatio
+    ? `, индекс талии WHtR: ${metrics.waistToHeightRatio} (${metrics.waistRiskCategory || 'норма'})`
+    : '';
+
   if (apiKey && navigator.onLine) {
     try {
-      const prompt = `You are a clinical physician and metabolic health specialist.
-Analyze this user's current parameters and weight trend:
-- Sex: ${profile.gender}, Age: ${profile.age} y.o.
-- Height: ${profile.height} cm, Weight: ${profile.currentWeight} kg -> Target: ${profile.targetWeight} kg (Goal: ${profile.goal})
-- BMI: ${metrics.bmi} (${metrics.bmiCategoryLabel}) | Ideal Weight Range: ${metrics.idealWeightMin}–${metrics.idealWeightMax} kg
-- BMR: ${metrics.bmr} kcal, TDEE: ${metrics.tdee} kcal, Daily Target: ${metrics.targetDailyCalories} kcal
-- Est. Body Fat: ${metrics.bodyFatPercentage}% | Protein Goal: ${metrics.targetProteinGrams}g/day
-- Trend: ${trendSnippet}
+      const prompt = `You are a clinical physician and metabolic endocrinologist.
+Analyze this patient's comprehensive health profile:
+- Demographics: ${profile.gender}, ${profile.age} y.o., Height: ${profile.height} cm, Weight: ${profile.currentWeight} kg -> Goal: ${profile.targetWeight} kg (${profile.goal})
+- BMI: ${metrics.bmi} (${metrics.bmiCategoryLabel}) | Ideal WHO Corridor: ${metrics.idealWeightMin}–${metrics.idealWeightMax} kg${waistSnippet}
+- Metabolism: BMR ${metrics.bmr} kcal, TDEE ${metrics.tdee} kcal, Prescribed: ${metrics.targetDailyCalories} kcal/day
+- Body Composition: ~${metrics.bodyFatPercentage}% Fat, ${metrics.muscleMassKg} kg Lean Tissue | Protein Target: ${metrics.targetProteinGrams}g/day
+- Weigh-in Trend: ${trendSnippet}
 
-Write a concise, professional 3-sentence clinical summary in Russian.
-1. Evaluate their BMI and healthy weight corridor for their height.
-2. Evaluate their target and give the estimated safe timeline (based on ~0.4-0.5kg/week fat loss or lean gain).
-3. Give one key metabolic recommendation (protein or hydration).
-Tone: Serious, clear, encouraging, clinical. DO NOT use sparkles ("✨") or emoji spam.`;
+Write an elegant, structured clinical analysis in Russian (3 concise sections):
+1. [Клинический статус]: Evaluate BMI, healthy corridor, and central visceral fat risk.
+2. [Прогноз и темп]: Evaluate timeline to goal (${profile.targetWeight} kg) at safe physiological rate (0.4-0.5 kg/week).
+3. [Назначения]: Clear prescription for daily caloric budget (${metrics.targetDailyCalories} kcal), protein (${metrics.targetProteinGrams}g), and water (${(metrics.targetWaterMl/1000).toFixed(1)}L).
+Tone: Serious, empathetic, clinical, encouraging. NO sparkles ("✨") or emoji floods.`;
 
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
@@ -292,7 +354,7 @@ Tone: Serious, clear, encouraging, clinical. DO NOT use sparkles ("✨") or emoj
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.2 },
+            generationConfig: { temperature: 0.25 },
           }),
         }
       );
@@ -311,17 +373,19 @@ Tone: Serious, clear, encouraging, clinical. DO NOT use sparkles ("✨") or emoj
   const diffKg = Math.abs(Number((profile.currentWeight - profile.targetWeight).toFixed(1)));
   const estimatedWeeks = Math.max(1, Math.ceil(diffKg / 0.45));
 
-  let goalText = '';
+  let goalPaceText = '';
   if (profile.goal === 'lose') {
-    goalText = diffKg > 0
-      ? `Для безопасного сброса ${diffKg} кг без замедления метаболизма ориентировочный срок составит ~${estimatedWeeks} недель при дефиците 400 ккал/день.`
-      : `Целевой вес достигнут. Рекомендуется переходить на рацион поддержки (TDEE: ${metrics.tdee} ккал).`;
+    goalPaceText = diffKg > 0
+      ? `Для безопасного снижения ${diffKg} кг без замедления щитовидной железы ориентировочный срок составит ~${estimatedWeeks} недель при дефиците ~400 ккал/день.`
+      : `Целевой вес ${profile.targetWeight} кг достигнут. Рекомендуется фиксация на калораже поддержки (TDEE: ${metrics.tdee} ккал).`;
   } else if (profile.goal === 'gain') {
-    goalText = `Для набора ${diffKg} кг сухой массы ориентируйся на профицит 300-350 ккал с акцентом на силовые тренировки.`;
+    goalPaceText = `Для чистого набора ${diffKg} кг сухой мышечной массы ориентируйся на профицит 300–350 ккал с прогрессивными силовыми нагрузками.`;
   } else {
-    goalText = `Ты находишься в режиме поддержания. Оптимальный суточный калораж: ${metrics.tdee} ккал.`;
+    goalPaceText = `Режим поддержания стабильного веса. Оптимальный суточный расход энергии: ${metrics.tdee} ккал.`;
   }
 
-  return `Твой индекс массы тела равен ${metrics.bmi} (${metrics.bmiCategoryLabel}). Здоровый диапазон по ВОЗ для роста ${profile.height} см составляет ${metrics.idealWeightMin}–${metrics.idealWeightMax} кг. ${goalText} Для защиты мышечной массы держи белок на уровне не ниже ${metrics.targetProteinGrams}г/сутки и пей не менее ${(metrics.targetWaterMl / 1000).toFixed(1)}л воды. ${trendSnippet}`;
+  return `• Клинический статус: Индекс массы тела равен ${metrics.bmi} (${metrics.bmiCategoryLabel}). Здоровый диапазон по ВОЗ для роста ${profile.height} см составляет ${metrics.idealWeightMin}–${metrics.idealWeightMax} кг${waistSnippet}.
+• Динамика и прогноз: ${trendSnippet} ${goalPaceText}
+• Клинические назначения: Суточный рацион — ${metrics.targetDailyCalories} ккал, потребление белка — не ниже ${metrics.targetProteinGrams}г/сутки (для сохранения ${metrics.muscleMassKg} кг мышечной массы), гидратация — ${(metrics.targetWaterMl / 1000).toFixed(1)}л чистой воды.`;
 }
 

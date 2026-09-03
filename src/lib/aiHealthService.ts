@@ -117,35 +117,88 @@ Return STRICT JSON ONLY in the following format (no markdown, no backticks, just
   };
 }
 
+export interface HealthTelemetryContext {
+  todaysMeals?: MealLog[];
+  todaysWaterTotalMl?: number;
+  todaysWorkouts?: WorkoutLog[];
+  todaysActiveCaloriesBurned?: number;
+  todaysTotalKcal?: number;
+  todaysProteinGrams?: number;
+  todaysCarbsGrams?: number;
+  todaysFatGrams?: number;
+  weightLogs?: WeightLog[];
+}
+
 /**
  * Generates personalized health advice from Sumire Health AI
  */
 export async function getHealthCoachAdviceWithAI(
   profile: HealthProfile,
   metrics: CalculatedHealthMetrics,
-  question: string
+  question: string,
+  context?: HealthTelemetryContext
 ): Promise<string> {
   const apiKey = getStoredGeminiApiKey();
 
+  // Prepare Live RAG Context Telemetry
+  const mealsList = context?.todaysMeals && context.todaysMeals.length > 0
+    ? context.todaysMeals.map(m => `${m.name} (${m.kcal} kcal, P:${m.proteinGrams}g, C:${m.carbsGrams}g, F:${m.fatGrams}g)`).join('; ')
+    : 'No meals logged yet today';
+
+  const workoutsList = context?.todaysWorkouts && context.todaysWorkouts.length > 0
+    ? context.todaysWorkouts.map(w => `${w.title} (${w.durationMinutes}m, +${w.caloriesBurned} kcal, cat: ${w.category})`).join('; ')
+    : 'No workouts logged yet today';
+
+  const recentWeights = context?.weightLogs && context.weightLogs.length > 0
+    ? context.weightLogs.slice(-5).map(l => `${l.date}: ${l.weight}kg`).join(', ')
+    : `${profile.currentWeight} kg`;
+
+  const startingWeight = context?.weightLogs && context.weightLogs.length > 0 ? context.weightLogs[0].weight : profile.currentWeight;
+  const deltaKg = Number((profile.currentWeight - profile.targetWeight).toFixed(1));
+
   if (apiKey && navigator.onLine) {
     try {
-      const prompt = `You are Sumire, a serious, calm, elite health and nutrition coach for the user.
-User Profile:
-- Gender: ${profile.gender}, Age: ${profile.age}
-- Height: ${profile.height} cm, Current Weight: ${profile.currentWeight} kg, Target: ${profile.targetWeight} kg
-- BMI: ${metrics.bmi} (${metrics.bmiCategoryLabel})
-- BMR: ${metrics.bmr} kcal, TDEE: ${metrics.tdee} kcal
-- Target Calories for ${profile.goal}: ${metrics.targetDailyCalories} kcal/day
-- Target Protein: ${metrics.targetProteinGrams}g, Carbs: ${metrics.targetCarbsGrams}g, Fats: ${metrics.targetFatGrams}g
-- Target Water: ${metrics.targetWaterMl} ml/day
+      const prompt = `You are Sumire Health AI — a clinical, evidence-based health, BMI, metabolism, and nutrition intelligence agent.
 
-User question: "${question}"
+LIVE USER HEALTH TELEMETRY (RAG GROUND TRUTH):
+- User Profile: Age ${profile.age}, Biological Sex: ${profile.gender}, Height: ${profile.height} cm
+- Weight Progress: Current ${profile.currentWeight} kg -> Goal ${profile.targetWeight} kg (Baseline Start: ${startingWeight} kg, Delta: ${deltaKg > 0 ? `${deltaKg} kg to lose` : `${Math.abs(deltaKg)} kg to gain`})
+- Body Mass Index (BMI): ${metrics.bmi} (WHO Category: ${metrics.bmiCategoryLabel})
+- Body Composition: ~${metrics.bodyFatPercentage}% Body Fat, ${metrics.muscleMassKg} kg Lean Muscle Mass
+- Energy Expenditure: Basal BMR ${metrics.bmr} kcal, Daily TDEE ${metrics.tdee} kcal
+- Prescribed Intake for Goal (${profile.goal}): ${metrics.targetDailyCalories} kcal/day
+  - Target Protein: ${metrics.targetProteinGrams}g, Carbs: ${metrics.targetCarbsGrams}g, Fat: ${metrics.targetFatGrams}g
+  - Target Water: ${metrics.targetWaterMl} ml/day
+- Today's Real Consumed Intake:
+  - Total Calories: ${context?.todaysTotalKcal || 0} / ${metrics.targetDailyCalories} kcal
+  - Protein: ${context?.todaysProteinGrams || 0} / ${metrics.targetProteinGrams}g
+  - Carbs: ${context?.todaysCarbsGrams || 0} / ${metrics.targetCarbsGrams}g
+  - Fat: ${context?.todaysFatGrams || 0} / ${metrics.targetFatGrams}g
+  - Meals eaten today: ${mealsList}
+- Today's Hydration: ${context?.todaysWaterTotalMl || 0} / ${metrics.targetWaterMl} ml
+- Today's Physical Activity: ${workoutsList} (Active Burn: +${context?.todaysActiveCaloriesBurned || 0} kcal)
+- Recent Weigh-in History: ${recentWeights}
 
-Behavioral Rules:
-- Persona: Calm, concise, strictly evidence-based, supportive yet direct.
-- DO NOT use sparkles ("✨") or emoji spam.
-- Keep the response between 2 and 4 compact paragraphs with bullet points if helpful.
-- Respond in the exact language of the user's question (Russian if Russian, English if English).`;
+STRICT DOMAIN GUARDRAILS (CRITICAL):
+1. MANDATORY DOMAIN RESTRICTION: You MUST ONLY answer questions strictly and directly related to:
+   - Body Mass Index (BMI), body fat percentage, lean body mass, and weight management.
+   - Clinical nutrition, calories, macronutrients (proteins, carbs, fats), micronutrients, hydration, and meal composition.
+   - Metabolic health, BMR, TDEE, metabolic adaptation, and recovery.
+   - Physical exercise, workouts, energy expenditure, and fitness physiology.
+2. STRICT OFF-TOPIC REFUSAL:
+   If the user asks ANY question outside the scope of health, BMI, nutrition, diet, or physical fitness (for example: coding, software, politics, world history, creative writing, general philosophy, entertainment, math problems, personal non-health chatter, etc.):
+   You MUST politely and strictly DECLINE to answer, and redirect them back to their health/nutrition/BMI goals.
+   Use this exact polite refusal style:
+   "Я твой персональный ассистент по здоровью, питанию и телу — Sumire Health AI.
+   Я специализируюсь исключительно на вопросах BMI, состава тела, правильного питания, калорий, тренировок и метаболизма.
+   Пожалуйста, задай вопрос, касающийся твоего рациона, веса или физической активности."
+3. BEHAVIOR & TONE:
+   - Serious, analytical, empathetic, clinical, and strictly evidence-based.
+   - Use the live telemetry numbers above to provide hyper-personalized insights when relevant.
+   - NEVER use the word or icon "sparkles" ("✨") or emoji floods.
+   - Respond in the exact language of the user's inquiry (Russian if Russian, English if English).
+
+User Question: "${question}"`;
 
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
@@ -154,7 +207,7 @@ Behavioral Rules:
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.3 },
+            generationConfig: { temperature: 0.25 },
           }),
         }
       );
@@ -169,17 +222,27 @@ Behavioral Rules:
     }
   }
 
-  // Offline Expert Fallback
+  // Offline Expert Fallback with Domain Boundary Check
+  const lowerQ = question.toLowerCase();
+  const isHealthTopic = /bmi|вес|похуд|набор|масс|калор|ккал|белок|протеин|углевод|жир|вод|трениров|зал|кардио|спорт|питан|диет|завтрак|обед|ужин|еда|мышц|жир|fat|weight|diet|food|eat|protein|calorie|carb|water|workout|exercise|health|burn|muscle/i.test(lowerQ);
+
+  if (!isHealthTopic) {
+    return `Я твой персональный ассистент по здоровью, питанию и телу — Sumire Health AI.
+Я консультирую исключительно по темам BMI, состава тела, рациона питания, калорийности и тренировок.
+Пожалуйста, задай вопрос, касающийся твоего здоровья, рациона или физической формы.`;
+  }
+
   const diffKg = Math.abs(Number((profile.currentWeight - profile.targetWeight).toFixed(1)));
   return `Твой текущий индекс массы тела: ${metrics.bmi} (${metrics.bmiCategoryLabel}). 
 Базовый метаболизм (BMR) составляет ${metrics.bmr} ккал, а суточный расход энергии (TDEE) — ${metrics.tdee} ккал.
 
-Для безопасного достижения цели (${profile.targetWeight} кг, осталось ${diffKg} кг):
-• Держи суточный рацион в районе ${metrics.targetDailyCalories} ккал.
-• Потребляй не менее ${metrics.targetProteinGrams}г белка в день для сохранения мышечного тонуса.
-• Выпивай минимум ${(metrics.targetWaterMl / 1000).toFixed(1)} л чистой воды ежедневно.
+Текущая статистика за день:
+• Калории: ${context?.todaysTotalKcal || 0} / ${metrics.targetDailyCalories} ккал (Остаток: ${Math.max(0, metrics.targetDailyCalories - (context?.todaysTotalKcal || 0))} ккал)
+• Белок: ${context?.todaysProteinGrams || 0} / ${metrics.targetProteinGrams}г
+• Вода: ${context?.todaysWaterTotalMl || 0} / ${metrics.targetWaterMl} мл
+• Активный расход тренировками: +${context?.todaysActiveCaloriesBurned || 0} ккал
 
-Регулярность важнее экстремальных ограничений. Продолжай фиксировать вес и пить воду.`;
+До цели (${profile.targetWeight} кг) осталось ${diffKg} кг. Держи дефицит калорий и норму белка для сохранения мышечной массы.`;
 }
 
 /**

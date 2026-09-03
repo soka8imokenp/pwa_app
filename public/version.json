@@ -1,12 +1,11 @@
 {
-  "version": "1.8.28",
-  "buildNumber": 34,
+  "version": "1.8.29",
+  "buildNumber": 35,
   "releaseDate": "2026-09-03",
   "changelog": [
-    "Fix TypeScript build error: Added sports category to MET_VALUES, getCategoryConfig, and category grid in HealthActivityPage",
-    "Scientific MET Calorie Burn: Dynamic calculation using actual body weight, workout category, and intensity level",
-    "Customizable Workout Presets: Added Edit mode with custom template creator for workouts",
-    "Daily Movement Target Progress: Added active burn progress bar tied to user profile activity level"
+    "Sumire Health AI RAG Overhaul: Grounded in real-time biometric telemetry (meals, water, workouts, weight trajectory)",
+    "Strict Health Domain Guardrails: Sumire strictly answers questions related to BMI, health, metabolism, and nutrition",
+    "Persistent Health Consultation Chat: Chat messages saved in localStorage with a clean reset consultation button"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.28/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.29/Daily-Sumire-app-debug.apk"
 }

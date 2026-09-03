@@ -346,6 +346,15 @@ export function App() {
                 <HealthCoachPage
                   profile={healthProfile}
                   metrics={healthMetrics}
+                  weightLogs={weightLogs}
+                  todaysMeals={todaysMeals}
+                  todaysWaterTotalMl={todaysWaterTotalMl}
+                  todaysWorkouts={todaysWorkouts}
+                  todaysActiveCaloriesBurned={todaysActiveCaloriesBurned}
+                  todaysTotalKcal={todaysTotalKcal}
+                  todaysProteinGrams={todaysProteinGrams}
+                  todaysCarbsGrams={todaysCarbsGrams}
+                  todaysFatGrams={todaysFatGrams}
                 />
               )}
             </>

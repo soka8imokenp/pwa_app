@@ -130,33 +130,6 @@ export interface HealthTelemetryContext {
 }
 
 /**
- * Generates personalized health advice from Sumire Health AI
- */
-export async function getHealthCoachAdviceWithAI(
-  profile: HealthProfile,
-  metrics: CalculatedHealthMetrics,
-  question: string,
-  context?: HealthTelemetryContext
-): Promise<string> {
-  const apiKey = getStoredGeminiApiKey();
-
-  // Prepare Live RAG Context Telemetry
-  const mealsList = context?.todaysMeals && context.todaysMeals.length > 0
-    ? context.todaysMeals.map(m => `${m.name} (${m.kcal} kcal, P:${m.proteinGrams}g, C:${m.carbsGrams}g, F:${m.fatGrams}g)`).join('; ')
-    : 'No meals logged yet today';
-
-  const workoutsList = context?.todaysWorkouts && context.todaysWorkouts.length > 0
-    ? context.todaysWorkouts.map(w => `${w.title} (${w.durationMinutes}m, +${w.caloriesBurned} kcal, cat: ${w.category})`).join('; ')
-    : 'No workouts logged yet today';
-
-  const recentWeights = context?.weightLogs && context.weightLogs.length > 0
-    ? context.weightLogs.slice(-5).map(l => `${l.date}: ${l.weight}kg`).join(', ')
-    : `${profile.currentWeight} kg`;
-
-  const startingWeight = context?.weightLogs && context.weightLogs.length > 0 ? context.weightLogs[0].weight : profile.currentWeight;
-  const deltaKg = Number((profile.currentWeight - profile.targetWeight).toFixed(1));
-
-/**
  * Generates personalized health advice from Sumire Health AI using the exact Gemini model loop with multimodal photo support
  */
 export async function getHealthCoachAdviceWithAI(

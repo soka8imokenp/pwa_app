@@ -1,12 +1,12 @@
 {
-  "version": "1.8.34",
-  "buildNumber": 40,
+  "version": "1.8.35",
+  "buildNumber": 41,
   "releaseDate": "2026-09-03",
   "changelog": [
+    "Fix TypeScript build error: Resolved duplicate function declaration in aiHealthService.ts",
+    "Multimodal Photo Support: Upload or take photos of food/meals and receive instant nutritional breakdown and feedback",
     "Removed background fallback script: Sumire Health AI now communicates exclusively through the real Gemini engine",
-    "Multimodal Photo Support: Upload or take photos of food/meals/dishes and receive instant nutritional breakdown and feedback",
-    "Unified Gemini Model Fallback: Identical architecture to the planner with multi-turn conversation memory",
-    "Removed Quick Health Inquiries chip row for a cleaner, modern chat interface"
+    "Unified Gemini Model Fallback: Identical architecture to the planner with multi-turn conversation memory"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.34/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.35/Daily-Sumire-app-debug.apk"
 }

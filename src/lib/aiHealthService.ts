@@ -181,3 +181,84 @@ Behavioral Rules:
 
 Регулярность важнее экстремальных ограничений. Продолжай фиксировать вес и пить воду.`;
 }
+
+/**
+ * Generates an automated, dynamic clinical health summary based on current BMI, metabolic rate, and weight trend
+ */
+export async function generateClinicalHealthSummaryAI(
+  profile: HealthProfile,
+  metrics: CalculatedHealthMetrics,
+  weightLogs: WeightLog[] = []
+): Promise<string> {
+  const apiKey = getStoredGeminiApiKey();
+
+  // Determine actual trend from history
+  let trendSnippet = 'Вес стабилен.';
+  if (weightLogs.length >= 2) {
+    const firstW = weightLogs[0].weight;
+    const lastW = weightLogs[weightLogs.length - 1].weight;
+    const diff = Number((lastW - firstW).toFixed(1));
+    if (diff < 0) {
+      trendSnippet = `Динамика за период: снижение на ${Math.abs(diff)} кг.`;
+    } else if (diff > 0) {
+      trendSnippet = `Динамика за период: прирост на ${diff} кг.`;
+    }
+  }
+
+  if (apiKey && navigator.onLine) {
+    try {
+      const prompt = `You are a clinical physician and metabolic health specialist.
+Analyze this user's current parameters and weight trend:
+- Sex: ${profile.gender}, Age: ${profile.age} y.o.
+- Height: ${profile.height} cm, Weight: ${profile.currentWeight} kg -> Target: ${profile.targetWeight} kg (Goal: ${profile.goal})
+- BMI: ${metrics.bmi} (${metrics.bmiCategoryLabel}) | Ideal Weight Range: ${metrics.idealWeightMin}–${metrics.idealWeightMax} kg
+- BMR: ${metrics.bmr} kcal, TDEE: ${metrics.tdee} kcal, Daily Target: ${metrics.targetDailyCalories} kcal
+- Est. Body Fat: ${metrics.bodyFatPercentage}% | Protein Goal: ${metrics.targetProteinGrams}g/day
+- Trend: ${trendSnippet}
+
+Write a concise, professional 3-sentence clinical summary in Russian.
+1. Evaluate their BMI and healthy weight corridor for their height.
+2. Evaluate their target and give the estimated safe timeline (based on ~0.4-0.5kg/week fat loss or lean gain).
+3. Give one key metabolic recommendation (protein or hydration).
+Tone: Serious, clear, encouraging, clinical. DO NOT use sparkles ("✨") or emoji spam.`;
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.2 },
+          }),
+        }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) return text.trim();
+      }
+    } catch (err) {
+      console.warn('AI clinical summary fallback:', err);
+    }
+  }
+
+  // Dynamic Algorithmic Clinical Generator (Offline fallback)
+  const diffKg = Math.abs(Number((profile.currentWeight - profile.targetWeight).toFixed(1)));
+  const estimatedWeeks = Math.max(1, Math.ceil(diffKg / 0.45));
+
+  let goalText = '';
+  if (profile.goal === 'lose') {
+    goalText = diffKg > 0
+      ? `Для безопасного сброса ${diffKg} кг без замедления метаболизма ориентировочный срок составит ~${estimatedWeeks} недель при дефиците 400 ккал/день.`
+      : `Целевой вес достигнут. Рекомендуется переходить на рацион поддержки (TDEE: ${metrics.tdee} ккал).`;
+  } else if (profile.goal === 'gain') {
+    goalText = `Для набора ${diffKg} кг сухой массы ориентируйся на профицит 300-350 ккал с акцентом на силовые тренировки.`;
+  } else {
+    goalText = `Ты находишься в режиме поддержания. Оптимальный суточный калораж: ${metrics.tdee} ккал.`;
+  }
+
+  return `Твой индекс массы тела равен ${metrics.bmi} (${metrics.bmiCategoryLabel}). Здоровый диапазон по ВОЗ для роста ${profile.height} см составляет ${metrics.idealWeightMin}–${metrics.idealWeightMax} кг. ${goalText} Для защиты мышечной массы держи белок на уровне не ниже ${metrics.targetProteinGrams}г/сутки и пей не менее ${(metrics.targetWaterMl / 1000).toFixed(1)}л воды. ${trendSnippet}`;
+}
+

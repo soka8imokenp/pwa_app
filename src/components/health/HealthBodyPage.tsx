@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Scale,
   Target,
@@ -12,12 +12,14 @@ import {
   Trash2,
   Calendar,
   Info,
-  ShieldCheck,
+  RefreshCw,
+  Bot,
 } from 'lucide-react';
-import { playClickSound } from '../../lib/sound';
+import { playClickSound, playSuccessChime } from '../../lib/sound';
 import type { HealthProfile, CalculatedHealthMetrics, WeightLog } from '../../types/health';
 import { LogWeightModal } from './LogWeightModal';
 import { HealthProfileModal } from './HealthProfileModal';
+import { generateClinicalHealthSummaryAI } from '../../lib/aiHealthService';
 
 interface HealthBodyPageProps {
   profile: HealthProfile;
@@ -41,6 +43,16 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
   const [isLogWeightOpen, setIsLogWeightOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | 'all'>('7d');
+  const [selectedPointIndex, setSelectedPointIndex] = useState<number | null>(null);
+
+  // AI-generated clinical summary state
+  const [aiSummary, setAiSummary] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('kairo_clinical_health_summary') || '';
+    }
+    return '';
+  });
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   const { currentWeight, targetWeight, height } = profile;
   const {
@@ -72,39 +84,119 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
   );
 
   // Delta vs previous weigh-in log
-  const previousLog = weightLogs.length > 1 ? weightLogs[weightLogs.length - 2] : null;
+  const sortedAllLogs = useMemo(() => {
+    return [...weightLogs].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
+  }, [weightLogs]);
+
+  const previousLog = sortedAllLogs.length > 1 ? sortedAllLogs[sortedAllLogs.length - 2] : null;
   const deltaFromPrev = previousLog ? Number((currentWeight - previousLog.weight).toFixed(1)) : null;
 
   // BMI Gauge indicator position (15 to 35 range mapped to 0% - 100%)
   const gaugePercent = Math.min(100, Math.max(0, ((bmi - 15) / 20) * 100));
 
-  // Time-range filtered logs for chart
-  const filteredLogs = React.useMemo(() => {
-    if (timeRange === '7d') return weightLogs.slice(-7);
-    if (timeRange === '30d') return weightLogs.slice(-30);
-    return weightLogs;
-  }, [weightLogs, timeRange]);
+  // Time-range filtered logs for chart (strictly sorted ASC by date)
+  const filteredLogs = useMemo(() => {
+    if (timeRange === '7d') return sortedAllLogs.slice(-7);
+    if (timeRange === '30d') return sortedAllLogs.slice(-30);
+    return sortedAllLogs;
+  }, [sortedAllLogs, timeRange]);
 
-  // Chart coordinates
-  const weights = filteredLogs.map((l) => l.weight);
-  const chartPoints = filteredLogs.length > 0 ? weights : [currentWeight];
-  const rawMin = Math.min(...chartPoints, targetWeight);
-  const rawMax = Math.max(...chartPoints, targetWeight);
-  const minW = rawMin - 1.5;
-  const maxW = rawMax + 1.5;
-  const rangeW = maxW - minW || 1;
+  // Generate / refresh AI clinical summary
+  const handleGenerateSummary = async () => {
+    setIsGeneratingSummary(true);
+    playClickSound();
 
-  const points = filteredLogs.map((l, i) => {
-    const x = filteredLogs.length > 1 ? (i / (filteredLogs.length - 1)) * 280 + 20 : 160;
-    const y = 115 - ((l.weight - minW) / rangeW) * 85;
-    return { x, y, weight: l.weight, date: l.date };
-  });
+    try {
+      const summaryText = await generateClinicalHealthSummaryAI(profile, metrics, filteredLogs);
+      setAiSummary(summaryText);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('kairo_clinical_health_summary', summaryText);
+      }
+      playSuccessChime();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
 
-  const pathD = points.length > 1
-    ? points.reduce((acc, p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`), '')
-    : '';
+  useEffect(() => {
+    if (!aiSummary) {
+      handleGenerateSummary();
+    }
+  }, [profile.currentWeight, profile.targetWeight, profile.goal]);
 
-  const targetY = 115 - ((targetWeight - minW) / rangeW) * 85;
+  // Chart Geometry Calculation
+  const chartData = useMemo(() => {
+    const rawWeights = filteredLogs.map((l) => l.weight);
+    const allVals = rawWeights.length > 0 ? [...rawWeights, targetWeight] : [currentWeight, targetWeight];
+
+    const minWeightVal = Math.min(...allVals);
+    const maxWeightVal = Math.max(...allVals);
+
+    // Provide healthy padding of at least 1.5kg above and below
+    const chartMin = Number((minWeightVal - 1.5).toFixed(1));
+    const chartMax = Number((maxWeightVal + 1.5).toFixed(1));
+    const chartRange = chartMax - chartMin || 1;
+
+    const svgWidth = 320;
+    const svgHeight = 150;
+    const paddingTop = 25;
+    const paddingBottom = 30;
+    const plotHeight = svgHeight - paddingTop - paddingBottom;
+    const paddingLeft = 35;
+    const paddingRight = 15;
+    const plotWidth = svgWidth - paddingLeft - paddingRight;
+
+    // Y position helper
+    const getY = (val: number) => {
+      const ratio = (val - chartMin) / chartRange;
+      return paddingTop + (1 - ratio) * plotHeight;
+    };
+
+    // Calculate points
+    const pts = filteredLogs.map((l, i) => {
+      const xRatio = filteredLogs.length > 1 ? i / (filteredLogs.length - 1) : 0.5;
+      const x = paddingLeft + xRatio * plotWidth;
+      const y = getY(l.weight);
+      return { x, y, weight: l.weight, date: l.date, note: l.note };
+    });
+
+    // Build SVG path
+    let linePath = '';
+    let areaPath = '';
+
+    if (pts.length > 1) {
+      linePath = pts.reduce((acc, p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`), '');
+      const firstPt = pts[0];
+      const lastPt = pts[pts.length - 1];
+      const bottomY = paddingTop + plotHeight;
+      areaPath = `${linePath} L ${lastPt.x} ${bottomY} L ${firstPt.x} ${bottomY} Z`;
+    }
+
+    const targetYPos = getY(targetWeight);
+
+    // Reference Grid Lines
+    const gridYVals = [
+      { val: chartMax, y: paddingTop },
+      { val: Number(((chartMax + chartMin) / 2).toFixed(1)), y: paddingTop + plotHeight / 2 },
+      { val: chartMin, y: paddingTop + plotHeight },
+    ];
+
+    return {
+      points: pts,
+      linePath,
+      areaPath,
+      targetYPos,
+      gridYVals,
+      chartMin,
+      chartMax,
+      svgWidth,
+      svgHeight,
+      paddingLeft,
+      plotWidth,
+    };
+  }, [filteredLogs, currentWeight, targetWeight]);
 
   return (
     <div className="w-full space-y-3.5 pb-3 font-body select-none">
@@ -130,6 +222,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
 
           <div className="flex items-center gap-1.5">
             <button
+              type="button"
               onClick={() => {
                 playClickSound();
                 setIsProfileOpen(true);
@@ -141,6 +234,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={() => {
                 playClickSound();
                 setIsLogWeightOpen(true);
@@ -271,9 +365,6 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
           <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
             Metabolic Rate & Body Stats
           </h3>
-          <span className="text-[10px] font-bold text-[#3D6B52] flex items-center gap-1">
-            <ShieldCheck className="w-3 h-3" /> Gold Standard Models
-          </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
@@ -333,7 +424,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
         </div>
       </div>
 
-      {/* 3. Weight History Line Chart with Filter */}
+      {/* 3. Redesigned, Crystal-Clear Weight History Line Chart */}
       <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
         <div className="flex items-center justify-between">
           <div>
@@ -346,7 +437,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
           </div>
 
           {/* Filter Pills */}
-          <div className="flex items-center gap-1 p-0.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl">
+          <div className="flex items-center gap-1 p-0.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl shadow-2xs">
             {(
               [
                 { id: '7d', label: '7D' },
@@ -360,6 +451,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
                 onClick={() => {
                   playClickSound();
                   setTimeRange(t.id);
+                  setSelectedPointIndex(null);
                 }}
                 className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
                   timeRange === t.id
@@ -373,52 +465,139 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
           </div>
         </div>
 
-        {points.length > 0 ? (
-          <div className="w-full bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl p-2.5 relative overflow-hidden">
-            <svg viewBox="0 0 320 135" className="w-full h-32 overflow-visible">
-              {/* Target dashed line */}
-              <line
-                x1="20"
-                y1={targetY}
-                x2="300"
-                y2={targetY}
-                stroke="#DC2626"
-                strokeWidth="1.5"
-                strokeDasharray="4 4"
-              />
-              <text x="295" y={targetY - 4} fill="#DC2626" fontSize="8" fontWeight="bold" textAnchor="end">
-                Target {targetWeight}kg
-              </text>
-
-              {/* Progress line */}
-              {pathD && (
-                <path
-                  d={pathD}
-                  fill="none"
-                  stroke="#3D6B52"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+        {/* SVG Chart */}
+        <div className="w-full bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl p-2 relative overflow-hidden shadow-2xs">
+          
+          {/* Selected Point Callout Tooltip */}
+          {selectedPointIndex !== null && chartData.points[selectedPointIndex] && (
+            <div className="absolute top-2 right-2 bg-white border border-[#24201D] rounded-lg px-2 py-1 shadow-2xs z-10 animate-in fade-in duration-100 flex items-center gap-1.5">
+              <span className="text-[10px] font-bold text-[#6B635B]">
+                {chartData.points[selectedPointIndex].date}:
+              </span>
+              <span className="text-xs font-black font-mono-num text-[#24201D]">
+                {chartData.points[selectedPointIndex].weight} kg
+              </span>
+              {chartData.points[selectedPointIndex].note && (
+                <span className="text-[9px] text-[#3D6B52] font-medium">
+                  ({chartData.points[selectedPointIndex].note})
+                </span>
               )}
+            </div>
+          )}
 
-              {/* Points */}
-              {points.map((p, idx) => (
-                <g key={idx}>
+          <svg viewBox={`0 0 ${chartData.svgWidth} ${chartData.svgHeight}`} className="w-full h-36 overflow-visible">
+            <defs>
+              <linearGradient id="weightAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#3D6B52" stopOpacity="0.30" />
+                <stop offset="100%" stopColor="#3D6B52" stopOpacity="0.02" />
+              </linearGradient>
+            </defs>
+
+            {/* Horizontal Grid Lines */}
+            {chartData.gridYVals.map((g, idx) => (
+              <g key={idx}>
+                <line
+                  x1={chartData.paddingLeft}
+                  y1={g.y}
+                  x2={chartData.svgWidth - 10}
+                  y2={g.y}
+                  stroke="#24201D"
+                  strokeOpacity="0.10"
+                  strokeWidth="1"
+                  strokeDasharray="2 2"
+                />
+                <text
+                  x={chartData.paddingLeft - 4}
+                  y={g.y + 3}
+                  fill="#78716C"
+                  fontSize="8"
+                  fontWeight="bold"
+                  textAnchor="end"
+                  className="font-mono-num"
+                >
+                  {g.val}
+                </text>
+              </g>
+            ))}
+
+            {/* Target dashed line */}
+            <line
+              x1={chartData.paddingLeft}
+              y1={chartData.targetYPos}
+              x2={chartData.svgWidth - 10}
+              y2={chartData.targetYPos}
+              stroke="#DC2626"
+              strokeWidth="1.5"
+              strokeDasharray="4 4"
+            />
+            <text
+              x={chartData.svgWidth - 12}
+              y={chartData.targetYPos - 4}
+              fill="#DC2626"
+              fontSize="8"
+              fontWeight="black"
+              textAnchor="end"
+            >
+              Goal {targetWeight}kg
+            </text>
+
+            {/* Area Fill */}
+            {chartData.areaPath && (
+              <path d={chartData.areaPath} fill="url(#weightAreaGrad)" />
+            )}
+
+            {/* Line Path */}
+            {chartData.linePath && (
+              <path
+                d={chartData.linePath}
+                fill="none"
+                stroke="#3D6B52"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
+
+            {/* If only 1 point exists, render horizontal guide */}
+            {chartData.points.length === 1 && (
+              <line
+                x1={chartData.paddingLeft}
+                y1={chartData.points[0].y}
+                x2={chartData.svgWidth - 10}
+                y2={chartData.points[0].y}
+                stroke="#3D6B52"
+                strokeWidth="2"
+                strokeDasharray="3 3"
+              />
+            )}
+
+            {/* Data Circles */}
+            {chartData.points.map((p, idx) => {
+              const isSelected = selectedPointIndex === idx;
+              return (
+                <g
+                  key={idx}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    playClickSound();
+                    setSelectedPointIndex(isSelected ? null : idx);
+                  }}
+                >
                   <circle
                     cx={p.x}
                     cy={p.y}
-                    r="4.5"
-                    fill="#FAF8F5"
+                    r={isSelected ? 6 : 4}
+                    fill={isSelected ? '#3D6B52' : '#FFFFFF'}
                     stroke="#24201D"
-                    strokeWidth="2"
+                    strokeWidth={isSelected ? 2.5 : 1.75}
+                    className="transition-all"
                   />
                   <text
                     x={p.x}
                     y={p.y - 7}
                     fill="#24201D"
                     fontSize="8"
-                    fontWeight="bold"
+                    fontWeight="black"
                     textAnchor="middle"
                     className="font-mono-num"
                   >
@@ -426,41 +605,61 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
                   </text>
                   <text
                     x={p.x}
-                    y="130"
+                    y={chartData.svgHeight - 8}
                     fill="#78716C"
                     fontSize="7"
+                    fontWeight="bold"
                     textAnchor="middle"
                     className="font-mono-num"
                   >
                     {p.date.slice(5)}
                   </text>
                 </g>
-              ))}
-            </svg>
-          </div>
-        ) : (
-          <div className="p-6 text-center text-xs font-bold text-stone-400 bg-[#FAF8F5] rounded-xl border border-dashed border-[#24201D]/20">
-            No weigh-in logs recorded yet. Tap "+ Weigh-In" to begin!
-          </div>
-        )}
+              );
+            })}
+          </svg>
+        </div>
       </div>
 
-      {/* 4. Clinical Evidence-Based Health Insight Card */}
-      <div className="p-3.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-2xl flex items-start gap-2.5">
-        <div className="p-1.5 rounded-xl bg-white border border-[#24201D]/25 shadow-2xs shrink-0 mt-0.5">
-          <Info className="w-4 h-4 text-[#3D6B52]" />
+      {/* 4. Real AI-Powered Clinical Summary Card (Dynamic & Regenerable) */}
+      <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-2xs">
+              <Bot className="w-3.5 h-3.5 text-[#2D503C]" />
+            </div>
+            <div>
+              <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] leading-none">
+                AI Clinical Health Analysis
+              </h3>
+              <span className="text-[10px] font-bold text-[#6B635B]">
+                Personalized metabolic recommendation
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGenerateSummary}
+            disabled={isGeneratingSummary}
+            title="Refresh AI Analysis"
+            className="p-1.5 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer disabled:opacity-40"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isGeneratingSummary ? 'animate-spin' : ''}`} />
+          </button>
         </div>
-        <div className="text-xs leading-relaxed text-[#24201D]">
-          <span className="font-black font-display uppercase tracking-wider block text-[10px] text-[#3D6B52] mb-0.5">
-            Clinical Summary & Recommendation
-          </span>
-          <p className="text-[11px] font-bold text-[#6B635B]">
-            Your current BMI of <span className="text-[#24201D] font-black">{bmi}</span> places you in the{' '}
-            <span className="text-[#24201D] font-black">{bmiCategoryLabel}</span> zone. For your height of {height} cm, a healthy WHO weight range is{' '}
-            <span className="text-[#24201D] font-black">{idealWeightMin}–{idealWeightMax} kg</span>. To reach your target of {targetWeight} kg sustainably, aim for{' '}
-            <span className="text-[#24201D] font-black">{targetDailyCalories} kcal/day</span> and at least{' '}
-            <span className="text-[#24201D] font-black">{targetProteinGrams}g of protein</span> daily.
-          </p>
+
+        <div className="p-3 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl text-xs leading-relaxed text-[#24201D]">
+          {isGeneratingSummary ? (
+            <div className="flex items-center gap-2 text-stone-500 py-1">
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              <span className="text-xs font-bold">Sumire is analyzing your metabolic trajectory...</span>
+            </div>
+          ) : (
+            <p className="text-xs font-medium text-[#24201D] whitespace-pre-line leading-relaxed">
+              {aiSummary || 'Tap the refresh icon above to generate your clinical analysis.'}
+            </p>
+          )}
         </div>
       </div>
 
@@ -479,7 +678,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
           <p className="text-xs text-stone-400 italic">No records yet.</p>
         ) : (
           <div className="space-y-1.5">
-            {weightLogs.slice(-10).reverse().map((log) => (
+            {[...weightLogs].reverse().slice(0, 10).map((log) => (
               <div
                 key={log.id}
                 className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl flex items-center justify-between"

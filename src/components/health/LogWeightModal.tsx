@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Scale, Calendar, FileText, Plus, Minus } from 'lucide-react';
+import { X, Scale, Calendar, FileText, Plus, Minus, Check } from 'lucide-react';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import { calculateBmi, getBmiCategory } from '../../lib/healthFormulas';
+import { getTodayString } from '../../lib/dateUtils';
 
 interface LogWeightModalProps {
   isOpen: boolean;
@@ -51,6 +52,16 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
     setNote(tag);
   };
 
+  const todayStr = getTodayString();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().slice(0, 10);
+
+  const handleSetQuickDate = (d: string) => {
+    playClickSound();
+    setDate(d);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (numWeight <= 0) return;
@@ -63,7 +74,7 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
   const notePresets = ['Morning fasting', 'Post-workout', 'Evening', 'Post-meal'];
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-[#24201D]/45 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-[#24201D]/50 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
       <div className="w-full max-w-sm bg-white border-[2px] border-[#24201D] rounded-3xl shadow-[4px_4px_0px_#24201D] p-5 space-y-4">
         
         {/* Header */}
@@ -83,6 +94,7 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
           </div>
 
           <button
+            type="button"
             onClick={() => {
               playClickSound();
               onClose();
@@ -95,69 +107,70 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3.5">
-          {/* Main Weight Input */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B]">
-                Body Weight (kg)
-              </label>
+          
+          {/* Main LCD-style Weight Input */}
+          <div className="p-3 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B]">
+                Scale Reading (kg)
+              </span>
               {diffFromCurrent !== 0 && (
                 <span className={`text-[10px] font-black font-mono-num ${diffFromCurrent < 0 ? 'text-[#3D6B52]' : 'text-[#DC2626]'}`}>
-                  {diffFromCurrent > 0 ? `+${diffFromCurrent}` : diffFromCurrent} kg vs current
+                  {diffFromCurrent > 0 ? `+${diffFromCurrent}` : diffFromCurrent} kg vs last
                 </span>
               )}
             </div>
 
-            <div className="relative">
-              <input
-                type="number"
-                step="0.1"
-                min="30"
-                max="250"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-                autoFocus
-                className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-xl text-2xl font-black font-mono-num text-[#24201D] shadow-2xs focus:outline-none"
-              />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-[#6B635B]">
-                KG
-              </span>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => handleStep(-0.5)}
+                className="w-10 h-10 rounded-xl bg-white hover:bg-stone-100 border-[1.5px] border-[#24201D] flex items-center justify-center text-base font-black text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer"
+              >
+                -
+              </button>
+
+              <div className="relative flex items-center justify-center">
+                <input
+                  type="number"
+                  step="0.1"
+                  min="30"
+                  max="250"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  autoFocus
+                  className="w-32 py-1 bg-transparent text-center text-3xl font-black font-mono-num text-[#24201D] focus:outline-none"
+                />
+                <span className="text-xs font-black text-[#6B635B] ml-1">
+                  KG
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleStep(0.5)}
+                className="w-10 h-10 rounded-xl bg-white hover:bg-stone-100 border-[1.5px] border-[#24201D] flex items-center justify-center text-base font-black text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer"
+              >
+                +
+              </button>
             </div>
 
-            {/* Quick Step Buttons for 1-Tap Adjustment */}
-            <div className="grid grid-cols-4 gap-1.5 mt-2">
-              <button
-                type="button"
-                onClick={() => handleStep(-1.0)}
-                className="py-1 rounded-lg bg-[#FAF8F5] hover:bg-stone-200 border border-[#24201D] text-xs font-black font-mono-num text-[#24201D] shadow-2xs cursor-pointer active:scale-95 transition-all"
-              >
-                -1.0
-              </button>
-              <button
-                type="button"
-                onClick={() => handleStep(-0.1)}
-                className="py-1 rounded-lg bg-[#FAF8F5] hover:bg-stone-200 border border-[#24201D] text-xs font-black font-mono-num text-[#24201D] shadow-2xs cursor-pointer active:scale-95 transition-all"
-              >
-                -0.1
-              </button>
-              <button
-                type="button"
-                onClick={() => handleStep(0.1)}
-                className="py-1 rounded-lg bg-[#FAF8F5] hover:bg-stone-200 border border-[#24201D] text-xs font-black font-mono-num text-[#24201D] shadow-2xs cursor-pointer active:scale-95 transition-all"
-              >
-                +0.1
-              </button>
-              <button
-                type="button"
-                onClick={() => handleStep(1.0)}
-                className="py-1 rounded-lg bg-[#FAF8F5] hover:bg-stone-200 border border-[#24201D] text-xs font-black font-mono-num text-[#24201D] shadow-2xs cursor-pointer active:scale-95 transition-all"
-              >
-                +1.0
-              </button>
+            {/* Micro Stepper Pills */}
+            <div className="grid grid-cols-4 gap-1.5 pt-1">
+              {[-1.0, -0.1, 0.1, 1.0].map((step) => (
+                <button
+                  key={step}
+                  type="button"
+                  onClick={() => handleStep(step)}
+                  className="py-1 rounded-lg bg-white hover:bg-stone-100 border border-[#24201D] text-[11px] font-black font-mono-num text-[#24201D] shadow-2xs cursor-pointer active:scale-95 transition-all"
+                >
+                  {step > 0 ? `+${step}` : step}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Real-time BMI Preview Bar */}
+          {/* Real-time BMI Indicator */}
           {bmi > 0 && (
             <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center justify-between shadow-2xs">
               <span className="text-xs font-bold text-[#6B635B]">Calculated BMI:</span>
@@ -173,46 +186,73 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
             </div>
           )}
 
-          {/* Date Picker */}
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block mb-1 flex items-center gap-1">
-              <Calendar className="w-3 h-3" /> Date
-            </label>
+          {/* Date Picker with Quick Date Pills */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] flex items-center gap-1">
+                <Calendar className="w-3 h-3" /> Weigh-In Date
+              </label>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleSetQuickDate(todayStr)}
+                  className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase transition-all cursor-pointer ${
+                    date === todayStr
+                      ? 'bg-[#24201D] text-white'
+                      : 'bg-[#FAF8F5] text-[#6B635B] border border-[#24201D]/20'
+                  }`}
+                >
+                  Today
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSetQuickDate(yesterdayStr)}
+                  className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase transition-all cursor-pointer ${
+                    date === yesterdayStr
+                      ? 'bg-[#24201D] text-white'
+                      : 'bg-[#FAF8F5] text-[#6B635B] border border-[#24201D]/20'
+                  }`}
+                >
+                  Yesterday
+                </button>
+              </div>
+            </div>
+
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] shadow-2xs focus:outline-none"
+              className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] shadow-2xs focus:outline-none"
             />
           </div>
 
-          {/* Note Input with Preset Chips */}
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block mb-1 flex items-center gap-1">
-              <FileText className="w-3 h-3" /> Context Note
+          {/* Context Note with Presets */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] flex items-center gap-1">
+              <FileText className="w-3 h-3" /> Note (optional)
             </label>
             <input
               type="text"
-              placeholder="e.g. morning fasting, post-run"
+              placeholder="e.g. morning fasting, post-workout..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-stone-400 shadow-2xs focus:outline-none"
+              className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-stone-400 shadow-2xs focus:outline-none"
             />
 
-            {/* Note preset chips */}
-            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
               {notePresets.map((preset) => (
                 <button
                   key={preset}
                   type="button"
                   onClick={() => handleQuickNote(preset)}
-                  className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                  className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer flex items-center gap-1 ${
                     note === preset
                       ? 'bg-[#24201D] text-white border-[#24201D]'
-                      : 'bg-[#FAF8F5] text-[#6B635B] border-[#24201D]/20 hover:border-[#24201D]'
+                      : 'bg-white text-[#6B635B] border-[#24201D]/20 hover:border-[#24201D]'
                   }`}
                 >
-                  {preset}
+                  {note === preset && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                  <span>{preset}</span>
                 </button>
               ))}
             </div>
@@ -225,7 +265,7 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
               className="w-full py-3 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black shadow-[2px_2px_0px_#24201D] cursor-pointer active:translate-y-0.5 transition-all font-display uppercase tracking-wider flex items-center justify-center gap-2"
             >
               <Scale className="w-4 h-4 stroke-[2.5]" />
-              <span>Save Weigh-In</span>
+              <span>Save Weigh-In Record</span>
             </button>
           </div>
         </form>

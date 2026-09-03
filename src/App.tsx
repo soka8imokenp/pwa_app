@@ -332,6 +332,8 @@ export function App() {
 
               {activeHealthTab === 'activity' && (
                 <HealthActivityPage
+                  profile={healthProfile}
+                  metrics={healthMetrics}
                   todaysWorkouts={todaysWorkouts}
                   todaysActiveCaloriesBurned={todaysActiveCaloriesBurned}
                   selectedDate={selectedDate}

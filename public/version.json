@@ -1,13 +1,12 @@
 {
-  "version": "1.8.26",
-  "buildNumber": 32,
+  "version": "1.8.27",
+  "buildNumber": 33,
   "releaseDate": "2026-09-03",
   "changelog": [
-    "Water Hydration Polish: Fixed duplicate plus button (+250 ml and +500 ml)",
-    "Lucide SVG Meal Icons: Minimalist line icons (Coffee, Sun, Moon, Apple) replacing emojis",
-    "Customizable Quick Presets: Added Edit mode to create custom meal presets and delete unused ones",
-    "Brutalist Entry Toggle: Sleek tactile segmented switch between AI Auto and Manual numbers",
-    "Interactive Intake Log: Accordion category breakdowns with macro pills, subtotals, and timestamps"
+    "Scientific MET Calorie Burn: Dynamic calculation using actual body weight, workout category, and intensity level",
+    "Customizable Workout Presets: Added Edit mode with custom template creator for workouts",
+    "Daily Movement Target Progress: Added active burn progress bar tied to user profile activity level",
+    "Minimalist Line SVG Icons: Clean icons for strength, running, cardio, walking, and mobility"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.26/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.27/Daily-Sumire-app-debug.apk"
 }

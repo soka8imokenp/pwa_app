@@ -1,14 +1,15 @@
 {
-  "version": "1.8.66",
-  "buildNumber": 70,
+  "version": "1.8.67",
+  "buildNumber": 71,
   "releaseDate": "2026-09-04",
   "changelog": [
+    "Resolved TypeScript UserProfile null assignment error in AuthContainer for CI/CD build",
     "Direct JWT decoding from Google ID Token for offline-first resilience without network block",
-    "Removed hardcoded localhost:4000 fallback, introduced configurable API base URL",
-    "Graceful backend sync: Google login succeeds with real name, email and avatar even when backend server is offline"
+    "Removed hardcoded localhost:4000 fallback, introduced configurable API base URL"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.66/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.67/Daily-Sumire-app-debug.apk"
 }
+
 
 
 

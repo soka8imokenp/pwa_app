@@ -237,15 +237,13 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       }
 
       // Fallback if token was opaque and userinfo couldn't be reached
-      if (!user) {
-        user = {
-          id: `google_${Date.now()}`,
-          firstName: 'Google',
-          lastName: 'User',
-          email: 'google.user@gmail.com',
-          username: 'google_user',
-        };
-      }
+      const finalUser: UserProfile = user || {
+        id: `google_${Date.now()}`,
+        firstName: 'Google',
+        lastName: 'User',
+        email: 'google.user@gmail.com',
+        username: 'google_user',
+      };
 
       // 3. Best-effort backend synchronization (if backend server is reachable)
       try {
@@ -255,13 +253,13 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
           setRefreshToken(res.refreshToken);
         }
         if (res.user) {
-          user = res.user;
+          Object.assign(finalUser, res.user);
         }
       } catch (backendErr) {
         console.warn('Backend server currently offline or unreachable, proceeding with verified Google profile:', backendErr);
       }
 
-      localStorage.setItem('kairo_auth_user', JSON.stringify(user));
+      localStorage.setItem('kairo_auth_user', JSON.stringify(finalUser));
 
       playSuccessChime();
       confetti({
@@ -271,7 +269,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
         colors: ['#3D6B52', '#4285F4', '#EA4335', '#FBBC05'],
       });
 
-      onLoginSuccess(user);
+      onLoginSuccess(finalUser);
     } catch (err: any) {
       console.error('Google authentication error:', err);
       setErrorMsg(err?.message || 'Failed to authenticate with Google.');

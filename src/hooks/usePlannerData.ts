@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, seedDemoDataIfEmpty } from '../lib/db';
+import { migrateExistingMealsToEnglish } from '../lib/mealTranslator';
 import type { Task, Habit, HabitLog, FocusSession, HabitWithStats, DayOverviewStats } from '../types';
 import { calculateHabitStats, calculateOverallActivityStreak, OverallActivityStats } from '../lib/streaks';
 import { triggerTwoWaySync } from '../lib/syncEngine';
@@ -10,7 +11,9 @@ export function usePlannerData(selectedDate: string) {
   // Ensure database is initialized with initial sample data on first load and trigger sync
   useEffect(() => {
     seedDemoDataIfEmpty().then(() => {
-      triggerTwoWaySync();
+      migrateExistingMealsToEnglish().finally(() => {
+        triggerTwoWaySync();
+      });
     });
   }, []);
 

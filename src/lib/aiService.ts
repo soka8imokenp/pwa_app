@@ -1,6 +1,7 @@
 import { buildPlannerRAGContext } from './ragContext';
 import { db } from './db';
 import { getTodayString } from './dateUtils';
+import { translateFoodNameSync } from './mealTranslator';
 import type { SubTask } from '../types';
 import type { MealType } from '../types/health';
 import { triggerTwoWaySync } from './syncEngine';
@@ -71,6 +72,16 @@ CRITICAL HYDRATION & BEVERAGE TRACKING RULE:
   2. "log_meal" for the calories, carbs/sugar, protein, fat.
   NEVER omit "log_water" when any drink or beverage is consumed!
 
+CRITICAL ENGLISH DATABASE MANDATE & DATA LOCALIZATION:
+- The entire application UI, database records, telemetry, and activity logs operate strictly in ENGLISH.
+- You converse naturally in the language the user addresses you in (Russian, Uzbek, etc.).
+- HOWEVER, whenever you execute or emit actions that store records into the database:
+  1. ALL food titles ("name") for "log_meal" and "suggested_meal" MUST BE IN ENGLISH!
+     Always translate food, meal, or beverage names to clean, natural English (e.g. "айс ти липтон 2л" -> "Lipton Iced Tea 2L", "мороженое" -> "Ice Cream", "овсянка с ягодами" -> "Oatmeal with Berries", "пицца" -> "Pizza", "борщ" -> "Borscht").
+  2. ALL task titles ("title") for "create_task" MUST BE IN ENGLISH (e.g. "купить продукты" -> "Buy groceries").
+  3. ALL habit titles ("title") for "create_habit" MUST BE IN ENGLISH (e.g. "пить воду" -> "Drink 2L water").
+  4. ALL workout titles ("title") for "log_workout" MUST BE IN ENGLISH (e.g. "силовая тренировка" -> "Strength Training").
+
 AUTONOMOUS TRACKER MANAGEMENT & ACTION EXECUTION:
 You have direct read AND write access to the user's live database (tasks, habits, meal logs, water logs, weight, workouts, scratchpad).
 When the user asks you to log, record, save, track, or add anything (or says "запиши это", "введи эти данные в мой трекер", "я покушал пиццу", "я выпил 2литра липтона", "добавь 400 мл воды", "запиши вес 74 кг", "создай задачу"):
@@ -87,7 +98,7 @@ You have two ways to execute actions:
   },
   {
     "action": "log_meal",
-    "name": "Чай Lipton 2л",
+    "name": "Lipton Iced Tea 2L",
     "kcal": 380,
     "proteinGrams": 0,
     "carbsGrams": 95,
@@ -98,15 +109,15 @@ You have two ways to execute actions:
 \`\`\`
 
 Supported actions in json:action block:
-- "log_meal": { name, kcal, proteinGrams, carbsGrams, fatGrams, mealType: "breakfast"|"lunch"|"dinner"|"snack", time?: "HH:MM" }
+- "log_meal": { name: string (in English), kcal, proteinGrams, carbsGrams, fatGrams, mealType: "breakfast"|"lunch"|"dinner"|"snack", time?: "HH:MM" }
 - "delete_meal": { name }
 - "log_water": { amountMl: number } (MUST be called for water, tea, Lipton, coffee, juices, and all beverages)
 - "log_weight": { weight: number, note?: string }
-- "log_workout": { title: string, durationMinutes: number, caloriesBurned?: number, category?: "strength"|"cardio"|"walk"|"hiit"|"yoga"|"sports" }
-- "create_task": { title: string, isPriority?: boolean, category?: string, estimatedMinutes?: number, subtasks?: string[] }
+- "log_workout": { title: string (in English), durationMinutes: number, caloriesBurned?: number, category?: "strength"|"cardio"|"walk"|"hiit"|"yoga"|"sports" }
+- "create_task": { title: string (in English), isPriority?: boolean, category?: string, estimatedMinutes?: number, subtasks?: string[] }
 - "complete_task": { title: string }
 - "delete_task": { title: string }
-- "create_habit": { title: string, icon?: string, targetDays?: string[] }
+- "create_habit": { title: string (in English), icon?: string, targetDays?: string[] }
 - "log_habit": { title: string }
 - "append_scratchpad": { note: string }
 - "navigate_tab": { tab: "priorities"|"backlog"|"habits"|"focus"|"links"|"stats" }
@@ -115,12 +126,12 @@ CRITICAL MULTIMODAL VISION INSTRUCTION:
 When the user attaches a photo of food / a meal:
 1. Accurately identify the dish, components, portion size, and estimate total calories (kcal) and macronutrients (protein, carbs, fat).
 2. If the user asked to log/save it ("запиши", "добавь в рацион", "введи в трекер"):
-   Emit a \`\`\`json:action block with "action": "log_meal".
+   Emit a \`\`\`json:action block with "action": "log_meal" and the food name strictly in ENGLISH.
 3. If the user only asked to evaluate/analyze without an explicit command to save:
-   Provide your feedback and ALWAYS emit a suggested meal block at the end so the app gives the user a 1-tap save button:
+   Provide your feedback and ALWAYS emit a suggested meal block at the end with the title strictly in ENGLISH:
 \`\`\`json:suggested_meal
 {
-  "name": "Название блюда",
+  "name": "English Dish Name",
   "kcal": 550,
   "proteinGrams": 22,
   "carbsGrams": 65,
@@ -303,9 +314,12 @@ export const AI_TOOLS = [
 export async function logMealDirectly(meal: EstimatedMealResult): Promise<void> {
   const now = new Date();
   const timeStr = meal.time || `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const rawName = meal.name || 'Meal Item';
+  const englishName = /[а-яё]/i.test(rawName) ? translateFoodNameSync(rawName) : rawName;
+
   await db.mealLogs.add({
     date: getTodayString(),
-    name: meal.name,
+    name: englishName,
     mealType: meal.mealType,
     kcal: Math.round(Number(meal.kcal) || 0),
     proteinGrams: Math.round(Number(meal.proteinGrams) || 0),
@@ -331,10 +345,13 @@ async function executePlannerAction(
     else if (currentHour >= 11 && currentHour < 16) defaultMealType = 'lunch';
     else if (currentHour >= 16 && currentHour < 22) defaultMealType = 'dinner';
 
+    const rawName = String(args.name || 'Meal Item');
+    const englishName = /[а-яё]/i.test(rawName) ? translateFoodNameSync(rawName) : rawName;
+
     const timeStr = args.time || `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     const mealRecord = {
       date: getTodayString(),
-      name: String(args.name || 'Приём пищи'),
+      name: englishName,
       mealType: (args.mealType || defaultMealType) as MealType,
       kcal: Math.round(Number(args.kcal) || 0),
       proteinGrams: Math.round(Number(args.proteinGrams) || 0),
@@ -347,17 +364,9 @@ async function executePlannerAction(
     await db.mealLogs.add(mealRecord);
     triggerTwoWaySync();
 
-    const mealTypeLabels: Record<string, string> = {
-      breakfast: 'Завтрак',
-      lunch: 'Обед',
-      dinner: 'Ужин',
-      snack: 'Перекус',
-    };
-    const catLabel = mealTypeLabels[mealRecord.mealType] || mealRecord.mealType;
-
     executedActions?.push({
       type: 'log_meal',
-      description: `Внесено в рацион (${catLabel}): ${mealRecord.name} (${mealRecord.kcal} ккал, Б:${mealRecord.proteinGrams}г, Ж:${mealRecord.fatGrams}г, У:${mealRecord.carbsGrams}г)`,
+      description: `Logged meal (${mealRecord.mealType}): ${mealRecord.name} (${mealRecord.kcal} kcal, P:${mealRecord.proteinGrams}g, F:${mealRecord.fatGrams}g, C:${mealRecord.carbsGrams}g)`,
       details: mealRecord,
     });
   } else if (fnName === 'delete_meal') {
@@ -372,7 +381,7 @@ async function executePlannerAction(
       triggerTwoWaySync();
       executedActions?.push({
         type: 'delete_meal',
-        description: `Удалено из рациона: ${target.name}`,
+        description: `Removed from meals: ${target.name}`,
         details: target,
       });
     }
@@ -386,7 +395,7 @@ async function executePlannerAction(
     triggerTwoWaySync();
     executedActions?.push({
       type: 'log_water',
-      description: `Записано ${amount} мл воды`,
+      description: `Logged ${amount} ml of water`,
       details: { amountMl: amount },
     });
   } else if (fnName === 'log_weight') {
@@ -409,7 +418,7 @@ async function executePlannerAction(
       triggerTwoWaySync();
       executedActions?.push({
         type: 'log_weight',
-        description: `Записан вес: ${weight} кг (ИМТ ${bmi})`,
+        description: `Logged body weight: ${weight} kg (BMI ${bmi})`,
         details: { weight, bmi },
       });
     }
@@ -418,7 +427,7 @@ async function executePlannerAction(
     const burned = args.caloriesBurned ? Math.round(Number(args.caloriesBurned)) : Math.round(duration * 7.5);
     const workoutRecord = {
       date: getTodayString(),
-      title: String(args.title || 'Тренировка'),
+      title: String(args.title || 'Workout Session'),
       durationMinutes: duration,
       caloriesBurned: burned,
       category: (args.category || 'cardio') as any,
@@ -428,7 +437,7 @@ async function executePlannerAction(
     triggerTwoWaySync();
     executedActions?.push({
       type: 'log_workout',
-      description: `Записана активность: "${workoutRecord.title}" (${duration} мин, +${burned} ккал)`,
+      description: `Logged workout: "${workoutRecord.title}" (${duration} min, +${burned} kcal)`,
       details: workoutRecord,
     });
   } else if (fnName === 'create_task') {
@@ -454,7 +463,7 @@ async function executePlannerAction(
 
     executedActions?.push({
       type: 'create_task',
-      description: `Создана задача: "${args.title}" ${args.isPriority ? '(Приоритет)' : ''}`,
+      description: `Created task: "${args.title}" ${args.isPriority ? '(Priority)' : ''}`,
       details: args,
     });
   } else if (fnName === 'complete_task') {
@@ -468,7 +477,7 @@ async function executePlannerAction(
       triggerTwoWaySync();
       executedActions?.push({
         type: 'complete_task',
-        description: `Выполнена задача: "${target.title}"`,
+        description: `Completed task: "${target.title}"`,
         details: target,
       });
     }
@@ -483,7 +492,7 @@ async function executePlannerAction(
       triggerTwoWaySync();
       executedActions?.push({
         type: 'delete_task',
-        description: `Удалена задача: "${target.title}"`,
+        description: `Deleted task: "${target.title}"`,
         details: target,
       });
     }
@@ -500,7 +509,7 @@ async function executePlannerAction(
 
     executedActions?.push({
       type: 'create_habit',
-      description: `Создана привычка: "${args.title}"`,
+      description: `Created habit: "${args.title}"`,
       details: args,
     });
   } else if (fnName === 'log_habit') {
@@ -529,7 +538,7 @@ async function executePlannerAction(
 
       executedActions?.push({
         type: 'log_habit',
-        description: `Отмечена привычка: "${targetHabit.title}"`,
+        description: `Logged habit: "${targetHabit.title}"`,
         details: targetHabit,
       });
     }
@@ -542,7 +551,7 @@ async function executePlannerAction(
 
     executedActions?.push({
       type: 'append_scratchpad',
-      description: `Добавлена заметка: "${args.note}"`,
+      description: `Added note: "${args.note}"`,
       details: args,
     });
   } else if (fnName === 'navigate_tab') {
@@ -552,7 +561,7 @@ async function executePlannerAction(
 
     executedActions?.push({
       type: 'navigate_tab',
-      description: `Переход на вкладку "${args.tab}"`,
+      description: `Switched to "${args.tab}" tab`,
       details: args,
     });
   }
@@ -793,8 +802,13 @@ export async function askSumireAI(
     try {
       const mealParsed = JSON.parse(suggestedMatch[1]);
       if (mealParsed && mealParsed.name && mealParsed.kcal) {
+        const rawMealName = String(mealParsed.name);
+        const englishMealName = /[а-яё]/i.test(rawMealName)
+          ? translateFoodNameSync(rawMealName)
+          : rawMealName;
+
         suggestedMeal = {
-          name: String(mealParsed.name),
+          name: englishMealName,
           kcal: Math.round(Number(mealParsed.kcal) || 0),
           proteinGrams: Math.round(Number(mealParsed.proteinGrams) || 0),
           carbsGrams: Math.round(Number(mealParsed.carbsGrams) || 0),
@@ -834,11 +848,11 @@ export async function askSumireAI(
   }
 
   if (!replyText.trim() && executedActions && executedActions.length > 0) {
-    replyText = `Выполнено: ${executedActions.map((a) => a.description).join('. ')}.`;
+    replyText = `Done: ${executedActions.map((a) => a.description).join('. ')}.`;
   }
 
   return {
-    replyText: replyText || 'Запрос обработан.',
+    replyText: replyText || 'Request processed.',
     executedActions,
     suggestedMeal,
   };

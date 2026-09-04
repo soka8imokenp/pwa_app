@@ -52,18 +52,18 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
               {isGoalReached && (
                 <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#DDE8DE] text-[#2D503C] border border-[#24201D]">
                   <CheckCircle2 className="w-2.5 h-2.5" />
-                  Норма
+                  Goal Reached
                 </span>
               )}
             </div>
 
-            {/* Adapted Clean Liter Display */}
+            {/* Adapted Clean Liter Display in English */}
             <div className="flex items-baseline gap-1 mt-1">
               <span className="text-xl sm:text-2xl font-black font-mono-num text-[#24201D] tracking-tight leading-none">
                 {currentLiters}
               </span>
               <span className="text-xs font-bold font-mono-num text-[#8C827A]">
-                / {targetLiters} л
+                / {targetLiters} L
               </span>
             </div>
           </div>
@@ -75,7 +75,7 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
             type="button"
             onClick={onRemoveWater}
             disabled={todaysWaterTotalMl <= 0}
-            title="Удалить 250 мл"
+            title="Remove 250 ml"
             className="w-8 h-8 rounded-xl bg-[#FAF8F5] hover:bg-stone-200 disabled:opacity-25 disabled:cursor-not-allowed border-[1.5px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 cursor-pointer"
           >
             <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -84,11 +84,11 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
           <button
             type="button"
             onClick={() => onAddWater(250)}
-            title="Добавить 250 мл (1 стакан)"
+            title="Add 250 ml (1 glass)"
             className="h-8 px-3 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white border-[1.5px] border-[#24201D] text-xs font-black shadow-2xs active:scale-95 cursor-pointer font-display flex items-center gap-1"
           >
             <Plus className="w-3.5 h-3.5 stroke-[3]" />
-            250 мл
+            +250 ml
           </button>
         </div>
       </div>
@@ -103,15 +103,15 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
         </div>
       </div>
 
-      {/* 3. Milestone Guide: 4 ст = 1L • 8 ст = 2L • 12 ст = 3L • 16 ст = 4L */}
+      {/* 3. Milestone Guide: 4 gl = 1.0L • 8 gl = 2.0L • 12 gl = 3.0L • 16 gl = 4.0L */}
       <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-[#6B635B] bg-[#FAF8F5] px-2.5 py-1 rounded-lg border border-[#24201D]/20">
-        <span className={consumedGlasses >= 4 ? 'text-[#0284C7] font-black' : ''}>4 ст = 1.0 л</span>
+        <span className={consumedGlasses >= 4 ? 'text-[#0284C7] font-black' : ''}>4 gl = 1.0L</span>
         <span>•</span>
-        <span className={consumedGlasses >= 8 ? 'text-[#0284C7] font-black' : ''}>8 ст = 2.0 л</span>
+        <span className={consumedGlasses >= 8 ? 'text-[#0284C7] font-black' : ''}>8 gl = 2.0L</span>
         <span>•</span>
-        <span className={consumedGlasses >= 12 ? 'text-[#0284C7] font-black' : ''}>12 ст = 3.0 л</span>
+        <span className={consumedGlasses >= 12 ? 'text-[#0284C7] font-black' : ''}>12 gl = 3.0L</span>
         <span>•</span>
-        <span className={consumedGlasses >= 16 ? 'text-[#0284C7] font-black' : ''}>16 ст = 4.0 л</span>
+        <span className={consumedGlasses >= 16 ? 'text-[#0284C7] font-black' : ''}>16 gl = 4.0L</span>
       </div>
 
       {/* 4. Symmetrical 16-Glass Matrix: 2 even rows of 8 glasses */}
@@ -127,7 +127,7 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
               key={i}
               type="button"
               onClick={() => handleGlassClick(i)}
-              title={`Стакан #${glassNum} (${glassNum * GLASS_SIZE_ML} мл / ${(glassNum * 0.25).toFixed(2)} л)`}
+              title={`Glass #${glassNum} (${glassNum * GLASS_SIZE_ML} ml / ${(glassNum * 0.25).toFixed(2)} L)`}
               className={`relative h-12 rounded-xl border-[1.5px] border-[#24201D] flex flex-col items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-90 select-none ${
                 isFilled
                   ? 'bg-gradient-to-b from-[#38BDF8] to-[#0284C7] text-white font-black'
@@ -137,7 +137,7 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
               {/* Daily Target Badge on exact target glass */}
               {isTarget && (
                 <div
-                  title={`Цель: ${glassNum} стаканов (${targetLiters} л)`}
+                  title={`Goal: ${glassNum} glasses (${targetLiters} L)`}
                   className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#FFE873] border border-[#24201D] flex items-center justify-center shadow-2xs"
                 >
                   <Target className="w-2.5 h-2.5 text-[#24201D] stroke-[2.5]" />

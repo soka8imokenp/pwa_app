@@ -1,4 +1,5 @@
 import { getStoredGeminiApiKey } from './aiService';
+import { translateFoodNameSync } from './mealTranslator';
 import type { HealthProfile, CalculatedHealthMetrics, MealType, WeightLog, MealLog, WorkoutLog } from '../types/health';
 
 export interface EstimatedMealResult {
@@ -23,9 +24,10 @@ export async function estimateMealNutritionWithAI(
     try {
       const prompt = `You are an elite clinical nutritionist. The user ate: "${mealDescription}".
 Estimate the nutritional breakdown accurately.
+CRITICAL: The "name" property MUST ALWAYS BE IN CLEAN, NATURAL ENGLISH (e.g. "Lipton Iced Tea 2L", "Vanilla Ice Cream", "Chicken Breast with Rice", "Borscht", "Oatmeal with Berries"). Translate if the user spoke another language.
 Return STRICT JSON ONLY in the following format (no markdown, no backticks, just raw JSON):
 {
-  "name": "Short clean food title",
+  "name": "Short clean food title in English",
   "kcal": 450,
   "proteinGrams": 30,
   "carbsGrams": 45,
@@ -53,8 +55,13 @@ Return STRICT JSON ONLY in the following format (no markdown, no backticks, just
         const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (rawJson) {
           const parsed = JSON.parse(rawJson);
+          const rawName = parsed.name || mealDescription;
+          const englishName = /[а-яё]/i.test(rawName)
+            ? translateFoodNameSync(rawName)
+            : rawName;
+
           return {
-            name: parsed.name || mealDescription,
+            name: englishName,
             kcal: Number(parsed.kcal) || 350,
             proteinGrams: Number(parsed.proteinGrams) || 20,
             carbsGrams: Number(parsed.carbsGrams) || 40,
@@ -100,6 +107,21 @@ Return STRICT JSON ONLY in the following format (no markdown, no backticks, just
     protein = 3;
     carbs = 10;
     fat = 4;
+  } else if (lower.includes('tea') || lower.includes('чай') || lower.includes('липтон') || lower.includes('lipton')) {
+    kcal = 80;
+    protein = 0;
+    carbs = 20;
+    fat = 0;
+  } else if (lower.includes('ice cream') || lower.includes('морожен')) {
+    kcal = 250;
+    protein = 4;
+    carbs = 32;
+    fat = 14;
+  } else if (lower.includes('pizza') || lower.includes('пицц')) {
+    kcal = 600;
+    protein = 24;
+    carbs = 70;
+    fat = 22;
   } else if (lower.includes('steak') || lower.includes('говядин') || lower.includes('мясо')) {
     kcal = 550;
     protein = 45;
@@ -108,7 +130,7 @@ Return STRICT JSON ONLY in the following format (no markdown, no backticks, just
   }
 
   return {
-    name: mealDescription.trim(),
+    name: translateFoodNameSync(mealDescription.trim()),
     kcal,
     proteinGrams: protein,
     carbsGrams: carbs,

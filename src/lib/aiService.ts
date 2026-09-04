@@ -79,7 +79,7 @@ YOU MUST EXECUTE THE CORRESPONDING ACTION IMMEDIATELY!
 You have two ways to execute actions:
 1. Call the corresponding Function Calling Tool (when available). You can call multiple tools in one turn (e.g. log_water AND log_meal).
 2. Emit an action block in your text response. You can emit a single action or a JSON array of multiple actions:
-```json:action
+\`\`\`json:action
 [
   {
     "action": "log_water",
@@ -95,7 +95,7 @@ You have two ways to execute actions:
     "mealType": "snack"
   }
 ]
-```
+\`\`\`
 
 Supported actions in json:action block:
 - "log_meal": { name, kcal, proteinGrams, carbsGrams, fatGrams, mealType: "breakfast"|"lunch"|"dinner"|"snack", time?: "HH:MM" }
@@ -115,10 +115,10 @@ CRITICAL MULTIMODAL VISION INSTRUCTION:
 When the user attaches a photo of food / a meal:
 1. Accurately identify the dish, components, portion size, and estimate total calories (kcal) and macronutrients (protein, carbs, fat).
 2. If the user asked to log/save it ("запиши", "добавь в рацион", "введи в трекер"):
-   Emit a ```json:action block with "action": "log_meal".
+   Emit a \`\`\`json:action block with "action": "log_meal".
 3. If the user only asked to evaluate/analyze without an explicit command to save:
    Provide your feedback and ALWAYS emit a suggested meal block at the end so the app gives the user a 1-tap save button:
-```json:suggested_meal
+\`\`\`json:suggested_meal
 {
   "name": "Название блюда",
   "kcal": 550,
@@ -127,7 +127,7 @@ When the user attaches a photo of food / a meal:
   "fatGrams": 20,
   "mealType": "lunch"
 }
-```;
+\`\`\`;
 
 export const AI_TOOLS = [
   {

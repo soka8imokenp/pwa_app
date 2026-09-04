@@ -4,26 +4,27 @@ import {
   Pause,
   SkipForward,
   SkipBack,
-  Shuffle,
-  Repeat,
+  Volume2,
+  VolumeX,
+  Radio,
+  Tv,
   ListMusic,
-  RefreshCw,
-  Search,
-  Music,
+  Plus,
+  Trash2,
+  ExternalLink,
+  Sparkles,
 } from 'lucide-react';
-import { Track } from '../../data/playlist';
 import { playClickSound } from '../../lib/sound';
-import { musicPlayer, MusicPlayerState } from '../../lib/musicPlayerService';
-
-const VERCEL_API_URL = 'https://sumiredaily-music.vercel.app/tracks.json';
-const VERCEL_BASE_ORIGIN = 'https://sumiredaily-music.vercel.app';
+import { musicPlayer, MusicPlayerState, extractYouTubeId } from '../../lib/musicPlayerService';
+import { RadioStation } from '../../types/radio';
 
 export const InAppMusicPlayer: React.FC = () => {
   const [playerState, setPlayerState] = useState<MusicPlayerState>(() => musicPlayer.getState());
-  const [isTracklistOpen, setIsTracklistOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [isStationsOpen, setIsStationsOpen] = useState(false);
+  const [customUrl, setCustomUrl] = useState('');
+  const [customName, setCustomName] = useState('');
+  const [customError, setCustomError] = useState<string | null>(null);
+  const [isAddingStation, setIsAddingStation] = useState(false);
 
   // Subscribe to persistent player service
   useEffect(() => {
@@ -33,321 +34,422 @@ export const InAppMusicPlayer: React.FC = () => {
     return unsubscribe;
   }, []);
 
-  const { playlist, currentIndex, currentTrack, isPlaying, currentTime, duration, isShuffle, isRepeat } = playerState;
-
-  // Helper to resolve full audio URL from Vercel
-  const resolveAudioUrl = (url: string) => {
-    if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    return `${VERCEL_BASE_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`;
-  };
-
-  // Sync with Vercel API (only on mount or manual button click)
-  const fetchVercelTracks = async (isManual = false) => {
-    if (isManual) {
-      playClickSound();
-      setIsSyncing(true);
-    }
-    try {
-      const res = await fetch(`${VERCEL_API_URL}?t=${Date.now()}`);
-      if (res.ok) {
-        const rawTracks = await res.json();
-        if (Array.isArray(rawTracks) && rawTracks.length > 0) {
-          const formattedTracks: Track[] = rawTracks.map((t, idx) => ({
-            id: t.id || (idx + 1).toString(),
-            title: t.title || 'Unknown Track',
-            artist: t.artist || 'Daily Sumire',
-            duration: t.duration || '03:30',
-            coverUrl: t.coverUrl?.startsWith('http') ? t.coverUrl : `${VERCEL_BASE_ORIGIN}${t.coverUrl || '/icon-192x192.png'}`,
-            audioUrl: resolveAudioUrl(t.audioUrl),
-          }));
-
-          musicPlayer.setPlaylist(formattedTracks);
-          if (isManual) {
-            setSyncStatus('Updated!');
-            setTimeout(() => setSyncStatus(null), 3000);
-          }
-        } else if (isManual) {
-          setSyncStatus('No .mp3 files on Vercel yet');
-          setTimeout(() => setSyncStatus(null), 3000);
-        }
-      }
-    } catch {
-      if (isManual) {
-        setSyncStatus('Connecting to Vercel...');
-        setTimeout(() => setSyncStatus(null), 3000);
-      }
-    } finally {
-      if (isManual) {
-        setIsSyncing(false);
-      }
-    }
-  };
-
-  // Initial fetch on mount only (no periodic interval to avoid stream interruptions)
-  useEffect(() => {
-    fetchVercelTracks(false);
-  }, []);
+  const {
+    stations,
+    currentStation,
+    isPlaying,
+    isBuffering,
+    volume,
+    isMuted,
+    isVideoVisible,
+  } = playerState;
 
   const handleTogglePlay = () => {
     playClickSound();
     musicPlayer.togglePlay();
   };
 
-  const handleNextTrack = () => {
+  const handleNextStation = () => {
     playClickSound();
-    musicPlayer.nextTrack();
+    musicPlayer.nextStation();
   };
 
-  const handlePrevTrack = () => {
+  const handlePrevStation = () => {
     playClickSound();
-    musicPlayer.prevTrack();
+    musicPlayer.prevStation();
   };
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const time = Number(e.target.value);
-    musicPlayer.seek(time);
+  const handleToggleMute = () => {
+    playClickSound();
+    musicPlayer.toggleMute();
   };
 
-  const formatSeconds = (sec: number) => {
-    if (isNaN(sec) || sec <= 0) return '0:00';
-    const m = Math.floor(sec / 60);
-    const s = Math.floor(sec % 60);
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = Number(e.target.value);
+    musicPlayer.setVolume(val);
   };
 
-  const filteredPlaylist = playlist.filter((t) =>
-    t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.artist.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleToggleVideo = () => {
+    playClickSound();
+    musicPlayer.toggleVideo();
+  };
 
-  const progressPercent = duration > 0 ? Math.min(100, Math.max(0, (currentTime / duration) * 100)) : 0;
+  const handleSelectStation = (station: RadioStation) => {
+    playClickSound();
+    musicPlayer.selectStation(station, true);
+  };
+
+  const handleAddCustomStation = (e: React.FormEvent) => {
+    e.preventDefault();
+    playClickSound();
+    setCustomError(null);
+
+    if (!customUrl.trim()) {
+      setCustomError('Вставьте ссылку на YouTube или ID видео');
+      return;
+    }
+
+    const videoId = extractYouTubeId(customUrl);
+    if (!videoId) {
+      setCustomError('Некорректная ссылка на YouTube стрим');
+      return;
+    }
+
+    const success = musicPlayer.addCustomStation(customUrl, customName);
+    if (success) {
+      setCustomUrl('');
+      setCustomName('');
+      setIsAddingStation(false);
+    } else {
+      setCustomError('Не удалось добавить станцию');
+    }
+  };
+
+  const handleDeleteStation = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    playClickSound();
+    musicPlayer.deleteCustomStation(id);
+  };
+
+  const effectiveVolume = isMuted ? 0 : volume;
 
   return (
-    <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3 font-body select-none">
-      {/* Header Controls */}
+    <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3 font-body select-none transition-all">
+      {/* 1. Header Controls */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-[#F0BB58] border-[1.75px] border-[#24201D] flex items-center justify-center text-sm shadow-2xs shrink-0">
-            <Music className="w-4 h-4 text-[#24201D] stroke-[2.25]" />
+            <Radio className="w-4 h-4 text-[#24201D] stroke-[2.25]" />
           </div>
           <div>
-            <h3 className="text-xs font-bold font-display text-[#24201D] leading-tight">Focus Music</h3>
-            {syncStatus && (
-              <span className="text-[10px] text-[#3D6B52] font-bold block">{syncStatus}</span>
-            )}
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-xs font-bold font-display text-[#24201D] leading-tight">
+                Lofi Live Radio
+              </h3>
+              {isPlaying && (
+                <span className="flex items-center gap-1 px-1.5 py-0.5 bg-[#FDE8E8] border border-[#E15A46] rounded-full text-[9px] font-black text-[#E15A46] leading-none animate-pulse">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#E15A46]" />
+                  LIVE
+                </span>
+              )}
+            </div>
+            <p className="text-[10px] text-[#6B635B] font-medium leading-none mt-0.5">
+              24/7 Deep Work Audio
+            </p>
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-1.5">
-          {/* Refresh / Check Vercel */}
+          {/* Toggle Picture-in-Picture Live Video */}
           <button
-            onClick={() => fetchVercelTracks(true)}
-            disabled={isSyncing}
-            title="Refresh from Vercel"
-            className="w-8 h-8 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border-[1.5px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs cursor-pointer active:translate-y-0.5"
+            onClick={handleToggleVideo}
+            title={isVideoVisible ? 'Скрыть видео' : 'Смотреть трансляцию'}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold border-[1.5px] border-[#24201D] flex items-center gap-1.5 cursor-pointer transition-all active:translate-y-0.5 ${
+              isVideoVisible
+                ? 'bg-[#3D6B52] text-white shadow-none'
+                : 'bg-[#FAF8F5] text-[#24201D] hover:bg-stone-100 shadow-2xs'
+            }`}
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-[#3D6B52]' : ''}`} />
+            <Tv className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{isVideoVisible ? 'Скрыть видео' : 'Видео'}</span>
           </button>
 
-          {/* Tracklist Drawer Toggle */}
+          {/* Stations Drawer Toggle */}
           <button
             onClick={() => {
               playClickSound();
-              setIsTracklistOpen(!isTracklistOpen);
+              setIsStationsOpen(!isStationsOpen);
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold border-[1.5px] border-[#24201D] flex items-center gap-1.5 cursor-pointer transition-all ${
-              isTracklistOpen
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold border-[1.5px] border-[#24201D] flex items-center gap-1.5 cursor-pointer transition-all active:translate-y-0.5 ${
+              isStationsOpen
                 ? 'bg-[#24201D] text-[#FAF8F5]'
                 : 'bg-[#FAF8F5] text-[#24201D] hover:bg-stone-100 shadow-2xs'
             }`}
           >
             <ListMusic className="w-3.5 h-3.5" />
-            <span>Tracks</span>
+            <span>Станции</span>
           </button>
         </div>
       </div>
 
-      {/* Main Playing Track Card */}
+      {/* 2. Main Playing Radio Station Card */}
       <div className="p-3.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
-        {currentTrack ? (
-          <div className="min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <h4 className="text-sm sm:text-base font-bold text-[#24201D] truncate">{currentTrack.title}</h4>
-              {isPlaying && (
-                <span className="flex items-center gap-0.5 shrink-0">
-                  <span className="w-1 h-3 bg-[#24201D] rounded-full animate-pulse" />
-                  <span className="w-1 h-4 bg-[#24201D] rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
-                  <span className="w-1 h-2 bg-[#24201D] rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+        <div className="flex items-center gap-3">
+          {/* Station Artwork Thumbnail */}
+          <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-xl border-[1.75px] border-[#24201D] overflow-hidden shadow-2xs shrink-0 bg-black">
+            <img
+              src={currentStation.thumbnailUrl}
+              alt={currentStation.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/icon-192x192.png';
+              }}
+            />
+            {isPlaying && (
+              <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
+                <span className="flex items-end gap-0.5 h-4">
+                  <span className="w-1 bg-white rounded-full animate-pulse" style={{ height: '60%' }} />
+                  <span className="w-1 bg-white rounded-full animate-pulse" style={{ height: '100%', animationDelay: '0.2s' }} />
+                  <span className="w-1 bg-white rounded-full animate-pulse" style={{ height: '40%', animationDelay: '0.4s' }} />
+                  <span className="w-1 bg-white rounded-full animate-pulse" style={{ height: '80%', animationDelay: '0.1s' }} />
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Station Metadata */}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${
+                isPlaying
+                  ? 'bg-[#FDE8E8] border-[#E15A46] text-[#E15A46]'
+                  : isBuffering
+                  ? 'bg-[#FEF3C7] border-[#D97706] text-[#B45309]'
+                  : 'bg-stone-200/60 border-stone-300 text-stone-600'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${
+                  isPlaying ? 'bg-[#E15A46] animate-ping' : isBuffering ? 'bg-[#D97706] animate-pulse' : 'bg-stone-400'
+                }`} />
+                {isPlaying ? 'Live Stream' : isBuffering ? 'Buffering...' : 'Radio Off'}
+              </span>
+
+              {currentStation.isCustom && (
+                <span className="px-1.5 py-0.5 bg-[#DDE8DE] border border-[#3D6B52] rounded-md text-[9px] font-bold text-[#3D6B52]">
+                  Custom
                 </span>
               )}
             </div>
-            <p className="text-xs text-[#6B635B] font-medium truncate mt-0.5">{currentTrack.artist}</p>
-          </div>
-        ) : (
-          <div className="py-2 text-center">
-            <p className="text-xs font-bold text-[#6B635B]">No tracks loaded yet</p>
-            <p className="text-[10px] text-stone-400 mt-0.5 flex items-center justify-center gap-1">
-              <span>Push .mp3 files to Vercel and tap</span>
-              <RefreshCw className="w-3 h-3 text-stone-500 inline stroke-[2.25]" />
-            </p>
-          </div>
-        )}
 
-        {/* Progress Scrubber Bar */}
-        <div className="space-y-1">
-          <input
-            type="range"
-            min="0"
-            max={duration || 100}
-            value={currentTime}
-            onChange={handleSeek}
-            disabled={!currentTrack}
-            className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-[#3D6B52]"
-            style={{
-              background: `linear-gradient(to right, #3D6B52 ${progressPercent}%, #E4E4E7 ${progressPercent}%)`,
-            }}
-          />
-          <div className="flex items-center justify-between text-[10px] font-bold font-mono-num text-[#6B635B]">
-            <span>{formatSeconds(currentTime)}</span>
-            <span>{formatSeconds(duration)}</span>
+            <h4 className="text-sm sm:text-base font-bold text-[#24201D] truncate mt-1">
+              {currentStation.name}
+            </h4>
+            <p className="text-xs text-[#6B635B] font-medium truncate mt-0.5">
+              {currentStation.subtitle || '24/7 Lofi Live Radio'}
+            </p>
           </div>
         </div>
 
-        {/* Playback Controls */}
-        <div className="flex items-center justify-between pt-0.5">
-          {/* Shuffle */}
-          <button
-            onClick={() => {
-              playClickSound();
-              musicPlayer.toggleShuffle();
-            }}
-            disabled={!currentTrack}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
-              isShuffle ? 'bg-[#F0BB58] border-[#24201D] text-[#24201D] shadow-2xs' : 'border-transparent text-stone-400 hover:text-stone-800'
-            }`}
-            title="Shuffle"
+        {/* 3. Audio Visualizer Waves */}
+        <div className="flex items-center justify-between px-2 py-1.5 bg-white border border-[#24201D]/20 rounded-xl">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-[#6B635B] uppercase tracking-wider">
+              Sound Wave
+            </span>
+            <div className="flex items-end gap-1 h-3.5">
+              {[40, 75, 90, 60, 100, 50, 85].map((height, i) => (
+                <span
+                  key={i}
+                  className={`w-1 rounded-full transition-all duration-200 ${
+                    isPlaying ? 'bg-[#3D6B52]' : 'bg-stone-300'
+                  }`}
+                  style={{
+                    height: isPlaying ? `${height}%` : '20%',
+                    animation: isPlaying ? `pulse 0.8s ease-in-out infinite alternate` : 'none',
+                    animationDelay: `${i * 0.15}s`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <a
+            href={`https://www.youtube.com/watch?v=${currentStation.videoId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Открыть на YouTube"
+            className="flex items-center gap-1 text-[10px] font-bold text-[#6B635B] hover:text-[#24201D] transition-colors"
           >
-            <Shuffle className="w-4 h-4 stroke-[2]" />
+            <span>YouTube</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+
+        {/* 4. Volume Scrubber Bar */}
+        <div className="flex items-center gap-2 pt-0.5">
+          <button
+            onClick={handleToggleMute}
+            title={isMuted ? 'Включить звук' : 'Выключить звук'}
+            className="w-7 h-7 rounded-lg bg-white hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-[#24201D] cursor-pointer shrink-0 active:translate-y-0.5"
+          >
+            {isMuted || volume === 0 ? (
+              <VolumeX className="w-3.5 h-3.5 text-[#E15A46]" />
+            ) : (
+              <Volume2 className="w-3.5 h-3.5" />
+            )}
           </button>
 
-          {/* Prev */}
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={effectiveVolume}
+            onChange={handleVolumeChange}
+            className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-[#3D6B52]"
+            style={{
+              background: `linear-gradient(to right, #3D6B52 ${effectiveVolume}%, #E4E4E7 ${effectiveVolume}%)`,
+            }}
+          />
+
+          <span className="text-[10px] font-bold font-mono-num text-[#6B635B] w-8 text-right shrink-0">
+            {effectiveVolume}%
+          </span>
+        </div>
+
+        {/* 5. Playback Transport Controls */}
+        <div className="flex items-center justify-between pt-1">
+          {/* Prev Station */}
           <button
-            onClick={handlePrevTrack}
-            disabled={!currentTrack}
-            className="w-11 h-11 rounded-xl bg-white border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer disabled:opacity-50"
-            title="Previous Track"
+            onClick={handlePrevStation}
+            className="w-12 h-11 rounded-xl bg-white border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer transition-all hover:bg-stone-50"
+            title="Предыдущая станция"
           >
             <SkipBack className="w-4 h-4 stroke-[2.5]" />
           </button>
 
-          {/* Big Play/Pause Button */}
+          {/* Big Play/Pause Toggle Button */}
           <button
             onClick={handleTogglePlay}
-            disabled={!currentTrack}
-            className="w-16 h-12 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] border-[2px] border-[#24201D] flex items-center justify-center text-white shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer disabled:opacity-50"
+            title={isPlaying ? 'Пауза' : 'Включить радио'}
+            className="w-20 h-12 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] border-[2px] border-[#24201D] flex items-center justify-center text-white shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
           >
-            {isPlaying ? <Pause className="w-6 h-6 fill-white" /> : <Play className="w-6 h-6 fill-white ml-0.5" />}
+            {isPlaying ? (
+              <Pause className="w-6 h-6 fill-white" />
+            ) : (
+              <Play className="w-6 h-6 fill-white ml-0.5" />
+            )}
           </button>
 
-          {/* Next */}
+          {/* Next Station */}
           <button
-            onClick={handleNextTrack}
-            disabled={!currentTrack}
-            className="w-11 h-11 rounded-xl bg-white border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer disabled:opacity-50"
-            title="Next Track"
+            onClick={handleNextStation}
+            className="w-12 h-11 rounded-xl bg-white border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer transition-all hover:bg-stone-50"
+            title="Следующая станция"
           >
             <SkipForward className="w-4 h-4 stroke-[2.5]" />
-          </button>
-
-          {/* Repeat */}
-          <button
-            onClick={() => {
-              playClickSound();
-              musicPlayer.toggleRepeat();
-            }}
-            disabled={!currentTrack}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
-              isRepeat ? 'bg-[#F0BB58] border-[#24201D] text-[#24201D] shadow-2xs' : 'border-transparent text-stone-400 hover:text-stone-800'
-            }`}
-            title="Repeat Track"
-          >
-            <Repeat className="w-4 h-4 stroke-[2]" />
           </button>
         </div>
       </div>
 
-      {/* Tracklist Drawer */}
-      {isTracklistOpen && (
-        <div className="p-3 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5">
-          {/* Search bar */}
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search tracks or artists..."
-              className="w-full pl-8 pr-3 py-2 bg-white border border-[#24201D] rounded-xl text-xs outline-none font-medium text-[#24201D]"
-            />
+      {/* 6. Stations Drawer & Custom URL Input */}
+      {isStationsOpen && (
+        <div className="p-3 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3 animate-in fade-in duration-150">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-[#3D6B52]" />
+              <span className="text-xs font-bold text-[#24201D]">Выберите станцию</span>
+            </div>
+
+            <button
+              onClick={() => {
+                playClickSound();
+                setIsAddingStation(!isAddingStation);
+              }}
+              className="px-2 py-1 bg-white hover:bg-stone-100 border border-[#24201D] rounded-lg text-[10px] font-bold text-[#24201D] flex items-center gap-1 cursor-pointer"
+            >
+              <Plus className="w-3 h-3" />
+              <span>{isAddingStation ? 'Закрыть' : 'Добавить ссылку'}</span>
+            </button>
           </div>
 
-          {/* Tracks List */}
-          <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1 py-0.5">
-            {filteredPlaylist.length === 0 ? (
-              <p className="text-xs text-stone-400 text-center py-4 flex items-center justify-center gap-1">
-                <span>No tracks found. Upload .mp3 to Vercel and tap</span>
-                <RefreshCw className="w-3 h-3 text-stone-400 inline" />
+          {/* Add Custom Station Form */}
+          {isAddingStation && (
+            <form onSubmit={handleAddCustomStation} className="p-2.5 bg-white border border-[#24201D] rounded-xl space-y-2">
+              <p className="text-[10px] font-bold text-[#6B635B]">
+                Подключить свой YouTube стрим или видео
               </p>
-            ) : (
-              filteredPlaylist.map((track) => {
-                const originalIndex = playlist.findIndex((t) => t.id === track.id);
-                const isCurrent = originalIndex === currentIndex;
+              <input
+                type="text"
+                value={customUrl}
+                onChange={(e) => setCustomUrl(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=... или ID"
+                className="w-full px-2.5 py-1.5 bg-[#FAF8F5] border border-[#24201D] rounded-lg text-xs font-medium text-[#24201D] outline-none"
+              />
+              <input
+                type="text"
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                placeholder="Название радио (необязательно)"
+                className="w-full px-2.5 py-1.5 bg-[#FAF8F5] border border-[#24201D] rounded-lg text-xs font-medium text-[#24201D] outline-none"
+              />
+              {customError && (
+                <p className="text-[10px] text-[#E15A46] font-bold">{customError}</p>
+              )}
+              <button
+                type="submit"
+                className="w-full py-1.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border border-[#24201D] rounded-lg text-xs font-bold shadow-2xs active:translate-y-0.5 cursor-pointer"
+              >
+                + Подключить радио
+              </button>
+            </form>
+          )}
 
-                return (
-                  <div
-                    key={track.id}
-                    onClick={() => {
-                      playClickSound();
-                      musicPlayer.selectTrack(originalIndex);
-                    }}
-                    className={`p-2.5 rounded-xl border-[1.5px] border-[#24201D] flex items-center justify-between gap-2.5 cursor-pointer transition-all ${
-                      isCurrent
-                        ? 'bg-[#DDE8DE] shadow-[2px_2px_0px_#24201D] -translate-y-0.5'
-                        : 'bg-white hover:bg-stone-50 shadow-2xs'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div
-                        className={`w-6 h-6 rounded-lg border border-[#24201D] flex items-center justify-center text-xs font-bold font-mono-num shrink-0 ${
-                          isCurrent ? 'bg-[#F0BB58] text-[#24201D]' : 'bg-[#FAF8F5] text-[#6B635B]'
-                        }`}
-                      >
-                        {isCurrent && isPlaying ? (
-                          <Play className="w-3 h-3 fill-[#24201D] stroke-[#24201D]" />
-                        ) : (
-                          originalIndex + 1
+          {/* Stations List */}
+          <div className="space-y-1.5 max-h-64 overflow-y-auto pr-0.5">
+            {stations.map((station) => {
+              const isCurrent = station.id === currentStation.id;
+
+              return (
+                <div
+                  key={station.id}
+                  onClick={() => handleSelectStation(station)}
+                  className={`p-2 rounded-xl border-[1.5px] border-[#24201D] flex items-center justify-between gap-2.5 cursor-pointer transition-all ${
+                    isCurrent
+                      ? 'bg-[#DDE8DE] shadow-[2px_2px_0px_#24201D] -translate-y-0.5'
+                      : 'bg-white hover:bg-stone-50 shadow-2xs'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <img
+                      src={station.thumbnailUrl}
+                      alt={station.name}
+                      className="w-8 h-8 rounded-lg border border-[#24201D] object-cover shrink-0 bg-stone-100"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/icon-192x192.png';
+                      }}
+                    />
+
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className={`text-xs font-bold truncate ${isCurrent ? 'text-[#24201D]' : 'text-stone-800'}`}>
+                          {station.name}
+                        </p>
+                        {isCurrent && isPlaying && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#E15A46] animate-ping" />
                         )}
                       </div>
-
-                      <div className="min-w-0">
-                        <p className={`text-xs font-bold truncate ${isCurrent ? 'text-[#24201D]' : 'text-stone-800'}`}>
-                          {track.title}
-                        </p>
-                        <p className="text-[10px] text-[#6B635B] truncate">{track.artist}</p>
-                      </div>
+                      <p className="text-[10px] text-[#6B635B] truncate">
+                        {station.subtitle}
+                      </p>
                     </div>
-
-                    <span className="text-[10px] font-bold font-mono-num text-[#6B635B] shrink-0">
-                      {track.duration}
-                    </span>
                   </div>
-                );
-              })
-            )}
+
+                  <div className="flex items-center gap-1 shrink-0">
+                    {station.isCustom && (
+                      <button
+                        onClick={(e) => handleDeleteStation(e, station.id)}
+                        title="Удалить станцию"
+                        className="w-6 h-6 rounded-md hover:bg-red-100 text-[#E15A46] flex items-center justify-center cursor-pointer"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
+
+                    <div
+                      className={`w-6 h-6 rounded-lg border border-[#24201D] flex items-center justify-center text-xs shrink-0 ${
+                        isCurrent ? 'bg-[#F0BB58] text-[#24201D]' : 'bg-[#FAF8F5] text-[#6B635B]'
+                      }`}
+                    >
+                      {isCurrent && isPlaying ? (
+                        <Play className="w-3 h-3 fill-[#24201D] stroke-[#24201D]" />
+                      ) : (
+                        <Radio className="w-3 h-3" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

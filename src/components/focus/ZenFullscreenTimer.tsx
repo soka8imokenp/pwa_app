@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Minimize2, Target, Check, Hourglass, Music2, AlertCircle } from 'lucide-react';
+import { Play, Pause, RotateCcw, Minimize2, Target, Check, Hourglass, Music2, AlertCircle, Radio } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 import { AmbientSoundType } from '../../lib/ambientSound';
 import { musicPlayer, MusicPlayerState } from '../../lib/musicPlayerService';
@@ -135,23 +135,28 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
               playClickSound();
               musicPlayer.togglePlay();
             }}
-            title={isMusicPlaying ? 'Click to Pause' : 'Click to Play'}
+            title={isMusicPlaying ? 'Click to Pause Lofi Radio' : 'Click to Play Lofi Radio'}
             className="inline-flex items-center gap-2.5 px-4 py-2 bg-white hover:bg-stone-50 border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] max-w-xs sm:max-w-sm mx-auto cursor-pointer transition-all active:translate-y-0.5"
           >
             <div className="w-6 h-6 rounded-lg bg-[#F0BB58] border border-[#24201D] flex items-center justify-center shrink-0">
-              <Music2 className="w-3.5 h-3.5 text-[#24201D] stroke-[2.25]" />
+              <Radio className="w-3.5 h-3.5 text-[#24201D] stroke-[2.25]" />
             </div>
 
             <div className="min-w-0 text-left flex-1">
-              <p className="text-xs font-bold text-[#24201D] truncate">{currentTrack.title}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs font-bold text-[#24201D] truncate">{currentTrack.title}</p>
+                {isMusicPlaying && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#E15A46] animate-ping shrink-0" />
+                )}
+              </div>
               <p className="text-[10px] text-[#6B635B] font-medium truncate">{currentTrack.artist}</p>
             </div>
 
             {isMusicPlaying ? (
               <div className="flex items-center gap-0.5 shrink-0">
-                <span className="w-1 h-3 bg-[#24201D] rounded-full animate-pulse" />
-                <span className="w-1 h-4 bg-[#24201D] rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
-                <span className="w-1 h-2 bg-[#24201D] rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+                <span className="w-1 h-3 bg-[#3D6B52] rounded-full animate-pulse" />
+                <span className="w-1 h-4 bg-[#3D6B52] rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                <span className="w-1 h-2 bg-[#3D6B52] rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
               </div>
             ) : (
               <Play className="w-3.5 h-3.5 fill-[#24201D] text-[#24201D] shrink-0 ml-1" />

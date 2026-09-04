@@ -20,7 +20,11 @@
       "*.spotifycdn.com",
       "github.com",
       "*.github.com",
-      "*.githubusercontent.com"
+      "*.githubusercontent.com",
+      "*.youtube.com",
+      "*.youtube-nocookie.com",
+      "*.googlevideo.com",
+      "*.ytimg.com"
     ]
   },
   "android": {

@@ -127,7 +127,7 @@ When the user attaches a photo of food / a meal:
   "fatGrams": 20,
   "mealType": "lunch"
 }
-\`\`\`;
+\`\`\``;
 
 export const AI_TOOLS = [
   {

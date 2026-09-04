@@ -186,10 +186,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   };
 
-  const handleImportClick = () => {
-    playClickSound();
-    fileInputRef.current?.click();
-  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -541,21 +537,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <span>Export JSON</span>
             </button>
 
-            <button
-              onClick={handleImportClick}
-              disabled={isProcessing}
-              className="flex-1 py-2 px-3 rounded-xl bg-[#F4F0EA] hover:bg-stone-200 border-[1.5px] border-[#24201D] text-xs font-black text-[#24201D] flex items-center justify-center gap-1.5 shadow-2xs active:translate-y-0.5 cursor-pointer transition-all"
+            <label
+              onClick={() => playClickSound()}
+              className={`flex-1 py-2 px-3 rounded-xl bg-[#F4F0EA] hover:bg-stone-200 border-[1.5px] border-[#24201D] text-xs font-black text-[#24201D] flex items-center justify-center gap-1.5 shadow-2xs active:translate-y-0.5 cursor-pointer transition-all ${
+                isProcessing ? 'opacity-50 pointer-events-none' : ''
+              }`}
             >
               <Upload className="w-3.5 h-3.5 stroke-[2.25]" />
               <span>Import JSON</span>
-            </button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept=".json"
-              className="hidden"
-            />
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept=".json"
+                className="hidden"
+                disabled={isProcessing}
+              />
+            </label>
 
             <button
               onClick={handleResetDemo}

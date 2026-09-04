@@ -327,24 +327,20 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
             }}
             className="flex items-center gap-2"
           >
-            {/* Hidden File Input */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageSelect}
-            />
-
             {/* Image Attachment Button */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
+            <label
               title="Attach image or notes photo"
               className="w-10 h-10 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border-[1.5px] border-[#24201D] flex items-center justify-center text-stone-700 shrink-0 shadow-2xs cursor-pointer active:translate-y-0.5 transition-all"
             >
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageSelect}
+              />
               <ImageIcon className="w-4 h-4 stroke-[2.25]" />
-            </button>
+            </label>
 
             {/* Voice Dictation Button & Language Selector */}
             <div className="relative flex items-center shrink-0">

@@ -66,6 +66,7 @@ public class MainActivity extends BridgeActivity {
         initMediaSession();
         requestNotificationPermission();
         requestAudioPermission();
+        requestStorageAndCameraPermissions();
     }
 
     @Override
@@ -112,6 +113,25 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
+    private void requestStorageAndCameraPermissions() {
+        ArrayList<String> perms = new ArrayList<>();
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            perms.add(Manifest.permission.CAMERA);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
+                perms.add(Manifest.permission.READ_MEDIA_IMAGES);
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                perms.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+            }
+        }
+        if (!perms.isEmpty()) {
+            ActivityCompat.requestPermissions(this, perms.toArray(new String[0]), 103);
+        }
+    }
+
     private void configureWebView() {
         try {
             if (getBridge() != null && getBridge().getWebView() != null) {
@@ -134,17 +154,8 @@ public class MainActivity extends BridgeActivity {
                 cookieManager.setAcceptCookie(true);
                 cookieManager.setAcceptThirdPartyCookies(webView, true);
 
-                // Allow Web Audio capture in WebChromeClient
-                webView.setWebChromeClient(new WebChromeClient() {
-                    @Override
-                    public void onPermissionRequest(final PermissionRequest request) {
-                        runOnUiThread(() -> {
-                            try {
-                                request.grant(request.getResources());
-                            } catch (Exception ignored) {}
-                        });
-                    }
-                });
+                // Note: Do not override webView.setWebChromeClient() here as Capacitor BridgeWebChromeClient
+                // is needed for onShowFileChooser (file inputs and photo uploads) and permission requests.
 
                 // Add Javascript Interfaces for Native Lock Screen, Package Installer & Native Speech Recognizer
                 webView.addJavascriptInterface(new MediaJsInterface(), "AndroidMediaNotification");

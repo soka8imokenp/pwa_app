@@ -437,22 +437,8 @@ How can I assist you today? You can ask me about your schedule, habits, diet, or
             }}
             className="flex items-center gap-2"
           >
-            {/* Hidden File Input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageSelect}
-              className="hidden"
-            />
-
             {/* Photo Attachment Button */}
-            <button
-              type="button"
-              onClick={() => {
-                playClickSound();
-                fileInputRef.current?.click();
-              }}
+            <label
               title="Attach photo of food or meal"
               className={`w-10 h-10 rounded-xl border-[1.75px] border-[#24201D] flex items-center justify-center shadow-2xs cursor-pointer active:translate-y-0.5 transition-all shrink-0 ${
                 attachedImage
@@ -460,8 +446,15 @@ How can I assist you today? You can ask me about your schedule, habits, diet, or
                   : 'bg-[#FAF8F5] hover:bg-stone-200 text-[#24201D]'
               }`}
             >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="hidden"
+              />
               <ImageIcon className="w-4 h-4 stroke-[2.25]" />
-            </button>
+            </label>
 
             {/* Voice Dictation Button */}
             <button

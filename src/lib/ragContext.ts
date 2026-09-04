@@ -145,19 +145,29 @@ export async function buildPlannerRAGContext(targetDate: string = getTodayString
 
       const totalKcal = todaysMeals.reduce((acc, m) => acc + (m.kcal || 0), 0);
       const totalProtein = todaysMeals.reduce((acc, m) => acc + (m.proteinGrams || 0), 0);
+      const totalCarbs = todaysMeals.reduce((acc, m) => acc + (m.carbsGrams || 0), 0);
+      const totalFat = todaysMeals.reduce((acc, m) => acc + (m.fatGrams || 0), 0);
       const totalWaterMl = todaysWater.reduce((acc, w) => acc + (w.amountMl || 0), 0);
       const totalBurned = todaysWorkouts.reduce((acc, w) => acc + (w.caloriesBurned || 0), 0);
-      const mealsSummary = todaysMeals.length > 0
-        ? todaysMeals.map((m) => `${m.name} (${m.kcal} kcal)`).join(', ')
-        : 'None logged yet';
+
+      const remainingKcal = metrics.targetDailyCalories - totalKcal;
+      const remainingProtein = metrics.targetProteinGrams - totalProtein;
+
+      const mealsBreakdown = todaysMeals.length > 0
+        ? todaysMeals
+            .map((m) => `  * [${m.mealType.toUpperCase()}] "${m.name}" - ${m.kcal} kcal (Protein: ${m.proteinGrams}g, Carbs: ${m.carbsGrams}g, Fat: ${m.fatGrams}g${m.time ? `, at ${m.time}` : ''})`)
+            .join('\n')
+        : '  * No meals recorded yet today.';
 
       lines.push(`\n### User's Live Health & Nutrition Telemetry:`);
       lines.push(`- Profile: Age ${profile.age}, ${profile.gender}, Height: ${profile.height} cm, Current Weight: ${profile.currentWeight} kg -> Target: ${profile.targetWeight} kg (Goal: ${profile.goal})`);
       lines.push(`- BMI: ${metrics.bmi} (${metrics.bmiCategoryLabel}) | Basal BMR: ${metrics.bmr} kcal | TDEE: ${metrics.tdee} kcal`);
-      lines.push(`- Targets: Daily Calories: ${metrics.targetDailyCalories} kcal, Protein: ${metrics.targetProteinGrams}g, Water: ${metrics.targetWaterMl} ml`);
-      lines.push(`- Today's Consumed: ${totalKcal} / ${metrics.targetDailyCalories} kcal, Protein: ${totalProtein} / ${metrics.targetProteinGrams}g, Water: ${totalWaterMl} / ${metrics.targetWaterMl} ml`);
-      lines.push(`- Physical Activity: +${totalBurned} kcal burned today`);
-      lines.push(`- Meals Today: ${mealsSummary}`);
+      lines.push(`- Prescribed Targets: ${metrics.targetDailyCalories} kcal/day (${metrics.targetProteinGrams}g Protein, ${metrics.targetCarbsGrams}g Carbs, ${metrics.targetFatGrams}g Fat, ${metrics.targetWaterMl}ml Water)`);
+      lines.push(`- Consumed Today: ${totalKcal} / ${metrics.targetDailyCalories} kcal (Remaining: ${remainingKcal} kcal)`);
+      lines.push(`- Macronutrients Today: Protein: ${totalProtein}/${metrics.targetProteinGrams}g (Remaining: ${remainingProtein}g), Carbs: ${totalCarbs}/${metrics.targetCarbsGrams}g, Fat: ${totalFat}/${metrics.targetFatGrams}g`);
+      lines.push(`- Hydration Today: ${totalWaterMl} / ${metrics.targetWaterMl} ml`);
+      lines.push(`- Physical Activity: +${totalBurned} kcal active burn (${todaysWorkouts.length} workouts logged)`);
+      lines.push(`- Itemized Meals Logged Today:\n${mealsBreakdown}`);
       if (recentWeights.length > 0) {
         lines.push(`- Recent Weigh-in History: ${recentWeights.map((w) => `${w.date}: ${w.weight}kg`).join(', ')}`);
       }

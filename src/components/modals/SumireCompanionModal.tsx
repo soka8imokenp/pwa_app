@@ -7,8 +7,19 @@ import {
   CheckCircle2,
   Image as ImageIcon,
   RotateCcw,
+  Utensils,
+  Plus,
+  Droplets,
+  Scale,
+  Dumbbell,
+  CheckSquare,
 } from 'lucide-react';
-import { askSumireAI, AIChatMessage } from '../../lib/aiService';
+import {
+  askSumireAI,
+  AIChatMessage,
+  logMealDirectly,
+  EstimatedMealResult,
+} from '../../lib/aiService';
 import { compressImageFile } from '../../lib/imageCompression';
 import {
   startVoiceDictation,
@@ -37,7 +48,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
     {
       id: 'welcome',
       role: 'assistant',
-      content: "Hi! I'm ready to help.",
+      content: "Привет! Я Сумирэ — помогу распределить задачи, проанализировать еду по фото или внести любые записи в твой дневник питания и трекеры.",
       timestamp: Date.now(),
     },
   ]);
@@ -75,7 +86,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
       {
         id: 'welcome_reset',
         role: 'assistant',
-        content: "History cleared. How can I help?",
+        content: "История очищена. Чем могу помочь?",
         timestamp: Date.now(),
       },
     ]);
@@ -95,6 +106,42 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
     e.target.value = '';
   };
 
+  const handleLogSuggestedMeal = async (meal: EstimatedMealResult, msgId: string) => {
+    playClickSound();
+    await logMealDirectly(meal);
+    playSuccessChime();
+    confetti({
+      particleCount: 50,
+      spread: 60,
+      origin: { y: 0.6 },
+      colors: ['#FFE873', '#E8DCFF', '#D1FBE4'],
+    });
+    if (onDataChanged) {
+      onDataChanged();
+    }
+    setMessages((prev) =>
+      prev.map((m) => {
+        if (m.id === msgId) {
+          const actionDesc = `Внесено в рацион (${meal.mealType}): ${meal.name} (${meal.kcal} ккал, Б:${meal.proteinGrams}г, Ж:${meal.fatGrams}г, У:${meal.carbsGrams}г)`;
+          const existingActions = m.executedActions || [];
+          return {
+            ...m,
+            suggestedMeal: undefined,
+            executedActions: [
+              ...existingActions,
+              {
+                type: 'log_meal' as const,
+                description: actionDesc,
+                details: meal,
+              },
+            ],
+          };
+        }
+        return m;
+      })
+    );
+  };
+
   const handleSendMessage = async (textToSend: string) => {
     const text = textToSend.trim();
     if ((!text && !attachedImage) || isLoading) return;
@@ -105,7 +152,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
     const userMsg: AIChatMessage = {
       id: `user_${Date.now()}`,
       role: 'user',
-      content: text || 'Analyze attached image:',
+      content: text || 'Оцени это фото/блюдо:',
       imagePreview: currentAttachment?.previewUrl,
       timestamp: Date.now(),
     };
@@ -128,6 +175,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
         content: response.replyText,
         timestamp: Date.now(),
         executedActions: response.executedActions,
+        suggestedMeal: response.suggestedMeal,
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
@@ -150,7 +198,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
         {
           id: `err_${Date.now()}`,
           role: 'assistant',
-          content: `${err.message || 'Could not process request.'}`,
+          content: `${err.message || 'Не удалось связаться с сервисом.'}`,
           timestamp: Date.now(),
         },
       ]);
@@ -161,7 +209,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
 
   const handleToggleVoice = () => {
     if (!isSpeechRecognitionSupported()) {
-      alert('Voice input is not supported by this browser or device.');
+      alert('Голосовой ввод не поддерживается данным браузером или устройством.');
       return;
     }
 
@@ -170,33 +218,36 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
       setIsRecording(false);
     } else {
       setIsRecording(true);
-      startVoiceDictation({
-        onTranscript: (transcript: string) => {
-          setInputText(transcript);
+      startVoiceDictation(
+        {
+          onTranscript: (transcript: string) => {
+            setInputText(transcript);
+          },
+          onError: (err: string) => {
+            console.error(err);
+            setIsRecording(false);
+          },
+          onEnd: () => {
+            setIsRecording(false);
+          },
         },
-        onError: (err: string) => {
-          console.error(err);
-          setIsRecording(false);
-        },
-        onEnd: () => {
-          setIsRecording(false);
-        },
-      }, {
-        lang: voiceLang,
-        continuous: true,
-        autoPunctuate: true,
-      });
+        {
+          lang: voiceLang,
+          continuous: true,
+          autoPunctuate: true,
+        }
+      );
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#24201D]/45 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
-      <div className="w-full max-w-md bg-white border-[2px] border-[#24201D] rounded-[2.5rem] shadow-[4px_4px_0px_#24201D] p-5 flex flex-col h-[85vh] max-h-[680px] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#24201D]/60 backdrop-blur-xs select-none">
+      <div className="w-full max-w-lg bg-white border-2 border-[#24201D] rounded-3xl p-4 shadow-[4px_4px_0px_#24201D] flex flex-col h-[85vh] max-h-[700px] animate-in fade-in zoom-in-95 duration-150">
         
-        {/* Modal Top Header */}
+        {/* Top Header */}
         <div className="flex items-center justify-between pb-3 border-b border-[#24201D]/15 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-[#DDE8DE] border-[1.75px] border-[#24201D] flex items-center justify-center shadow-xs overflow-hidden p-0.5 shrink-0">
+            <div className="w-9 h-9 rounded-2xl bg-[#DDE8DE] border-[1.75px] border-[#24201D] flex items-center justify-center shadow-xs overflow-hidden p-0.5 shrink-0">
               <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
                 <circle cx="50" cy="50" r="46" fill="#DDE8DE" stroke="#24201D" strokeWidth="4" />
                 <ellipse cx="38" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
@@ -220,7 +271,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
                 Sumire Companion
               </h3>
               <p className="text-[10px] font-bold text-[#6B635B]">
-                Scout-Archivist • Kawaii Archive
+                Scout-Archivist • Управление планами и здоровьем
               </p>
             </div>
           </div>
@@ -228,7 +279,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
           <div className="flex items-center gap-1.5">
             <button
               onClick={handleClearHistory}
-              title="Clear chat"
+              title="Очистить чат"
               className="w-8 h-8 rounded-xl bg-[#FAF8F5] hover:bg-rose-50 border border-[#24201D] flex items-center justify-center text-stone-600 hover:text-rose-700 shadow-2xs active:scale-95 transition-all cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -269,18 +320,140 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
 
                 <p className="whitespace-pre-wrap">{msg.content}</p>
 
+                {/* Suggested Meal 1-Tap Save Card */}
+                {msg.suggestedMeal && (
+                  <div className="mt-2.5 p-3 bg-[#FFF9E6] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-black text-[#24201D]">
+                        <Utensils className="w-3.5 h-3.5 text-amber-700" />
+                        <span>Оценка блюда: {msg.suggestedMeal.name}</span>
+                      </div>
+                      <span className="text-xs font-black font-mono-num text-[#24201D] bg-[#FEF08A] px-2 py-0.5 rounded-lg border border-[#24201D]/20">
+                        {msg.suggestedMeal.kcal} ккал
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] font-bold font-mono-num text-[#6B635B]">
+                      <span className="bg-white/90 px-1.5 py-0.5 rounded border border-black/10">Б: {msg.suggestedMeal.proteinGrams}г</span>
+                      <span className="bg-white/90 px-1.5 py-0.5 rounded border border-black/10">Ж: {msg.suggestedMeal.fatGrams}г</span>
+                      <span className="bg-white/90 px-1.5 py-0.5 rounded border border-black/10">У: {msg.suggestedMeal.carbsGrams}г</span>
+                      <span className="ml-auto text-[9px] font-black uppercase text-stone-500">
+                        {msg.suggestedMeal.mealType === 'breakfast' ? 'Завтрак' : msg.suggestedMeal.mealType === 'lunch' ? 'Обед' : msg.suggestedMeal.mealType === 'dinner' ? 'Ужин' : 'Перекус'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleLogSuggestedMeal(msg.suggestedMeal!, msg.id)}
+                      className="w-full py-2 px-3 rounded-xl bg-[#2D503C] hover:bg-[#233f2f] text-white text-xs font-black tracking-wide flex items-center justify-center gap-1.5 shadow-2xs active:translate-y-0.5 cursor-pointer transition-all"
+                    >
+                      <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                      <span>Записать в дневник питания</span>
+                    </button>
+                  </div>
+                )}
+
                 {/* Executed Action Cards */}
                 {msg.executedActions && msg.executedActions.length > 0 && (
-                  <div className="mt-2.5 pt-2 border-t border-[#24201D]/15 space-y-1.5">
-                    {msg.executedActions.map((action, idx) => (
-                      <div
-                        key={idx}
-                        className="p-2 bg-[#DDE8DE] border border-[#3D6B52]/40 rounded-xl flex items-center gap-2 text-[11px] font-bold text-[#2D503C]"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[#3D6B52] stroke-[2.5]" />
-                        <span className="truncate">{action.description}</span>
-                      </div>
-                    ))}
+                  <div className="mt-2.5 pt-2 border-t border-[#24201D]/15 space-y-2">
+                    {msg.executedActions.map((action, idx) => {
+                      if (action.type === 'log_meal' && action.details) {
+                        return (
+                          <div
+                            key={idx}
+                            className="p-2.5 bg-white border border-[#24201D]/30 rounded-xl shadow-2xs space-y-1 text-[#24201D]"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5 font-black text-xs">
+                                <Utensils className="w-3.5 h-3.5 text-[#C25E40]" />
+                                <span>{action.details.name}</span>
+                                <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-[#FEF08A] border border-[#24201D]/20">
+                                  {action.details.mealType === 'breakfast'
+                                    ? 'Завтрак'
+                                    : action.details.mealType === 'lunch'
+                                    ? 'Обед'
+                                    : action.details.mealType === 'dinner'
+                                    ? 'Ужин'
+                                    : 'Перекус'}
+                                </span>
+                              </div>
+                              <span className="text-xs font-black font-mono-num text-[#C25E40]">
+                                +{action.details.kcal} ккал
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] font-bold font-mono-num text-[#6B635B]">
+                              <span>Б: {action.details.proteinGrams}г</span>
+                              <span>•</span>
+                              <span>Ж: {action.details.fatGrams}г</span>
+                              <span>•</span>
+                              <span>У: {action.details.carbsGrams}г</span>
+                              {action.details.time && (
+                                <>
+                                  <span>•</span>
+                                  <span>{action.details.time}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      if (action.type === 'log_water') {
+                        return (
+                          <div
+                            key={idx}
+                            className="p-2 bg-[#E0F2FE] border border-[#0284C7]/40 rounded-xl flex items-center gap-2 text-[11px] font-bold text-[#0369A1]"
+                          >
+                            <Droplets className="w-3.5 h-3.5 text-[#0284C7]" />
+                            <span>{action.description}</span>
+                          </div>
+                        );
+                      }
+
+                      if (action.type === 'log_weight') {
+                        return (
+                          <div
+                            key={idx}
+                            className="p-2 bg-[#FEF3C7] border border-[#D97706]/40 rounded-xl flex items-center gap-2 text-[11px] font-bold text-[#B45309]"
+                          >
+                            <Scale className="w-3.5 h-3.5 text-[#D97706]" />
+                            <span>{action.description}</span>
+                          </div>
+                        );
+                      }
+
+                      if (action.type === 'log_workout') {
+                        return (
+                          <div
+                            key={idx}
+                            className="p-2 bg-[#FEE2E2] border border-[#DC2626]/40 rounded-xl flex items-center gap-2 text-[11px] font-bold text-[#B91C1C]"
+                          >
+                            <Dumbbell className="w-3.5 h-3.5 text-[#DC2626]" />
+                            <span>{action.description}</span>
+                          </div>
+                        );
+                      }
+
+                      if (action.type === 'create_task') {
+                        return (
+                          <div
+                            key={idx}
+                            className="p-2 bg-[#FEF9C3] border border-[#CA8A04]/40 rounded-xl flex items-center gap-2 text-[11px] font-bold text-[#854D0E]"
+                          >
+                            <CheckSquare className="w-3.5 h-3.5 text-[#CA8A04]" />
+                            <span>{action.description}</span>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div
+                          key={idx}
+                          className="p-2 bg-[#DDE8DE] border border-[#3D6B52]/40 rounded-xl flex items-center gap-2 text-[11px] font-bold text-[#2D503C]"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[#3D6B52] stroke-[2.5]" />
+                          <span className="truncate">{action.description}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -292,7 +465,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
               <div className="w-2 h-2 rounded-full bg-[#3D6B52] animate-bounce" />
               <div className="w-2 h-2 rounded-full bg-[#3D6B52] animate-bounce" style={{ animationDelay: '0.2s' }} />
               <div className="w-2 h-2 rounded-full bg-[#3D6B52] animate-bounce" style={{ animationDelay: '0.4s' }} />
-              <span className="text-[10px] font-bold text-stone-400 ml-1">Thinking...</span>
+              <span className="text-[10px] font-bold text-stone-400 ml-1">Думаю...</span>
             </div>
           )}
 
@@ -306,7 +479,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
               <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#24201D] shrink-0">
                 <img src={attachedImage.previewUrl} alt="Preview" className="w-full h-full object-cover" />
               </div>
-              <span className="text-[11px] font-bold text-[#24201D] truncate">Image attached for analysis</span>
+              <span className="text-[11px] font-bold text-[#24201D] truncate">Фото прикреплено для анализа</span>
             </div>
             <button
               type="button"
@@ -329,7 +502,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
           >
             {/* Image Attachment Button */}
             <label
-              title="Attach image or notes photo"
+              title="Прикрепить фото еды или заметки"
               className="w-10 h-10 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border-[1.5px] border-[#24201D] flex items-center justify-center text-stone-700 shrink-0 shadow-2xs cursor-pointer active:translate-y-0.5 transition-all"
             >
               <input
@@ -347,7 +520,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
               <button
                 type="button"
                 onClick={handleToggleVoice}
-                title={isRecording ? 'Stop recording' : 'Voice input'}
+                title={isRecording ? 'Остановить запись' : 'Голосовой ввод'}
                 className={`w-10 h-10 rounded-xl border-[1.5px] border-[#24201D] flex items-center justify-center shrink-0 transition-all cursor-pointer ${
                   isRecording
                     ? 'bg-rose-500 text-white animate-pulse shadow-2xs'
@@ -360,7 +533,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
               <button
                 type="button"
                 onClick={cycleVoiceLang}
-                title={`Voice Recognition Language: ${voiceLang.toUpperCase()}. Tap to switch.`}
+                title={`Язык распознавания речи: ${voiceLang.toUpperCase()}. Нажмите для переключения.`}
                 className="absolute -top-2 -right-1 px-1 py-0.2 rounded bg-white hover:bg-stone-100 border border-[#24201D] text-[8px] font-black font-mono-num text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
               >
                 {getVoiceLanguageBadge(voiceLang)}
@@ -371,7 +544,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder={isRecording ? 'Listening...' : 'Type...'}
+              placeholder={isRecording ? 'Слушаю...' : 'Спросить или дать команду...'}
               className="flex-1 px-3 py-2 bg-[#FAF8F5] text-xs font-bold text-[#24201D] rounded-xl border-[1.5px] border-[#24201D] outline-none placeholder:text-stone-400 shadow-2xs"
             />
 

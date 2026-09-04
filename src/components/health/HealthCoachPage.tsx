@@ -12,6 +12,8 @@ import {
   Scale,
   Dumbbell,
   CheckSquare,
+  Calendar,
+  Clock,
 } from 'lucide-react';
 import {
   askSumireAI,
@@ -142,6 +144,30 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
         : 'maintain optimal body composition';
 
     return `Hi! I am Sumire — your personal nutrition and health assistant. Your goal is to ${goalText}. Snap a meal photo, speak via voice dictation, or describe what you ate — I'll estimate macros and automatically log everything into your daily tracker!`;
+  };
+
+  const getMessageDateString = (timestamp?: number): string => {
+    const d = new Date(timestamp || Date.now());
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const formatDayDivider = (timestamp?: number): string => {
+    const msgDate = new Date(timestamp || Date.now());
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    if (msgDate.toDateString() === today.toDateString()) {
+      return 'Today';
+    }
+    if (msgDate.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    }
+    return msgDate.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: msgDate.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
+    });
   };
 
   const [messages, setMessages] = useState<AIChatMessage[]>(() => {
@@ -391,66 +417,92 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
     <div className="w-full space-y-3 pb-3 font-body select-none">
       {/* 1. Streamlined Sumire AI Assistant Header */}
       <div className="p-3.5 sm:p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            {/* Signature Sumire Avatar SVG */}
-            <div className="w-10 h-10 rounded-2xl bg-[#DDE8DE] border-[1.75px] border-[#24201D] flex items-center justify-center shadow-2xs overflow-hidden p-0.5 shrink-0">
-              <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                <circle cx="50" cy="50" r="46" fill="#DDE8DE" stroke="#24201D" strokeWidth="4" />
-                <ellipse cx="38" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
-                <ellipse cx="38" cy="26" rx="3.5" ry="11" fill="#FCA5A5" />
-                <ellipse cx="62" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
-                <ellipse cx="62" cy="26" rx="3.5" ry="11" fill="#FCA5A5" />
-                <circle cx="50" cy="56" r="28" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
-                <ellipse cx="40" cy="52" rx="4" ry="5" fill="#24201D" />
-                <circle cx="39" cy="50" r="1.5" fill="#FFFFFF" />
-                <ellipse cx="60" cy="52" rx="4" ry="5" fill="#24201D" />
-                <circle cx="59" cy="50" r="1.5" fill="#FFFFFF" />
-                <ellipse cx="50" cy="59" rx="2.5" ry="1.8" fill="#C25E40" />
-                <path d="M47 62 Q50 65 53 62" stroke="#24201D" strokeWidth="2" strokeLinecap="round" />
-                <ellipse cx="34" cy="58" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.8" />
-                <ellipse cx="66" cy="58" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.8" />
-              </svg>
-            </div>
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Signature Sumire Avatar SVG */}
+          <div className="w-10 h-10 rounded-2xl bg-[#DDE8DE] border-[1.75px] border-[#24201D] flex items-center justify-center shadow-2xs overflow-hidden p-0.5 shrink-0">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+              <circle cx="50" cy="50" r="46" fill="#DDE8DE" stroke="#24201D" strokeWidth="4" />
+              <ellipse cx="38" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
+              <ellipse cx="38" cy="26" rx="3.5" ry="11" fill="#FCA5A5" />
+              <ellipse cx="62" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
+              <ellipse cx="62" cy="26" rx="3.5" ry="11" fill="#FCA5A5" />
+              <circle cx="50" cy="56" r="28" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
+              <ellipse cx="40" cy="52" rx="4" ry="5" fill="#24201D" />
+              <circle cx="39" cy="50" r="1.5" fill="#FFFFFF" />
+              <ellipse cx="60" cy="52" rx="4" ry="5" fill="#24201D" />
+              <circle cx="59" cy="50" r="1.5" fill="#FFFFFF" />
+              <ellipse cx="50" cy="59" rx="2.5" ry="1.8" fill="#C25E40" />
+              <path d="M47 62 Q50 65 53 62" stroke="#24201D" strokeWidth="2" strokeLinecap="round" />
+              <ellipse cx="34" cy="58" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.8" />
+              <ellipse cx="66" cy="58" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.8" />
+            </svg>
+          </div>
 
-            <div className="min-w-0">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
               <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D] truncate">
                 Sumire AI Assistant
               </h3>
-              <p className="text-[10px] font-bold text-[#6B635B] truncate">
-                Nutrition vision • Voice logging • Smart intake sync
-              </p>
+              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-[#DDE8DE] border border-[#24201D]/25 text-[#2D503C] shrink-0">
+                Online
+              </span>
             </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0">
-            {/* Clear History Button */}
-            <button
-              type="button"
-              onClick={handleClearHistory}
-              title="Clear chat history"
-              className="p-2 rounded-xl bg-[#FAF8F5] hover:bg-stone-200 border-[1.5px] border-[#24201D] text-[#24201D] shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
-            >
-              <RotateCcw className="w-4 h-4 stroke-[2.25]" />
-            </button>
+            <p className="text-[10px] font-bold text-[#6B635B] truncate">
+              Nutrition vision • Voice logging • Smart intake sync
+            </p>
           </div>
         </div>
       </div>
 
       {/* 2. Interactive Chat Container with Fixed Height and Internal Scroll */}
       <div className="h-[520px] sm:h-[580px] bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex flex-col overflow-hidden">
+        {/* Chat Header Toolbar with New Position for Restart Button */}
+        <div className="px-3.5 py-2 bg-[#FAF8F5] border-b border-[#24201D]/15 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#24201D]">
+              Active Dialogue
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleClearHistory}
+            title="Restart conversation"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white hover:bg-stone-100 border border-[#24201D]/25 text-[10px] font-black uppercase tracking-wider text-[#6B635B] hover:text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
+          >
+            <RotateCcw className="w-3 h-3 stroke-[2.5]" />
+            <span>Restart Chat</span>
+          </button>
+        </div>
+
         {/* Scrollable Messages Area */}
         <div
           ref={chatContainerRef}
           className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3.5 pr-2 scrollbar-thin"
         >
-          {messages.map((m) => (
-            <div
-              key={m.id}
-              className={`flex gap-2.5 items-start ${
-                m.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-              }`}
-            >
+          {messages.map((m, idx) => {
+            const prevMessage = idx > 0 ? messages[idx - 1] : null;
+            const isNewDay = !prevMessage || getMessageDateString(m.timestamp) !== getMessageDateString(prevMessage.timestamp);
+
+            return (
+              <React.Fragment key={m.id}>
+                {isNewDay && (
+                  <div className="flex items-center justify-center my-3 select-none">
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-[#FAF8F5] border border-[#24201D]/20 rounded-full shadow-2xs">
+                      <Calendar className="w-3 h-3 text-[#3D6B52] stroke-[2.25]" />
+                      <span className="text-[10px] font-black uppercase tracking-wider text-[#24201D]">
+                        {formatDayDivider(m.timestamp)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div
+                  className={`flex gap-2.5 items-start ${
+                    m.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                  }`}
+                >
               {/* Assistant Avatar Icon */}
               {m.role === 'assistant' ? (
                 <div className="w-7 h-7 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0 overflow-hidden p-0.5 mt-0.5">
@@ -664,9 +716,22 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
                     })}
                   </div>
                 )}
+                {/* Message Timestamp */}
+                <div className="flex items-center justify-end gap-1 mt-1.5 opacity-60 select-none">
+                  <Clock className="w-2.5 h-2.5 stroke-[2]" />
+                  <span className="text-[9px] font-mono-num font-bold">
+                    {new Date(m.timestamp || Date.now()).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: false,
+                    })}
+                  </span>
+                </div>
               </div>
             </div>
-          ))}
+          </React.Fragment>
+        );
+      })}
 
           {isLoading && (
             <div className="flex gap-2.5 items-center">

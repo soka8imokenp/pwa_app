@@ -1,12 +1,12 @@
 {
-  "version": "1.8.53",
-  "buildNumber": 57,
+  "version": "1.8.54",
+  "buildNumber": 58,
   "releaseDate": "2026-09-04",
   "changelog": [
-    "Dual beverage tracking: fruit juices and caloric drinks automatically update both nutrition (calories/macros) and hydration (fluid ml)",
-    "Standard 250ml glass serving size applied automatically for beverages without explicit volume",
-    "Bilingual fluid and drink recognition across Russian and English",
-    "Contextual coaching analysis before offering to log"
+    "Tactile APK Install button: removed sliding delay, restoring instant tactile press feedback",
+    "Relocated Restart Chat button: integrated directly into the dialogue toolbar with active status indicator",
+    "Temporal dialogue separation: calendar day dividers and message timestamps in chat history",
+    "Smart temporal meal categorization: automatic slot assignment (breakfast, lunch, dinner, snack) by explicit time or clock time"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.53/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.54/Daily-Sumire-app-debug.apk"
 }

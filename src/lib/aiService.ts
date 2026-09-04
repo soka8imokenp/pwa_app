@@ -93,6 +93,20 @@ CRITICAL DUAL LOGGING FOR CALORIC BEVERAGES (HYDRATION + NUTRITION):
 - Pure water & zero-calorie drinks (pure water, mineral water, unsweetened tea/coffee with 0 kcal):
   * Only logged via "log_water" (they contain 0 kcal, so they do not go into meals).
 
+CRITICAL TEMPORAL INTELLIGENCE & SMART MEAL TIME CATEGORIZATION:
+- You know the current time and date from the header of each prompt.
+- PAST DAYS VS TODAY:
+  * Messages in chat history are stamped: [Past Day (YYYY-MM-DD) HH:MM] or [Today at HH:MM].
+  * Strictly separate past days from today! If the user asks what they ate today, ONLY refer to today's logged data, NEVER past days.
+- SMART MEAL SLOTS BY TIME:
+  * Choose mealType based on time mentioned in user query (or current time if not mentioned):
+    - Morning (05:00 - 11:30, or "утром", "7 утра"): -> "breakfast"
+    - Midday / Lunch (11:30 - 16:30, or "днем", "в 13:00", "на обед"): -> "lunch"
+    - Evening / Dinner (16:30 - 22:30, or "вечером", "в 18:00", "на ужин"): -> "dinner"
+    - Late Night / Snack (22:30 - 05:00, or "перекус"): -> "snack"
+  * If the user mentions a specific time (e.g. "покушал торт в 18:00"), set "time": "18:00" and "mealType": "dinner".
+  * If the user mentions "в 7 утра выпил чай", set "time": "07:00" and "mealType": "breakfast".
+
 CRITICAL ENGLISH DATABASE MANDATE & DATA LOCALIZATION:
 - The entire application UI, database records, telemetry, and activity logs operate strictly in ENGLISH.
 - You converse naturally in the language the user addresses you in (Russian, Uzbek, etc.).
@@ -358,21 +372,98 @@ export function hasExplicitLogCommand(text: string): boolean {
   return imperativePattern.test(trimmed);
 }
 
-export async function logMealDirectly(meal: EstimatedMealResult): Promise<void> {
+/**
+ * Smartly infers meal type ("breakfast", "lunch", "dinner", "snack") and exact time string ("HH:MM")
+ * based on user query context (e.g. "в 18:00", "7 утра", "на обед", "вечером") or the current clock time.
+ */
+export function inferMealTypeAndTime(
+  query?: string,
+  explicitTime?: string,
+  explicitMealType?: string
+): { mealType: MealType; time: string } {
   const now = new Date();
-  const timeStr = meal.time || `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  let hour = now.getHours();
+  let minutes = now.getMinutes();
+  let timeStr = explicitTime || `${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
+  const text = (query || '').toLowerCase();
+
+  // 1. Check for explicit time mentioned in query text:
+  // e.g. "18:00", "18.30", "7:00", "07:30"
+  const timeRegex = /(?:^|[^\d])(\d{1,2})[:.](\d{2})(?=[^\d]|$)/i;
+  const timeMatch = text.match(timeRegex);
+  if (timeMatch) {
+    const h = parseInt(timeMatch[1], 10);
+    const m = parseInt(timeMatch[2], 10);
+    if (h >= 0 && h < 24 && m >= 0 && m < 60) {
+      hour = h;
+      minutes = m;
+      timeStr = `${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    }
+  } else {
+    // e.g. "7 утра", "8 утра", "6 вечера", "18 часов", "в 19", "в 7"
+    const hourOnlyMatch = text.match(/(?:в\s+)?(\d{1,2})\s*(?:утра|вечера|дня|ночи|часов|ч\b)?/i);
+    if (hourOnlyMatch && /(?:утра|вечера|дня|ночи|в\s+\d{1,2})/i.test(text)) {
+      let h = parseInt(hourOnlyMatch[1], 10);
+      if (text.includes('вечера') && h < 12) h += 12;
+      if (text.includes('дня') && h < 12 && h >= 1 && h <= 5) h += 12;
+      if (text.includes('ночи') && h === 12) h = 0;
+      if (h >= 0 && h < 24) {
+        hour = h;
+        minutes = 0;
+        timeStr = `${String(hour).padStart(2, '0')}:00`;
+      }
+    }
+  }
+
+  // 2. Check if user explicitly stated meal slot keywords:
+  if (/(?:завтрак|breakfast|утром|с утра)/i.test(text)) {
+    return { mealType: 'breakfast', time: timeStr };
+  }
+  if (/(?:обед|lunch|днем|в обед)/i.test(text)) {
+    return { mealType: 'lunch', time: timeStr };
+  }
+  if (/(?:ужин|dinner|вечером|на ужин|вечер)/i.test(text)) {
+    return { mealType: 'dinner', time: timeStr };
+  }
+  if (/(?:перекус|snack|ночью)/i.test(text)) {
+    return { mealType: 'snack', time: timeStr };
+  }
+
+  // 3. Smart temporal mapping based on the resolved hour:
+  // 05:00 - 11:30 -> breakfast
+  // 11:30 - 16:30 -> lunch
+  // 16:30 - 22:30 -> dinner
+  // 22:30 - 05:00 -> snack
+  const totalMinutes = hour * 60 + minutes;
+  let computedMealType: MealType = 'snack';
+  if (totalMinutes >= 5 * 60 && totalMinutes < 11 * 60 + 30) {
+    computedMealType = 'breakfast';
+  } else if (totalMinutes >= 11 * 60 + 30 && totalMinutes < 16 * 60 + 30) {
+    computedMealType = 'lunch';
+  } else if (totalMinutes >= 16 * 60 + 30 && totalMinutes < 22 * 60 + 30) {
+    computedMealType = 'dinner';
+  } else {
+    computedMealType = 'snack';
+  }
+
+  return { mealType: computedMealType, time: timeStr };
+}
+
+export async function logMealDirectly(meal: EstimatedMealResult): Promise<void> {
+  const temporal = inferMealTypeAndTime(meal.name, meal.time, meal.mealType);
   const rawName = meal.name || 'Meal Item';
   const englishName = /[а-яё]/i.test(rawName) ? translateFoodNameSync(rawName) : rawName;
 
   await db.mealLogs.add({
     date: getTodayString(),
     name: englishName,
-    mealType: meal.mealType,
+    mealType: temporal.mealType,
     kcal: Math.round(Number(meal.kcal) || 0),
     proteinGrams: Math.round(Number(meal.proteinGrams) || 0),
     carbsGrams: Math.round(Number(meal.carbsGrams) || 0),
     fatGrams: Math.round(Number(meal.fatGrams) || 0),
-    time: timeStr,
+    time: temporal.time,
     aiEstimated: true,
     createdAt: Date.now(),
   });
@@ -400,26 +491,19 @@ async function executePlannerAction(
   }
 ) {
   if (fnName === 'log_meal') {
-    const now = new Date();
-    const currentHour = now.getHours();
-    let defaultMealType: MealType = 'snack';
-    if (currentHour >= 5 && currentHour < 11) defaultMealType = 'breakfast';
-    else if (currentHour >= 11 && currentHour < 16) defaultMealType = 'lunch';
-    else if (currentHour >= 16 && currentHour < 22) defaultMealType = 'dinner';
-
     const rawName = String(args.name || 'Meal Item');
     const englishName = /[а-яё]/i.test(rawName) ? translateFoodNameSync(rawName) : rawName;
+    const temporal = inferMealTypeAndTime(context?.userQuery, args.time, args.mealType);
 
-    const timeStr = args.time || `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     const mealRecord = {
       date: getTodayString(),
       name: englishName,
-      mealType: (args.mealType || defaultMealType) as MealType,
+      mealType: temporal.mealType,
       kcal: Math.round(Number(args.kcal) || 0),
       proteinGrams: Math.round(Number(args.proteinGrams) || 0),
       carbsGrams: Math.round(Number(args.carbsGrams) || 0),
       fatGrams: Math.round(Number(args.fatGrams) || 0),
-      time: timeStr,
+      time: temporal.time,
       aiEstimated: true,
       createdAt: Date.now(),
     };
@@ -758,19 +842,39 @@ export async function askSumireAI(
     );
   }
 
-  // 1. Build live RAG context (includes planner tasks, habits, focus, notes, AND itemized health biometrics)
+  // 1. Build live RAG context with explicit date, time, and temporal guidelines
+  const now = new Date();
+  const todayStr = getTodayString();
+  const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   const ragContext = await buildPlannerRAGContext();
-  const formattedSystemInstruction = `${SUMIRE_SYSTEM_PROMPT}\n\n=== ARCHIVE OVERVIEW & USER DATA ===\n${ragContext}`;
+  const formattedSystemInstruction = `${SUMIRE_SYSTEM_PROMPT}
 
-  // 2. Prepare Gemini contents payload
+=== CURRENT CLOCK & TEMPORAL CONTEXT ===
+- Current Local Time: ${currentTimeStr}
+- Current Date (Today): ${todayStr}
+- Note on Chat History: All previous dialogue turns are explicitly stamped with [Today at HH:MM] or [Past Day YYYY-MM-DD at HH:MM].
+- You must strictly distinguish past days' events and meals from today's. If the user asks what they ate today, only consider items logged for ${todayStr}.
+
+=== ARCHIVE OVERVIEW & USER DATA ===
+${ragContext}`;
+
+  // 2. Prepare Gemini contents payload with temporal labeling for history turns
   const contents: any[] = [];
 
-  // Add previous conversational turns (up to last 6)
-  chatHistory.slice(-6).forEach((msg) => {
+  // Add previous conversational turns (up to last 8) with day/time stamps
+  chatHistory.slice(-8).forEach((msg) => {
+    const msgDate = new Date(msg.timestamp || Date.now());
+    const msgDateStr = `${msgDate.getFullYear()}-${String(msgDate.getMonth() + 1).padStart(2, '0')}-${String(msgDate.getDate()).padStart(2, '0')}`;
+    const msgTimeStr = `${String(msgDate.getHours()).padStart(2, '0')}:${String(msgDate.getMinutes()).padStart(2, '0')}`;
+    const isMsgToday = msgDateStr === todayStr;
+    const timeTag = isMsgToday ? `[Today at ${msgTimeStr}]` : `[Past Day ${msgDateStr} at ${msgTimeStr}]`;
+
+    const turnText = `${timeTag} ${msg.content}`;
+
     if (msg.role === 'user') {
-      contents.push({ role: 'user', parts: [{ text: msg.content }] });
+      contents.push({ role: 'user', parts: [{ text: turnText }] });
     } else if (msg.role === 'assistant') {
-      contents.push({ role: 'model', parts: [{ text: msg.content }] });
+      contents.push({ role: 'model', parts: [{ text: turnText }] });
     }
   });
 
@@ -786,8 +890,11 @@ export async function askSumireAI(
     });
   }
 
+  const queryText = userQuery || (imageAttachment ? 'Оцени это фото/блюдо, определи состав, калории, БЖУ и дай рекомендации для моего рациона.' : '');
+  const currentTurnText = `[Today at ${currentTimeStr}] ${queryText}`;
+
   currentParts.push({
-    text: userQuery || (imageAttachment ? 'Оцени это фото/блюдо, определи состав, калории, БЖУ и дай рекомендации для моего рациона.' : ''),
+    text: currentTurnText,
   });
 
   contents.push({
@@ -931,14 +1038,15 @@ export async function askSumireAI(
           ? translateFoodNameSync(rawMealName)
           : rawMealName;
 
+        const temporal = inferMealTypeAndTime(userQuery, mealParsed.time, mealParsed.mealType);
         suggestedMeal = {
           name: englishMealName,
           kcal: Math.round(Number(mealParsed.kcal) || 0),
           proteinGrams: Math.round(Number(mealParsed.proteinGrams) || 0),
           carbsGrams: Math.round(Number(mealParsed.carbsGrams) || 0),
           fatGrams: Math.round(Number(mealParsed.fatGrams) || 0),
-          mealType: (mealParsed.mealType || 'lunch') as MealType,
-          time: mealParsed.time,
+          mealType: temporal.mealType,
+          time: temporal.time,
         };
       }
     } catch (e) {

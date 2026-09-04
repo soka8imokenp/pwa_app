@@ -314,11 +314,11 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
             </button>
           )}
 
-          {/* When completed, smoothly fade in the Install button without any redundant notification banners */}
+          {/* When completed, show the Install button with instant tactile response */}
           {downloadStatus === 'completed' && (
             <button
               onClick={handleInstall}
-              className="w-full py-3.5 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[2px] border-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300"
+              className="w-full py-3.5 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[2px] border-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex items-center justify-center gap-2"
             >
               <PackageCheck className="w-4 h-4 stroke-[2.5]" />
               <span>Install</span>

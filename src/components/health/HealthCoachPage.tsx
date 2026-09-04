@@ -417,36 +417,52 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
 
   return (
     <div className="w-full space-y-3 pb-3 font-body select-none">
-      {/* 1. Sumire AI Assistant Brand Header */}
+      {/* 1. Sumire AI Assistant Bespoke Brand Header */}
       <div className="px-4 py-3.5 sm:px-5 sm:py-4 bg-[#FAF8F5] border-[2px] border-[#24201D] rounded-2xl shadow-[3px_3px_0px_#24201D]">
-        <div className="flex items-center gap-3.5">
-          {/* Signature Sumire Logo */}
-          <div className="w-12 h-12 rounded-2xl bg-[#DDE8DE] border-[2px] border-[#24201D] flex items-center justify-center shadow-[2px_2px_0px_#24201D] overflow-hidden p-0.5 shrink-0">
-            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-              <circle cx="50" cy="50" r="46" fill="#DDE8DE" stroke="#24201D" strokeWidth="4" />
-              <ellipse cx="38" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
-              <ellipse cx="38" cy="26" rx="3.5" ry="11" fill="#FCA5A5" />
-              <ellipse cx="62" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
-              <ellipse cx="62" cy="26" rx="3.5" ry="11" fill="#FCA5A5" />
-              <circle cx="50" cy="56" r="28" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
-              <ellipse cx="40" cy="52" rx="4" ry="5" fill="#24201D" />
-              <circle cx="39" cy="50" r="1.5" fill="#FFFFFF" />
-              <ellipse cx="60" cy="52" rx="4" ry="5" fill="#24201D" />
-              <circle cx="59" cy="50" r="1.5" fill="#FFFFFF" />
-              <ellipse cx="50" cy="59" rx="2.5" ry="1.8" fill="#C25E40" />
-              <path d="M47 62 Q50 65 53 62" stroke="#24201D" strokeWidth="2" strokeLinecap="round" />
-              <ellipse cx="34" cy="58" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.8" />
-              <ellipse cx="66" cy="58" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.8" />
-            </svg>
+        <div className="flex items-center gap-3.5 sm:gap-4">
+          {/* Signature Sumire Logo Emblem */}
+          <div className="relative w-13 h-13 sm:w-15 sm:h-15 shrink-0">
+            <div className="w-full h-full rounded-2xl bg-[#DDE8DE] border-[2px] border-[#24201D] flex items-center justify-center shadow-[2px_2px_0px_#24201D] overflow-hidden p-0.5">
+              <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                <circle cx="50" cy="50" r="46" fill="#DDE8DE" stroke="#24201D" strokeWidth="4" />
+                <ellipse cx="38" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
+                <ellipse cx="38" cy="26" rx="3.5" ry="11" fill="#FCA5A5" />
+                <ellipse cx="62" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
+                <ellipse cx="62" cy="26" rx="3.5" ry="11" fill="#FCA5A5" />
+                <circle cx="50" cy="56" r="28" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
+                <ellipse cx="40" cy="52" rx="4" ry="5" fill="#24201D" />
+                <circle cx="39" cy="50" r="1.5" fill="#FFFFFF" />
+                <ellipse cx="60" cy="52" rx="4" ry="5" fill="#24201D" />
+                <circle cx="59" cy="50" r="1.5" fill="#FFFFFF" />
+                <ellipse cx="50" cy="59" rx="2.5" ry="1.8" fill="#C25E40" />
+                <path d="M47 62 Q50 65 53 62" stroke="#24201D" strokeWidth="2" strokeLinecap="round" />
+                <ellipse cx="34" cy="58" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.8" />
+                <ellipse cx="66" cy="58" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.8" />
+              </svg>
+            </div>
+            {/* Japanese Editorial Terracotta Stamp Badge */}
+            <div className="absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-md bg-[#C25E40] border-[1.5px] border-[#24201D] text-[9px] font-black text-white leading-none shadow-2xs select-none font-display">
+              菫
+            </div>
           </div>
 
-          {/* Clean Typography */}
+          {/* Bespoke Typography Lockup */}
           <div className="min-w-0 flex-1">
-            <h2 className="text-base sm:text-lg font-black font-display uppercase tracking-wider text-[#24201D] leading-tight">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="text-[9px] font-mono-num font-black uppercase tracking-widest text-[#2D503C] bg-[#DDE8DE] px-2 py-0.5 rounded-md border border-[#24201D]/20">
+                スミレ • SUMIRE
+              </span>
+              <span className="text-[9px] font-mono-num font-bold text-[#8C827A] tracking-wider uppercase truncate">
+                AI VISION & NUTRITION
+              </span>
+            </div>
+
+            <h1 className="text-lg sm:text-xl font-brand font-black tracking-tight text-[#24201D] uppercase leading-tight truncate">
               Sumire AI Assistant
-            </h2>
-            <p className="text-xs font-semibold text-[#6B635B] mt-0.5 leading-snug">
-              Nutrition Vision & Personal Health Coach
+            </h1>
+
+            <p className="text-[11px] sm:text-xs font-semibold text-[#6B635B] mt-0.5 leading-snug truncate">
+              Personal nutrition vision, voice logging & health guidance
             </p>
           </div>
         </div>

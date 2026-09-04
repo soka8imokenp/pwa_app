@@ -488,6 +488,7 @@ export function App() {
           currentUser={currentUser}
           onUpdateProfile={(updated) => setCurrentUser(updated)}
           onLogout={handleLogout}
+          overallStreak={overallStreak}
           streakCount={overallStreak}
           allHabitLogs={allHabitLogs}
           allFocusSessions={allFocusSessions}

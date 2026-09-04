@@ -88,7 +88,8 @@ export interface ModalManagerProps {
   currentUser: UserProfile | null;
   onUpdateProfile: (updated: UserProfile) => void;
   onLogout: () => void;
-  overallStreak: number;
+  overallStreak?: number;
+  streakCount?: number;
   allHabitLogs: HabitLog[];
   allFocusSessions: FocusSession[];
   activityStats: any;
@@ -171,6 +172,7 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
   onUpdateProfile,
   onLogout,
   overallStreak,
+  streakCount,
   allHabitLogs,
   allFocusSessions,
   activityStats,
@@ -197,6 +199,8 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
   isLocked,
   onUnlockApp,
 }) => {
+  const streak = overallStreak ?? streakCount ?? 0;
+
   return (
     <>
       <AddTaskModal
@@ -234,7 +238,7 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
         currentUser={currentUser}
         onUpdateProfile={onUpdateProfile}
         onLogout={onLogout}
-        streakCount={overallStreak}
+        streakCount={streak}
         allTasks={allTasks}
         habits={habitsWithStats}
         allHabitLogs={allHabitLogs}
@@ -311,7 +315,7 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
           <DuolingoStreakModal
             isOpen={isStreakModalOpen}
             onClose={onCloseStreakModal}
-            streakCount={overallStreak}
+            streakCount={streak}
             activityStats={activityStats}
           />
         )}

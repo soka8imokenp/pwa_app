@@ -1,12 +1,11 @@
 {
-  "version": "1.8.57",
-  "buildNumber": 61,
+  "version": "1.8.58",
+  "buildNumber": 62,
   "releaseDate": "2026-09-04",
   "changelog": [
-    "Bespoke Japanese editorial typography for Sumire AI Assistant brand header",
-    "Introduced modern Syne display font for expressive, distinct title hierarchy",
-    "Custom Sumire emblem with terracotta Japanese botanical seal stamp (菫)",
-    "Clean, uncluttered layout without extraneous panels or statistics"
+    "Compact & minimal matcha brand header for Sumire AI Assistant",
+    "Clean, space-efficient design without oversized fonts or extraneous labels",
+    "Preserved secure Restart Chat confirmation dialog"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.57/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.58/Daily-Sumire-app-debug.apk"
 }

@@ -53,12 +53,6 @@
 }
 
 /* Typography Classes */
-.font-brand {
-  font-family: 'Syne', 'Space Grotesk', sans-serif;
-  letter-spacing: -0.03em;
-  font-weight: 800;
-}
-
 .font-display {
   font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
   letter-spacing: -0.035em;

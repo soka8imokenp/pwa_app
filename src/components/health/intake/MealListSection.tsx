@@ -8,7 +8,6 @@ import {
   ChevronUp,
   Trash2,
   Clock,
-  Zap,
 } from 'lucide-react';
 import { playClickSound } from '../../../lib/sound';
 import type { MealLog, MealType } from '../../../types/health';
@@ -121,11 +120,6 @@ export const MealListSection: React.FC<MealListSectionProps> = ({
                           <span className="text-xs font-black text-[#24201D]">
                             {meal.name}
                           </span>
-                          {meal.aiEstimated && (
-                            <span className="text-[8px] font-black uppercase px-1 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-0.5 font-display">
-                              <Zap className="w-2.5 h-2.5" /> AI
-                            </span>
-                          )}
                           {meal.time && (
                             <span className="text-[9px] font-bold text-stone-400 flex items-center gap-0.5 font-mono-num">
                               <Clock className="w-2.5 h-2.5" />

@@ -139,7 +139,7 @@ export const Header: React.FC<HeaderProps> = ({
               }}
               className={`flex-1 py-1 px-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer font-display uppercase tracking-wider ${
                 appMode === 'health'
-                  ? 'bg-[#3D6B52] text-white shadow-2xs'
+                  ? 'bg-[#24201D] text-white shadow-2xs'
                   : 'text-[#6B635B] hover:text-[#24201D]'
               }`}
             >

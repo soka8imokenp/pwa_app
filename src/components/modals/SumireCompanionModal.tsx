@@ -39,6 +39,70 @@ interface SumireCompanionModalProps {
   onDataChanged?: () => void;
 }
 
+const getMealCategoryLabel = (mealType?: string): string => {
+  switch (mealType) {
+    case 'breakfast':
+      return 'Завтрак';
+    case 'lunch':
+      return 'Обед';
+    case 'dinner':
+      return 'Ужин';
+    case 'snack':
+      return 'Перекус';
+    default:
+      return 'Рацион';
+  }
+};
+
+const FormattedMessageText: React.FC<{ content: string }> = ({ content }) => {
+  const lines = content.split('\n');
+
+  return (
+    <div className="space-y-1.5 text-xs text-[#24201D] leading-relaxed break-words">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          return <div key={idx} className="h-1" />;
+        }
+
+        const isBullet = /^[\*\-•]\s+/.test(trimmed);
+        const textContent = isBullet ? trimmed.replace(/^[\*\-•]\s+/, '') : line;
+
+        const renderFormattedParts = (text: string) => {
+          const parts = text.split(/(\*\*[^*]+\*\*)/g);
+          return parts.map((part, pIdx) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+              return (
+                <strong key={pIdx} className="font-black text-[#24201D]">
+                  {part.slice(2, -2)}
+                </strong>
+              );
+            }
+            return <span key={pIdx}>{part}</span>;
+          });
+        };
+
+        if (isBullet) {
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-1 py-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#C25E40] shrink-0 mt-1.5" />
+              <div className="flex-1 min-w-0 leading-relaxed">
+                {renderFormattedParts(textContent)}
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <p key={idx} className="leading-relaxed">
+            {renderFormattedParts(line)}
+          </p>
+        );
+      })}
+    </div>
+  );
+};
+
 export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
   isOpen,
   onClose,
@@ -122,7 +186,8 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
     setMessages((prev) =>
       prev.map((m) => {
         if (m.id === msgId) {
-          const actionDesc = `Внесено в рацион (${meal.mealType}): ${meal.name} (${meal.kcal} ккал, Б:${meal.proteinGrams}г, Ж:${meal.fatGrams}г, У:${meal.carbsGrams}г)`;
+          const catLabel = getMealCategoryLabel(meal.mealType);
+          const actionDesc = `Внесено в ${catLabel}: ${meal.name} (${meal.kcal} ккал, Б:${meal.proteinGrams}г, Ж:${meal.fatGrams}г, У:${meal.carbsGrams}г)`;
           const existingActions = m.executedActions || [];
           return {
             ...m,
@@ -241,8 +306,8 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#24201D]/60 backdrop-blur-xs select-none">
-      <div className="w-full max-w-lg bg-white border-2 border-[#24201D] rounded-3xl p-4 shadow-[4px_4px_0px_#24201D] flex flex-col h-[85vh] max-h-[700px] animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#24201D]/60 backdrop-blur-xs select-none">
+      <div className="w-full max-w-lg bg-white border-2 border-[#24201D] rounded-3xl p-3.5 sm:p-4 shadow-[4px_4px_0px_#24201D] flex flex-col h-[85vh] max-h-[700px] animate-in fade-in zoom-in-95 duration-150">
         
         {/* Top Header */}
         <div className="flex items-center justify-between pb-3 border-b border-[#24201D]/15 shrink-0">
@@ -298,54 +363,85 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
         </div>
 
         {/* Messages Stream Container */}
-        <div className="flex-1 overflow-y-auto space-y-3 py-3 pr-1 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto space-y-3.5 py-3 pr-1 scrollbar-thin">
           {messages.map((msg) => (
             <div
               key={msg.id}
               className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
             >
               <div
-                className={`max-w-[88%] p-3.5 rounded-2xl border-[1.75px] border-[#24201D] text-xs font-medium leading-relaxed ${
+                className={`max-w-[94%] sm:max-w-[88%] p-3.5 rounded-2xl border-[1.75px] border-[#24201D] text-xs leading-relaxed ${
                   msg.role === 'user'
-                    ? 'bg-[#F0BB58] text-[#24201D] rounded-tr-xs shadow-[2px_2px_0px_#24201D]'
-                    : 'bg-[#FAF8F5] text-[#24201D] rounded-tl-xs shadow-[2px_2px_0px_#24201D]'
+                    ? 'bg-[#F0BB58] text-[#24201D] rounded-tr-xs shadow-[2px_2px_0px_#24201D] font-bold whitespace-pre-wrap'
+                    : 'bg-[#FAF8F5] text-[#24201D] rounded-tl-xs shadow-[2px_2px_0px_#24201D] font-medium'
                 }`}
               >
                 {/* User Attached Image Thumbnail */}
                 {msg.imagePreview && (
-                  <div className="mb-2 rounded-xl overflow-hidden border border-[#24201D] max-h-52">
+                  <div className="mb-2.5 rounded-xl overflow-hidden border border-[#24201D] max-h-56">
                     <img src={msg.imagePreview} alt="Attached" className="w-full h-full object-cover" />
                   </div>
                 )}
 
-                <p className="whitespace-pre-wrap">{msg.content}</p>
+                {/* Formatted Content */}
+                {msg.role === 'assistant' ? (
+                  <FormattedMessageText content={msg.content} />
+                ) : (
+                  <div>{msg.content}</div>
+                )}
 
                 {/* Suggested Meal 1-Tap Save Card */}
                 {msg.suggestedMeal && (
-                  <div className="mt-2.5 p-3 bg-[#FFF9E6] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-xs font-black text-[#24201D]">
-                        <Utensils className="w-3.5 h-3.5 text-amber-700" />
-                        <span>Оценка блюда: {msg.suggestedMeal.name}</span>
+                  <div className="mt-3 p-3.5 bg-[#FFFDF5] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5">
+                    {/* Header: Name & Calorie Counter */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-[#FEF08A] border border-[#24201D]/30 text-[#24201D] font-display tracking-wider">
+                            {getMealCategoryLabel(msg.suggestedMeal.mealType)}
+                          </span>
+                          <span className="text-[10px] font-bold text-[#6B635B]">
+                            Оценка блюда
+                          </span>
+                        </div>
+                        <h4 className="text-xs font-black text-[#24201D] leading-snug break-words">
+                          {msg.suggestedMeal.name}
+                        </h4>
                       </div>
-                      <span className="text-xs font-black font-mono-num text-[#24201D] bg-[#FEF08A] px-2 py-0.5 rounded-lg border border-[#24201D]/20">
-                        {msg.suggestedMeal.kcal} ккал
-                      </span>
+
+                      <div className="shrink-0 text-right bg-[#FAF8F5] px-2.5 py-1 rounded-xl border border-[#24201D]/30 shadow-2xs">
+                        <span className="text-sm font-black font-mono-num text-[#C25E40] block leading-none">
+                          {msg.suggestedMeal.kcal}
+                        </span>
+                        <span className="text-[8px] font-black uppercase text-stone-500 font-display block mt-0.5">
+                          ккал
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] font-bold font-mono-num text-[#6B635B]">
-                      <span className="bg-white/90 px-1.5 py-0.5 rounded border border-black/10">Б: {msg.suggestedMeal.proteinGrams}г</span>
-                      <span className="bg-white/90 px-1.5 py-0.5 rounded border border-black/10">Ж: {msg.suggestedMeal.fatGrams}г</span>
-                      <span className="bg-white/90 px-1.5 py-0.5 rounded border border-black/10">У: {msg.suggestedMeal.carbsGrams}г</span>
-                      <span className="ml-auto text-[9px] font-black uppercase text-stone-500">
-                        {msg.suggestedMeal.mealType === 'breakfast' ? 'Завтрак' : msg.suggestedMeal.mealType === 'lunch' ? 'Обед' : msg.suggestedMeal.mealType === 'dinner' ? 'Ужин' : 'Перекус'}
-                      </span>
+
+                    {/* Macronutrient Pills Grid (3 equal cards, no overlap) */}
+                    <div className="grid grid-cols-3 gap-1.5 text-center">
+                      <div className="p-1.5 rounded-xl bg-emerald-50 border border-emerald-300/60 shadow-2xs">
+                        <span className="text-[9px] font-bold text-emerald-700 block uppercase font-display">Белки</span>
+                        <span className="text-xs font-black font-mono-num text-emerald-900 block leading-tight">{msg.suggestedMeal.proteinGrams}г</span>
+                      </div>
+                      <div className="p-1.5 rounded-xl bg-amber-50 border border-amber-300/60 shadow-2xs">
+                        <span className="text-[9px] font-bold text-amber-700 block uppercase font-display">Жиры</span>
+                        <span className="text-xs font-black font-mono-num text-amber-900 block leading-tight">{msg.suggestedMeal.fatGrams}г</span>
+                      </div>
+                      <div className="p-1.5 rounded-xl bg-sky-50 border border-sky-300/60 shadow-2xs">
+                        <span className="text-[9px] font-bold text-sky-700 block uppercase font-display">Углеводы</span>
+                        <span className="text-xs font-black font-mono-num text-sky-900 block leading-tight">{msg.suggestedMeal.carbsGrams}г</span>
+                      </div>
                     </div>
+
+                    {/* 1-Tap Save Button */}
                     <button
                       type="button"
                       onClick={() => handleLogSuggestedMeal(msg.suggestedMeal!, msg.id)}
-                      className="w-full py-2 px-3 rounded-xl bg-[#2D503C] hover:bg-[#233f2f] text-white text-xs font-black tracking-wide flex items-center justify-center gap-1.5 shadow-2xs active:translate-y-0.5 cursor-pointer transition-all"
+                      className="w-full py-2.5 px-3 rounded-xl bg-[#24201D] hover:bg-stone-800 active:translate-y-0.5 text-white text-xs font-black tracking-wide flex items-center justify-center gap-1.5 shadow-[1.5px_1.5px_0px_#24201D] cursor-pointer transition-all"
                     >
-                      <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                      <Plus className="w-4 h-4 stroke-[3]" />
                       <span>Записать в дневник питания</span>
                     </button>
                   </div>
@@ -353,44 +449,51 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
 
                 {/* Executed Action Cards */}
                 {msg.executedActions && msg.executedActions.length > 0 && (
-                  <div className="mt-2.5 pt-2 border-t border-[#24201D]/15 space-y-2">
+                  <div className="mt-3 pt-2.5 border-t border-[#24201D]/15 space-y-2">
                     {msg.executedActions.map((action, idx) => {
                       if (action.type === 'log_meal' && action.details) {
                         return (
                           <div
                             key={idx}
-                            className="p-2.5 bg-white border border-[#24201D]/30 rounded-xl shadow-2xs space-y-1 text-[#24201D]"
+                            className="p-3 bg-white border-[1.5px] border-[#24201D] rounded-2xl shadow-2xs space-y-2"
                           >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1.5 font-black text-xs">
-                                <Utensils className="w-3.5 h-3.5 text-[#C25E40]" />
-                                <span>{action.details.name}</span>
-                                <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-[#FEF08A] border border-[#24201D]/20">
-                                  {action.details.mealType === 'breakfast'
-                                    ? 'Завтрак'
-                                    : action.details.mealType === 'lunch'
-                                    ? 'Обед'
-                                    : action.details.mealType === 'dinner'
-                                    ? 'Ужин'
-                                    : 'Перекус'}
-                                </span>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 border border-emerald-300 text-emerald-900 font-display tracking-wider">
+                                    ✓ Внесено в {getMealCategoryLabel(action.details.mealType)}
+                                  </span>
+                                  {action.details.time && (
+                                    <span className="text-[9px] font-bold text-stone-400 font-mono-num">
+                                      {action.details.time}
+                                    </span>
+                                  )}
+                                </div>
+                                <h5 className="text-xs font-black text-[#24201D] leading-snug break-words">
+                                  {action.details.name}
+                                </h5>
                               </div>
-                              <span className="text-xs font-black font-mono-num text-[#C25E40]">
-                                +{action.details.kcal} ккал
-                              </span>
+                              <div className="shrink-0 text-right bg-[#FAF8F5] px-2 py-1 rounded-xl border border-[#24201D]/20 shadow-2xs">
+                                <span className="text-xs font-black font-mono-num text-[#C25E40] block leading-none">
+                                  +{action.details.kcal}
+                                </span>
+                                <span className="text-[8px] font-bold text-stone-400 font-display block mt-0.5">ккал</span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 text-[10px] font-bold font-mono-num text-[#6B635B]">
-                              <span>Б: {action.details.proteinGrams}г</span>
-                              <span>•</span>
-                              <span>Ж: {action.details.fatGrams}г</span>
-                              <span>•</span>
-                              <span>У: {action.details.carbsGrams}г</span>
-                              {action.details.time && (
-                                <>
-                                  <span>•</span>
-                                  <span>{action.details.time}</span>
-                                </>
-                              )}
+
+                            <div className="grid grid-cols-3 gap-1.5 text-center">
+                              <div className="py-1 px-1.5 rounded-lg bg-[#FAF8F5] border border-stone-200">
+                                <span className="text-[8px] font-bold text-stone-500 block uppercase">Белки</span>
+                                <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.proteinGrams}г</span>
+                              </div>
+                              <div className="py-1 px-1.5 rounded-lg bg-[#FAF8F5] border border-stone-200">
+                                <span className="text-[8px] font-bold text-stone-500 block uppercase">Жиры</span>
+                                <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.fatGrams}г</span>
+                              </div>
+                              <div className="py-1 px-1.5 rounded-lg bg-[#FAF8F5] border border-stone-200">
+                                <span className="text-[8px] font-bold text-stone-500 block uppercase">Углеводы</span>
+                                <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.carbsGrams}г</span>
+                              </div>
                             </div>
                           </div>
                         );
@@ -400,10 +503,10 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
                         return (
                           <div
                             key={idx}
-                            className="p-2 bg-[#E0F2FE] border border-[#0284C7]/40 rounded-xl flex items-center gap-2 text-[11px] font-bold text-[#0369A1]"
+                            className="p-2.5 bg-[#E0F2FE] border border-[#0284C7]/40 rounded-xl flex items-center gap-2 text-[11px] font-bold text-[#0369A1]"
                           >
-                            <Droplets className="w-3.5 h-3.5 text-[#0284C7]" />
-                            <span>{action.description}</span>
+                            <Droplets className="w-4 h-4 text-[#0284C7] shrink-0" />
+                            <span className="break-words">{action.description}</span>
                           </div>
                         );
                       }
@@ -412,10 +515,10 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
                         return (
                           <div
                             key={idx}
-                            className="p-2 bg-[#FEF3C7] border border-[#D97706]/40 rounded-xl flex items-center gap-2 text-[11px] font-bold text-[#B45309]"
+                            className="p-2.5 bg-[#FEF3C7] border border-[#D97706]/40 rounded-xl flex items-center gap-2 text-[11px] font-bold text-[#B45309]"
                           >
-                            <Scale className="w-3.5 h-3.5 text-[#D97706]" />
-                            <span>{action.description}</span>
+                            <Scale className="w-4 h-4 text-[#D97706] shrink-0" />
+                            <span className="break-words">{action.description}</span>
                           </div>
                         );
                       }
@@ -424,10 +527,10 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
                         return (
                           <div
                             key={idx}
-                            className="p-2 bg-[#FEE2E2] border border-[#DC2626]/40 rounded-xl flex items-center gap-2 text-[11px] font-bold text-[#B91C1C]"
+                            className="p-2.5 bg-[#FEE2E2] border border-[#DC2626]/40 rounded-xl flex items-center gap-2 text-[11px] font-bold text-[#B91C1C]"
                           >
-                            <Dumbbell className="w-3.5 h-3.5 text-[#DC2626]" />
-                            <span>{action.description}</span>
+                            <Dumbbell className="w-4 h-4 text-[#DC2626] shrink-0" />
+                            <span className="break-words">{action.description}</span>
                           </div>
                         );
                       }
@@ -436,10 +539,10 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
                         return (
                           <div
                             key={idx}
-                            className="p-2 bg-[#FEF9C3] border border-[#CA8A04]/40 rounded-xl flex items-center gap-2 text-[11px] font-bold text-[#854D0E]"
+                            className="p-2.5 bg-[#FEF9C3] border border-[#CA8A04]/40 rounded-xl flex items-center gap-2 text-[11px] font-bold text-[#854D0E]"
                           >
-                            <CheckSquare className="w-3.5 h-3.5 text-[#CA8A04]" />
-                            <span>{action.description}</span>
+                            <CheckSquare className="w-4 h-4 text-[#CA8A04] shrink-0" />
+                            <span className="break-words">{action.description}</span>
                           </div>
                         );
                       }
@@ -447,10 +550,10 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
                       return (
                         <div
                           key={idx}
-                          className="p-2 bg-[#DDE8DE] border border-[#3D6B52]/40 rounded-xl flex items-center gap-2 text-[11px] font-bold text-[#2D503C]"
+                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-[#DDE8DE] border border-[#24201D] text-[11px] font-bold text-[#2D503C]"
                         >
-                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[#3D6B52] stroke-[2.5]" />
-                          <span className="truncate">{action.description}</span>
+                          <CheckCircle2 className="w-4 h-4 stroke-[2.5] shrink-0" />
+                          <span className="break-words">{action.description}</span>
                         </div>
                       );
                     })}

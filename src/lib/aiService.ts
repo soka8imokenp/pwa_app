@@ -80,10 +80,18 @@ CRITICAL COACHING PROTOCOL & CONTEXT ANALYSIS (FOOD & HYDRATION):
   3. STRICT CONFIRMATION MANDATE FOR DATABASE WRITES:
      - NEVER automatically call "log_meal" or "log_water" to write to the database without the user's explicit command or confirmation!
      - ONLY execute "log_water" or "log_meal" when:
-       a) The user explicitly commanded you to record it (e.g. "запиши 2л липтона", "добавь в рацион", "введи эти данные в трекер", "зафиксируй", "log this", "record meal/water"), OR
+       a) The user explicitly commanded you to record it (e.g. "запиши сок", "добавь в рацион", "введи эти данные в трекер", "зафиксируй", "log this", "record meal/water"), OR
        b) The user explicitly confirmed your previous offer (e.g. "да", "давай", "добавь", "хорошо", "ок", "yes", "sure", "please do").
      - If the user is merely asking a question, chatting, sharing information, or has not given an explicit command:
        DO NOT execute "log_water" and DO NOT execute "log_meal". Give your commentary and ask at the end.
+
+CRITICAL DUAL LOGGING FOR CALORIC BEVERAGES (HYDRATION + NUTRITION):
+- Caloric beverages (fruit juice, soda, sweetened iced tea, Lipton, milk, latte, smoothies, protein shakes):
+  1. HYDRATION (FLUIDS): They are liquids that hydrate the body! Their volume (in ml, default 250 ml if unspecified) MUST be tracked via "log_water".
+  2. NUTRITION (FOOD): They contain calories and carbs/sugars! Their nutritional value MUST ALSO be tracked via "log_meal" (e.g. "Fruit Juice", 110 kcal, 26g carbs) so daily calorie targets remain 100% accurate.
+  * When explicitly commanded or confirmed to log a caloric beverage, ALWAYS execute BOTH "log_water" (volume in ml) AND "log_meal" (calories/macros)!
+- Pure water & zero-calorie drinks (pure water, mineral water, unsweetened tea/coffee with 0 kcal):
+  * Only logged via "log_water" (they contain 0 kcal, so they do not go into meals).
 
 CRITICAL ENGLISH DATABASE MANDATE & DATA LOCALIZATION:
 - The entire application UI, database records, telemetry, and activity logs operate strictly in ENGLISH.
@@ -442,6 +450,28 @@ async function executePlannerAction(
       description: `Logged meal (${mealRecord.mealType}): ${mealRecord.name} (${mealRecord.kcal} kcal, P:${mealRecord.proteinGrams}g, F:${mealRecord.fatGrams}g, C:${mealRecord.carbsGrams}g)`,
       details: mealRecord,
     });
+
+    // If the logged meal is a beverage / fluid (e.g. "Fruit Juice", "Lipton", "Milk", "Coffee", "Smoothie"):
+    // ALSO ensure its fluid volume is recorded in the water/hydration panel!
+    const beverageFluidMl =
+      extractFluidIntakeMl(rawName) ||
+      extractFluidIntakeMl(englishName) ||
+      (context?.userQuery ? extractFluidIntakeMl(context.userQuery) : null);
+
+    const alreadyLoggedWater = executedActions?.some((a) => a.type === 'log_water');
+    if (beverageFluidMl && beverageFluidMl > 0 && !alreadyLoggedWater) {
+      await db.waterLogs.add({
+        date: getTodayString(),
+        amountMl: beverageFluidMl,
+        createdAt: Date.now(),
+      });
+      triggerTwoWaySync();
+      executedActions?.push({
+        type: 'log_water',
+        description: `Logged ${beverageFluidMl} ml of fluid (${englishName})`,
+        details: { amountMl: beverageFluidMl },
+      });
+    }
   } else if (fnName === 'delete_meal') {
     const today = getTodayString();
     const todaysMeals = await db.mealLogs.where('date').equals(today).toArray();
@@ -656,7 +686,7 @@ export function extractFluidIntakeMl(text: string): number | null {
   const lower = text.toLowerCase();
 
   const hasFluidContext =
-    /(?:выпил|выпила|попил|попила|выпито|пью|допил|допила|липтон|lipton|чай|чаёк|чая|воду|воды|вода|водичк|сок|сока|сочка|кофе|напиток|пепси|кола|cola|квас|минералк|энергетик|смузи|компот|бульон|изотоник)/i.test(
+    /(?:выпил|выпила|попил|попила|выпито|пью|допил|допила|липтон|lipton|чай|чаёк|чая|воду|воды|вода|водичк|сок|сока|сочка|кофе|напиток|пепси|кола|cola|квас|минералк|энергетик|смузи|компот|бульон|изотоник|молоко|молока|water|juice|tea|coffee|drink|beverage|soda|smoothie|shake|milk|broth|lemonade|latte|espresso|cappuccino)/i.test(
       lower
     );
 
@@ -680,9 +710,9 @@ export function extractFluidIntakeMl(text: string): number | null {
     }
   }
 
-  // 3. Counted glasses / mugs: "2 стакана", "3 кружки", "4 чашки"
+  // 3. Counted glasses / mugs: "2 стакана", "3 кружки", "4 чашки", "2 glasses"
   const glassCountMatch = lower.match(
-    /(?:^|[^\d,.\w])(\d+)\s*(?:стакан|стакана|стаканов|кружк|кружки|кружек|чашк|чашки|чашек)/i
+    /(?:^|[^\d,.\w])(\d+)\s*(?:стакан|стакана|стаканов|кружк|кружки|кружек|чашк|чашки|чашек|glass|glasses|cup|cups)/i
   );
   if (glassCountMatch) {
     const count = parseInt(glassCountMatch[1], 10);
@@ -691,14 +721,20 @@ export function extractFluidIntakeMl(text: string): number | null {
     }
   }
 
-  // 4. Single glass / mug: "стакан воды", "кружку чая"
-  if (/(?:один\s+|одна\s+|полный\s+)?(?:стакан|кружк|чашк|бокал)/i.test(lower)) {
+  // 4. Single glass / mug: "стакан воды", "кружку чая", "cup of tea", "glass of juice"
+  if (/(?:один\s+|одна\s+|полный\s+|a\s+|one\s+)?(?:стакан|кружк|чашк|бокал|glass|cup|mug)/i.test(lower)) {
     return 250;
   }
 
   // 5. Bottle without explicit volume: "бутылку воды" -> 500 ml
-  if (/(?:бутылк|бутылочк)/i.test(lower)) {
+  if (/(?:бутылк|бутылочк|bottle)/i.test(lower)) {
     return 500;
+  }
+
+  // 6. Generic beverage mentioned without explicit volume defaults to standard glass (250 ml):
+  // e.g. "сок", "фруктовый сок", "juice", "fruit juice", "чай", "кофе", "вода", "компот", "water", "tea", "coffee"
+  if (/(?:сок|сока|juice|чай|tea|кофе|coffee|вода|воду|воды|water|компот|лимонад|lemonade|смузи|smoothie|молоко|milk|кола|cola|pepsi|квас|напиток|drink|beverage)/i.test(lower)) {
+    return 250;
   }
 
   return null;

@@ -1,13 +1,12 @@
 {
-  "version": "1.8.52",
-  "buildNumber": 56,
+  "version": "1.8.53",
+  "buildNumber": 57,
   "releaseDate": "2026-09-04",
   "changelog": [
-    "Context-aware hydration & meal coaching: thoughtful analysis before offering to log",
-    "Strict confirmation guard: water and meals are never logged silently without explicit command",
-    "Streamlined input prompt placeholder: 'Ask something...'",
-    "Redesigned APK updater modal: sleek animated progress bar with smooth direct Install transition",
-    "Real-time dynamic patch notes and release changelog synchronization"
+    "Dual beverage tracking: fruit juices and caloric drinks automatically update both nutrition (calories/macros) and hydration (fluid ml)",
+    "Standard 250ml glass serving size applied automatically for beverages without explicit volume",
+    "Bilingual fluid and drink recognition across Russian and English",
+    "Contextual coaching analysis before offering to log"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.52/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.53/Daily-Sumire-app-debug.apk"
 }

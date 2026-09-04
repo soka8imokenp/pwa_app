@@ -6,11 +6,16 @@ import {
   getUserProfile,
   refreshUserToken,
   logoutUser,
+  authenticateWithGoogle,
 } from '../services/auth.service.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.middleware.js';
 import { authRateLimiter } from '../middleware/rateLimiter.js';
 
 export const authRouter = Router();
+
+const GoogleAuthSchema = z.object({
+  idToken: z.string().min(1, 'Google ID token is required'),
+});
 
 const RegisterSchema = z.object({
   email: z.string().email(),
@@ -48,6 +53,17 @@ authRouter.post('/login', authRateLimiter, async (req, res) => {
     res.status(200).json(result);
   } catch (err: any) {
     res.status(400).json({ error: err.message || 'Login failed' });
+  }
+});
+
+// 2.1. Google OAuth Sign-In with Rate Limiting
+authRouter.post('/google', authRateLimiter, async (req, res) => {
+  try {
+    const validated = GoogleAuthSchema.parse(req.body);
+    const result = await authenticateWithGoogle(validated.idToken);
+    res.status(200).json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'Google authentication failed' });
   }
 });
 

@@ -250,3 +250,82 @@ export async function getUserProfile(userId: string) {
 
   return user;
 }
+
+/**
+ * Authenticates or registers a user via Google OAuth ID Token
+ */
+export async function authenticateWithGoogle(idToken: string) {
+  if (!idToken) {
+    throw new Error('Google ID token is required');
+  }
+
+  // 1. Verify token with Google public tokeninfo endpoint
+  let googlePayload: any;
+  try {
+    const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
+    if (!res.ok) {
+      throw new Error(`Google token validation failed: ${res.statusText}`);
+    }
+    googlePayload = await res.json();
+  } catch (err: any) {
+    throw new Error('Invalid or expired Google authentication token: ' + err.message);
+  }
+
+  const { email, given_name, family_name, name, picture, email_verified } = googlePayload;
+
+  if (!email) {
+    throw new Error('Google account does not have an associated email');
+  }
+
+  if (email_verified === 'false' || email_verified === false) {
+    throw new Error('Google account email is not verified');
+  }
+
+  // 2. Find or create user in local SQLite/Postgres database
+  let user = await prisma.user.findUnique({
+    where: { email: email.toLowerCase() },
+  });
+
+  if (!user) {
+    const randomPassword = crypto.randomUUID();
+    const hashedPassword = await bcrypt.hash(randomPassword, 12);
+    const firstName = given_name || (name ? name.split(' ')[0] : 'Sumire');
+    const lastName = family_name || (name ? name.split(' ').slice(1).join(' ') : 'User');
+    const username = email.split('@')[0] || `user_${Date.now().toString(36)}`;
+
+    user = await prisma.user.create({
+      data: {
+        email: email.toLowerCase(),
+        password: hashedPassword,
+        firstName,
+        lastName,
+        username,
+        avatarUrl: picture || undefined,
+        themeAccent: '#3D6B52',
+        soundEnabled: true,
+      },
+    });
+  } else if (!user.avatarUrl && picture) {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: { avatarUrl: picture },
+    });
+  }
+
+  // 3. Issue our dual-token pair (15m access, 30d refresh)
+  const tokens = await generateTokenPair(user.id, user.email);
+
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
+      avatarUrl: user.avatarUrl,
+      themeAccent: user.themeAccent,
+      soundEnabled: user.soundEnabled,
+    },
+    ...tokens,
+  };
+}

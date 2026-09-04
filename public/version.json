@@ -1,8 +1,9 @@
 {
-  "version": "1.8.59",
-  "buildNumber": 63,
+  "version": "1.8.60",
+  "buildNumber": 64,
   "releaseDate": "2026-09-04",
   "changelog": [
+    "Google OAuth Sign-In & Account Linking integration (backend token verification & Continue with Google UI)",
     "Hardened Dual-Token JWT Auth with silent refresh & sliding-window rate limiting",
     "Global React ErrorBoundary and sticky Offline Mode indicator",
     "Zod schemas for client/server payloads & Gemini AI meal parsing",
@@ -10,5 +11,6 @@
     "Extracted ModalManager with React.lazy and Suspense for heavy modals",
     "Ring-buffer client logger, Dockerfile & CI/CD workflow, GDPR purge & Legal terms"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.59/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.60/Daily-Sumire-app-debug.apk"
 }
+

@@ -231,6 +231,13 @@ export const authApi = {
       skipAuthRefresh: true,
     }),
 
+  loginWithGoogle: (idToken: string) =>
+    apiRequest<{ user: any; token: string; accessToken: string; refreshToken: string }>('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ idToken }),
+      skipAuthRefresh: true,
+    }),
+
   refreshToken: (refreshToken: string) =>
     apiRequest<{ user: any; token: string; accessToken: string; refreshToken: string }>('/auth/refresh', {
       method: 'POST',

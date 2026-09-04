@@ -221,27 +221,34 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     }
   };
 
-  // Check on mount if returning from Google OAuth redirect with hash (#access_token=... or #id_token=...)
+  // Check on mount or hashchange if returning from Google OAuth redirect with hash (#access_token=... or #id_token=...)
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const hash = window.location.hash;
-    if (hash && (hash.includes('access_token=') || hash.includes('id_token='))) {
-      try {
-        const hashClean = hash.startsWith('#') ? hash.substring(1) : hash;
-        const params = new URLSearchParams(hashClean);
-        const idToken = params.get('id_token');
-        const accessToken = params.get('access_token');
-        const token = idToken || accessToken;
 
-        if (token) {
-          // Clean the hash from the URL without triggering page reload
-          window.history.replaceState(null, '', window.location.pathname + window.location.search);
-          processGoogleAuth(token);
+    const checkHash = () => {
+      const hash = window.location.hash;
+      if (hash && (hash.includes('access_token=') || hash.includes('id_token='))) {
+        try {
+          const hashClean = hash.startsWith('#') ? hash.substring(1) : hash;
+          const params = new URLSearchParams(hashClean);
+          const idToken = params.get('id_token');
+          const accessToken = params.get('access_token');
+          const token = idToken || accessToken;
+
+          if (token) {
+            // Clean the hash from the URL without triggering page reload
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+            processGoogleAuth(token);
+          }
+        } catch (e) {
+          console.error('Failed to parse Google OAuth redirect hash:', e);
         }
-      } catch (e) {
-        console.error('Failed to parse Google OAuth redirect hash:', e);
       }
-    }
+    };
+
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+    return () => window.removeEventListener('hashchange', checkHash);
   }, []);
 
   const openGoogleOAuthRedirect = () => {

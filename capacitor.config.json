@@ -6,6 +6,10 @@
   "server": {
     "androidScheme": "https",
     "allowNavigation": [
+      "localhost",
+      "*.localhost",
+      "https://localhost",
+      "https://localhost/*",
       "accounts.google.com",
       "*.google.com",
       "*.googleusercontent.com",

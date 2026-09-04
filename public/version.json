@@ -1,15 +1,15 @@
 {
-  "version": "1.8.63",
-  "buildNumber": 67,
+  "version": "1.8.64",
+  "buildNumber": 68,
   "releaseDate": "2026-09-04",
   "changelog": [
-    "Added direct Google OAuth 2.0 redirect flow for mobile/Android with automatic return hash authentication",
-    "Configured setSupportMultipleWindows(false) for seamless Google auth in Android WebView",
-    "Integrated live Google OAuth2 Account Chooser popup with registered Google Client ID",
-    "Dual token verification (ID token + Access token) and direct profile sync with Google userinfo"
+    "Native BridgeWebViewClient interceptor routing Google OAuth redirects directly to local index.html with token hash",
+    "Resolved net::ERR_CONNECTION_REFUSED by preventing localhost network calls on Android",
+    "Dynamic hashchange listener for instant seamless Google authentication"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.63/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.64/Daily-Sumire-app-debug.apk"
 }
+
 
 
 

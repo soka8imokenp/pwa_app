@@ -60,33 +60,47 @@ CHARACTER IDENTITY & BEHAVIORAL RULES:
   1. Life & Productivity: You help organize tasks, top 3 priorities, daily habits, deep work focus, and scratchpad notes using tools.
   2. Health, Diet & Nutrition: You analyze food photos, evaluate meal composition, estimate calories (kcal) and macronutrients (proteins, fats, carbs), discuss flexible dieting (IIFYM / 80/20 rule, ice cream, cheat meals, caloric budgets), evaluate weight targets (e.g. dropping to 65 kg vs WHO healthy corridor), and advise on hydration, workouts, and recovery.
   3. No empty trivial chitchat: If the user talks about completely unrelated random topics (e.g. abstract philosophy, celebrity gossip), bluntly yet politely prompt them to focus on their actual tasks, habits, productivity, or health goals.
-- Language: Respond in the exact language the user addresses you in (Russian if Russian, English if English, Uzbek if Uzbek).
 - Output Style: Crisp, articulate, helpful, strictly to the point, no fluff. NEVER use sparkles ("✨", "Sparkles") or spam unicode emojis.
+
+CRITICAL HYDRATION & BEVERAGE TRACKING RULE:
+- ANY time the user mentions drinking ANY beverage or liquid (water, tea, iced tea, Lipton, coffee, juice, soda, lemonade, energy drink, milk, protein shake, broth, soup):
+  YOU MUST ALWAYS LOG WATER HYDRATION using "log_water" with the exact or estimated amount in ml (e.g. "2 литра липтона" = 2000 ml; "стакан чая" = 250 ml; "бутылка 0.5" = 500 ml).
+- If the beverage contains calories/macros (e.g. Lipton iced tea, juice, soda, milk, sweetened coffee):
+  YOU MUST LOG BOTH:
+  1. "log_water" for the liquid volume in ml (e.g. 2000 ml).
+  2. "log_meal" for the calories, carbs/sugar, protein, fat.
+  NEVER omit "log_water" when any drink or beverage is consumed!
 
 AUTONOMOUS TRACKER MANAGEMENT & ACTION EXECUTION:
 You have direct read AND write access to the user's live database (tasks, habits, meal logs, water logs, weight, workouts, scratchpad).
-When the user asks you to log, record, save, track, or add anything (or says "запиши это", "введи эти данные в мой трекер", "я покушал пиццу", "добавь 400 мл воды", "запиши вес 74 кг", "создай задачу"):
+When the user asks you to log, record, save, track, or add anything (or says "запиши это", "введи эти данные в мой трекер", "я покушал пиццу", "я выпил 2литра липтона", "добавь 400 мл воды", "запиши вес 74 кг", "создай задачу"):
 YOU MUST EXECUTE THE CORRESPONDING ACTION IMMEDIATELY!
 
 You have two ways to execute actions:
-1. Call the corresponding Function Calling Tool (when available).
-2. Emit an action block in your text response:
-\`\`\`json:action
-{
-  "action": "log_meal",
-  "name": "Пицца Маргарита",
-  "kcal": 650,
-  "proteinGrams": 24,
-  "carbsGrams": 72,
-  "fatGrams": 26,
-  "mealType": "dinner"
-}
-\`\`\`
+1. Call the corresponding Function Calling Tool (when available). You can call multiple tools in one turn (e.g. log_water AND log_meal).
+2. Emit an action block in your text response. You can emit a single action or a JSON array of multiple actions:
+```json:action
+[
+  {
+    "action": "log_water",
+    "amountMl": 2000
+  },
+  {
+    "action": "log_meal",
+    "name": "Чай Lipton 2л",
+    "kcal": 380,
+    "proteinGrams": 0,
+    "carbsGrams": 95,
+    "fatGrams": 0,
+    "mealType": "snack"
+  }
+]
+```
 
 Supported actions in json:action block:
 - "log_meal": { name, kcal, proteinGrams, carbsGrams, fatGrams, mealType: "breakfast"|"lunch"|"dinner"|"snack", time?: "HH:MM" }
 - "delete_meal": { name }
-- "log_water": { amountMl: number }
+- "log_water": { amountMl: number } (MUST be called for water, tea, Lipton, coffee, juices, and all beverages)
 - "log_weight": { weight: number, note?: string }
 - "log_workout": { title: string, durationMinutes: number, caloriesBurned?: number, category?: "strength"|"cardio"|"walk"|"hiit"|"yoga"|"sports" }
 - "create_task": { title: string, isPriority?: boolean, category?: string, estimatedMinutes?: number, subtasks?: string[] }
@@ -101,10 +115,10 @@ CRITICAL MULTIMODAL VISION INSTRUCTION:
 When the user attaches a photo of food / a meal:
 1. Accurately identify the dish, components, portion size, and estimate total calories (kcal) and macronutrients (protein, carbs, fat).
 2. If the user asked to log/save it ("запиши", "добавь в рацион", "введи в трекер"):
-   Emit a \`\`\`json:action block with "action": "log_meal".
+   Emit a ```json:action block with "action": "log_meal".
 3. If the user only asked to evaluate/analyze without an explicit command to save:
    Provide your feedback and ALWAYS emit a suggested meal block at the end so the app gives the user a 1-tap save button:
-\`\`\`json:suggested_meal
+```json:suggested_meal
 {
   "name": "Название блюда",
   "kcal": 550,
@@ -113,18 +127,18 @@ When the user attaches a photo of food / a meal:
   "fatGrams": 20,
   "mealType": "lunch"
 }
-\`\`\``;
+```;
 
 export const AI_TOOLS = [
   {
     functionDeclarations: [
       {
         name: 'log_meal',
-        description: 'Records a meal into the user daily nutrition tracker (calories and macronutrients).',
+        description: 'Records a meal or caloric beverage into the user daily nutrition tracker (calories and macronutrients). IMPORTANT: If logging a beverage with volume (e.g. Lipton, iced tea, juice), ALSO call log_water with amountMl!',
         parameters: {
           type: 'OBJECT',
           properties: {
-            name: { type: 'STRING', description: 'Food or meal title (e.g. "Пицца Маргарита", "Овсянка с ягодами")' },
+            name: { type: 'STRING', description: 'Food or meal title (e.g. "Пицца Маргарита", "Чай Lipton 2л")' },
             kcal: { type: 'INTEGER', description: 'Total calories in kcal' },
             proteinGrams: { type: 'NUMBER', description: 'Protein in grams' },
             carbsGrams: { type: 'NUMBER', description: 'Carbohydrates in grams' },
@@ -152,11 +166,11 @@ export const AI_TOOLS = [
       },
       {
         name: 'log_water',
-        description: 'Logs water intake in milliliters (e.g. 250, 500).',
+        description: 'Logs water or fluid hydration in milliliters (e.g. 250, 500, 2000). CRITICAL: MUST be called whenever the user drinks water, tea, Lipton, coffee, juices, or any beverage (calculate total ml).',
         parameters: {
           type: 'OBJECT',
           properties: {
-            amountMl: { type: 'INTEGER', description: 'Water amount in ml' },
+            amountMl: { type: 'INTEGER', description: 'Water or beverage amount in ml (e.g. 2000 for 2 liters)' },
           },
           required: ['amountMl'],
         },
@@ -544,6 +558,62 @@ async function executePlannerAction(
   }
 }
 
+/**
+ * Helper to detect fluid/beverage intake volume (in ml) from Russian or English conversational phrases.
+ */
+export function extractFluidIntakeMl(text: string): number | null {
+  if (!text) return null;
+  const lower = text.toLowerCase();
+
+  const hasFluidContext =
+    /(?:выпил|выпила|попил|попила|выпито|пью|допил|допила|липтон|lipton|чай|чаёк|чая|воду|воды|вода|водичк|сок|сока|сочка|кофе|напиток|пепси|кола|cola|квас|минералк|энергетик|смузи|компот|бульон|изотоник)/i.test(
+      lower
+    );
+
+  if (!hasFluidContext) return null;
+
+  // 1. Liters: "2литра", "2 литра", "2.5 л", "2л", "1,5л", "1.5 литра", "3 литра", "0.5л"
+  const literMatch = lower.match(/(?:^|[^\d,.\w])(\d+(?:[.,]\d+)?)\s*(?:л|литр|литра|литров|l|liter|liters)(?=[^\d\w]|$)/i);
+  if (literMatch) {
+    const liters = parseFloat(literMatch[1].replace(',', '.'));
+    if (!isNaN(liters) && liters > 0 && liters <= 10) {
+      return Math.round(liters * 1000);
+    }
+  }
+
+  // 2. Milliliters: "500мл", "500 мл", "330 ml", "250ml", "1000 ml"
+  const mlMatch = lower.match(/(?:^|[^\d,.\w])(\d+)\s*(?:мл|ml|миллилитр)(?=[^\d\w]|$)/i);
+  if (mlMatch) {
+    const ml = parseInt(mlMatch[1], 10);
+    if (!isNaN(ml) && ml > 0 && ml <= 10000) {
+      return ml;
+    }
+  }
+
+  // 3. Counted glasses / mugs: "2 стакана", "3 кружки", "4 чашки"
+  const glassCountMatch = lower.match(
+    /(?:^|[^\d,.\w])(\d+)\s*(?:стакан|стакана|стаканов|кружк|кружки|кружек|чашк|чашки|чашек)/i
+  );
+  if (glassCountMatch) {
+    const count = parseInt(glassCountMatch[1], 10);
+    if (!isNaN(count) && count > 0 && count <= 20) {
+      return count * 250;
+    }
+  }
+
+  // 4. Single glass / mug: "стакан воды", "кружку чая"
+  if (/(?:один\s+|одна\s+|полный\s+)?(?:стакан|кружк|чашк|бокал)/i.test(lower)) {
+    return 250;
+  }
+
+  // 5. Bottle without explicit volume: "бутылку воды" -> 500 ml
+  if (/(?:бутылк|бутылочк)/i.test(lower)) {
+    return 500;
+  }
+
+  return null;
+}
+
 export async function askSumireAI(
   userQuery: string,
   chatHistory: AIChatMessage[] = [],
@@ -671,19 +741,35 @@ export async function askSumireAI(
   }
 
   // 3. Process structured action blocks in replyText (Dual-Channel Action Engine)
-  const actionRegex = /```(?:json:action|json)?\s*(\{[\s\S]*?"action"\s*:\s*"([^"]+)"[\s\S]*?\})\s*```/g;
+  // Supports single action objects OR arrays of actions: [ { "action": "log_water" }, ... ]
+  const actionBlockRegex = /```(?:json:action|json)?\s*([\[\{][\s\S]*?[\]\}])\s*```/g;
   let actionMatch;
-  while ((actionMatch = actionRegex.exec(replyText)) !== null) {
+  while ((actionMatch = actionBlockRegex.exec(replyText)) !== null) {
     try {
-      const actionObj = JSON.parse(actionMatch[1]);
-      const actName = actionObj.action;
-      delete actionObj.action;
-      await executePlannerAction(actName, actionObj, executedActions);
+      const parsed = JSON.parse(actionMatch[1]);
+      const actionsList = Array.isArray(parsed) ? parsed : [parsed];
+      for (const item of actionsList) {
+        if (item && item.action) {
+          const actName = item.action;
+          const clone = { ...item };
+          delete clone.action;
+          await executePlannerAction(actName, clone, executedActions);
+        }
+      }
     } catch (err) {
-      console.warn('Failed to parse text action block:', err);
+      // Not a valid action JSON block, ignore
     }
   }
-  replyText = replyText.replace(actionRegex, '').trim();
+  replyText = replyText.replace(actionBlockRegex, (match, p1) => {
+    try {
+      const parsed = JSON.parse(p1);
+      const isAction = Array.isArray(parsed)
+        ? parsed.some((x) => x && x.action)
+        : Boolean(parsed && parsed.action);
+      if (isAction) return '';
+    } catch {}
+    return match;
+  }).trim();
 
   // 4. Process inline action tags: [[ACTION:actName:{...}]]
   const inlineActionRegex = /\[\[ACTION:([a-zA-Z0-9_]+):(\{[\s\S]*?\})\]\]/g;
@@ -721,6 +807,30 @@ export async function askSumireAI(
       console.warn('Failed to parse suggested meal:', e);
     }
     replyText = replyText.replace(suggestedRegex, '').trim();
+  }
+
+  // 6. Deterministic Hydration Safety Net:
+  // If the user query or any logged meal mentions fluid consumption, and log_water was not yet executed:
+  const hasLoggedWater = executedActions?.some((a) => a.type === 'log_water');
+  if (!hasLoggedWater) {
+    let detectedFluidMl = extractFluidIntakeMl(userQuery);
+
+    // Also check if a meal was logged with a fluid/beverage title (e.g. "Lipton 2л", "Чай 500мл")
+    if (!detectedFluidMl && executedActions) {
+      for (const act of executedActions) {
+        if (act.type === 'log_meal' && act.details?.name) {
+          const mealFluidMl = extractFluidIntakeMl(String(act.details.name));
+          if (mealFluidMl) {
+            detectedFluidMl = mealFluidMl;
+            break;
+          }
+        }
+      }
+    }
+
+    if (detectedFluidMl && detectedFluidMl > 0) {
+      await executePlannerAction('log_water', { amountMl: detectedFluidMl }, executedActions);
+    }
   }
 
   if (!replyText.trim() && executedActions && executedActions.length > 0) {

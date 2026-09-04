@@ -133,7 +133,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 </span>
               </button>
 
-              {/* 4. AI Coach */}
+              {/* 4. AI Assistant */}
               <button
                 onClick={() => handleHealthTabClick('coach')}
                 className={`py-1.5 px-1 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${
@@ -152,7 +152,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                     activeHealthTab === 'coach' ? 'font-bold text-[#24201D]' : 'font-medium text-[#78716C]'
                   }`}
                 >
-                  AI Coach
+                  AI Assistant
                 </span>
               </button>
             </>

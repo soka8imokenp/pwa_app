@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   Image as ImageIcon,
   RotateCcw,
-  Utensils,
   Plus,
   Droplets,
   Scale,
@@ -52,15 +51,15 @@ interface HealthCoachPageProps {
 const getMealCategoryLabel = (mealType?: string): string => {
   switch (mealType) {
     case 'breakfast':
-      return 'Завтрак';
+      return 'Breakfast';
     case 'lunch':
-      return 'Обед';
+      return 'Lunch';
     case 'dinner':
-      return 'Ужин';
+      return 'Dinner';
     case 'snack':
-      return 'Перекус';
+      return 'Snacks & Drinks';
     default:
-      return 'Рацион';
+      return 'Meals';
   }
 };
 
@@ -116,9 +115,7 @@ const FormattedMessageText: React.FC<{ content: string }> = ({ content }) => {
 export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
   profile,
   metrics,
-  todaysMeals = [],
   todaysWaterTotalMl = 0,
-  todaysWorkouts = [],
   todaysActiveCaloriesBurned = 0,
   todaysTotalKcal = 0,
   todaysProteinGrams = 0,
@@ -139,12 +136,12 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
     const delta = Number((profile.currentWeight - profile.targetWeight).toFixed(1));
     const goalText =
       profile.goal === 'lose'
-        ? `сбросить ещё ${Math.max(0, delta)} кг`
+        ? `lose ${Math.max(0, delta)} kg`
         : profile.goal === 'gain'
-        ? `набрать ${Math.max(0, Math.abs(delta))} кг`
-        : 'поддерживать форму';
+        ? `gain ${Math.max(0, Math.abs(delta))} kg`
+        : 'maintain optimal body composition';
 
-    return `Привет! Я Сумирэ — твой персональный наставник по питанию и здоровью. Твоя цель: ${goalText}. Сфотографируй блюдо, опиши свой рацион или спроси совет — я рассчитаю калории, БЖУ и сразу внесу всё в твой дневник питания!`;
+    return `Hi! I am Sumire — your personal nutrition and health assistant. Your goal is to ${goalText}. Snap a meal photo, speak via voice dictation, or describe what you ate — I'll estimate macros and automatically log everything into your daily tracker!`;
   };
 
   const [messages, setMessages] = useState<AIChatMessage[]>(() => {
@@ -152,7 +149,23 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
       const saved = localStorage.getItem('kairo_health_companion_chat_history');
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed: AIChatMessage[] = JSON.parse(saved);
+          // If the initial welcome message is still old Russian text, replace it with English
+          if (
+            parsed.length === 1 &&
+            parsed[0].id.includes('welcome') &&
+            /[а-яё]/i.test(parsed[0].content)
+          ) {
+            return [
+              {
+                id: 'initial_welcome',
+                role: 'assistant',
+                content: getInitialGreeting(),
+                timestamp: Date.now(),
+              },
+            ];
+          }
+          return parsed;
         } catch (e) {}
       }
     }
@@ -166,8 +179,25 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
     ];
   });
 
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const scrollToBottom = (instant = false) => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: instant ? 'auto' : 'smooth',
+      });
+    }
+  };
+
+  // Immediate scroll to bottom on mount so chat opens at the end
+  useEffect(() => {
+    scrollToBottom(true);
+    const timer = setTimeout(() => scrollToBottom(true), 60);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Persist messages
   useEffect(() => {
@@ -176,15 +206,16 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
     }
   }, [messages]);
 
+  // Scroll to bottom whenever messages or loading state change
   useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollToBottom(false);
   }, [messages, isLoading]);
 
   const cycleVoiceLang = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     playClickSound();
-    const order: VoiceLanguage[] = ['auto', 'ru-RU', 'en-US', 'ja-JP'];
+    const order: VoiceLanguage[] = ['auto', 'en-US', 'ru-RU', 'ja-JP'];
     const nextIdx = (order.indexOf(voiceLang) + 1) % order.length;
     const nextLang = order[nextIdx];
     setVoiceLang(nextLang);
@@ -236,7 +267,7 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
       prev.map((m) => {
         if (m.id === msgId) {
           const catLabel = getMealCategoryLabel(meal.mealType);
-          const actionDesc = `Внесено в ${catLabel}: ${meal.name} (${meal.kcal} ккал, Б:${meal.proteinGrams}г, Ж:${meal.fatGrams}г, У:${meal.carbsGrams}г)`;
+          const actionDesc = `Logged to ${catLabel}: ${meal.name} (${meal.kcal} kcal, P:${meal.proteinGrams}g, F:${meal.fatGrams}g, C:${meal.carbsGrams}g)`;
           const existingActions = m.executedActions || [];
           return {
             ...m,
@@ -266,7 +297,7 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
     const userMsg: AIChatMessage = {
       id: `user_${Date.now()}`,
       role: 'user',
-      content: text || 'Оцени это фото/блюдо:',
+      content: text || 'Analyze this meal:',
       imagePreview: currentAttachment?.previewUrl,
       timestamp: Date.now(),
     };
@@ -314,7 +345,7 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
         {
           id: `err_${Date.now()}`,
           role: 'assistant',
-          content: `${err.message || 'Не удалось связаться с Sumire. Проверьте API-ключ в настройках.'}`,
+          content: `${err.message || 'Unable to connect to Sumire AI. Please check your Gemini API key in Settings.'}`,
           timestamp: Date.now(),
         },
       ]);
@@ -325,7 +356,7 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
 
   const handleToggleVoice = () => {
     if (!isSpeechRecognitionSupported()) {
-      alert('Голосовой ввод не поддерживается данным браузером или устройством.');
+      alert('Voice dictation is not supported in this browser or device.');
       return;
     }
 
@@ -358,13 +389,12 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
 
   return (
     <div className="w-full space-y-3 pb-3 font-body select-none">
-      
-      {/* 1. Sumire Companion Top Header */}
-      <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+      {/* 1. Streamlined Sumire AI Assistant Header */}
+      <div className="p-3.5 sm:p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
             {/* Signature Sumire Avatar SVG */}
-            <div className="w-10 h-10 rounded-2xl bg-[#DDE8DE] border-[1.75px] border-[#24201D] flex items-center justify-center shadow-xs overflow-hidden p-0.5 shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-[#DDE8DE] border-[1.75px] border-[#24201D] flex items-center justify-center shadow-2xs overflow-hidden p-0.5 shrink-0">
               <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
                 <circle cx="50" cy="50" r="46" fill="#DDE8DE" stroke="#24201D" strokeWidth="4" />
                 <ellipse cx="38" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
@@ -383,27 +413,28 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
               </svg>
             </div>
 
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D]">
-                  Sumire AI Coach
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D] truncate">
+                  Sumire AI Assistant
                 </h3>
-                <span className="px-1.5 py-0.2 rounded-md bg-[#DDE8DE] border border-[#24201D]/20 text-[9px] font-black text-[#2D503C] uppercase tracking-wider font-display">
-                  Live
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#DDE8DE] border border-[#2D503C]/20 text-[9px] font-black text-[#2D503C] uppercase tracking-wider font-display shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Ready
                 </span>
               </div>
-              <p className="text-[10px] font-bold text-[#6B635B]">
-                Анализ фото блюд • Дневник питания • Управление трекерами
+              <p className="text-[10px] font-bold text-[#6B635B] truncate">
+                Nutrition vision • Voice logging • Smart intake sync
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             {/* Clear History Button */}
             <button
               type="button"
               onClick={handleClearHistory}
-              title="Очистить историю чата"
+              title="Clear chat history"
               className="p-1.5 rounded-xl bg-[#FAF8F5] hover:bg-stone-200 border-[1.5px] border-[#24201D] text-[#24201D] shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5 stroke-[2.25]" />
@@ -413,7 +444,7 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
             <button
               type="button"
               onClick={cycleVoiceLang}
-              title={`Язык распознавания речи: ${voiceLang.toUpperCase()}. Нажмите для переключения.`}
+              title={`Voice input language: ${voiceLang.toUpperCase()}. Tap to toggle.`}
               className="px-2 py-1 rounded-xl bg-[#FAF8F5] hover:bg-stone-200 border-[1.5px] border-[#24201D] text-[10px] font-black font-mono-num text-[#24201D] shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
             >
               {getVoiceLanguageBadge(voiceLang)}
@@ -421,31 +452,35 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
           </div>
         </div>
 
-        {/* Live Context Telemetry Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-[10px] font-bold text-[#6B635B]">
-          <div className="px-2.5 py-1 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center gap-1.5 shrink-0 shadow-2xs min-w-max">
+        {/* Clean Context Telemetry Bar */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-none text-[10px] font-bold text-[#6B635B]">
+          <div className="px-2.5 py-1 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center gap-1.5 shrink-0 shadow-2xs">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span className="text-[#24201D] font-mono-num font-black">{todaysTotalKcal}</span> / {metrics.targetDailyCalories} ккал
+            <span className="text-[#24201D] font-mono-num font-black">{todaysTotalKcal}</span> / {metrics.targetDailyCalories} kcal
           </div>
-          <div className="px-2.5 py-1 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center gap-1.5 shrink-0 shadow-2xs min-w-max">
-            <span>Белки:</span>
-            <span className="text-[#24201D] font-mono-num font-black">{todaysProteinGrams}</span> / {metrics.targetProteinGrams}г
+          <div className="px-2.5 py-1 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center gap-1.5 shrink-0 shadow-2xs">
+            <span>Protein:</span>
+            <span className="text-[#24201D] font-mono-num font-black">{todaysProteinGrams}</span> / {metrics.targetProteinGrams}g
           </div>
-          <div className="px-2.5 py-1 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center gap-1.5 shrink-0 shadow-2xs min-w-max">
-            <span>Вода:</span>
-            <span className="text-[#24201D] font-mono-num font-black">{todaysWaterTotalMl}</span> / {metrics.targetWaterMl} мл
+          <div className="px-2.5 py-1 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center gap-1.5 shrink-0 shadow-2xs">
+            <span>Water:</span>
+            <span className="text-[#24201D] font-mono-num font-black">{(todaysWaterTotalMl / 1000).toFixed(1)}</span> / {(metrics.targetWaterMl / 1000).toFixed(1)}L
           </div>
           {todaysActiveCaloriesBurned > 0 && (
-            <div className="px-2.5 py-1 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center gap-1.5 shrink-0 shadow-2xs text-[#C25E40] min-w-max">
-              <span>+{todaysActiveCaloriesBurned} ккал сожжено</span>
+            <div className="px-2.5 py-1 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center gap-1.5 shrink-0 shadow-2xs text-[#C25E40]">
+              <span>+{todaysActiveCaloriesBurned} kcal burned</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* 2. Interactive Chat Feed Container */}
-      <div className="p-3.5 sm:p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
-        <div className="min-h-[350px] max-h-[580px] overflow-y-auto space-y-3.5 pr-1 scrollbar-thin">
+      {/* 2. Interactive Chat Container with Fixed Height and Internal Scroll */}
+      <div className="h-[520px] sm:h-[580px] bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex flex-col overflow-hidden">
+        {/* Scrollable Messages Area */}
+        <div
+          ref={chatContainerRef}
+          className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3.5 pr-2 scrollbar-thin"
+        >
           {messages.map((m) => (
             <div
               key={m.id}
@@ -453,7 +488,7 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
                 m.role === 'user' ? 'flex-row-reverse' : 'flex-row'
               }`}
             >
-              {/* Avatar Icon */}
+              {/* Assistant Avatar Icon */}
               {m.role === 'assistant' ? (
                 <div className="w-7 h-7 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0 overflow-hidden p-0.5 mt-0.5">
                   <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
@@ -508,7 +543,7 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
                             {getMealCategoryLabel(m.suggestedMeal.mealType)}
                           </span>
                           <span className="text-[10px] font-bold text-[#6B635B]">
-                            Оценка блюда
+                            Meal Analysis
                           </span>
                         </div>
                         <h4 className="text-xs font-black text-[#24201D] leading-snug break-words">
@@ -521,24 +556,24 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
                           {m.suggestedMeal.kcal}
                         </span>
                         <span className="text-[8px] font-black uppercase text-stone-500 font-display block mt-0.5">
-                          ккал
+                          kcal
                         </span>
                       </div>
                     </div>
 
-                    {/* Macronutrient Pills Grid (3 equal cards, no overlap) */}
+                    {/* Macronutrient Pills Grid */}
                     <div className="grid grid-cols-3 gap-1.5 text-center">
                       <div className="p-1.5 rounded-xl bg-emerald-50 border border-emerald-300/60 shadow-2xs">
-                        <span className="text-[9px] font-bold text-emerald-700 block uppercase font-display">Белки</span>
-                        <span className="text-xs font-black font-mono-num text-emerald-900 block leading-tight">{m.suggestedMeal.proteinGrams}г</span>
+                        <span className="text-[9px] font-bold text-emerald-700 block uppercase font-display">PROTEIN</span>
+                        <span className="text-xs font-black font-mono-num text-emerald-900 block leading-tight">{m.suggestedMeal.proteinGrams}g</span>
                       </div>
                       <div className="p-1.5 rounded-xl bg-amber-50 border border-amber-300/60 shadow-2xs">
-                        <span className="text-[9px] font-bold text-amber-700 block uppercase font-display">Жиры</span>
-                        <span className="text-xs font-black font-mono-num text-amber-900 block leading-tight">{m.suggestedMeal.fatGrams}г</span>
+                        <span className="text-[9px] font-bold text-amber-700 block uppercase font-display">FAT</span>
+                        <span className="text-xs font-black font-mono-num text-amber-900 block leading-tight">{m.suggestedMeal.fatGrams}g</span>
                       </div>
                       <div className="p-1.5 rounded-xl bg-sky-50 border border-sky-300/60 shadow-2xs">
-                        <span className="text-[9px] font-bold text-sky-700 block uppercase font-display">Углеводы</span>
-                        <span className="text-xs font-black font-mono-num text-sky-900 block leading-tight">{m.suggestedMeal.carbsGrams}г</span>
+                        <span className="text-[9px] font-bold text-sky-700 block uppercase font-display">CARBS</span>
+                        <span className="text-xs font-black font-mono-num text-sky-900 block leading-tight">{m.suggestedMeal.carbsGrams}g</span>
                       </div>
                     </div>
 
@@ -546,10 +581,10 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
                     <button
                       type="button"
                       onClick={() => handleLogSuggestedMeal(m.suggestedMeal!, m.id)}
-                      className="w-full py-2.5 px-3 rounded-xl bg-[#24201D] hover:bg-stone-800 active:translate-y-0.5 text-white text-xs font-black tracking-wide flex items-center justify-center gap-1.5 shadow-[1.5px_1.5px_0px_#24201D] cursor-pointer transition-all"
+                      className="w-full py-2.5 px-3 rounded-xl bg-[#24201D] hover:bg-stone-800 active:translate-y-0.5 text-white text-xs font-black tracking-wide flex items-center justify-center gap-1.5 shadow-[1.5px_1.5px_0px_#24201D] cursor-pointer transition-all font-display"
                     >
                       <Plus className="w-4 h-4 stroke-[3]" />
-                      <span>Записать в дневник питания</span>
+                      <span>Log to Daily Meals</span>
                     </button>
                   </div>
                 )}
@@ -568,7 +603,7 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5 mb-1">
                                   <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 border border-emerald-300 text-emerald-900 font-display tracking-wider">
-                                    ✓ Внесено в {getMealCategoryLabel(action.details.mealType)}
+                                    ✓ Logged to {getMealCategoryLabel(action.details.mealType)}
                                   </span>
                                   {action.details.time && (
                                     <span className="text-[9px] font-bold text-stone-400 font-mono-num">
@@ -584,22 +619,22 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
                                 <span className="text-xs font-black font-mono-num text-[#C25E40] block leading-none">
                                   +{action.details.kcal}
                                 </span>
-                                <span className="text-[8px] font-bold text-stone-400 font-display block mt-0.5">ккал</span>
+                                <span className="text-[8px] font-bold text-stone-400 font-display block mt-0.5">kcal</span>
                               </div>
                             </div>
 
                             <div className="grid grid-cols-3 gap-1.5 text-center">
                               <div className="py-1 px-1.5 rounded-lg bg-[#FAF8F5] border border-stone-200">
-                                <span className="text-[8px] font-bold text-stone-500 block uppercase">Белки</span>
-                                <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.proteinGrams}г</span>
+                                <span className="text-[8px] font-bold text-stone-500 block uppercase">PROTEIN</span>
+                                <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.proteinGrams}g</span>
                               </div>
                               <div className="py-1 px-1.5 rounded-lg bg-[#FAF8F5] border border-stone-200">
-                                <span className="text-[8px] font-bold text-stone-500 block uppercase">Жиры</span>
-                                <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.fatGrams}г</span>
+                                <span className="text-[8px] font-bold text-stone-500 block uppercase">FAT</span>
+                                <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.fatGrams}g</span>
                               </div>
                               <div className="py-1 px-1.5 rounded-lg bg-[#FAF8F5] border border-stone-200">
-                                <span className="text-[8px] font-bold text-stone-500 block uppercase">Углеводы</span>
-                                <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.carbsGrams}г</span>
+                                <span className="text-[8px] font-bold text-stone-500 block uppercase">CARBS</span>
+                                <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.carbsGrams}g</span>
                               </div>
                             </div>
                           </div>
@@ -681,7 +716,7 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
                 </svg>
               </div>
               <div className="px-3.5 py-2 rounded-2xl bg-[#FAF8F5] border border-[#24201D]/20 text-xs font-bold text-[#6B635B] animate-pulse">
-                Сумирэ анализирует...
+                Sumire is analyzing...
               </div>
             </div>
           )}
@@ -689,8 +724,8 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
           <div ref={chatBottomRef} />
         </div>
 
-        {/* Input Bar with Photo & Mic */}
-        <div className="pt-2 border-t border-[#24201D]/15">
+        {/* 3. Pinned Input Bar with Photo & Mic */}
+        <div className="p-3 bg-[#FFFDF5] border-t border-[#24201D]/15 shrink-0">
           {/* Attached Image Thumbnail Preview */}
           {attachedImage && (
             <div className="relative inline-block mb-2">
@@ -721,7 +756,7 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
           >
             {/* Photo Attachment Button */}
             <label
-              title="Прикрепить фото блюда или этикетки"
+              title="Attach meal photo or food label"
               className={`w-10 h-10 rounded-xl border-[1.75px] border-[#24201D] flex items-center justify-center shadow-2xs cursor-pointer active:translate-y-0.5 transition-all shrink-0 ${
                 attachedImage
                   ? 'bg-[#F0BB58] text-[#24201D]'
@@ -742,7 +777,7 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
             <button
               type="button"
               onClick={handleToggleVoice}
-              title={isRecording ? 'Остановить голосовой ввод' : 'Начать голосовой ввод'}
+              title={isRecording ? 'Stop voice dictation' : 'Start voice dictation'}
               className={`w-10 h-10 rounded-xl border-[1.75px] border-[#24201D] flex items-center justify-center shadow-2xs cursor-pointer active:translate-y-0.5 transition-all shrink-0 ${
                 isRecording
                   ? 'bg-rose-500 text-white animate-pulse'
@@ -759,7 +794,7 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
             {/* Query Text Input */}
             <input
               type="text"
-              placeholder={attachedImage ? 'Добавьте комментарий или вопрос к фото...' : 'Спросите про рацион, скажите «запиши пиццу на ужин»...'}
+              placeholder={attachedImage ? 'Add details or a question about this photo...' : 'Ask about nutrition, or say "log 2 slices of pizza for dinner"...'}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               className="flex-1 px-3.5 py-2.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-stone-400 shadow-2xs focus:outline-none"
@@ -776,7 +811,6 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
           </form>
         </div>
       </div>
-
     </div>
   );
 };

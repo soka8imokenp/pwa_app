@@ -1,7 +1,14 @@
 import { Router, Response } from 'express';
 import { z } from 'zod';
-import { registerUser, loginUser, getUserProfile } from '../services/auth.service.js';
+import {
+  registerUser,
+  loginUser,
+  getUserProfile,
+  refreshUserToken,
+  logoutUser,
+} from '../services/auth.service.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.middleware.js';
+import { authRateLimiter } from '../middleware/rateLimiter.js';
 
 export const authRouter = Router();
 
@@ -18,7 +25,12 @@ const LoginSchema = z.object({
   password: z.string().min(1),
 });
 
-authRouter.post('/register', async (req, res) => {
+const RefreshSchema = z.object({
+  refreshToken: z.string().min(1, 'Refresh token is required'),
+});
+
+// 1. Register with Rate Limiting
+authRouter.post('/register', authRateLimiter, async (req, res) => {
   try {
     const validated = RegisterSchema.parse(req.body);
     const result = await registerUser(validated);
@@ -28,7 +40,8 @@ authRouter.post('/register', async (req, res) => {
   }
 });
 
-authRouter.post('/login', async (req, res) => {
+// 2. Login with Rate Limiting
+authRouter.post('/login', authRateLimiter, async (req, res) => {
   try {
     const validated = LoginSchema.parse(req.body);
     const result = await loginUser(validated);
@@ -38,6 +51,29 @@ authRouter.post('/login', async (req, res) => {
   }
 });
 
+// 3. Silent Refresh Token Exchange
+authRouter.post('/refresh', async (req, res) => {
+  try {
+    const validated = RefreshSchema.parse(req.body);
+    const result = await refreshUserToken(validated.refreshToken);
+    res.status(200).json(result);
+  } catch (err: any) {
+    res.status(401).json({ error: err.message || 'Token refresh failed' });
+  }
+});
+
+// 4. Logout / Invalidation
+authRouter.post('/logout', async (req, res) => {
+  try {
+    const refreshToken = typeof req.body?.refreshToken === 'string' ? req.body.refreshToken : undefined;
+    await logoutUser(refreshToken);
+    res.status(200).json({ success: true, message: 'Logged out successfully' });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'Logout failed' });
+  }
+});
+
+// 5. Current User Profile
 authRouter.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const profile = await getUserProfile(req.user!.userId);

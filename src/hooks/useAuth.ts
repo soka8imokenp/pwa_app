@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { authApi, setAuthToken, getAuthToken } from '../lib/api';
+import { authApi, setAuthToken, setRefreshToken, getRefreshToken, clearAuthTokens, getAuthToken } from '../lib/api';
 import { triggerTwoWaySync } from '../lib/syncEngine';
 
 export interface AuthUserProfile {
@@ -34,7 +34,8 @@ export function useAuth() {
   // Validate session on mount
   useEffect(() => {
     const token = getAuthToken();
-    if (token) {
+    const refresh = getRefreshToken();
+    if (token || refresh) {
       authApi
         .getProfile()
         .then((res) => {
@@ -43,8 +44,8 @@ export function useAuth() {
           triggerTwoWaySync();
         })
         .catch(() => {
-          // Token expired or invalid
-          setAuthToken(null);
+          // Both access & refresh expired or invalid
+          clearAuthTokens();
           localStorage.removeItem('kairo_auth_user');
           setCurrentUser(null);
         });
@@ -56,7 +57,10 @@ export function useAuth() {
     setError(null);
     try {
       const result = await authApi.login({ email, password });
-      setAuthToken(result.token);
+      setAuthToken(result.token || result.accessToken);
+      if (result.refreshToken) {
+        setRefreshToken(result.refreshToken);
+      }
       setCurrentUser(result.user);
       localStorage.setItem('kairo_auth_user', JSON.stringify(result.user));
       await triggerTwoWaySync();
@@ -80,7 +84,10 @@ export function useAuth() {
     setError(null);
     try {
       const result = await authApi.register(payload);
-      setAuthToken(result.token);
+      setAuthToken(result.token || result.accessToken);
+      if (result.refreshToken) {
+        setRefreshToken(result.refreshToken);
+      }
       setCurrentUser(result.user);
       localStorage.setItem('kairo_auth_user', JSON.stringify(result.user));
       await triggerTwoWaySync();
@@ -93,8 +100,12 @@ export function useAuth() {
     }
   }, []);
 
-  const logout = useCallback(() => {
-    setAuthToken(null);
+  const logout = useCallback(async () => {
+    const refresh = getRefreshToken();
+    if (refresh) {
+      authApi.logout(refresh).catch(() => {});
+    }
+    clearAuthTokens();
     localStorage.removeItem('kairo_auth_user');
     setCurrentUser(null);
   }, []);

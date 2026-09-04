@@ -31,21 +31,25 @@ export function useHealthData(selectedDate: string) {
     return calculateComprehensiveMetrics(profile);
   }, [profile]);
 
-  // 3. Todays totals
-  const todaysTotalKcal = useMemo(() => {
-    return todaysMeals.reduce((acc, m) => acc + (m.kcal || 0), 0);
-  }, [todaysMeals]);
-
-  const todaysProteinGrams = useMemo(() => {
-    return todaysMeals.reduce((acc, m) => acc + (m.proteinGrams || 0), 0);
-  }, [todaysMeals]);
-
-  const todaysCarbsGrams = useMemo(() => {
-    return todaysMeals.reduce((acc, m) => acc + (m.carbsGrams || 0), 0);
-  }, [todaysMeals]);
-
-  const todaysFatGrams = useMemo(() => {
-    return todaysMeals.reduce((acc, m) => acc + (m.fatGrams || 0), 0);
+  // 3. Todays totals - single pass memoization
+  const { todaysTotalKcal, todaysProteinGrams, todaysCarbsGrams, todaysFatGrams } = useMemo(() => {
+    let kcal = 0;
+    let protein = 0;
+    let carbs = 0;
+    let fat = 0;
+    for (let i = 0; i < todaysMeals.length; i++) {
+      const m = todaysMeals[i];
+      kcal += m.kcal || 0;
+      protein += m.proteinGrams || 0;
+      carbs += m.carbsGrams || 0;
+      fat += m.fatGrams || 0;
+    }
+    return {
+      todaysTotalKcal: kcal,
+      todaysProteinGrams: protein,
+      todaysCarbsGrams: carbs,
+      todaysFatGrams: fat,
+    };
   }, [todaysMeals]);
 
   const todaysWaterTotalMl = useMemo(() => {

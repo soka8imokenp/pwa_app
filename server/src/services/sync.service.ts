@@ -114,19 +114,22 @@ export async function processSyncPush(userId: string, payload: ClientSyncPushPay
       });
 
       if (existing) {
-        await prisma.task.update({
-          where: { id: existing.id },
-          data: {
-            title: item.title,
-            isPriority: item.isPriority,
-            isCompleted: item.isCompleted,
-            date: item.date,
-            category: item.category || 'general',
-            estimatedMinutes: item.estimatedMinutes || 30,
-            deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
-            updatedAt: now,
-          },
-        });
+        const clientUpdatedAt = item.updatedAt ? new Date(item.updatedAt) : null;
+        if (!clientUpdatedAt || !existing.updatedAt || clientUpdatedAt >= existing.updatedAt) {
+          await prisma.task.update({
+            where: { id: existing.id },
+            data: {
+              title: item.title,
+              isPriority: item.isPriority,
+              isCompleted: item.isCompleted,
+              date: item.date,
+              category: item.category || 'general',
+              estimatedMinutes: item.estimatedMinutes || 30,
+              deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
+              updatedAt: clientUpdatedAt || now,
+            },
+          });
+        }
       } else {
         await prisma.task.create({
           data: {
@@ -160,18 +163,21 @@ export async function processSyncPush(userId: string, payload: ClientSyncPushPay
       });
 
       if (existing) {
-        await prisma.habit.update({
-          where: { id: existing.id },
-          data: {
-            title: item.title,
-            icon: item.icon || 'zap',
-            color: item.color || '#FFDE59',
-            targetDays: targetDaysStr,
-            archived: item.archived || false,
-            deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
-            updatedAt: now,
-          },
-        });
+        const clientUpdatedAt = item.updatedAt ? new Date(item.updatedAt) : null;
+        if (!clientUpdatedAt || !existing.updatedAt || clientUpdatedAt >= existing.updatedAt) {
+          await prisma.habit.update({
+            where: { id: existing.id },
+            data: {
+              title: item.title,
+              icon: item.icon || 'zap',
+              color: item.color || '#FFDE59',
+              targetDays: targetDaysStr,
+              archived: item.archived || false,
+              deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
+              updatedAt: clientUpdatedAt || now,
+            },
+          });
+        }
       } else {
         await prisma.habit.create({
           data: {
@@ -267,19 +273,22 @@ export async function processSyncPush(userId: string, payload: ClientSyncPushPay
       });
 
       if (existing) {
-        await prisma.link.update({
-          where: { id: existing.id },
-          data: {
-            title: item.title,
-            url: item.url,
-            icon: item.icon || 'link',
-            iconBg: item.iconBg || '#FFDE59',
-            category: item.category || 'general',
-            clicks: item.clicks || 0,
-            deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
-            updatedAt: now,
-          },
-        });
+        const clientUpdatedAt = item.updatedAt ? new Date(item.updatedAt) : null;
+        if (!clientUpdatedAt || !existing.updatedAt || clientUpdatedAt >= existing.updatedAt) {
+          await prisma.link.update({
+            where: { id: existing.id },
+            data: {
+              title: item.title,
+              url: item.url,
+              icon: item.icon || 'link',
+              iconBg: item.iconBg || '#FFDE59',
+              category: item.category || 'general',
+              clicks: item.clicks || 0,
+              deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
+              updatedAt: clientUpdatedAt || now,
+            },
+          });
+        }
       } else {
         await prisma.link.create({
           data: {

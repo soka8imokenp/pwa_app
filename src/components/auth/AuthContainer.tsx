@@ -13,7 +13,7 @@ import rabbitAnimation from '../../assets/rabbit-hi.json';
 import { LottiePlayer } from '../common/LottiePlayer';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import confetti from 'canvas-confetti';
-import { authApi, setAuthToken } from '../../lib/api';
+import { authApi, setAuthToken, setRefreshToken } from '../../lib/api';
 
 export interface UserProfile {
   id?: string;
@@ -75,7 +75,10 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
         password,
       });
 
-      setAuthToken(res.token);
+      setAuthToken(res.accessToken || res.token);
+      if (res.refreshToken) {
+        setRefreshToken(res.refreshToken);
+      }
       localStorage.setItem('kairo_auth_user', JSON.stringify(res.user));
 
       playSuccessChime();
@@ -87,7 +90,11 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       });
 
       onLoginSuccess(res.user);
-    } catch {
+    } catch (err: any) {
+      if (err?.message && (err.message.includes('429') || err.message.includes('Too many') || err.message.includes('attempts'))) {
+        setErrorMsg(err.message || 'Too many login attempts. Please wait 15 minutes.');
+        return;
+      }
       // Offline fallback
       const user: UserProfile = {
         firstName: identifier,
@@ -126,7 +133,10 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
         lastName,
       });
 
-      setAuthToken(res.token);
+      setAuthToken(res.accessToken || res.token);
+      if (res.refreshToken) {
+        setRefreshToken(res.refreshToken);
+      }
       localStorage.setItem('kairo_auth_user', JSON.stringify(res.user));
 
       playSuccessChime();
@@ -138,7 +148,12 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       });
 
       onLoginSuccess(res.user);
-    } catch {
+    } catch (err: any) {
+      if (err?.message && err.message.includes('already exists')) {
+        setErrorMsg('User with this email already exists.');
+        return;
+      }
+      // Offline fallback
       const parts = fullName.trim().split(' ');
       const user: UserProfile = {
         firstName: parts[0] || 'User',

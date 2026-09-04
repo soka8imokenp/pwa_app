@@ -42,6 +42,11 @@ export class PlannerDatabase extends Dexie {
       waterLogs: '++id, date, createdAt',
       workoutLogs: '++id, date, category, createdAt',
     });
+    this.version(5).stores({
+      tasks: '++id, date, isPriority, isCompleted, createdAt, order, updatedAt, deletedAt',
+      habits: '++id, archived, createdAt, updatedAt, deletedAt',
+      links: '++id, title, category, clicks, createdAt, updatedAt, deletedAt',
+    });
   }
 }
 

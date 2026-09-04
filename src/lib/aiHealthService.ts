@@ -1,5 +1,6 @@
 import { getStoredGeminiApiKey } from './aiService';
 import { translateFoodNameSync } from './mealTranslator';
+import { aiMealEstimateSchema } from './validationSchemas';
 import type { HealthProfile, CalculatedHealthMetrics, MealType, WeightLog, MealLog, WorkoutLog } from '../types/health';
 
 export interface EstimatedMealResult {
@@ -55,18 +56,21 @@ Return STRICT JSON ONLY in the following format (no markdown, no backticks, just
         const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (rawJson) {
           const parsed = JSON.parse(rawJson);
-          const rawName = parsed.name || mealDescription;
+          const validation = aiMealEstimateSchema.safeParse(parsed);
+          const validatedData = validation.success ? validation.data : parsed;
+
+          const rawName = validatedData.name || mealDescription;
           const englishName = /[а-яё]/i.test(rawName)
             ? translateFoodNameSync(rawName)
             : rawName;
 
           return {
             name: englishName,
-            kcal: Number(parsed.kcal) || 350,
-            proteinGrams: Number(parsed.proteinGrams) || 20,
-            carbsGrams: Number(parsed.carbsGrams) || 40,
-            fatGrams: Number(parsed.fatGrams) || 12,
-            mealType: parsed.mealType || preferredMealType,
+            kcal: Number(validatedData.kcal) || 350,
+            proteinGrams: Number(validatedData.proteinGrams) || 20,
+            carbsGrams: Number(validatedData.carbsGrams) || 40,
+            fatGrams: Number(validatedData.fatGrams) || 12,
+            mealType: (validatedData.mealType as any) || preferredMealType,
           };
         }
       }

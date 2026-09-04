@@ -11,6 +11,8 @@ export interface Task {
   isCompleted: boolean;
   date: string; // YYYY-MM-DD
   createdAt: number;
+  updatedAt?: number;
+  deletedAt?: number | null;
   category?: 'code' | 'design' | 'health' | 'learn' | 'admin' | 'general';
   estimatedMinutes?: number;
   subtasks?: SubTask[];
@@ -27,6 +29,8 @@ export interface Habit {
   targetDays: string[]; // ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
   archived: boolean;
   createdAt: number;
+  updatedAt?: number;
+  deletedAt?: number | null;
   order?: number;
 }
 
@@ -56,6 +60,8 @@ export interface LinkItem {
   category?: string;
   clicks?: number;
   createdAt: number;
+  updatedAt?: number;
+  deletedAt?: number | null;
 }
 
 export interface HabitWithStats extends Habit {

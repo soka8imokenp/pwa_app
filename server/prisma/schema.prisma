@@ -26,6 +26,7 @@ model User {
   focusSessions FocusSession[]
   links        Link[]
   pushSubs     PushSubscription[]
+  refreshTokens RefreshToken[]
 
   healthProfile HealthProfile?
   weightLogs    WeightLog[]
@@ -222,3 +223,17 @@ model WorkoutLog {
 
   @@index([userId, date])
 }
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+

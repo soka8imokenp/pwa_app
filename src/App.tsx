@@ -14,19 +14,9 @@ import { HabitsPage } from './components/pages/HabitsPage';
 import { FocusPage } from './components/pages/FocusPage';
 import { StatsPage } from './components/pages/StatsPage';
 import { LinksPage } from './components/pages/LinksPage';
-import { AddTaskModal } from './components/planner/AddTaskModal';
-import { AddHabitModal } from './components/habits/AddHabitModal';
-import { SettingsModal } from './components/settings/SettingsModal';
-import { ProfileModal } from './components/profile/ProfileModal';
-import { SmartBraindumpModal } from './components/modals/SmartBraindumpModal';
-import { EveningReviewModal } from './components/modals/EveningReviewModal';
-import { SumireCompanionModal } from './components/modals/SumireCompanionModal';
-import { MenuModal } from './components/modals/MenuModal';
-import { AppUpdateModal } from './components/modals/AppUpdateModal';
-import { CalendarPlannerModal } from './components/modals/CalendarPlannerModal';
-import { CalendarExportModal } from './components/modals/CalendarExportModal';
-import { DuolingoStreakModal } from './components/modals/DuolingoStreakModal';
-import { WeeklyInfographicModal } from './components/modals/WeeklyInfographicModal';
+import { ModalManager } from './components/layout/ModalManager';
+import { OfflineBanner } from './components/common/OfflineBanner';
+import { ToastContainer } from './components/common/ToastContainer';
 import { AuthContainer, UserProfile } from './components/auth/AuthContainer';
 import { AppSplashScreen } from './components/common/AppSplashScreen';
 import { initNotificationSystem } from './lib/notifications';
@@ -35,7 +25,6 @@ import { usePlannerData } from './hooks/usePlannerData';
 import { getTodayString } from './lib/dateUtils';
 import { isSoundMuted, setSoundMuted, playClickSound, playSuccessChime } from './lib/sound';
 import { isAppLocked, setAppLocked } from './lib/securityService';
-import { SecurityLockScreen } from './components/security/SecurityLockScreen';
 import type { Task } from './types';
 
 export function App() {
@@ -270,6 +259,8 @@ export function App() {
 
       {/* Mobile Screen Frame */}
       <div className="w-full max-w-md min-h-screen flex flex-col relative px-3 sm:px-0 z-10">
+        <OfflineBanner />
+        <ToastContainer />
         
         {/* Mobile Top Header with User Greeting & Streak Modal Trigger */}
         <Header
@@ -456,51 +447,33 @@ export function App() {
           onOpenMenu={() => setIsMenuOpen(true)}
         />
 
-        {/* Modals & Panels */}
-        <AddTaskModal
-          isOpen={isAddTaskOpen}
-          onClose={() => setIsAddTaskOpen(false)}
-          onAddTask={addTask}
-          defaultDate={selectedDate}
-          defaultPriority={addTaskPriorityDefault}
+        {/* Modals & Overlays managed via ModalManager */}
+        <ModalManager
+          isAddTaskOpen={isAddTaskOpen}
+          onCloseAddTask={() => setIsAddTaskOpen(false)}
+          addTaskPriorityDefault={addTaskPriorityDefault}
           canAddPriority={canAddPriority}
-        />
-
-        <AddHabitModal
-          isOpen={isAddHabitOpen}
-          onClose={() => setIsAddHabitOpen(false)}
-          onAddHabit={addHabit}
-        />
-
-        <SmartBraindumpModal
-          isOpen={isBraindumpOpen}
-          onClose={() => setIsBraindumpOpen(false)}
-          onBulkAddTasks={bulkAddTasks}
+          addTask={addTask}
           selectedDate={selectedDate}
-          canAddPriority={canAddPriority}
-        />
-
-        <EveningReviewModal
-          isOpen={isEveningReviewOpen}
-          onClose={() => setIsEveningReviewOpen(false)}
+          isAddHabitOpen={isAddHabitOpen}
+          onCloseAddHabit={() => setIsAddHabitOpen(false)}
+          addHabit={addHabit}
+          isBraindumpOpen={isBraindumpOpen}
+          onCloseBraindump={() => setIsBraindumpOpen(false)}
+          bulkAddTasks={bulkAddTasks}
+          isEveningReviewOpen={isEveningReviewOpen}
+          onCloseEveningReview={() => setIsEveningReviewOpen(false)}
           priorityTasks={priorityTasks}
           allTasks={allTasks}
-          habits={habitsWithStats}
+          habitsWithStats={habitsWithStats}
           todaysSessions={todaysFocusSessions}
-          selectedDate={selectedDate}
           onRolloverTask={updateTaskDate}
           onDemoteToBacklog={demoteTaskToBacklog}
           onToggleComplete={toggleTaskComplete}
-        />
-
-        <SumireCompanionModal
-          isOpen={isSumireOpen}
-          onClose={() => setIsSumireOpen(false)}
-        />
-
-        <MenuModal
-          isOpen={isMenuOpen}
-          onClose={() => setIsMenuOpen(false)}
+          isSumireOpen={isSumireOpen}
+          onCloseSumire={() => setIsSumireOpen(false)}
+          isMenuOpen={isMenuOpen}
+          onCloseMenu={() => setIsMenuOpen(false)}
           activeTab={activeTab}
           onSelectTab={setActiveTab}
           onOpenSettings={() => setIsSettingsOpen(true)}
@@ -510,95 +483,41 @@ export function App() {
           onOpenWeeklyInfographic={() => setIsWeeklyInfographicOpen(true)}
           onOpenCalendarExport={() => setIsCalendarExportOpen(true)}
           onLockApp={handleLockApp}
-        />
-
-        <ProfileModal
-          isOpen={isProfileOpen}
-          onClose={() => setIsProfileOpen(false)}
+          isProfileOpen={isProfileOpen}
+          onCloseProfile={() => setIsProfileOpen(false)}
           currentUser={currentUser}
           onUpdateProfile={(updated) => setCurrentUser(updated)}
           onLogout={handleLogout}
           streakCount={overallStreak}
-          allTasks={allTasks}
-          habits={habitsWithStats}
           allHabitLogs={allHabitLogs}
           allFocusSessions={allFocusSessions}
           activityStats={activityStats}
-          selectedDate={selectedDate}
-        />
-
-        <SettingsModal
-          isOpen={isSettingsOpen}
-          onClose={() => setIsSettingsOpen(false)}
-          darkMode={false}
-          onToggleDarkMode={() => {}}
-          isSoundMuted={soundMutedState}
+          isSettingsOpen={isSettingsOpen}
+          onCloseSettings={() => setIsSettingsOpen(false)}
+          soundMutedState={soundMutedState}
           onToggleSound={handleToggleSound}
-          onDataChanged={() => {}}
           onShowUpdateModal={(info) => setAvailableUpdate(info)}
-          onLockApp={handleLockApp}
           appMode={appMode}
           onChangeAppMode={handleSetAppMode}
-        />
-
-        {/* Telegram Auto-Update Modal */}
-        {availableUpdate && (
-          <AppUpdateModal
-            isOpen={Boolean(availableUpdate)}
-            onClose={() => setAvailableUpdate(null)}
-            updateInfo={availableUpdate}
-          />
-        )}
-
-        {/* Calendar & Multi-Event Day Planner Modal */}
-        <CalendarPlannerModal
-          isOpen={isCalendarOpen}
-          onClose={() => setIsCalendarOpen(false)}
-          selectedDate={selectedDate}
+          availableUpdate={availableUpdate}
+          onCloseUpdateModal={() => setAvailableUpdate(null)}
+          isCalendarOpen={isCalendarOpen}
+          onCloseCalendar={() => setIsCalendarOpen(false)}
           onSelectDate={(date) => {
             setSelectedDate(date);
             setActiveTab('priorities');
           }}
-          allTasks={allTasks}
-          onAddTask={addTask}
-          onToggleTask={toggleTaskComplete}
-          onDeleteTask={deleteTask}
-          onOpenExport={() => setIsCalendarExportOpen(true)}
+          deleteTask={deleteTask}
+          isStreakModalOpen={isStreakModalOpen}
+          onCloseStreakModal={() => setIsStreakModalOpen(false)}
+          isWeeklyInfographicOpen={isWeeklyInfographicOpen}
+          onCloseWeeklyInfographic={() => setIsWeeklyInfographicOpen(false)}
+          displayName={displayName}
+          isCalendarExportOpen={isCalendarExportOpen}
+          onCloseCalendarExport={() => setIsCalendarExportOpen(false)}
+          isLocked={isLocked}
+          onUnlockApp={handleUnlockApp}
         />
-
-        {/* Duolingo-style Streak Greeting Modal */}
-        <DuolingoStreakModal
-          isOpen={isStreakModalOpen}
-          onClose={() => setIsStreakModalOpen(false)}
-          streakCount={overallStreak}
-          activityStats={activityStats}
-        />
-
-        {/* Weekly Infographic Export Modal */}
-        <WeeklyInfographicModal
-          isOpen={isWeeklyInfographicOpen}
-          onClose={() => setIsWeeklyInfographicOpen(false)}
-          tasks={allTasks}
-          habitLogs={allHabitLogs}
-          focusSessions={allFocusSessions}
-          userName={displayName}
-        />
-
-        {/* Calendar Sync & .ics Export Modal */}
-        <CalendarExportModal
-          isOpen={isCalendarExportOpen}
-          onClose={() => setIsCalendarExportOpen(false)}
-          allTasks={allTasks}
-          selectedDate={selectedDate}
-        />
-
-        {/* Fullscreen PIN / Biometrics Security Lock Screen */}
-        {isLocked && (
-          <SecurityLockScreen
-            onUnlock={handleUnlockApp}
-            userName={displayName}
-          />
-        )}
       </div>
     </div>
   );

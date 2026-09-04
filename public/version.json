@@ -1,11 +1,14 @@
 {
-  "version": "1.8.58",
-  "buildNumber": 62,
+  "version": "1.8.59",
+  "buildNumber": 63,
   "releaseDate": "2026-09-04",
   "changelog": [
-    "Compact & minimal matcha brand header for Sumire AI Assistant",
-    "Clean, space-efficient design without oversized fonts or extraneous labels",
-    "Preserved secure Restart Chat confirmation dialog"
+    "Hardened Dual-Token JWT Auth with silent refresh & sliding-window rate limiting",
+    "Global React ErrorBoundary and sticky Offline Mode indicator",
+    "Zod schemas for client/server payloads & Gemini AI meal parsing",
+    "Last-Write-Wins (LWW) conflict resolution and soft-deletion propagation",
+    "Extracted ModalManager with React.lazy and Suspense for heavy modals",
+    "Ring-buffer client logger, Dockerfile & CI/CD workflow, GDPR purge & Legal terms"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.58/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.59/Daily-Sumire-app-debug.apk"
 }

@@ -1,0 +1,25 @@
+services:
+  sumire-sync-server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: sumire-sync-server
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/prisma/dev.db
+      - JWT_SECRET=${JWT_SECRET:-sumire_production_secret_change_me_min_32_chars}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-sumire_refresh_secret_change_me_min_32_chars}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:5173,http://localhost:3000,capacitor://localhost,https://localhost}
+    volumes:
+      # Persistent storage for SQLite database and uploaded media
+      - ./server/prisma:/app/prisma
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

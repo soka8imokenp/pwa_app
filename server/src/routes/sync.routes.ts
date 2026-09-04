@@ -1,11 +1,13 @@
 import { Router, Response } from 'express';
 import { authMiddleware, AuthRequest } from '../middleware/auth.middleware.js';
 import { processSyncPush, processSyncPull } from '../services/sync.service.js';
+import { validateBody } from '../middleware/validate.middleware.js';
+import { syncPushPayloadSchema } from '../schemas/sync.schema.js';
 
 export const syncRouter = Router();
 
-// Push local offline mutations to cloud database
-syncRouter.post('/push', authMiddleware, async (req: AuthRequest, res: Response) => {
+// Push local offline mutations to cloud database with Zod validation
+syncRouter.post('/push', authMiddleware, validateBody(syncPushPayloadSchema), async (req: AuthRequest, res: Response) => {
   try {
     const result = await processSyncPush(req.user!.userId, req.body);
     res.json(result);

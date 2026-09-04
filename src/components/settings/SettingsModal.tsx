@@ -42,7 +42,10 @@ import { checkForAppUpdate, CURRENT_APP_VERSION, AppUpdateInfo } from '../../lib
 import {
   isPinSet,
 } from '../../lib/securityService';
+import { db } from '../../lib/db';
 import { SecuritySetupModal } from '../security/SecuritySetupModal';
+import { PrivacyPolicyModal } from '../modals/PrivacyPolicyModal';
+import { TermsOfServiceModal } from '../modals/TermsOfServiceModal';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -100,7 +103,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [updateChecking, setUpdateChecking] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
 
+  // Legal & GDPR modals
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDeleteAllData = async () => {
+    const confirmation = window.prompt(
+      '⚠️ DANGER: This will permanently delete all your offline data, tasks, habits, health logs, and auth sessions.\n\nType "DELETE" to confirm:'
+    );
+    if (confirmation === 'DELETE') {
+      setIsProcessing(true);
+      try {
+        await db.delete();
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.reload();
+      } catch (err: any) {
+        setFeedback({ text: 'Failed to purge data: ' + err.message, success: false });
+        setIsProcessing(false);
+      }
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -563,6 +588,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <RotateCcw className="w-3 h-3 stroke-[2.25]" />
               <span>Reset & Reload Sample Data</span>
             </button>
+
+            {/* GDPR Right to be Forgotten */}
+            <button
+              onClick={handleDeleteAllData}
+              disabled={isProcessing}
+              className="w-full py-1.5 rounded-xl bg-[#F9E2E5] hover:bg-[#F4CCD1] border border-[#8C2B39] text-[10px] font-black text-[#8C2B39] flex items-center justify-center gap-1 shadow-2xs active:translate-y-0.5 cursor-pointer transition-all"
+            >
+              <span>Purge All Data (GDPR Right to be Forgotten) ⚠️</span>
+            </button>
+          </div>
+
+          {/* Legal Compliance Links */}
+          <div className="pt-2 border-t border-stone-200 flex items-center justify-center gap-4 text-[10px] font-bold text-[#6B635B]">
+            <button
+              type="button"
+              onClick={() => setIsPrivacyModalOpen(true)}
+              className="underline hover:text-[#24201D] cursor-pointer"
+            >
+              Privacy Policy
+            </button>
+            <span>•</span>
+            <button
+              type="button"
+              onClick={() => setIsTermsModalOpen(true)}
+              className="underline hover:text-[#24201D] cursor-pointer"
+            >
+              Terms of Service
+            </button>
           </div>
         </div>
 
@@ -611,6 +664,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           }}
         />
       )}
+
+      {/* Privacy Policy Modal */}
+      <PrivacyPolicyModal
+        isOpen={isPrivacyModalOpen}
+        onClose={() => setIsPrivacyModalOpen(false)}
+      />
+
+      {/* Terms of Service Modal */}
+      <TermsOfServiceModal
+        isOpen={isTermsModalOpen}
+        onClose={() => setIsTermsModalOpen(false)}
+      />
     </div>
   );
 };

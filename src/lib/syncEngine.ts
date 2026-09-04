@@ -66,6 +66,8 @@ export async function triggerTwoWaySync(): Promise<boolean> {
         category: t.category,
         estimatedMinutes: t.estimatedMinutes,
         createdAt: t.createdAt,
+        updatedAt: t.updatedAt || t.createdAt,
+        deletedAt: t.deletedAt,
       })),
       habits: localHabits.map((h) => ({
         clientLocalId: h.id,
@@ -75,6 +77,8 @@ export async function triggerTwoWaySync(): Promise<boolean> {
         targetDays: h.targetDays,
         archived: h.archived,
         createdAt: h.createdAt,
+        updatedAt: h.updatedAt || h.createdAt,
+        deletedAt: h.deletedAt,
       })),
       habitLogs: localHabitLogs.map((hl) => ({
         clientLocalHabitId: hl.habitId,
@@ -99,6 +103,8 @@ export async function triggerTwoWaySync(): Promise<boolean> {
         category: l.category,
         clicks: l.clicks,
         createdAt: l.createdAt,
+        updatedAt: l.updatedAt || l.createdAt,
+        deletedAt: l.deletedAt,
       })),
       healthProfile: localProfiles[0]
         ? {
@@ -152,21 +158,32 @@ export async function triggerTwoWaySync(): Promise<boolean> {
     const lastSync = getLastSyncTimestamp();
     const pullData = await syncApi.pull(lastSync > 0 ? lastSync : undefined);
 
-    // 4. Merge incoming tasks into Dexie DB
+    // 4. Merge incoming tasks into Dexie DB with Last-Write-Wins (LWW)
     if (pullData.tasks && pullData.tasks.length > 0) {
       for (const remoteTask of pullData.tasks) {
         const existing = await db.tasks
-          .filter((t) => t.title === remoteTask.title && t.date === remoteTask.date)
+          .filter((t) => (remoteTask.clientLocalId && t.id === remoteTask.clientLocalId) || (t.title === remoteTask.title && t.date === remoteTask.date))
           .first();
 
+        const remoteUpdated = remoteTask.updatedAt ? new Date(remoteTask.updatedAt).getTime() : new Date(remoteTask.createdAt).getTime();
+
         if (existing && existing.id) {
-          await db.tasks.update(existing.id, {
-            isCompleted: remoteTask.isCompleted,
-            isPriority: remoteTask.isPriority,
-            category: remoteTask.category,
-            estimatedMinutes: remoteTask.estimatedMinutes,
-          });
-        } else {
+          const localUpdated = existing.updatedAt || existing.createdAt || 0;
+          if (remoteUpdated >= localUpdated) {
+            if (remoteTask.deletedAt) {
+              await db.tasks.delete(existing.id);
+            } else {
+              await db.tasks.update(existing.id, {
+                title: remoteTask.title,
+                isCompleted: remoteTask.isCompleted,
+                isPriority: remoteTask.isPriority,
+                category: remoteTask.category,
+                estimatedMinutes: remoteTask.estimatedMinutes,
+                updatedAt: remoteUpdated,
+              });
+            }
+          }
+        } else if (!remoteTask.deletedAt) {
           await db.tasks.add({
             title: remoteTask.title,
             isPriority: remoteTask.isPriority,
@@ -175,19 +192,38 @@ export async function triggerTwoWaySync(): Promise<boolean> {
             category: remoteTask.category,
             estimatedMinutes: remoteTask.estimatedMinutes,
             createdAt: new Date(remoteTask.createdAt).getTime(),
+            updatedAt: remoteUpdated,
           });
         }
       }
     }
 
-    // 5. Merge incoming habits
+    // 5. Merge incoming habits with Last-Write-Wins (LWW)
     if (pullData.habits && pullData.habits.length > 0) {
       for (const remoteHabit of pullData.habits) {
         const existing = await db.habits
-          .filter((h) => h.title === remoteHabit.title)
+          .filter((h) => (remoteHabit.clientLocalId && h.id === remoteHabit.clientLocalId) || h.title === remoteHabit.title)
           .first();
 
-        if (!existing) {
+        const remoteUpdated = remoteHabit.updatedAt ? new Date(remoteHabit.updatedAt).getTime() : new Date(remoteHabit.createdAt).getTime();
+
+        if (existing && existing.id) {
+          const localUpdated = existing.updatedAt || existing.createdAt || 0;
+          if (remoteUpdated >= localUpdated) {
+            if (remoteHabit.deletedAt) {
+              await db.habits.delete(existing.id);
+            } else {
+              await db.habits.update(existing.id, {
+                title: remoteHabit.title,
+                icon: remoteHabit.icon,
+                color: remoteHabit.color,
+                targetDays: remoteHabit.targetDays || ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+                archived: remoteHabit.archived || false,
+                updatedAt: remoteUpdated,
+              });
+            }
+          }
+        } else if (!remoteHabit.deletedAt) {
           await db.habits.add({
             title: remoteHabit.title,
             icon: remoteHabit.icon,
@@ -195,12 +231,54 @@ export async function triggerTwoWaySync(): Promise<boolean> {
             targetDays: remoteHabit.targetDays || ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
             archived: remoteHabit.archived || false,
             createdAt: new Date(remoteHabit.createdAt).getTime(),
+            updatedAt: remoteUpdated,
           });
         }
       }
     }
 
-    // 6. Merge incoming habit logs
+    // 6. Merge incoming links with Last-Write-Wins (LWW)
+    if (pullData.links && pullData.links.length > 0) {
+      for (const remoteLink of pullData.links) {
+        const existing = await db.links
+          .filter((l) => (remoteLink.clientLocalId && l.id === remoteLink.clientLocalId) || l.title === remoteLink.title || l.url === remoteLink.url)
+          .first();
+
+        const remoteUpdated = remoteLink.updatedAt ? new Date(remoteLink.updatedAt).getTime() : (remoteLink.createdAt ? new Date(remoteLink.createdAt).getTime() : 0);
+
+        if (existing && existing.id) {
+          const localUpdated = existing.updatedAt || existing.createdAt || 0;
+          if (remoteUpdated >= localUpdated) {
+            if (remoteLink.deletedAt) {
+              await db.links.delete(existing.id);
+            } else {
+              await db.links.update(existing.id, {
+                title: remoteLink.title,
+                url: remoteLink.url,
+                icon: remoteLink.icon,
+                iconBg: remoteLink.iconBg,
+                category: remoteLink.category,
+                clicks: remoteLink.clicks,
+                updatedAt: remoteUpdated,
+              });
+            }
+          }
+        } else if (!remoteLink.deletedAt) {
+          await db.links.add({
+            title: remoteLink.title,
+            url: remoteLink.url,
+            icon: remoteLink.icon,
+            iconBg: remoteLink.iconBg,
+            category: remoteLink.category,
+            clicks: remoteLink.clicks || 0,
+            createdAt: remoteLink.createdAt ? new Date(remoteLink.createdAt).getTime() : Date.now(),
+            updatedAt: remoteUpdated,
+          });
+        }
+      }
+    }
+
+    // 7. Merge incoming habit logs
     if (pullData.habitLogs && pullData.habitLogs.length > 0) {
       const refreshedHabits = await db.habits.toArray();
       const habitTitleToLocalId = new Map<string, number>();

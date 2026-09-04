@@ -62,11 +62,26 @@ class MusicPlayerService {
 
     if (typeof window !== 'undefined') {
       try {
-        const customRaw = localStorage.getItem('kairo_radio_custom_stations');
-        if (customRaw) {
-          const parsed = JSON.parse(customRaw);
+        const activeStationsRaw = localStorage.getItem('kairo_radio_active_stations');
+        if (activeStationsRaw) {
+          const parsed = JSON.parse(activeStationsRaw);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            initialStations = [...PRESET_STATIONS, ...parsed];
+            // Migrate any outdated preset video IDs (e.g. jfKfPfyJRdk -> rFZHOHl-L8A)
+            initialStations = parsed.map((station: RadioStation) => {
+              const defaultPreset = PRESET_STATIONS.find(p => p.id === station.id);
+              if (defaultPreset) {
+                return { ...station, videoId: defaultPreset.videoId, isLive: defaultPreset.isLive };
+              }
+              return station;
+            });
+          }
+        } else {
+          const customRaw = localStorage.getItem('kairo_radio_custom_stations');
+          if (customRaw) {
+            const parsed = JSON.parse(customRaw);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              initialStations = [...PRESET_STATIONS, ...parsed];
+            }
           }
         }
 
@@ -115,7 +130,6 @@ class MusicPlayerService {
     };
 
     if (typeof window !== 'undefined') {
-      // Lazy init host and YouTube API on first idle or user interaction
       if (document.readyState === 'complete') {
         this.initYouTubeApi();
       } else {
@@ -133,83 +147,6 @@ class MusicPlayerService {
     if (!host) {
       host = document.createElement('div');
       host.id = 'sumire-lofi-radio-host';
-      
-      // Floating container header
-      const header = document.createElement('div');
-      header.id = 'sumire-lofi-host-header';
-      header.style.display = 'flex';
-      header.style.alignItems = 'center';
-      header.style.justifyContent = 'space-between';
-      header.style.padding = '6px 12px';
-      header.style.backgroundColor = '#FAF8F5';
-      header.style.borderBottom = '1.75px solid #24201D';
-      header.style.userSelect = 'none';
-
-      const titleEl = document.createElement('span');
-      titleEl.id = 'sumire-lofi-host-title';
-      titleEl.style.fontSize = '11px';
-      titleEl.style.fontWeight = '800';
-      titleEl.style.color = '#24201D';
-      titleEl.style.display = 'flex';
-      titleEl.style.alignItems = 'center';
-      titleEl.style.gap = '6px';
-      titleEl.innerHTML = '<span style="width: 8px; height: 8px; border-radius: 50%; background-color: #E15A46; display: inline-block; animation: pulse 1.5s infinite;"></span> <span id="sumire-lofi-header-station-name">' + this.state.currentStation.name + '</span> • LIVE';
-
-      const closeBtn = document.createElement('button');
-      closeBtn.type = 'button';
-      closeBtn.innerText = '✕ Скрыть';
-      closeBtn.style.background = '#F4F0EA';
-      closeBtn.style.border = '1px solid #24201D';
-      closeBtn.style.borderRadius = '6px';
-      closeBtn.style.fontSize = '10px';
-      closeBtn.style.fontWeight = '700';
-      closeBtn.style.color = '#24201D';
-      closeBtn.style.padding = '2px 8px';
-      closeBtn.style.cursor = 'pointer';
-      closeBtn.onclick = (e) => {
-        e.stopPropagation();
-        this.setVideoVisible(false);
-      };
-
-      header.appendChild(titleEl);
-      header.appendChild(closeBtn);
-      host.appendChild(header);
-
-      // Player frame placeholder
-      const playerDiv = document.createElement('div');
-      playerDiv.id = 'sumire-yt-player-target';
-      playerDiv.style.width = '100%';
-      playerDiv.style.height = 'calc(100% - 30px)';
-      playerDiv.style.backgroundColor = '#000';
-      host.appendChild(playerDiv);
-
-      document.body.appendChild(host);
-    }
-
-    this.hostElement = host;
-    this.applyVideoVisibilityStyles(host, this.state.isVideoVisible);
-    return host;
-  }
-
-  private applyVideoVisibilityStyles(host: HTMLElement, isVisible: boolean) {
-    if (!host) return;
-
-    if (isVisible) {
-      host.style.position = 'fixed';
-      host.style.bottom = '86px';
-      host.style.right = '16px';
-      host.style.width = 'min(360px, calc(100vw - 32px))';
-      host.style.height = '232px';
-      host.style.opacity = '1';
-      host.style.pointerEvents = 'auto';
-      host.style.borderRadius = '16px';
-      host.style.border = '2px solid #24201D';
-      host.style.boxShadow = '3px 3px 0px #24201D';
-      host.style.overflow = 'hidden';
-      host.style.zIndex = '9990';
-      host.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
-      host.style.transform = 'translateY(0)';
-    } else {
       host.style.position = 'fixed';
       host.style.bottom = '-9999px';
       host.style.left = '-9999px';
@@ -217,16 +154,19 @@ class MusicPlayerService {
       host.style.height = '140px';
       host.style.opacity = '0.001';
       host.style.pointerEvents = 'none';
-      host.style.boxShadow = 'none';
-      host.style.border = 'none';
       host.style.zIndex = '-999';
-      host.style.transform = 'translateY(20px)';
+
+      const playerDiv = document.createElement('div');
+      playerDiv.id = 'sumire-yt-player-target';
+      playerDiv.style.width = '100%';
+      playerDiv.style.height = '100%';
+      host.appendChild(playerDiv);
+
+      document.body.appendChild(host);
     }
 
-    const titleEl = document.getElementById('sumire-lofi-header-station-name');
-    if (titleEl) {
-      titleEl.innerText = this.state.currentStation.name;
-    }
+    this.hostElement = host;
+    return host;
   }
 
   public initYouTubeApi(): void {
@@ -279,7 +219,7 @@ class MusicPlayerService {
         videoId: this.state.currentStation.videoId,
         playerVars: {
           autoplay: 0,
-          controls: 1,
+          controls: 0,
           disablekb: 1,
           fs: 0,
           iv_load_policy: 3,
@@ -325,7 +265,6 @@ class MusicPlayerService {
               this.state.isBuffering = true;
               this.notify();
             } else if (event.data === YT.PlayerState.ENDED) {
-              // Live streams typically don't end, but if it ends, reconnect to current station
               this.play();
             }
           },
@@ -455,13 +394,6 @@ class MusicPlayerService {
       localStorage.setItem('kairo_radio_current_station_id', station.id);
     }
 
-    if (this.hostElement) {
-      const titleEl = document.getElementById('sumire-lofi-header-station-name');
-      if (titleEl) {
-        titleEl.innerText = station.name;
-      }
-    }
-
     if (this.ytPlayer && this.isPlayerReady) {
       try {
         if (autoPlay) {
@@ -539,25 +471,11 @@ class MusicPlayerService {
     this.notify();
   }
 
-  public setVideoVisible(visible: boolean) {
-    this.state.isVideoVisible = visible;
-    if (this.hostElement) {
-      this.applyVideoVisibilityStyles(this.hostElement, visible);
-    } else {
-      this.getOrCreateHostContainer();
-    }
-    this.notify();
-  }
-
-  public toggleVideo() {
-    this.setVideoVisible(!this.state.isVideoVisible);
-  }
-
   public addCustomStation(urlOrId: string, name?: string): boolean {
     const videoId = extractYouTubeId(urlOrId);
     if (!videoId) return false;
 
-    const stationName = name?.trim() || 'Custom Radio Stream';
+    const stationName = name?.trim() || `Custom Radio #${this.state.stations.length + 1}`;
     const station: RadioStation = {
       id: `custom-${Date.now()}`,
       name: stationName,
@@ -573,27 +491,41 @@ class MusicPlayerService {
     this.state.playlist = updated.map(stationToTrack);
 
     if (typeof window !== 'undefined') {
-      const customOnly = updated.filter(s => s.isCustom);
-      localStorage.setItem('kairo_radio_custom_stations', JSON.stringify(customOnly));
+      localStorage.setItem('kairo_radio_active_stations', JSON.stringify(updated));
     }
 
     this.selectStation(station, true);
     return true;
   }
 
-  public deleteCustomStation(id: string) {
+  public deleteStation(id: string) {
     const updated = this.state.stations.filter(s => s.id !== id);
-    this.state.stations = updated;
-    this.state.playlist = updated.map(stationToTrack);
+    const finalStations = updated.length > 0 ? updated : [...PRESET_STATIONS];
+    this.state.stations = finalStations;
+    this.state.playlist = finalStations.map(stationToTrack);
 
     if (this.state.currentStation.id === id) {
-      this.selectStation(updated[0] || PRESET_STATIONS[0], this.state.isPlaying);
+      this.selectStation(finalStations[0], this.state.isPlaying);
     }
 
     if (typeof window !== 'undefined') {
-      const customOnly = updated.filter(s => s.isCustom);
-      localStorage.setItem('kairo_radio_custom_stations', JSON.stringify(customOnly));
+      localStorage.setItem('kairo_radio_active_stations', JSON.stringify(finalStations));
     }
+    this.notify();
+  }
+
+  public deleteCustomStation(id: string) {
+    this.deleteStation(id);
+  }
+
+  public resetStationsToDefault() {
+    this.state.stations = [...PRESET_STATIONS];
+    this.state.playlist = PRESET_STATIONS.map(stationToTrack);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('kairo_radio_active_stations');
+      localStorage.removeItem('kairo_radio_custom_stations');
+    }
+    this.selectStation(PRESET_STATIONS[0], this.state.isPlaying);
     this.notify();
   }
 

@@ -1,14 +1,15 @@
 {
-  "version": "1.8.68",
-  "buildNumber": 72,
+  "version": "1.8.69",
+  "buildNumber": 73,
   "releaseDate": "2026-09-04",
   "changelog": [
-    "Integrated 24/7 Lofi Live Radio on Focus page via YouTube IFrame API",
-    "Connected Claude FM ('Music for thinking & building') as primary 24/7 stream",
-    "Added preset stations (Lofi Girl, Chillhop, Synthwave) and custom YouTube stream support",
-    "Picture-in-picture video stream view and lock-screen media sync"
+    "Clean text-based Lofi Radio: removed images and live stream badges",
+    "Removed TV/video button for distraction-free background audio focus",
+    "Connected active Lofi Girl live stream (rFZHOHl-L8A)",
+    "Compact responsive 'Add link' panel and ability to delete any station",
+    "Fixed stations drawer top cropping"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.68/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.69/Daily-Sumire-app-debug.apk"
 }
 
 

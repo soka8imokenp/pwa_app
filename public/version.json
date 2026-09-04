@@ -1,21 +1,16 @@
 {
-  "version": "1.8.62",
-  "buildNumber": 66,
+  "version": "1.8.63",
+  "buildNumber": 67,
   "releaseDate": "2026-09-04",
   "changelog": [
+    "Added direct Google OAuth 2.0 redirect flow for mobile/Android with automatic return hash authentication",
+    "Configured setSupportMultipleWindows(false) for seamless Google auth in Android WebView",
     "Integrated live Google OAuth2 Account Chooser popup with registered Google Client ID",
-    "Dual token verification (ID token + Access token) and direct profile sync with Google userinfo",
-    "Fixed Google OAuth: eliminated raw developer prompt, instant 1-click Google sign in without errors",
-    "Google OAuth Sign-In & Account Linking integration (backend token verification & Continue with Google UI)",
-    "Hardened Dual-Token JWT Auth with silent refresh & sliding-window rate limiting",
-    "Global React ErrorBoundary and sticky Offline Mode indicator",
-    "Zod schemas for client/server payloads & Gemini AI meal parsing",
-    "Last-Write-Wins (LWW) conflict resolution and soft-deletion propagation",
-    "Extracted ModalManager with React.lazy and Suspense for heavy modals",
-    "Ring-buffer client logger, Dockerfile & CI/CD workflow, GDPR purge & Legal terms"
+    "Dual token verification (ID token + Access token) and direct profile sync with Google userinfo"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.62/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.63/Daily-Sumire-app-debug.apk"
 }
+
 
 
 

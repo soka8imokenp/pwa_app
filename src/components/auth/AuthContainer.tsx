@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Eye,
   EyeOff,
@@ -221,70 +221,88 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     }
   };
 
+  // Check on mount if returning from Google OAuth redirect with hash (#access_token=... or #id_token=...)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hash = window.location.hash;
+    if (hash && (hash.includes('access_token=') || hash.includes('id_token='))) {
+      try {
+        const hashClean = hash.startsWith('#') ? hash.substring(1) : hash;
+        const params = new URLSearchParams(hashClean);
+        const idToken = params.get('id_token');
+        const accessToken = params.get('access_token');
+        const token = idToken || accessToken;
+
+        if (token) {
+          // Clean the hash from the URL without triggering page reload
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          processGoogleAuth(token);
+        }
+      } catch (e) {
+        console.error('Failed to parse Google OAuth redirect hash:', e);
+      }
+    }
+  }, []);
+
+  const openGoogleOAuthRedirect = () => {
+    let redirectUri = window.location.origin;
+    if (!redirectUri.endsWith('/')) {
+      redirectUri += '/';
+    }
+    const nonce = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
+      GOOGLE_CLIENT_ID
+    )}&redirect_uri=${encodeURIComponent(
+      redirectUri
+    )}&response_type=token%20id_token&scope=openid%20email%20profile&nonce=${nonce}&prompt=select_account`;
+
+    window.location.href = authUrl;
+  };
+
   const handleGoogleSignIn = () => {
     playClickSound();
     setErrorMsg(null);
 
-    const triggerOAuth = () => {
-      const google = (window as any).google;
-      if (google?.accounts?.oauth2) {
-        try {
-          const tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: GOOGLE_CLIENT_ID,
-            scope: 'email profile openid',
-            callback: async (tokenResponse: any) => {
-              if (tokenResponse?.error) {
-                console.error('Google OAuth error:', tokenResponse);
-                if (tokenResponse.error !== 'popup_closed_by_user') {
-                  setErrorMsg(`Google sign-in error: ${tokenResponse.error_description || tokenResponse.error}`);
-                }
-                return;
-              }
-              if (tokenResponse?.access_token) {
-                await processGoogleAuth(tokenResponse.access_token);
-              }
-            },
-          });
-          tokenClient.requestAccessToken({ prompt: 'select_account' });
-          return;
-        } catch (err: any) {
-          console.error('Error initializing Google token client:', err);
-          setErrorMsg(err?.message || 'Could not start Google sign in.');
-        }
-      }
+    // Check if on mobile or WebView
+    const isMobileOrApp = typeof window !== 'undefined' && (
+      window.location.origin.includes('localhost') ||
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    );
 
-      // Fallback: try One Tap prompt if oauth2 client is not yet ready
-      if (google?.accounts?.id) {
-        google.accounts.id.initialize({
+    // On mobile / Android APK or WebView, direct OAuth redirect opens cleanly and never gets suppressed
+    if (isMobileOrApp) {
+      openGoogleOAuthRedirect();
+      return;
+    }
+
+    // On desktop browser, attempt Google Identity Services Token Client first, with redirect fallback
+    const google = typeof window !== 'undefined' ? (window as any).google : null;
+    if (google?.accounts?.oauth2) {
+      try {
+        const tokenClient = google.accounts.oauth2.initTokenClient({
           client_id: GOOGLE_CLIENT_ID,
-          callback: async (response: any) => {
-            if (response?.credential) {
-              await processGoogleAuth(response.credential);
+          scope: 'email profile openid',
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse?.error) {
+              console.error('Google OAuth error:', tokenResponse);
+              if (tokenResponse.error !== 'popup_closed_by_user') {
+                openGoogleOAuthRedirect();
+              }
+              return;
+            }
+            if (tokenResponse?.access_token) {
+              await processGoogleAuth(tokenResponse.access_token);
             }
           },
-          auto_select: false,
         });
-        google.accounts.id.prompt();
-      }
-    };
-
-    if (typeof window !== 'undefined' && (window as any).google?.accounts) {
-      triggerOAuth();
-    } else {
-      const existingScript = document.getElementById('google-gsi-client');
-      if (!existingScript) {
-        const script = document.createElement('script');
-        script.id = 'google-gsi-client';
-        script.src = 'https://accounts.google.com/gsi/client';
-        script.async = true;
-        script.defer = true;
-        script.onload = () => triggerOAuth();
-        script.onerror = () => setErrorMsg('Failed to load Google Identity Services SDK. Check your network connection.');
-        document.body.appendChild(script);
-      } else {
-        triggerOAuth();
+        tokenClient.requestAccessToken({ prompt: 'select_account' });
+        return;
+      } catch (err) {
+        console.warn('Google token client popup failed, redirecting:', err);
       }
     }
+
+    openGoogleOAuthRedirect();
   };
 
   const handleGuest = () => {

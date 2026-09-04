@@ -1,12 +1,12 @@
 {
-  "version": "1.8.54",
-  "buildNumber": 58,
+  "version": "1.8.55",
+  "buildNumber": 59,
   "releaseDate": "2026-09-04",
   "changelog": [
-    "Tactile APK Install button: removed sliding delay, restoring instant tactile press feedback",
-    "Relocated Restart Chat button: integrated directly into the dialogue toolbar with active status indicator",
-    "Temporal dialogue separation: calendar day dividers and message timestamps in chat history",
-    "Smart temporal meal categorization: automatic slot assignment (breakfast, lunch, dinner, snack) by explicit time or clock time"
+    "Interactive Sumire AI Assistant card: live daily nutrition & hydration telemetry pills, interactive avatar button with micro-sounds",
+    "Quick prompt actions: 1-tap buttons for Snap Meal, Hydration analysis, Calorie check, and Balanced meal ideas",
+    "Rotating coach insights: interactive tip callout featuring smart nutrition facts and timing advice",
+    "Accidental reset protection: styled neo-brutalist confirmation popup before clearing chat history"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.54/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.55/Daily-Sumire-app-debug.apk"
 }

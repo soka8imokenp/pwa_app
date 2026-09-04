@@ -4,6 +4,9 @@ import {
   Info,
   Calendar,
   X,
+  TrendingDown,
+  TrendingUp,
+  Minus,
 } from 'lucide-react';
 import { playClickSound } from '../../../lib/sound';
 import { exportWeightLogsToCsv } from '../../../lib/exportImport';
@@ -51,25 +54,61 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
     return logsWithMovingAvg;
   }, [logsWithMovingAvg, timeRange]);
 
+  // Dynamic statistics summary for the active period
+  const stats = useMemo(() => {
+    if (filteredLogs.length === 0) return null;
+    const latest = filteredLogs[filteredLogs.length - 1];
+    const first = filteredLogs[0];
+    const latestMA = latest.movingAvg;
+    const delta = Number((latest.weight - first.weight).toFixed(1));
+    const maDelta = Number((latest.movingAvg - first.movingAvg).toFixed(1));
+    const isDown = maDelta < -0.2;
+    const isUp = maDelta > 0.2;
+
+    return {
+      latestWeight: latest.weight,
+      latestMA,
+      delta,
+      maDelta,
+      trend: isDown ? ('down' as const) : isUp ? ('up' as const) : ('stable' as const),
+    };
+  }, [filteredLogs]);
+
   // SVG Chart Geometry
   const chartData = useMemo(() => {
     if (filteredLogs.length === 0) return null;
 
-    const weights = filteredLogs.map((l) => l.weight);
-    const movingAvgs = filteredLogs.map((l) => l.movingAvg);
-    const allVals = [...weights, ...movingAvgs, targetWeight, currentWeight];
+    // Filter valid positive weights
+    const weights = filteredLogs
+      .map((l) => l.weight)
+      .filter((w) => typeof w === 'number' && w > 20 && !isNaN(w));
+    const movingAvgs = filteredLogs
+      .map((l) => l.movingAvg)
+      .filter((w) => typeof w === 'number' && w > 20 && !isNaN(w));
 
-    const minVal = Math.min(...allVals);
-    const maxVal = Math.max(...allVals);
-    const paddingVal = Math.max(1.5, (maxVal - minVal) * 0.15);
+    const activeVals = [...weights, ...movingAvgs];
+    if (activeVals.length === 0) return null;
 
+    let minVal = Math.min(...activeVals);
+    let maxVal = Math.max(...activeVals);
+
+    // Only include targetWeight in Y domain if it's within a reasonable visual delta (<= 6kg from data)
+    // This prevents a distant goal (e.g. 60kg vs 95kg) from squashing all daily variations into an imperceptible flat line!
+    const hasValidTarget = typeof targetWeight === 'number' && targetWeight > 30 && !isNaN(targetWeight);
+    const isTargetNear = hasValidTarget && targetWeight >= minVal - 6 && targetWeight <= maxVal + 6;
+    if (isTargetNear) {
+      minVal = Math.min(minVal, targetWeight);
+      maxVal = Math.max(maxVal, targetWeight);
+    }
+
+    const paddingVal = Math.max(1.2, (maxVal - minVal) * 0.18);
     const chartMin = Number((minVal - paddingVal).toFixed(1));
     const chartMax = Number((maxVal + paddingVal).toFixed(1));
-    const chartRange = Math.max(2, chartMax - chartMin);
+    const chartRange = Math.max(1.5, chartMax - chartMin);
 
-    const svgWidth = 340;
+    const svgWidth = 360;
     const svgHeight = 160;
-    const paddingLeft = 32;
+    const paddingLeft = 38; // 38px ensures 5-char numbers like 102.5 never clip
     const paddingRight = 16;
     const paddingTop = 16;
     const paddingBottom = 24;
@@ -112,9 +151,13 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
       const lastPt = pts[pts.length - 1];
       const bottomY = paddingTop + plotHeight;
       areaPath = `${rawLinePath} L ${lastPt.x} ${bottomY} L ${firstPt.x} ${bottomY} Z`;
+    } else if (pts.length === 1) {
+      // Single point baseline across the chart
+      rawLinePath = `M ${paddingLeft} ${pts[0].y} L ${svgWidth - paddingRight} ${pts[0].y}`;
+      avgLinePath = `M ${paddingLeft} ${pts[0].avgY} L ${svgWidth - paddingRight} ${pts[0].avgY}`;
     }
 
-    const targetYPos = getY(targetWeight);
+    const targetYPos = hasValidTarget ? getY(targetWeight) : -100;
 
     const gridYVals = [
       { val: chartMax, y: paddingTop },
@@ -128,6 +171,8 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
       avgLinePath,
       areaPath,
       targetYPos,
+      hasValidTarget,
+      isTargetNear,
       gridYVals,
       chartMin,
       chartMax,
@@ -149,15 +194,15 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
       : null;
 
   return (
-    <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
-      {/* Header & Controls */}
+    <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3 font-body">
+      {/* 1. Header & Controls */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#24201D]/15 pb-2.5">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
+          <span className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
             Weight Dynamics & Moving Avg
           </span>
           <div
-            title="Dots represent daily weigh-ins. The solid green line is the 7-day Moving Average filter."
+            title="Dots represent daily weigh-ins. The solid dark green line is the 7-day Moving Average filter."
             className="cursor-help"
           >
             <Info className="w-3.5 h-3.5 text-stone-400 hover:text-stone-600" />
@@ -170,7 +215,7 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
             type="button"
             onClick={handleExportCsv}
             title="Export CSV history"
-            className="p-1 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] text-[#24201D] flex items-center justify-center cursor-pointer shadow-2xs"
+            className="p-1.5 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] text-[#24201D] flex items-center justify-center cursor-pointer shadow-2xs active:scale-95 transition-all"
           >
             <Download className="w-3.5 h-3.5 stroke-[2]" />
           </button>
@@ -199,7 +244,57 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
         </div>
       </div>
 
-      {/* Legend */}
+      {/* 2. Real-time Moving Average Insight Bar */}
+      {stats && (
+        <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#24201D]/15 text-xs flex-wrap">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] font-display">
+              7-Day MA:
+            </span>
+            <span className="font-mono-num font-black text-sm text-[#24201D]">
+              {stats.latestMA} kg
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-[#6B635B] font-bold">
+              Period:
+              <span
+                className={`ml-1 font-mono-num font-black ${
+                  stats.delta < 0
+                    ? 'text-[#2D503C]'
+                    : stats.delta > 0
+                    ? 'text-[#C25E40]'
+                    : 'text-[#6B635B]'
+                }`}
+              >
+                {stats.delta > 0 ? `+${stats.delta}` : stats.delta} kg
+              </span>
+            </span>
+
+            {stats.trend === 'down' && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#DDE8DE] text-[#2D503C] border border-[#2D503C]/20 text-[9px] font-black uppercase">
+                <TrendingDown className="w-3 h-3" />
+                Down
+              </span>
+            )}
+            {stats.trend === 'up' && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#F7E3DC] text-[#C25E40] border border-[#C25E40]/20 text-[9px] font-black uppercase">
+                <TrendingUp className="w-3 h-3" />
+                Up
+              </span>
+            )}
+            {stats.trend === 'stable' && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-stone-200 text-stone-700 border border-stone-300 text-[9px] font-black uppercase">
+                <Minus className="w-3 h-3" />
+                Stable
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 3. Legend */}
       <div className="flex items-center justify-between text-[10px] text-[#6B635B] font-bold px-1">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
@@ -218,12 +313,12 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
         <span className="font-mono-num text-[9px] text-stone-400">Tap points for details</span>
       </div>
 
-      {/* SVG Canvas */}
+      {/* 4. SVG Canvas */}
       {chartData ? (
         <div className="relative w-full overflow-hidden bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl p-1">
           <svg
             viewBox={`0 0 ${chartData.svgWidth} ${chartData.svgHeight}`}
-            className="w-full h-40 overflow-visible"
+            className="w-full h-44 overflow-visible"
           >
             <defs>
               <linearGradient id="weightAreaGrad" x1="0" y1="0" x2="0" y2="1">
@@ -232,7 +327,7 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
               </linearGradient>
             </defs>
 
-            {/* Horizontal Grid lines */}
+            {/* Horizontal Grid lines & Y-Axis Labels */}
             {chartData.gridYVals.map((g, idx) => (
               <g key={idx}>
                 <line
@@ -259,30 +354,32 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
             ))}
 
             {/* Target Weight Dashed Guide Line */}
-            {chartData.targetYPos >= 10 && chartData.targetYPos <= chartData.svgHeight - 15 && (
-              <g>
-                <line
-                  x1={chartData.paddingLeft}
-                  y1={chartData.targetYPos}
-                  x2={chartData.svgWidth - 16}
-                  y2={chartData.targetYPos}
-                  stroke="#C25E40"
-                  strokeWidth="1.25"
-                  strokeDasharray="4 3"
-                />
-                <text
-                  x={chartData.svgWidth - 18}
-                  y={chartData.targetYPos - 3}
-                  textAnchor="end"
-                  fontSize="8"
-                  fontWeight="900"
-                  fill="#C25E40"
-                  className="font-mono-num"
-                >
-                  Goal: {targetWeight}kg
-                </text>
-              </g>
-            )}
+            {chartData.isTargetNear &&
+              chartData.targetYPos >= 10 &&
+              chartData.targetYPos <= chartData.svgHeight - 15 && (
+                <g>
+                  <line
+                    x1={chartData.paddingLeft}
+                    y1={chartData.targetYPos}
+                    x2={chartData.svgWidth - 16}
+                    y2={chartData.targetYPos}
+                    stroke="#C25E40"
+                    strokeWidth="1.25"
+                    strokeDasharray="4 3"
+                  />
+                  <text
+                    x={chartData.svgWidth - 18}
+                    y={chartData.targetYPos - 3}
+                    textAnchor="end"
+                    fontSize="8"
+                    fontWeight="900"
+                    fill="#C25E40"
+                    className="font-mono-num"
+                  >
+                    Goal: {targetWeight}kg
+                  </text>
+                </g>
+              )}
 
             {/* Shaded Area */}
             {chartData.areaPath && <path d={chartData.areaPath} fill="url(#weightAreaGrad)" />}
@@ -311,24 +408,41 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
               />
             )}
 
-            {/* Interactive Scatter Dots */}
+            {/* Interactive Scatter Dots with generous touch hit target */}
             {chartData.points.map((pt, i) => {
               const isSelected = selectedPointIndex === i;
               return (
-                <g key={i} className="cursor-pointer" onClick={() => setSelectedPointIndex(i)}>
+                <g
+                  key={i}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    playClickSound();
+                    setSelectedPointIndex(isSelected ? null : i);
+                  }}
+                >
+                  {/* Invisible 36px touch hit area */}
+                  <circle cx={pt.x} cy={pt.y} r={18} fill="transparent" />
+                  {/* Visible point circle */}
                   <circle
                     cx={pt.x}
                     cy={pt.y}
-                    r={isSelected ? 6 : 3.5}
+                    r={isSelected ? 6 : 4}
                     fill={isSelected ? '#C25E40' : '#FFFFFF'}
                     stroke={isSelected ? '#24201D' : '#3D6B52'}
-                    strokeWidth={isSelected ? 2 : 1.5}
+                    strokeWidth={isSelected ? 2.5 : 2}
                     className="transition-all"
                   />
                 </g>
               );
             })}
           </svg>
+
+          {/* Single entry baseline hint */}
+          {chartData.points.length === 1 && (
+            <div className="mt-1 px-2.5 py-1 text-center text-[10px] text-[#8C827A] font-bold">
+              1 weigh-in logged. Add 2+ entries to view the moving average trend line.
+            </div>
+          )}
 
           {/* Selected Point Tooltip card */}
           {selectedPt && (
@@ -340,7 +454,7 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
                     {selectedPt.date}
                   </span>
                   {selectedPt.note && (
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300">
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300 font-medium">
                       {selectedPt.note}
                     </span>
                   )}

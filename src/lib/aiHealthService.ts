@@ -309,18 +309,18 @@ COACHING CAPABILITIES & GUIDELINES:
 }
 
 export const CURATED_SCIENCE_FACTS = [
-  "⚡ Синтез мышечного белка (MPS): для максимальной стимуляции анаболизма порция белка должна содержать около 2.5–3г лейцина (эквивалент ~25–30г сывороточного протеина или 150г куриной грудки).",
-  "💧 Гидратация и липолиз: обезвоживание всего на 2% снижает физическую выносливость на 10-15% и замедляет окисление жиров клетками печени.",
-  "🔥 NEAT (нетренировочный термогенез): бытовая активность (ходьба, уборка, лестница) сжигает в 3–5 раз больше суточных калорий, чем 45 минут интенсивной тренировки в зале.",
-  "🌙 Сон и гормоны голода: сокращение сна до 5–6 часов увеличивает секрецию грелина (гормона голода) на 15% и снижает лептин (гормон сытости), провоцируя тягу к сладкому.",
-  "🏋️ Эффект EPOC: высокоинтенсивные силовые тренировки вызывают пост-тренировочное потребление кислорода, продолжая сжигать калории в течение 12–24 часов после занятия.",
-  "🥑 Правило гибкой диеты (80/20): включение 15–20% калорий из любимых лакомств при соблюдении суточного бюджета предотвращает срывы и не замедляет сжигание жира.",
-  "☕ Кофеин и выносливость: прием 3 мг кофеина на 1 кг массы тела за 45 минут до кардио ускоряет мобилизацию жирных кислот и повышает порог утомления.",
-  "🥗 Клетчатка и гликемия: употребление порции зеленых овощей перед быстрыми углеводами замедляет всасывание и снижает пик глюкозы в крови на 30%.",
-  "🏃 Пульсовая Зона 2: кардио при 60–70% от максимального пульса стимулирует рост плотности митохондрий и развивает способность организма использовать жиры как топливо.",
-  "🧠 Креатин моногидрат: самая исследованная добавка доказательной медицины. Он ускоряет ресинтез АТФ в мышцах и поддерживает когнитивную выносливость головного мозга.",
-  "🍌 Восстановление гликогена: мышечный гликоген восполняется наиболее активно в первые 2 часа после тренировки благодаря временному повышению активности транспортеров GLUT-4.",
-  "🛡️ Защита мышц на дефиците: потребление белка на уровне 1.6–2.0г на 1 кг массы тела надежно предотвращает катаболизм активной мышечной ткани даже при дефиците калорий."
+  "⚡ Muscle Protein Synthesis (MPS): To maximally trigger anabolism, a meal should supply ~2.5–3g of leucine (equivalent to 25–30g of whey protein or 150g of chicken breast).",
+  "💧 Hydration & Lipolysis: Mild dehydration of just 2% body mass reduces physical work capacity by 10–15% and directly impairs hepatic fatty acid oxidation.",
+  "🔥 NEAT (Non-Exercise Activity Thermogenesis): Daily spontaneous movement (walking, standing, chores) burns 3–5x more daily calories than a standard 45-minute gym session.",
+  "🌙 Sleep & Appetite Regulation: Restricting sleep to 5–6 hours spikes ghrelin (hunger hormone) by 15% and drops leptin (satiety hormone), triggering cravings for high-glycemic carbohydrates.",
+  "🏋️ The EPOC Effect: High-intensity resistance training creates excess post-exercise oxygen consumption, elevating resting metabolic rate for 12–24 hours post-workout.",
+  "🥑 Flexible Dieting (80/20 Rule): Allocating 15–20% of daily calories to favorite treats within an energy deficit prevents dietary fatigue without compromising body recomposition.",
+  "☕ Caffeine Timing: Consuming 3 mg of caffeine per kg of body weight 45 minutes prior to endurance sessions enhances fatty acid mobilization and delays perceived exertion.",
+  "🥗 Fiber & Glucose Spikes: Consuming leafy green vegetables or dietary fiber prior to high-glycemic carbohydrates attenuates postprandial glucose peaks by up to 30%.",
+  "🏃 Zone 2 Cardio: Low-intensity aerobic exercise at 60–70% of maximum heart rate stimulates mitochondrial biogenesis and trains muscles to utilize fat as their primary fuel.",
+  "🧠 Creatine Monohydrate: The most researched sports supplement in medicine. It accelerates cellular ATP resynthesis in muscle tissue and enhances cognitive resilience under sleep deprivation.",
+  "🍌 Glycogen Supercompensation: Muscle glycogen synthesis is elevated twofold in the first 2 hours post-exercise due to insulin-independent GLUT-4 transporter translocation.",
+  "🛡️ Lean Mass Preservation: Maintaining protein intake at 1.6–2.2g per kg of body weight reliably prevents catabolism of lean tissue during a hypocaloric deficit."
 ];
 
 /**
@@ -336,10 +336,10 @@ export async function generateClinicalHealthSummaryAI(
   if (apiKey && navigator.onLine) {
     try {
       const prompt = `You are Sumire Health AI — an elite sports scientist and clinical nutritionist.
-Generate ONE fascinating, concise, evidence-based scientific fact or insight (2 sentences max) in Russian about nutrition, physical fitness, metabolism, or sports physiology.
-The fact must be scientifically proven, surprising, and practical for someone improving their body composition.
+Generate ONE fascinating, concise, evidence-based scientific fact or insight (2 sentences max) in English about nutrition, physical fitness, metabolism, or sports physiology.
+The fact must be scientifically proven, surprising, and practical for someone optimizing their body composition and energy.
 Topics: muscle protein synthesis, NEAT, hydration & fat oxidation, sleep & ghrelin/leptin, EPOC effect, Zone 2 cardio, creatine, caffeine timing, or gut microbiome.
-NO preamble, NO introduction, NO sparkles ("✨"). Output ONLY the science insight text.`;
+NO preamble, NO introduction, NO sparkles ("✨"). Output ONLY the science insight text in English.`;
 
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`,

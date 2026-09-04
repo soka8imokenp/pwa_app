@@ -88,7 +88,7 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
             className="h-8 px-3 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white border-[1.5px] border-[#24201D] text-xs font-black shadow-2xs active:scale-95 cursor-pointer font-display flex items-center gap-1"
           >
             <Plus className="w-3.5 h-3.5 stroke-[3]" />
-            +250 ml
+            250 ml
           </button>
         </div>
       </div>

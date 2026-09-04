@@ -44,16 +44,39 @@ export const MealListSection: React.FC<MealListSectionProps> = ({
     snack: false,
   });
 
+  // Custom Confirmation Modal state in our signature style
+  const [mealToDelete, setMealToDelete] = useState<{
+    id: number;
+    name: string;
+    kcal: number;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const toggleCategory = (cat: MealType) => {
     playClickSound();
     setCollapsedCategories((prev) => ({ ...prev, [cat]: !prev[cat] }));
   };
 
-  const handleDelete = async (id: number, name: string) => {
+  const openDeleteModal = (meal: { id: number; name: string; kcal: number }) => {
     playClickSound();
-    if (confirm(`Delete "${name}" from meal logs?`)) {
-      await onDeleteMeal(id);
+    setMealToDelete(meal);
+  };
+
+  const confirmDelete = async () => {
+    if (!mealToDelete) return;
+    try {
+      setIsDeleting(true);
+      playClickSound();
+      await onDeleteMeal(mealToDelete.id);
+      setMealToDelete(null);
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const cancelDelete = () => {
+    playClickSound();
+    setMealToDelete(null);
   };
 
   return (
@@ -159,7 +182,13 @@ export const MealListSection: React.FC<MealListSectionProps> = ({
                             {meal.id && (
                               <button
                                 type="button"
-                                onClick={() => handleDelete(meal.id!, displayName)}
+                                onClick={() =>
+                                  openDeleteModal({
+                                    id: meal.id!,
+                                    name: displayName,
+                                    kcal: meal.kcal || 0,
+                                  })
+                                }
                                 title="Delete meal item"
                                 className="w-7 h-7 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center border border-transparent hover:border-red-200 transition-all cursor-pointer"
                               >
@@ -195,6 +224,57 @@ export const MealListSection: React.FC<MealListSectionProps> = ({
           </div>
         );
       })}
+
+      {/* Signature Neobrutalist Delete Confirmation Modal */}
+      {mealToDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#24201D]/60 backdrop-blur-xs animate-in fade-in duration-200"
+          onClick={cancelDelete}
+        >
+          <div
+            className="w-full max-w-sm bg-white border-[2px] border-[#24201D] rounded-2xl p-5 shadow-[4px_4px_0px_#24201D] space-y-4 animate-in zoom-in-95 duration-150"
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top Icon & Title */}
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-red-600 shrink-0 shadow-2xs">
+                <Trash2 className="w-5 h-5 stroke-[2.2]" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-black font-display text-[#24201D] leading-tight">
+                  Remove Meal Entry?
+                </h4>
+                <p className="text-xs text-[#6B635B] leading-relaxed">
+                  Are you sure you want to remove <span className="font-bold text-[#24201D] underline decoration-stone-300">{mealToDelete.name}</span> ({mealToDelete.kcal} kcal) from your daily log?
+                </p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#24201D]/10">
+              <button
+                type="button"
+                onClick={cancelDelete}
+                disabled={isDeleting}
+                className="px-3.5 py-2 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border-[1.5px] border-[#24201D] text-xs font-bold text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer font-display"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-xl bg-[#DC2626] hover:bg-red-700 text-white border-[1.5px] border-[#24201D] text-xs font-black shadow-2xs active:scale-95 transition-all cursor-pointer font-display flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

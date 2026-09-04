@@ -47,10 +47,15 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [activeMetricDetail, setActiveMetricDetail] = useState<MetricDetailModalInfo | null>(null);
 
-  // AI-generated clinical summary state
+  // AI-generated clinical summary state (in English)
   const [aiSummary, setAiSummary] = useState<string>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('kairo_clinical_health_summary') || '';
+      const saved = localStorage.getItem('kairo_clinical_health_summary') || '';
+      if (/[а-яё]/i.test(saved)) {
+        localStorage.removeItem('kairo_clinical_health_summary');
+        return '';
+      }
+      return saved;
     }
     return '';
   });

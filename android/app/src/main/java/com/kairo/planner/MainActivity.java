@@ -157,17 +157,23 @@ public class MainActivity extends BridgeActivity {
                 // Note: Do not override webView.setWebChromeClient() here as Capacitor BridgeWebChromeClient
                 // is needed for onShowFileChooser (file inputs and photo uploads) and permission requests.
 
-                // Intercept OAuth redirects (https://localhost/#access_token=...) and route directly to local index.html
+                // Intercept OAuth redirects (localhost with access_token / id_token) and route directly to local index.html
                 webView.setWebViewClient(new com.getcapacitor.BridgeWebViewClient(getBridge()) {
                     @Override
                     public boolean shouldOverrideUrlLoading(WebView view, android.webkit.WebResourceRequest request) {
                         if (request != null && request.getUrl() != null) {
                             String url = request.getUrl().toString();
                             if (url.contains("access_token=") || url.contains("id_token=")) {
-                                int hashIndex = url.indexOf("#");
-                                if (hashIndex != -1) {
-                                    String hash = url.substring(hashIndex);
-                                    view.loadUrl("https://localhost/index.html" + hash);
+                                int paramIndex = url.indexOf("#");
+                                if (paramIndex == -1) {
+                                    paramIndex = url.indexOf("?");
+                                }
+                                if (paramIndex != -1) {
+                                    String params = url.substring(paramIndex);
+                                    if (params.startsWith("?")) {
+                                        params = "#" + params.substring(1);
+                                    }
+                                    view.loadUrl("https://localhost/index.html" + params);
                                     return true;
                                 }
                             }
@@ -178,10 +184,16 @@ public class MainActivity extends BridgeActivity {
                     @Override
                     public boolean shouldOverrideUrlLoading(WebView view, String url) {
                         if (url != null && (url.contains("access_token=") || url.contains("id_token="))) {
-                            int hashIndex = url.indexOf("#");
-                            if (hashIndex != -1) {
-                                String hash = url.substring(hashIndex);
-                                view.loadUrl("https://localhost/index.html" + hash);
+                            int paramIndex = url.indexOf("#");
+                            if (paramIndex == -1) {
+                                paramIndex = url.indexOf("?");
+                            }
+                            if (paramIndex != -1) {
+                                String params = url.substring(paramIndex);
+                                if (params.startsWith("?")) {
+                                    params = "#" + params.substring(1);
+                                }
+                                view.loadUrl("https://localhost/index.html" + params);
                                 return true;
                             }
                         }

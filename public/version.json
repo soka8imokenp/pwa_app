@@ -1,14 +1,15 @@
 {
-  "version": "1.8.64",
-  "buildNumber": 68,
+  "version": "1.8.65",
+  "buildNumber": 69,
   "releaseDate": "2026-09-04",
   "changelog": [
-    "Native BridgeWebViewClient interceptor routing Google OAuth redirects directly to local index.html with token hash",
-    "Resolved net::ERR_CONNECTION_REFUSED by preventing localhost network calls on Android",
-    "Dynamic hashchange listener for instant seamless Google authentication"
+    "Fixed cleartext HTTP traffic to localhost with usesCleartextTraffic and network_security_config",
+    "Enhanced BridgeWebViewClient OAuth interceptor for both query and hash redirects",
+    "Resolved Android ERR_CLEARTEXT_NOT_PERMITTED during Google OAuth redirect"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.64/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.65/Daily-Sumire-app-debug.apk"
 }
+
 
 
 

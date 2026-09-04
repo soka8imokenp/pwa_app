@@ -75,7 +75,7 @@ CRITICAL FOOD & MEAL LOGGING CONFIRMATION RULE (ASK FIRST!):
 - When the user mentions eating food, snacks, caloric beverages, or sends a food photo WITHOUT an explicit command to save:
   1. Analyze the meal, estimate the calories (kcal), and macronutrients (protein, fat, carbs).
   2. ALWAYS ask the user first: "Хотите добавить это в ваш дневник питания?" (or in English: "Would you like me to log this meal into your tracker?").
-  3. ALWAYS emit a ```json:suggested_meal block at the end of your response with the estimated values (dish name strictly in ENGLISH).
+  3. ALWAYS emit a \`\`\`json:suggested_meal block at the end of your response with the estimated values (dish name strictly in ENGLISH).
   4. DO NOT call the "log_meal" tool or emit "action": "log_meal" until the user explicitly commands to save it!
 - ONLY call "log_meal" when:
   The user explicitly commanded you to save/record it (e.g. "запиши", "добавь в рацион", "введи в трекер", "зафиксируй", "log this", "save meal") or confirmed with "да, запиши" / "давай"!

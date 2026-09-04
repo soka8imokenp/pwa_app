@@ -259,16 +259,41 @@ export async function authenticateWithGoogle(idToken: string) {
     throw new Error('Google ID token is required');
   }
 
-  // 1. Verify token with Google public tokeninfo endpoint
-  let googlePayload: any;
+  // 1. Verify token with Google public endpoints (supports both ID Token and Access Token)
+  let googlePayload: any = null;
+
+  // Try 1: ID Token info
   try {
     const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
-    if (!res.ok) {
-      throw new Error(`Google token validation failed: ${res.statusText}`);
+    if (res.ok) {
+      googlePayload = await res.json();
     }
-    googlePayload = await res.json();
-  } catch (err: any) {
-    throw new Error('Invalid or expired Google authentication token: ' + err.message);
+  } catch (_) {}
+
+  // Try 2: Access Token info
+  if (!googlePayload || !googlePayload.email) {
+    try {
+      const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(idToken)}`);
+      if (res.ok) {
+        googlePayload = await res.json();
+      }
+    } catch (_) {}
+  }
+
+  // Try 3: UserInfo API endpoint
+  if (!googlePayload || !googlePayload.email) {
+    try {
+      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      if (res.ok) {
+        googlePayload = await res.json();
+      }
+    } catch (_) {}
+  }
+
+  if (!googlePayload || !googlePayload.email) {
+    throw new Error('Invalid or expired Google authentication token');
   }
 
   const { email, given_name, family_name, name, picture, email_verified } = googlePayload;

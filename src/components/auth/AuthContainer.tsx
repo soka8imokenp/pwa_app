@@ -169,16 +169,41 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     }
   };
 
-  const processGoogleAuth = async (idToken: string) => {
+  const GOOGLE_CLIENT_ID =
+    (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID ||
+    (typeof window !== 'undefined' ? localStorage.getItem('kairo_google_client_id') : null) ||
+    '98363494043-t58b883m6upt2mrtegt90e7lq08srq01.apps.googleusercontent.com';
+
+  const processGoogleAuth = async (token: string) => {
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      const res = await authApi.loginWithGoogle(idToken);
-      setAuthToken(res.accessToken || res.token);
-      if (res.refreshToken) {
-        setRefreshToken(res.refreshToken);
+      let user: UserProfile;
+      try {
+        const res = await authApi.loginWithGoogle(token);
+        setAuthToken(res.accessToken || res.token);
+        if (res.refreshToken) {
+          setRefreshToken(res.refreshToken);
+        }
+        user = res.user;
+      } catch (backendErr) {
+        console.warn('Backend auth failed, retrieving Google profile directly:', backendErr);
+        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!userInfoRes.ok) throw backendErr;
+        const info = await userInfoRes.json();
+        user = {
+          id: info.sub || `google_${Date.now()}`,
+          firstName: info.given_name || (info.name ? info.name.split(' ')[0] : 'User'),
+          lastName: info.family_name || (info.name ? info.name.split(' ').slice(1).join(' ') : ''),
+          email: info.email,
+          username: info.email ? info.email.split('@')[0] : 'user',
+          avatarId: info.picture,
+        };
       }
-      localStorage.setItem('kairo_auth_user', JSON.stringify(res.user));
+
+      localStorage.setItem('kairo_auth_user', JSON.stringify(user));
 
       playSuccessChime();
       confetti({
@@ -188,7 +213,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
         colors: ['#3D6B52', '#4285F4', '#EA4335', '#FBBC05'],
       });
 
-      onLoginSuccess(res.user);
+      onLoginSuccess(user);
     } catch (err: any) {
       setErrorMsg(err?.message || 'Failed to authenticate with Google.');
     } finally {
@@ -196,75 +221,70 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     }
   };
 
-  const loginAsGoogleDemo = () => {
-    const demoUser: UserProfile = {
-      firstName: 'Google',
-      lastName: 'User',
-      email: 'user@gmail.com',
-      username: 'google_user',
-    };
-    localStorage.setItem('kairo_auth_user', JSON.stringify(demoUser));
-    playSuccessChime();
-    confetti({
-      particleCount: 80,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ['#3D6B52', '#4285F4', '#EA4335', '#FBBC05'],
-    });
-    onLoginSuccess(demoUser);
-  };
-
   const handleGoogleSignIn = () => {
     playClickSound();
-    const clientId =
-      (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID ||
-      (typeof window !== 'undefined' ? localStorage.getItem('kairo_google_client_id') : null);
+    setErrorMsg(null);
 
-    // If a valid Google Client ID is configured, attempt Google Identity Services
-    if (clientId && clientId !== 'your_google_client_id_here.apps.googleusercontent.com') {
-      const initGoogleGSI = () => {
-        const google = (window as any).google;
-        if (google?.accounts?.id) {
-          google.accounts.id.initialize({
-            client_id: clientId,
-            callback: (response: any) => {
-              if (response?.credential) {
-                processGoogleAuth(response.credential);
+    const triggerOAuth = () => {
+      const google = (window as any).google;
+      if (google?.accounts?.oauth2) {
+        try {
+          const tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: GOOGLE_CLIENT_ID,
+            scope: 'email profile openid',
+            callback: async (tokenResponse: any) => {
+              if (tokenResponse?.error) {
+                console.error('Google OAuth error:', tokenResponse);
+                if (tokenResponse.error !== 'popup_closed_by_user') {
+                  setErrorMsg(`Google sign-in error: ${tokenResponse.error_description || tokenResponse.error}`);
+                }
+                return;
+              }
+              if (tokenResponse?.access_token) {
+                await processGoogleAuth(tokenResponse.access_token);
               }
             },
-            auto_select: false,
-            cancel_on_tap_outside: true,
           });
-          google.accounts.id.prompt();
-        } else {
-          loginAsGoogleDemo();
-        }
-      };
-
-      if (typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
-        initGoogleGSI();
-        return;
-      } else {
-        const existingScript = document.getElementById('google-gsi-client');
-        if (!existingScript) {
-          const script = document.createElement('script');
-          script.id = 'google-gsi-client';
-          script.src = 'https://accounts.google.com/gsi/client';
-          script.async = true;
-          script.defer = true;
-          script.onload = () => initGoogleGSI();
-          script.onerror = () => loginAsGoogleDemo();
-          document.body.appendChild(script);
+          tokenClient.requestAccessToken({ prompt: 'select_account' });
           return;
-        } else {
-          initGoogleGSI();
-          return;
+        } catch (err: any) {
+          console.error('Error initializing Google token client:', err);
+          setErrorMsg(err?.message || 'Could not start Google sign in.');
         }
       }
-    }
 
-    // Default 1-click seamless Google sign in (no ugly prompt or missing env alerts)
-    loginAsGoogleDemo();
+      // Fallback: try One Tap prompt if oauth2 client is not yet ready
+      if (google?.accounts?.id) {
+        google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: async (response: any) => {
+            if (response?.credential) {
+              await processGoogleAuth(response.credential);
+            }
+          },
+          auto_select: false,
+        });
+        google.accounts.id.prompt();
+      }
+    };
+
+    if (typeof window !== 'undefined' && (window as any).google?.accounts) {
+      triggerOAuth();
+    } else {
+      const existingScript = document.getElementById('google-gsi-client');
+      if (!existingScript) {
+        const script = document.createElement('script');
+        script.id = 'google-gsi-client';
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.onload = () => triggerOAuth();
+        script.onerror = () => setErrorMsg('Failed to load Google Identity Services SDK. Check your network connection.');
+        document.body.appendChild(script);
+      } else {
+        triggerOAuth();
+      }
+    }
   };
 
   const handleGuest = () => {

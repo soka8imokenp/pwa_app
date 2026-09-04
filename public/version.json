@@ -1,12 +1,11 @@
 {
-  "version": "1.8.55",
-  "buildNumber": 59,
+  "version": "1.8.56",
+  "buildNumber": 60,
   "releaseDate": "2026-09-04",
   "changelog": [
-    "Interactive Sumire AI Assistant card: live daily nutrition & hydration telemetry pills, interactive avatar button with micro-sounds",
-    "Quick prompt actions: 1-tap buttons for Snap Meal, Hydration analysis, Calorie check, and Balanced meal ideas",
-    "Rotating coach insights: interactive tip callout featuring smart nutrition facts and timing advice",
-    "Accidental reset protection: styled neo-brutalist confirmation popup before clearing chat history"
+    "Clean & refined Sumire AI Assistant brand header: pure signature avatar logo with distinct typography without clutter",
+    "Removed redundant telemetry and prompt buttons, fixing TypeScript compilation error",
+    "Preserved secure Restart Chat confirmation dialog preventing accidental history loss"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.55/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.56/Daily-Sumire-app-debug.apk"
 }

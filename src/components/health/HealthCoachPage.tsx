@@ -15,11 +15,6 @@ import {
   Calendar,
   Clock,
   AlertTriangle,
-  Sparkles,
-  Flame,
-  Lightbulb,
-  Camera,
-  Utensils,
 } from 'lucide-react';
 import {
   askSumireAI,
@@ -140,15 +135,6 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [voiceLang, setVoiceLang] = useState<VoiceLanguage>(() => getVoiceLanguage());
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [activeTipIdx, setActiveTipIdx] = useState(0);
-
-  const SUMIRE_TIPS = [
-    'Snap a meal photo or describe your plate for instant macro estimation.',
-    'Drinking 250ml of water before a meal supports healthy metabolic breakdown.',
-    'Tell me "I had dinner at 18:30" to automatically schedule your evening meal.',
-    'Caloric drinks like juices & lattes track both your hydration and daily calories.',
-    'Need meal ideas? Tap any prompt below or ask about your daily targets.',
-  ];
 
   const getInitialGreeting = (): string => {
     const delta = Number((profile.currentWeight - profile.targetWeight).toFixed(1));
@@ -431,137 +417,38 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
 
   return (
     <div className="w-full space-y-3 pb-3 font-body select-none">
-      {/* 1. Interactive Neo-Brutalist Sumire AI Assistant Header */}
-      <div className="p-3.5 sm:p-4 bg-gradient-to-b from-[#FAF8F5] to-[#F5EFE6] border-[2px] border-[#24201D] rounded-2xl shadow-[3px_3px_0px_#24201D] space-y-3">
-        {/* Main Identity & Telemetry Row */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            {/* Interactive Sumire Avatar Button with Sound and Mood Rotation */}
-            <button
-              type="button"
-              onClick={() => {
-                playClickSound();
-                setActiveTipIdx((prev) => (prev + 1) % SUMIRE_TIPS.length);
-              }}
-              title="Tap for Sumire insight"
-              className="w-12 h-12 rounded-2xl bg-[#DDE8DE] hover:bg-[#D0E2D1] border-[2px] border-[#24201D] flex items-center justify-center shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all overflow-hidden p-0.5 shrink-0 cursor-pointer group"
-            >
-              <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full group-hover:scale-105 transition-transform">
-                <circle cx="50" cy="50" r="46" fill="#DDE8DE" stroke="#24201D" strokeWidth="4" />
-                <ellipse cx="38" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
-                <ellipse cx="38" cy="26" rx="3.5" ry="11" fill="#FCA5A5" />
-                <ellipse cx="62" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
-                <ellipse cx="62" cy="26" rx="3.5" ry="11" fill="#FCA5A5" />
-                <circle cx="50" cy="56" r="28" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
-                <ellipse cx="40" cy="52" rx="4" ry="5" fill="#24201D" />
-                <circle cx="39" cy="50" r="1.5" fill="#FFFFFF" />
-                <ellipse cx="60" cy="52" rx="4" ry="5" fill="#24201D" />
-                <circle cx="59" cy="50" r="1.5" fill="#FFFFFF" />
-                <ellipse cx="50" cy="59" rx="2.5" ry="1.8" fill="#C25E40" />
-                <path d="M47 62 Q50 65 53 62" stroke="#24201D" strokeWidth="2" strokeLinecap="round" />
-                <ellipse cx="34" cy="58" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.8" />
-                <ellipse cx="66" cy="58" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.8" />
-              </svg>
-            </button>
-
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D] truncate">
-                  Sumire AI Assistant
-                </h3>
-                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-[#FAF5EE] border border-[#24201D]/25 text-[#6B635B] shrink-0 font-display">
-                  {profile.goal === 'lose' ? 'Cut' : profile.goal === 'gain' ? 'Bulk' : 'Maintain'}
-                </span>
-              </div>
-              <p className="text-[10px] font-bold text-[#6B635B] truncate mt-0.5">
-                Nutrition Vision • Voice Dictation • Macro Sync
-              </p>
-            </div>
+      {/* 1. Sumire AI Assistant Brand Header */}
+      <div className="px-4 py-3.5 sm:px-5 sm:py-4 bg-[#FAF8F5] border-[2px] border-[#24201D] rounded-2xl shadow-[3px_3px_0px_#24201D]">
+        <div className="flex items-center gap-3.5">
+          {/* Signature Sumire Logo */}
+          <div className="w-12 h-12 rounded-2xl bg-[#DDE8DE] border-[2px] border-[#24201D] flex items-center justify-center shadow-[2px_2px_0px_#24201D] overflow-hidden p-0.5 shrink-0">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+              <circle cx="50" cy="50" r="46" fill="#DDE8DE" stroke="#24201D" strokeWidth="4" />
+              <ellipse cx="38" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
+              <ellipse cx="38" cy="26" rx="3.5" ry="11" fill="#FCA5A5" />
+              <ellipse cx="62" cy="26" rx="7" ry="18" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
+              <ellipse cx="62" cy="26" rx="3.5" ry="11" fill="#FCA5A5" />
+              <circle cx="50" cy="56" r="28" fill="#FFFFFF" stroke="#24201D" strokeWidth="3" />
+              <ellipse cx="40" cy="52" rx="4" ry="5" fill="#24201D" />
+              <circle cx="39" cy="50" r="1.5" fill="#FFFFFF" />
+              <ellipse cx="60" cy="52" rx="4" ry="5" fill="#24201D" />
+              <circle cx="59" cy="50" r="1.5" fill="#FFFFFF" />
+              <ellipse cx="50" cy="59" rx="2.5" ry="1.8" fill="#C25E40" />
+              <path d="M47 62 Q50 65 53 62" stroke="#24201D" strokeWidth="2" strokeLinecap="round" />
+              <ellipse cx="34" cy="58" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.8" />
+              <ellipse cx="66" cy="58" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.8" />
+            </svg>
           </div>
 
-          {/* Live Progress Mini Telemetry Pills */}
-          <div className="flex flex-col items-end gap-1 shrink-0">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white border border-[#24201D]/30 shadow-2xs">
-              <Flame className="w-3 h-3 text-[#C25E40] stroke-[2.5]" />
-              <span className="text-[10px] font-black font-mono-num text-[#24201D]">
-                {todaysTotalKcal} <span className="text-stone-400 font-normal">/ {metrics.targetCalories}</span>
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-[#EBF5FB] border border-[#24201D]/20 text-[9px] font-black font-mono-num text-[#2B5B84]">
-              <Droplets className="w-2.5 h-2.5 text-sky-600 stroke-[2.5]" />
-              <span>{(todaysWaterTotalMl / 1000).toFixed(1)}L</span>
-            </div>
+          {/* Clean Typography */}
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base sm:text-lg font-black font-display uppercase tracking-wider text-[#24201D] leading-tight">
+              Sumire AI Assistant
+            </h2>
+            <p className="text-xs font-semibold text-[#6B635B] mt-0.5 leading-snug">
+              Nutrition Vision & Personal Health Coach
+            </p>
           </div>
-        </div>
-
-        {/* Interactive Quick-Action Prompt Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-none select-none">
-          <button
-            type="button"
-            onClick={() => {
-              playClickSound();
-              fileInputRef.current?.click();
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#FAF5EE] hover:bg-[#F2ECE3] border-[1.5px] border-[#24201D] text-[10px] font-black font-display uppercase tracking-wider text-[#24201D] shadow-2xs active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0"
-          >
-            <Camera className="w-3 h-3 text-[#3D6B52] stroke-[2.5]" />
-            <span>Snap Meal</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              handleSendMessage('Analyze my hydration and water intake for today');
-            }}
-            disabled={isLoading}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#FAF5EE] hover:bg-[#F2ECE3] border-[1.5px] border-[#24201D] text-[10px] font-black font-display uppercase tracking-wider text-[#24201D] shadow-2xs active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0 disabled:opacity-50"
-          >
-            <Droplets className="w-3 h-3 text-sky-600 stroke-[2.5]" />
-            <span>Hydration</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              handleSendMessage('What are my calorie and macro totals for today?');
-            }}
-            disabled={isLoading}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#FAF5EE] hover:bg-[#F2ECE3] border-[1.5px] border-[#24201D] text-[10px] font-black font-display uppercase tracking-wider text-[#24201D] shadow-2xs active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0 disabled:opacity-50"
-          >
-            <Flame className="w-3 h-3 text-[#C25E40] stroke-[2.5]" />
-            <span>Calories</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              handleSendMessage('Suggest a balanced meal option to fit my remaining calories');
-            }}
-            disabled={isLoading}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#FAF5EE] hover:bg-[#F2ECE3] border-[1.5px] border-[#24201D] text-[10px] font-black font-display uppercase tracking-wider text-[#24201D] shadow-2xs active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0 disabled:opacity-50"
-          >
-            <Utensils className="w-3 h-3 text-amber-600 stroke-[2.5]" />
-            <span>Meal Idea</span>
-          </button>
-        </div>
-
-        {/* Interactive Rotating Coach Insight Bar */}
-        <div
-          onClick={() => {
-            playClickSound();
-            setActiveTipIdx((prev) => (prev + 1) % SUMIRE_TIPS.length);
-          }}
-          className="flex items-center gap-2 p-2 rounded-xl bg-white/80 hover:bg-white border border-[#24201D]/20 cursor-pointer active:scale-[0.99] transition-all"
-        >
-          <div className="w-5 h-5 rounded-lg bg-[#FEF08A] border border-[#24201D]/30 flex items-center justify-center shrink-0">
-            <Lightbulb className="w-3 h-3 text-[#854D0E] stroke-[2.5]" />
-          </div>
-          <p className="text-[10px] font-medium text-[#4A453E] leading-tight flex-1 truncate">
-            {SUMIRE_TIPS[activeTipIdx]}
-          </p>
-          <span className="text-[8px] font-black uppercase text-[#8C827A] px-1.5 py-0.5 rounded bg-stone-100 border border-stone-200 shrink-0">
-            Tap tip
-          </span>
         </div>
       </div>
 

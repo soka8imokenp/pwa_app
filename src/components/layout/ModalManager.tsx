@@ -61,9 +61,9 @@ export interface ModalManagerProps {
   allTasks: Task[];
   habitsWithStats: HabitWithStats[];
   todaysSessions: FocusSession[];
-  onRolloverTask: (id: number, date: string) => Promise<any>;
-  onDemoteToBacklog: (id: number) => Promise<any>;
-  onToggleComplete: (id: number) => Promise<any>;
+  onRolloverTask: (id: number, date: string) => void | Promise<any>;
+  onDemoteToBacklog: (task: Task) => void | Promise<any>;
+  onToggleComplete: (task: Task) => void | Promise<any>;
 
   // Sumire AI Companion
   isSumireOpen: boolean;
@@ -111,7 +111,6 @@ export interface ModalManagerProps {
   onCloseCalendar: () => void;
   onSelectDate: (date: string) => void;
   deleteTask: (id: number) => Promise<any>;
-  onOpenCalendarExport: () => void;
 
   // Streak Modal
   isStreakModalOpen: boolean;

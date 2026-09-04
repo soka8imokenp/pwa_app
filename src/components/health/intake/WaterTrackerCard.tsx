@@ -38,13 +38,13 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
 
   return (
     <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3.5">
-      {/* 1. Header with Icons, Titles and Target Badge */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2.5">
+      {/* 1. Header with Icons, Titles, Liters Display and Steppers */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-9 h-9 rounded-xl bg-[#E0F2FE] border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0">
             <Droplets className="w-5 h-5 text-[#0284C7]" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] leading-none">
                 Water Hydration
@@ -56,28 +56,27 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
                 </span>
               )}
             </div>
+
+            {/* Adapted Clean Liter Display */}
             <div className="flex items-baseline gap-1 mt-1">
-              <span className="text-lg font-black font-mono-num text-[#24201D] leading-none">
+              <span className="text-xl sm:text-2xl font-black font-mono-num text-[#24201D] tracking-tight leading-none">
                 {currentLiters}
               </span>
-              <span className="text-xs font-bold font-mono-num text-[#6B635B]">
+              <span className="text-xs font-bold font-mono-num text-[#8C827A]">
                 / {targetLiters} л
-              </span>
-              <span className="text-[10px] font-bold text-[#0284C7] ml-1 font-mono-num">
-                ({consumedGlasses}/{targetGlasses} ст • {waterPercent}%)
               </span>
             </div>
           </div>
         </div>
 
-        {/* Quick Steppers (+250, +500, +1000, -250) */}
-        <div className="flex items-center gap-1 shrink-0">
+        {/* Tactile Steppers: Undo (-) and +250 ml */}
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={onRemoveWater}
             disabled={todaysWaterTotalMl <= 0}
-            title="Удалить последний стакан"
-            className="w-7 h-7 rounded-lg bg-[#FAF8F5] hover:bg-stone-200 disabled:opacity-25 disabled:cursor-not-allowed border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 cursor-pointer"
+            title="Удалить 250 мл"
+            className="w-8 h-8 rounded-xl bg-[#FAF8F5] hover:bg-stone-200 disabled:opacity-25 disabled:cursor-not-allowed border-[1.5px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 cursor-pointer"
           >
             <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
           </button>
@@ -86,28 +85,10 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
             type="button"
             onClick={() => onAddWater(250)}
             title="Добавить 250 мл (1 стакан)"
-            className="px-2 py-1 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white border border-[#24201D] text-[11px] font-black shadow-2xs active:scale-95 cursor-pointer font-display flex items-center gap-0.5"
+            className="h-8 px-3 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white border-[1.5px] border-[#24201D] text-xs font-black shadow-2xs active:scale-95 cursor-pointer font-display flex items-center gap-1"
           >
-            <Plus className="w-3 h-3 stroke-[3]" />
-            250
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onAddWater(500)}
-            title="Добавить 500 мл (бутылка 0.5л)"
-            className="px-2 py-1 rounded-lg bg-white hover:bg-sky-50 text-[#0284C7] border border-[#24201D] text-[11px] font-black shadow-2xs active:scale-95 cursor-pointer font-display"
-          >
-            +500
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onAddWater(1000)}
-            title="Добавить 1000 мл (1 литр)"
-            className="px-2 py-1 rounded-lg bg-white hover:bg-sky-50 text-[#0284C7] border border-[#24201D] text-[11px] font-black shadow-2xs active:scale-95 cursor-pointer font-display hidden sm:block"
-          >
-            +1л
+            <Plus className="w-3.5 h-3.5 stroke-[3]" />
+            250 мл
           </button>
         </div>
       </div>
@@ -181,20 +162,6 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
             </button>
           );
         })}
-      </div>
-
-      {/* 5. Mobile +1L Quick Button Footer */}
-      <div className="flex items-center justify-between sm:hidden pt-0.5">
-        <span className="text-[10px] text-[#6B635B] font-medium">
-          💡 Нажмите на стакан для быстрого заполнения
-        </span>
-        <button
-          type="button"
-          onClick={() => onAddWater(1000)}
-          className="px-2 py-0.5 rounded-md bg-[#E0F2FE] hover:bg-sky-200 text-[#0284C7] border border-[#24201D] text-[10px] font-black font-display cursor-pointer"
-        >
-          +1 литр
-        </button>
       </div>
     </div>
   );

@@ -41,12 +41,13 @@ function stationToTrack(station: RadioStation): Track {
     artist: station.subtitle || '24/7 Lofi Live Radio',
     duration: 'LIVE',
     coverUrl: station.thumbnailUrl,
-    audioUrl: `https://www.youtube.com/watch?v=${station.videoId}`,
+    audioUrl: station.streamUrl || (station.videoId ? `https://www.youtube.com/watch?v=${station.videoId}` : ''),
   };
 }
 
 class MusicPlayerService {
   private ytPlayer: any = null;
+  private audio: HTMLAudioElement | null = null;
   private isPlayerReady: boolean = false;
   private pendingPlay: boolean = false;
   private userIntentPlay: boolean = false;
@@ -63,7 +64,7 @@ class MusicPlayerService {
 
     if (typeof window !== 'undefined') {
       try {
-        // Prevent visibilitychange from pausing YouTube iframe when app is minimized or screen is locked
+        // Prevent visibilitychange from pausing media when app is minimized or screen is locked
         window.addEventListener('visibilitychange', (e) => {
           e.stopImmediatePropagation();
         }, true);
@@ -86,11 +87,16 @@ class MusicPlayerService {
         if (activeStationsRaw) {
           const parsed = JSON.parse(activeStationsRaw);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            // Migrate any outdated preset video IDs (e.g. jfKfPfyJRdk -> rFZHOHl-L8A)
+            // Migrate presets to ensure streamUrl & latest video IDs are present
             initialStations = parsed.map((station: RadioStation) => {
               const defaultPreset = PRESET_STATIONS.find(p => p.id === station.id);
               if (defaultPreset) {
-                return { ...station, videoId: defaultPreset.videoId, isLive: defaultPreset.isLive };
+                return {
+                  ...station,
+                  streamUrl: defaultPreset.streamUrl,
+                  videoId: defaultPreset.videoId,
+                  isLive: defaultPreset.isLive,
+                };
               }
               return station;
             });
@@ -150,12 +156,77 @@ class MusicPlayerService {
     };
 
     if (typeof window !== 'undefined') {
+      (window as any).__onNativeAudioState = (isPlaying: boolean, isBuffering: boolean) => {
+        this.state.isPlaying = isPlaying;
+        this.state.isBuffering = isBuffering;
+        this.notify();
+      };
+      (window as any).__sumireTogglePlay = () => {
+        this.togglePlay();
+      };
+      (window as any).__sumireNextTrack = () => {
+        this.nextStation();
+      };
+      (window as any).__sumirePrevTrack = () => {
+        this.previousStation();
+      };
+
       if (document.readyState === 'complete') {
         this.initYouTubeApi();
       } else {
         window.addEventListener('load', () => this.initYouTubeApi(), { once: true });
       }
     }
+  }
+
+  private initAudio(): HTMLAudioElement {
+    if (this.audio) return this.audio;
+    const audio = new Audio();
+    audio.preload = 'auto';
+
+    audio.addEventListener('play', () => {
+      this.state.isPlaying = true;
+      this.state.isBuffering = false;
+      this.syncMediaSession();
+      this.syncNativeNotification();
+      this.notify();
+    });
+
+    audio.addEventListener('pause', () => {
+      if (this.userIntentPlay) {
+        // System / minimization blur event attempted to pause stream
+        setTimeout(() => {
+          if (this.userIntentPlay && this.audio && this.audio.paused) {
+            this.audio.play().catch(() => {});
+          }
+        }, 50);
+        return;
+      }
+      this.state.isPlaying = false;
+      this.syncMediaSession();
+      this.syncNativeNotification();
+      this.notify();
+    });
+
+    audio.addEventListener('waiting', () => {
+      this.state.isBuffering = true;
+      this.notify();
+    });
+
+    audio.addEventListener('playing', () => {
+      this.state.isBuffering = false;
+      this.state.isPlaying = true;
+      this.notify();
+    });
+
+    audio.addEventListener('error', (e) => {
+      console.warn('[Sumire Radio] Native audio stream error:', e);
+      this.state.isBuffering = false;
+      this.notify();
+    });
+
+    this.audio = audio;
+    return audio;
   }
 
   private getOrCreateHostContainer(): HTMLElement {
@@ -233,10 +304,11 @@ class MusicPlayerService {
     if (!target) return;
 
     try {
+      const initialVid = this.state.currentStation.videoId || 'tRsQsTMvPNg';
       this.ytPlayer = new (window as any).YT.Player('sumire-yt-player-target', {
         height: '100%',
         width: '100%',
-        videoId: this.state.currentStation.videoId,
+        videoId: initialVid,
         playerVars: {
           autoplay: 0,
           controls: 0,
@@ -276,9 +348,8 @@ class MusicPlayerService {
               this.syncNativeNotification();
               this.notify();
             } else if (event.data === YT.PlayerState.PAUSED) {
-              if (this.userIntentPlay) {
-                // Device minimization or visibility change attempted to pause stream
-                // Automatically resume playback immediately
+              if (this.userIntentPlay && !this.state.currentStation.streamUrl) {
+                // Background minimize or visibility change attempted to pause stream
                 setTimeout(() => {
                   if (this.userIntentPlay && this.ytPlayer) {
                     try {
@@ -376,6 +447,46 @@ class MusicPlayerService {
 
   public play() {
     this.userIntentPlay = true;
+
+    // 1. Android Native MediaPlayer (runs outside WebView in Android OS media framework, 0% drop on background/lock)
+    const nativeMedia = typeof window !== 'undefined' ? (window as any).AndroidMediaNotification : null;
+    if (nativeMedia && typeof nativeMedia.playStream === 'function' && this.state.currentStation.streamUrl) {
+      try {
+        nativeMedia.setVolume(this.state.isMuted ? 0 : this.state.volume / 100);
+        nativeMedia.playStream(
+          this.state.currentStation.streamUrl,
+          this.state.currentStation.name,
+          this.state.currentStation.subtitle || '24/7 Lofi Live Radio'
+        );
+        this.state.isPlaying = true;
+        this.syncMediaSession();
+        this.notify();
+        return;
+      } catch (e) {
+        console.warn('[Sumire Radio] Android native audio failed, falling back to HTML5 audio:', e);
+      }
+    }
+
+    // 2. Direct audio stream (100% background playback in mobile WebView & screen lock)
+    if (this.state.currentStation.streamUrl) {
+      const audio = this.initAudio();
+      if (!audio.src || !audio.src.includes(this.state.currentStation.streamUrl)) {
+        audio.src = this.state.currentStation.streamUrl;
+      }
+      audio.volume = this.state.isMuted ? 0 : this.state.volume / 100;
+      audio.play().then(() => {
+        this.state.isPlaying = true;
+        this.syncMediaSession();
+        this.syncNativeNotification();
+        this.notify();
+      }).catch(() => {
+        this.state.isPlaying = false;
+        this.notify();
+      });
+      return;
+    }
+
+    // 3. YouTube playback
     if (!this.ytPlayer || !this.isPlayerReady) {
       this.pendingPlay = true;
       this.state.isPlaying = true;
@@ -398,6 +509,16 @@ class MusicPlayerService {
 
   public pause() {
     this.userIntentPlay = false;
+
+    const nativeMedia = typeof window !== 'undefined' ? (window as any).AndroidMediaNotification : null;
+    if (nativeMedia && typeof nativeMedia.pauseAudio === 'function') {
+      try { nativeMedia.pauseAudio(); } catch {}
+    }
+
+    if (this.audio) {
+      try { this.audio.pause(); } catch {}
+    }
+
     if (this.ytPlayer && this.isPlayerReady) {
       try {
         this.ytPlayer.pauseVideo();
@@ -428,23 +549,25 @@ class MusicPlayerService {
       localStorage.setItem('kairo_radio_current_station_id', station.id);
     }
 
+    // Stop current audio and video players
+    const nativeMedia = typeof window !== 'undefined' ? (window as any).AndroidMediaNotification : null;
+    if (nativeMedia && typeof nativeMedia.stopAudio === 'function') {
+      try { nativeMedia.stopAudio(); } catch {}
+    }
+    if (this.audio) {
+      try { this.audio.pause(); } catch {}
+    }
     if (this.ytPlayer && this.isPlayerReady) {
-      try {
-        if (autoPlay) {
-          this.ytPlayer.loadVideoById(station.videoId);
-          this.state.isPlaying = true;
-        } else {
-          this.ytPlayer.cueVideoById(station.videoId);
-        }
-      } catch {}
-    } else if (autoPlay) {
-      this.pendingPlay = true;
-      this.initYouTubeApi();
+      try { this.ytPlayer.pauseVideo(); } catch {}
     }
 
-    this.syncMediaSession();
-    this.syncNativeNotification();
-    this.notify();
+    if (autoPlay) {
+      this.play();
+    } else {
+      this.syncMediaSession();
+      this.syncNativeNotification();
+      this.notify();
+    }
   }
 
   public nextStation() {
@@ -470,6 +593,21 @@ class MusicPlayerService {
   public setVolume(vol: number) {
     const clamped = Math.max(0, Math.min(100, Math.round(vol)));
     this.state.volume = clamped;
+
+    const nativeMedia = typeof window !== 'undefined' ? (window as any).AndroidMediaNotification : null;
+    if (nativeMedia && typeof nativeMedia.setVolume === 'function') {
+      try { nativeMedia.setVolume(this.state.isMuted ? 0 : clamped / 100); } catch {}
+    }
+
+    if (this.audio) {
+      this.audio.volume = clamped / 100;
+      if (clamped === 0) {
+        this.audio.muted = true;
+      } else if (this.state.isMuted) {
+        this.audio.muted = false;
+      }
+    }
+
     if (this.ytPlayer && this.isPlayerReady) {
       try {
         this.ytPlayer.setVolume(clamped);
@@ -489,36 +627,59 @@ class MusicPlayerService {
   }
 
   public toggleMute() {
+    this.state.isMuted = !this.state.isMuted;
+
+    const nativeMedia = typeof window !== 'undefined' ? (window as any).AndroidMediaNotification : null;
+    if (nativeMedia && typeof nativeMedia.setVolume === 'function') {
+      try { nativeMedia.setVolume(this.state.isMuted ? 0 : this.state.volume / 100); } catch {}
+    }
+
+    if (this.audio) {
+      this.audio.muted = this.state.isMuted;
+    }
+
     if (this.ytPlayer && this.isPlayerReady) {
       try {
         if (this.state.isMuted) {
-          this.ytPlayer.unMute();
-          this.state.isMuted = false;
-        } else {
           this.ytPlayer.mute();
-          this.state.isMuted = true;
+        } else {
+          this.ytPlayer.unMute();
         }
       } catch {}
-    } else {
-      this.state.isMuted = !this.state.isMuted;
     }
     this.notify();
   }
 
   public addCustomStation(urlOrId: string, name?: string): boolean {
-    const videoId = extractYouTubeId(urlOrId);
-    if (!videoId) return false;
+    const trimmed = urlOrId.trim();
+    const videoId = extractYouTubeId(trimmed);
 
+    let station: RadioStation;
     const stationName = name?.trim() || `Custom Radio #${this.state.stations.length + 1}`;
-    const station: RadioStation = {
-      id: `custom-${Date.now()}`,
-      name: stationName,
-      subtitle: 'YouTube Live Stream',
-      videoId,
-      thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
-      isLive: true,
-      isCustom: true,
-    };
+
+    if (videoId) {
+      station = {
+        id: `custom-${Date.now()}`,
+        name: stationName,
+        subtitle: 'YouTube Live Stream',
+        videoId,
+        thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        isLive: true,
+        isCustom: true,
+      };
+    } else if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      station = {
+        id: `custom-${Date.now()}`,
+        name: stationName,
+        subtitle: '24/7 Live Audio Stream',
+        streamUrl: trimmed,
+        thumbnailUrl: '/icon-192x192.png',
+        isLive: true,
+        isCustom: true,
+      };
+    } else {
+      return false;
+    }
 
     const updated = [...this.state.stations, station];
     this.state.stations = updated;

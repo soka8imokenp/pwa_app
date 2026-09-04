@@ -1,14 +1,14 @@
 {
-  "version": "1.8.70",
-  "buildNumber": 74,
+  "version": "1.8.71",
+  "buildNumber": 75,
   "releaseDate": "2026-09-04",
   "changelog": [
-    "Full English localization for Lofi Radio player",
-    "Stations toggle button without count indicator",
-    "Removed YouTube external link to prevent accidental navigation",
-    "Enabled continuous background audio playback when app is minimized and locked (WakeLock + WebView resume + visibility override)"
+    "Native Android MediaPlayer engine for continuous 24/7 background radio streaming",
+    "Removed red blinking ping indicator next to station in Zen Mode",
+    "Added high-reliability direct audio streams (Claude FM, Lofi Girl, Chillhop, Synthwave)",
+    "Lock screen play/pause/prev/next controls with instant hardware response"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.70/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.71/Daily-Sumire-app-debug.apk"
 }
 
 

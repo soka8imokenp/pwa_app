@@ -143,12 +143,7 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
             </div>
 
             <div className="min-w-0 text-left flex-1">
-              <div className="flex items-center gap-1.5">
-                <p className="text-xs font-bold text-[#24201D] truncate">{currentTrack.title}</p>
-                {isMusicPlaying && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#E15A46] animate-ping shrink-0" />
-                )}
-              </div>
+              <p className="text-xs font-bold text-[#24201D] truncate">{currentTrack.title}</p>
               <p className="text-[10px] text-[#6B635B] font-medium truncate">{currentTrack.artist}</p>
             </div>
 

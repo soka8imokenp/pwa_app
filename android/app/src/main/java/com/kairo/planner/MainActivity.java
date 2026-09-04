@@ -12,9 +12,12 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.media.AudioAttributes;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.provider.Settings;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -58,14 +61,20 @@ public class MainActivity extends BridgeActivity {
     private NotificationManager notificationManager;
     private MediaReceiver mediaReceiver;
     private boolean isAudioPlaying = false;
-    private android.os.PowerManager.WakeLock wakeLock;
+    private PowerManager.WakeLock wakeLock;
+
+    // Native MediaPlayer for continuous 24/7 background audio playback
+    private MediaPlayer nativeMediaPlayer;
+    private String currentStreamUrl = null;
+    private float currentVolume = 1.0f;
+    private boolean isNativePrepared = false;
 
     private void acquireWakeLock() {
         try {
             if (wakeLock == null) {
-                android.os.PowerManager pm = (android.os.PowerManager) getSystemService(Context.POWER_SERVICE);
+                PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
                 if (pm != null) {
-                    wakeLock = pm.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "DailySumire:AudioPlaybackWakeLock");
+                    wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DailySumire:AudioPlaybackWakeLock");
                 }
             }
             if (wakeLock != null && !wakeLock.isHeld()) {
@@ -80,6 +89,144 @@ public class MainActivity extends BridgeActivity {
                 wakeLock.release();
             }
         } catch (Exception ignored) {}
+    }
+
+    public void startNativeAudio(String streamUrl, String title, String artist) {
+        try {
+            acquireWakeLock();
+            this.isAudioPlaying = true;
+            showMediaNotification(title, artist, true);
+
+            if (nativeMediaPlayer == null) {
+                nativeMediaPlayer = new MediaPlayer();
+                nativeMediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+                nativeMediaPlayer.setAudioAttributes(
+                    new AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .build()
+                );
+            }
+
+            if (streamUrl != null && streamUrl.equals(currentStreamUrl) && isNativePrepared) {
+                nativeMediaPlayer.setVolume(currentVolume, currentVolume);
+                nativeMediaPlayer.start();
+                notifyJsAudioState(true, false);
+                return;
+            }
+
+            currentStreamUrl = streamUrl;
+            isNativePrepared = false;
+            nativeMediaPlayer.reset();
+            nativeMediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+            nativeMediaPlayer.setAudioAttributes(
+                new AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .build()
+            );
+            nativeMediaPlayer.setDataSource(streamUrl);
+            notifyJsAudioState(false, true); // buffering
+
+            nativeMediaPlayer.setOnPreparedListener(mp -> {
+                isNativePrepared = true;
+                mp.setVolume(currentVolume, currentVolume);
+                mp.start();
+                notifyJsAudioState(true, false);
+            });
+
+            nativeMediaPlayer.setOnErrorListener((mp, what, extra) -> {
+                isNativePrepared = false;
+                notifyJsAudioState(false, false);
+                return true;
+            });
+
+            nativeMediaPlayer.prepareAsync();
+        } catch (Exception e) {
+            e.printStackTrace();
+            notifyJsAudioState(false, false);
+        }
+    }
+
+    public void pauseNativeAudio() {
+        try {
+            if (nativeMediaPlayer != null && nativeMediaPlayer.isPlaying()) {
+                nativeMediaPlayer.pause();
+            }
+            this.isAudioPlaying = false;
+            releaseWakeLock();
+            if (mediaSession != null && mediaSession.getController() != null && mediaSession.getController().getMetadata() != null) {
+                String title = mediaSession.getController().getMetadata().getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+                String artist = mediaSession.getController().getMetadata().getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
+                showMediaNotification(title != null ? title : "Claude FM", artist != null ? artist : "Lofi Live Radio", false);
+            }
+            notifyJsAudioState(false, false);
+        } catch (Exception ignored) {}
+    }
+
+    public void resumeNativeAudio() {
+        try {
+            acquireWakeLock();
+            this.isAudioPlaying = true;
+            if (nativeMediaPlayer != null && isNativePrepared) {
+                nativeMediaPlayer.start();
+                if (mediaSession != null && mediaSession.getController() != null && mediaSession.getController().getMetadata() != null) {
+                    String title = mediaSession.getController().getMetadata().getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+                    String artist = mediaSession.getController().getMetadata().getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
+                    showMediaNotification(title != null ? title : "Claude FM", artist != null ? artist : "Lofi Live Radio", true);
+                }
+                notifyJsAudioState(true, false);
+            } else if (currentStreamUrl != null) {
+                String title = "Claude FM";
+                String artist = "Lofi Live Radio";
+                if (mediaSession != null && mediaSession.getController() != null && mediaSession.getController().getMetadata() != null) {
+                    String t = mediaSession.getController().getMetadata().getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+                    String a = mediaSession.getController().getMetadata().getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
+                    if (t != null) title = t;
+                    if (a != null) artist = a;
+                }
+                startNativeAudio(currentStreamUrl, title, artist);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public void stopNativeAudio() {
+        try {
+            this.isAudioPlaying = false;
+            releaseWakeLock();
+            if (nativeMediaPlayer != null) {
+                try {
+                    if (nativeMediaPlayer.isPlaying()) {
+                        nativeMediaPlayer.stop();
+                    }
+                    nativeMediaPlayer.reset();
+                } catch (Exception ignored) {}
+            }
+            isNativePrepared = false;
+            currentStreamUrl = null;
+        } catch (Exception ignored) {}
+    }
+
+    public void setNativeVolume(float volume) {
+        this.currentVolume = Math.max(0.0f, Math.min(1.0f, volume));
+        try {
+            if (nativeMediaPlayer != null) {
+                nativeMediaPlayer.setVolume(currentVolume, currentVolume);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private void notifyJsAudioState(boolean isPlaying, boolean isBuffering) {
+        runOnUiThread(() -> {
+            try {
+                if (getBridge() != null && getBridge().getWebView() != null) {
+                    getBridge().getWebView().evaluateJavascript(
+                        "window.__onNativeAudioState && window.__onNativeAudioState(" + isPlaying + ", " + isBuffering + ");",
+                        null
+                    );
+                }
+            } catch (Exception ignored) {}
+        });
     }
 
     @Override
@@ -136,6 +283,13 @@ public class MainActivity extends BridgeActivity {
     public void onDestroy() {
         super.onDestroy();
         try {
+            stopNativeAudio();
+            if (nativeMediaPlayer != null) {
+                try {
+                    nativeMediaPlayer.release();
+                } catch (Exception ignored) {}
+                nativeMediaPlayer = null;
+            }
             releaseWakeLock();
             if (mediaReceiver != null) {
                 unregisterReceiver(mediaReceiver);
@@ -401,12 +555,48 @@ public class MainActivity extends BridgeActivity {
     public class MediaJsInterface {
         @JavascriptInterface
         public void updateMedia(String title, String artist, boolean isPlaying) {
-            runOnUiThread(() -> showMediaNotification(title, artist, isPlaying));
+            runOnUiThread(() -> {
+                MainActivity.this.isAudioPlaying = isPlaying;
+                if (isPlaying) {
+                    acquireWakeLock();
+                } else {
+                    releaseWakeLock();
+                }
+                showMediaNotification(title, artist, isPlaying);
+            });
         }
 
         @JavascriptInterface
         public void clearMedia() {
-            runOnUiThread(() -> cancelMediaNotification());
+            runOnUiThread(() -> {
+                stopNativeAudio();
+                cancelMediaNotification();
+            });
+        }
+
+        @JavascriptInterface
+        public void playStream(String streamUrl, String title, String artist) {
+            runOnUiThread(() -> startNativeAudio(streamUrl, title, artist));
+        }
+
+        @JavascriptInterface
+        public void pauseAudio() {
+            runOnUiThread(() -> pauseNativeAudio());
+        }
+
+        @JavascriptInterface
+        public void resumeAudio() {
+            runOnUiThread(() -> resumeNativeAudio());
+        }
+
+        @JavascriptInterface
+        public void stopAudio() {
+            runOnUiThread(() -> stopNativeAudio());
+        }
+
+        @JavascriptInterface
+        public void setVolume(float volume) {
+            runOnUiThread(() -> setNativeVolume(volume));
         }
     }
 
@@ -665,14 +855,23 @@ public class MainActivity extends BridgeActivity {
 
             runOnUiThread(() -> {
                 try {
-                    if (getBridge() != null && getBridge().getWebView() != null) {
-                        WebView webView = getBridge().getWebView();
-                        if (ACTION_PLAY_PAUSE.equals(action)) {
-                            webView.evaluateJavascript("window.__sumireTogglePlay && window.__sumireTogglePlay();", null);
-                        } else if (ACTION_PREV.equals(action)) {
-                            webView.evaluateJavascript("window.__sumirePrevTrack && window.__sumirePrevTrack();", null);
-                        } else if (ACTION_NEXT.equals(action)) {
-                            webView.evaluateJavascript("window.__sumireNextTrack && window.__sumireNextTrack();", null);
+                    if (ACTION_PLAY_PAUSE.equals(action)) {
+                        if (nativeMediaPlayer != null && isNativePrepared) {
+                            if (nativeMediaPlayer.isPlaying()) {
+                                pauseNativeAudio();
+                            } else {
+                                resumeNativeAudio();
+                            }
+                        } else if (getBridge() != null && getBridge().getWebView() != null) {
+                            getBridge().getWebView().evaluateJavascript("window.__sumireTogglePlay && window.__sumireTogglePlay();", null);
+                        }
+                    } else if (ACTION_PREV.equals(action)) {
+                        if (getBridge() != null && getBridge().getWebView() != null) {
+                            getBridge().getWebView().evaluateJavascript("window.__sumirePrevTrack && window.__sumirePrevTrack();", null);
+                        }
+                    } else if (ACTION_NEXT.equals(action)) {
+                        if (getBridge() != null && getBridge().getWebView() != null) {
+                            getBridge().getWebView().evaluateJavascript("window.__sumireNextTrack && window.__sumireNextTrack();", null);
                         }
                     }
                 } catch (Exception ignored) {}

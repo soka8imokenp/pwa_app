@@ -11,20 +11,20 @@ export function useHealthData(selectedDate: string) {
 
   const allWeightLogs = useLiveQuery(() => db.weightLogs.orderBy('date').toArray(), []) || [];
   
-  const allMealLogs = useLiveQuery(() => db.mealLogs.toArray(), []) || [];
-  const todaysMeals = useMemo(() => {
-    return allMealLogs.filter((m) => m.date === selectedDate);
-  }, [allMealLogs, selectedDate]);
+  const todaysMeals = useLiveQuery(
+    () => db.mealLogs.where('date').equals(selectedDate).toArray(),
+    [selectedDate]
+  ) || [];
 
-  const allWaterLogs = useLiveQuery(() => db.waterLogs.toArray(), []) || [];
-  const todaysWaterLogs = useMemo(() => {
-    return allWaterLogs.filter((w) => w.date === selectedDate);
-  }, [allWaterLogs, selectedDate]);
+  const todaysWaterLogs = useLiveQuery(
+    () => db.waterLogs.where('date').equals(selectedDate).toArray(),
+    [selectedDate]
+  ) || [];
 
-  const allWorkouts = useLiveQuery(() => db.workoutLogs.toArray(), []) || [];
-  const todaysWorkouts = useMemo(() => {
-    return allWorkouts.filter((w) => w.date === selectedDate);
-  }, [allWorkouts, selectedDate]);
+  const todaysWorkouts = useLiveQuery(
+    () => db.workoutLogs.where('date').equals(selectedDate).toArray(),
+    [selectedDate]
+  ) || [];
 
   // 2. Computed Metrics
   const metrics = useMemo(() => {

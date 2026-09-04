@@ -79,8 +79,14 @@ export const syncApi = {
     apiRequest<{
       tasks: any[];
       habits: any[];
+      habitLogs?: any[];
       focusSessions: any[];
       links: any[];
+      healthProfile?: any;
+      weightLogs?: any[];
+      mealLogs?: any[];
+      waterLogs?: any[];
+      workoutLogs?: any[];
       serverTimestamp: number;
     }>(`/sync/pull${sinceTimestamp ? `?since=${sinceTimestamp}` : ''}`, {
       method: 'GET',

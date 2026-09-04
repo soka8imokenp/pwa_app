@@ -26,6 +26,12 @@ model User {
   focusSessions FocusSession[]
   links        Link[]
   pushSubs     PushSubscription[]
+
+  healthProfile HealthProfile?
+  weightLogs    WeightLog[]
+  mealLogs      MealLog[]
+  waterLogs     WaterLog[]
+  workoutLogs   WorkoutLog[]
 }
 
 model Task {
@@ -99,6 +105,7 @@ model FocusSession {
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   task            Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull)
 
+  @@unique([userId, completedAt])
   @@index([userId, date])
 }
 
@@ -129,4 +136,89 @@ model PushSubscription {
   createdAt DateTime @default(now())
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model HealthProfile {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  age           Int      @default(25)
+  gender        String   @default("male")
+  height        Float    @default(178.0)
+  currentWeight Float    @default(75.5)
+  targetWeight  Float    @default(72.0)
+  waistCm       Float?
+  activityLevel String   @default("moderate")
+  goal          String   @default("maintain")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WeightLog {
+  id                 String   @id @default(uuid())
+  userId             String
+  date               String   // yyyy-MM-dd
+  weight             Float
+  bmi                Float
+  bodyFatPercentage  Float?
+  waistCm            Float?
+  note               String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+model MealLog {
+  id           String   @id @default(uuid())
+  userId       String
+  date         String   // yyyy-MM-dd
+  name         String
+  mealType     String   // breakfast, lunch, dinner, snack
+  kcal         Int
+  proteinGrams Float
+  carbsGrams   Float
+  fatGrams     Float
+  time         String?
+  aiEstimated  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+model WaterLog {
+  id        String   @id @default(uuid())
+  userId    String
+  date      String   // yyyy-MM-dd
+  amountMl  Int      // e.g. 250
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+model WorkoutLog {
+  id              String   @id @default(uuid())
+  userId          String
+  date            String   // yyyy-MM-dd
+  title           String
+  category        String   // gym, cardio, run, walk, stretch, sports
+  durationMinutes Int
+  caloriesBurned  Int?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
 }

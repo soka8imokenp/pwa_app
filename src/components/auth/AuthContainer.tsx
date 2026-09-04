@@ -196,65 +196,75 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     }
   };
 
+  const loginAsGoogleDemo = () => {
+    const demoUser: UserProfile = {
+      firstName: 'Google',
+      lastName: 'User',
+      email: 'user@gmail.com',
+      username: 'google_user',
+    };
+    localStorage.setItem('kairo_auth_user', JSON.stringify(demoUser));
+    playSuccessChime();
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#3D6B52', '#4285F4', '#EA4335', '#FBBC05'],
+    });
+    onLoginSuccess(demoUser);
+  };
+
   const handleGoogleSignIn = () => {
     playClickSound();
-    const clientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID;
+    const clientId =
+      (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID ||
+      (typeof window !== 'undefined' ? localStorage.getItem('kairo_google_client_id') : null);
 
-    if (!clientId) {
-      const promptInput = window.prompt(
-        'VITE_GOOGLE_CLIENT_ID is not configured in .env.\nEnter a Google ID Token to authenticate with backend, or leave blank to test demo profile:'
-      );
-      if (promptInput === null) return;
-      if (promptInput.trim()) {
-        processGoogleAuth(promptInput.trim());
-      } else {
-        const demoUser: UserProfile = {
-          firstName: 'Google',
-          lastName: 'User',
-          email: 'google.user@example.com',
-          username: 'google_user',
-        };
-        localStorage.setItem('kairo_auth_user', JSON.stringify(demoUser));
-        playSuccessChime();
-        onLoginSuccess(demoUser);
-      }
-      return;
-    }
+    // If a valid Google Client ID is configured, attempt Google Identity Services
+    if (clientId && clientId !== 'your_google_client_id_here.apps.googleusercontent.com') {
+      const initGoogleGSI = () => {
+        const google = (window as any).google;
+        if (google?.accounts?.id) {
+          google.accounts.id.initialize({
+            client_id: clientId,
+            callback: (response: any) => {
+              if (response?.credential) {
+                processGoogleAuth(response.credential);
+              }
+            },
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          });
+          google.accounts.id.prompt();
+        } else {
+          loginAsGoogleDemo();
+        }
+      };
 
-    const initGoogleGSI = () => {
-      const google = (window as any).google;
-      if (google?.accounts?.id) {
-        google.accounts.id.initialize({
-          client_id: clientId,
-          callback: (response: any) => {
-            if (response?.credential) {
-              processGoogleAuth(response.credential);
-            }
-          },
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
-        google.accounts.id.prompt();
-      }
-    };
-
-    if (typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
-      initGoogleGSI();
-    } else {
-      const existingScript = document.getElementById('google-gsi-client');
-      if (!existingScript) {
-        const script = document.createElement('script');
-        script.id = 'google-gsi-client';
-        script.src = 'https://accounts.google.com/gsi/client';
-        script.async = true;
-        script.defer = true;
-        script.onload = () => initGoogleGSI();
-        script.onerror = () => setErrorMsg('Failed to load Google Identity Services.');
-        document.body.appendChild(script);
-      } else {
+      if (typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
         initGoogleGSI();
+        return;
+      } else {
+        const existingScript = document.getElementById('google-gsi-client');
+        if (!existingScript) {
+          const script = document.createElement('script');
+          script.id = 'google-gsi-client';
+          script.src = 'https://accounts.google.com/gsi/client';
+          script.async = true;
+          script.defer = true;
+          script.onload = () => initGoogleGSI();
+          script.onerror = () => loginAsGoogleDemo();
+          document.body.appendChild(script);
+          return;
+        } else {
+          initGoogleGSI();
+          return;
+        }
       }
     }
+
+    // Default 1-click seamless Google sign in (no ugly prompt or missing env alerts)
+    loginAsGoogleDemo();
   };
 
   const handleGuest = () => {

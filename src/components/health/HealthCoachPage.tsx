@@ -390,7 +390,7 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
   return (
     <div className="w-full space-y-3 pb-3 font-body select-none">
       {/* 1. Streamlined Sumire AI Assistant Header */}
-      <div className="p-3.5 sm:p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5">
+      <div className="p-3.5 sm:p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
             {/* Signature Sumire Avatar SVG */}
@@ -414,15 +414,9 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
             </div>
 
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D] truncate">
-                  Sumire AI Assistant
-                </h3>
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#DDE8DE] border border-[#2D503C]/20 text-[9px] font-black text-[#2D503C] uppercase tracking-wider font-display shrink-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Ready
-                </span>
-              </div>
+              <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D] truncate">
+                Sumire AI Assistant
+              </h3>
               <p className="text-[10px] font-bold text-[#6B635B] truncate">
                 Nutrition vision • Voice logging • Smart intake sync
               </p>
@@ -435,42 +429,11 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
               type="button"
               onClick={handleClearHistory}
               title="Clear chat history"
-              className="p-1.5 rounded-xl bg-[#FAF8F5] hover:bg-stone-200 border-[1.5px] border-[#24201D] text-[#24201D] shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
+              className="p-2 rounded-xl bg-[#FAF8F5] hover:bg-stone-200 border-[1.5px] border-[#24201D] text-[#24201D] shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
             >
-              <RotateCcw className="w-3.5 h-3.5 stroke-[2.25]" />
-            </button>
-
-            {/* Language Switcher Pill */}
-            <button
-              type="button"
-              onClick={cycleVoiceLang}
-              title={`Voice input language: ${voiceLang.toUpperCase()}. Tap to toggle.`}
-              className="px-2 py-1 rounded-xl bg-[#FAF8F5] hover:bg-stone-200 border-[1.5px] border-[#24201D] text-[10px] font-black font-mono-num text-[#24201D] shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
-            >
-              {getVoiceLanguageBadge(voiceLang)}
+              <RotateCcw className="w-4 h-4 stroke-[2.25]" />
             </button>
           </div>
-        </div>
-
-        {/* Clean Context Telemetry Bar */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-none text-[10px] font-bold text-[#6B635B]">
-          <div className="px-2.5 py-1 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center gap-1.5 shrink-0 shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span className="text-[#24201D] font-mono-num font-black">{todaysTotalKcal}</span> / {metrics.targetDailyCalories} kcal
-          </div>
-          <div className="px-2.5 py-1 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center gap-1.5 shrink-0 shadow-2xs">
-            <span>Protein:</span>
-            <span className="text-[#24201D] font-mono-num font-black">{todaysProteinGrams}</span> / {metrics.targetProteinGrams}g
-          </div>
-          <div className="px-2.5 py-1 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center gap-1.5 shrink-0 shadow-2xs">
-            <span>Water:</span>
-            <span className="text-[#24201D] font-mono-num font-black">{(todaysWaterTotalMl / 1000).toFixed(1)}</span> / {(metrics.targetWaterMl / 1000).toFixed(1)}L
-          </div>
-          {todaysActiveCaloriesBurned > 0 && (
-            <div className="px-2.5 py-1 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center gap-1.5 shrink-0 shadow-2xs text-[#C25E40]">
-              <span>+{todaysActiveCaloriesBurned} kcal burned</span>
-            </div>
-          )}
         </div>
       </div>
 

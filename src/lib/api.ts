@@ -1,10 +1,16 @@
 // Frontend API Client for Backend REST & Sync Endpoints
 // Features: Silent Refresh Token Rotation, JWT Expiration Check, Proactive Auth, and Exponential Backoff Retry
 
-const API_BASE_URL =
-  typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? 'http://localhost:4000/api'
-    : '/api';
+export function getApiBaseUrl(): string {
+  if (typeof window === 'undefined') return '/api';
+  const custom = localStorage.getItem('kairo_server_url');
+  if (custom) return custom.replace(/\/$/, '') + '/api';
+  const envUrl = (import.meta as any).env?.VITE_API_BASE_URL;
+  if (envUrl) return envUrl.replace(/\/$/, '');
+  return '/api';
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 const AUTH_TOKEN_KEY = 'kairo_auth_token';
 const REFRESH_TOKEN_KEY = 'kairo_refresh_token';

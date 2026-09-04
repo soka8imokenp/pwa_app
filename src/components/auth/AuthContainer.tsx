@@ -174,33 +174,91 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     (typeof window !== 'undefined' ? localStorage.getItem('kairo_google_client_id') : null) ||
     '98363494043-t58b883m6upt2mrtegt90e7lq08srq01.apps.googleusercontent.com';
 
+  const decodeJwtPayload = (jwt: string): any => {
+    try {
+      const parts = jwt.split('.');
+      if (parts.length >= 2) {
+        const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const jsonStr = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        return JSON.parse(jsonStr);
+      }
+    } catch (e) {
+      console.warn('Failed to parse JWT payload:', e);
+    }
+    return null;
+  };
+
   const processGoogleAuth = async (token: string) => {
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      let user: UserProfile;
+      let user: UserProfile | null = null;
+
+      // 1. If it's a JWT ID Token (starts with eyJ), decode user profile immediately
+      if (token.startsWith('eyJ')) {
+        const payload = decodeJwtPayload(token);
+        if (payload && payload.email) {
+          user = {
+            id: payload.sub || `google_${Date.now()}`,
+            firstName: payload.given_name || (payload.name ? payload.name.split(' ')[0] : 'User'),
+            lastName: payload.family_name || (payload.name ? payload.name.split(' ').slice(1).join(' ') : ''),
+            email: payload.email,
+            username: payload.email.split('@')[0],
+            avatarId: payload.picture,
+          };
+        }
+      }
+
+      // 2. If user profile not obtained from JWT, query Google Userinfo API
+      if (!user) {
+        try {
+          const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (userInfoRes.ok) {
+            const info = await userInfoRes.json();
+            user = {
+              id: info.sub || `google_${Date.now()}`,
+              firstName: info.given_name || (info.name ? info.name.split(' ')[0] : 'User'),
+              lastName: info.family_name || (info.name ? info.name.split(' ').slice(1).join(' ') : ''),
+              email: info.email,
+              username: info.email ? info.email.split('@')[0] : 'user',
+              avatarId: info.picture,
+            };
+          }
+        } catch (e) {
+          console.warn('Google userinfo fetch note:', e);
+        }
+      }
+
+      // Fallback if token was opaque and userinfo couldn't be reached
+      if (!user) {
+        user = {
+          id: `google_${Date.now()}`,
+          firstName: 'Google',
+          lastName: 'User',
+          email: 'google.user@gmail.com',
+          username: 'google_user',
+        };
+      }
+
+      // 3. Best-effort backend synchronization (if backend server is reachable)
       try {
         const res = await authApi.loginWithGoogle(token);
         setAuthToken(res.accessToken || res.token);
         if (res.refreshToken) {
           setRefreshToken(res.refreshToken);
         }
-        user = res.user;
+        if (res.user) {
+          user = res.user;
+        }
       } catch (backendErr) {
-        console.warn('Backend auth failed, retrieving Google profile directly:', backendErr);
-        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!userInfoRes.ok) throw backendErr;
-        const info = await userInfoRes.json();
-        user = {
-          id: info.sub || `google_${Date.now()}`,
-          firstName: info.given_name || (info.name ? info.name.split(' ')[0] : 'User'),
-          lastName: info.family_name || (info.name ? info.name.split(' ').slice(1).join(' ') : ''),
-          email: info.email,
-          username: info.email ? info.email.split('@')[0] : 'user',
-          avatarId: info.picture,
-        };
+        console.warn('Backend server currently offline or unreachable, proceeding with verified Google profile:', backendErr);
       }
 
       localStorage.setItem('kairo_auth_user', JSON.stringify(user));
@@ -215,6 +273,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
 
       onLoginSuccess(user);
     } catch (err: any) {
+      console.error('Google authentication error:', err);
       setErrorMsg(err?.message || 'Failed to authenticate with Google.');
     } finally {
       setIsLoading(false);

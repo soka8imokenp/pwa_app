@@ -63,22 +63,27 @@ CHARACTER IDENTITY & BEHAVIORAL RULES:
   3. No empty trivial chitchat: If the user talks about completely unrelated random topics (e.g. abstract philosophy, celebrity gossip), bluntly yet politely prompt them to focus on their actual tasks, habits, productivity, or health goals.
 - Output Style: Crisp, articulate, helpful, strictly to the point, no fluff. NEVER use sparkles ("✨", "Sparkles") or spam unicode emojis.
 
-CRITICAL HYDRATION & BEVERAGE TRACKING RULE:
-- ANY time the user mentions drinking ANY beverage or liquid (water, tea, iced tea, Lipton, coffee, juice, soda, lemonade, energy drink, milk, protein shake, broth, soup):
-  YOU MUST ALWAYS LOG WATER HYDRATION using "log_water" with the exact or estimated amount in ml (e.g. "2 литра липтона" = 2000 ml; "стакан чая" = 250 ml; "бутылка 0.5" = 500 ml).
-- For caloric beverages (e.g. Lipton iced tea, juice, soda, milk):
-  1. "log_water" tracks the volume in ml.
-  2. For food calories/macros: FOLLOW THE MEAL CONFIRMATION RULE BELOW (ask before logging unless user explicitly gave a command to record it!).
-
-CRITICAL FOOD & MEAL LOGGING CONFIRMATION RULE (ASK FIRST!):
-- NEVER automatically log meals ("log_meal") into the database without the user's explicit command or confirmation!
-- When the user mentions eating food, snacks, caloric beverages, or sends a food photo WITHOUT an explicit command to save:
-  1. Analyze the meal, estimate the calories (kcal), and macronutrients (protein, fat, carbs).
-  2. ALWAYS ask the user first: "Хотите добавить это в ваш дневник питания?" (or in English: "Would you like me to log this meal into your tracker?").
-  3. ALWAYS emit a \`\`\`json:suggested_meal block at the end of your response with the estimated values (dish name strictly in ENGLISH).
-  4. DO NOT call the "log_meal" tool or emit "action": "log_meal" until the user explicitly commands to save it!
-- ONLY call "log_meal" when:
-  The user explicitly commanded you to save/record it (e.g. "запиши", "добавь в рацион", "введи в трекер", "зафиксируй", "log this", "save meal") or confirmed with "да, запиши" / "давай"!
+CRITICAL COACHING PROTOCOL & CONTEXT ANALYSIS (FOOD & HYDRATION):
+- Sumire is an observant scout-archivist and clinical health coach. NEVER give robotic, cold, or empty responses!
+- When the user asks a question, shares what they ate or drank (e.g. water, iced tea, soda, snacks, pizza), or discusses their diet:
+  1. CONTEXT ANALYSIS FIRST:
+     - Always analyze the context thoroughly and provide thoughtful, knowledgeable commentary.
+     - If the user asks a question (e.g. "Is 2L of Lipton fine?", "Can I drink soda?", "How will this affect my calories?"):
+       Answer the question with scientific and practical nuance first! Discuss hydration quality, electrolytes, caffeine/sugar, caloric impact, satiety, flexible dieting (IIFYM 80/20 rule), and healthy trade-offs.
+     - If the user shares what they consumed (e.g. "I drank 2L of iced tea", "Ate 2 slices of pizza"):
+       Provide meaningful commentary first (e.g. hydration volume, estimated caloric and macronutrient composition, how it fits into daily targets, tips for balancing later meals).
+     - STRICTLY FORBIDDEN: NEVER jump straight to "Would you like me to add this?" or give a bare confirmation offer without comments! Always provide your insightful analysis and commentary first.
+  2. OFFER TO LOG AT THE VERY END (ASK FIRST!):
+     - Only at the very END of your helpful commentary and analysis, ask politely:
+       "Хотите, я добавлю это в ваш трекер питания и гидратации?" (or in English: "Would you like me to log this into your daily tracker?").
+     - If food / caloric beverage was mentioned, emit a \`\`\`json:suggested_meal block at the end of your response with the estimated values (dish name strictly in ENGLISH).
+  3. STRICT CONFIRMATION MANDATE FOR DATABASE WRITES:
+     - NEVER automatically call "log_meal" or "log_water" to write to the database without the user's explicit command or confirmation!
+     - ONLY execute "log_water" or "log_meal" when:
+       a) The user explicitly commanded you to record it (e.g. "запиши 2л липтона", "добавь в рацион", "введи эти данные в трекер", "зафиксируй", "log this", "record meal/water"), OR
+       b) The user explicitly confirmed your previous offer (e.g. "да", "давай", "добавь", "хорошо", "ок", "yes", "sure", "please do").
+     - If the user is merely asking a question, chatting, sharing information, or has not given an explicit command:
+       DO NOT execute "log_water" and DO NOT execute "log_meal". Give your commentary and ask at the end.
 
 CRITICAL ENGLISH DATABASE MANDATE & DATA LOCALIZATION:
 - The entire application UI, database records, telemetry, and activity logs operate strictly in ENGLISH.
@@ -119,7 +124,7 @@ You have two ways to execute actions:
 Supported actions in json:action block:
 - "log_meal": { name: string (in English), kcal, proteinGrams, carbsGrams, fatGrams, mealType: "breakfast"|"lunch"|"dinner"|"snack", time?: "HH:MM" } (ONLY IF EXPLICITLY COMMANDED/CONFIRMED!)
 - "delete_meal": { name }
-- "log_water": { amountMl: number } (MUST be called for water, tea, Lipton, coffee, juices, and all beverages)
+- "log_water": { amountMl: number } (ONLY IF EXPLICITLY COMMANDED/CONFIRMED! Volume in ml)
 - "log_weight": { weight: number, note?: string }
 - "log_workout": { title: string (in English), durationMinutes: number, caloriesBurned?: number, category?: "strength"|"cardio"|"walk"|"hiit"|"yoga"|"sports" }
 - "create_task": { title: string (in English), isPriority?: boolean, category?: string, estimatedMinutes?: number, subtasks?: string[] }
@@ -319,6 +324,32 @@ export const AI_TOOLS = [
   },
 ];
 
+/**
+ * Detects if the user gave an explicit command or confirmed saving/logging items into their database.
+ * Avoids false positives from descriptive speech, past actions, or general nutrition inquiries.
+ */
+export function hasExplicitLogCommand(text: string): boolean {
+  if (!text) return false;
+  const trimmed = text.trim();
+
+  // Pure affirmative confirmation: "да", "давай", "ок", "хорошо", "ага", "yes", "sure", etc.
+  if (/^(?:да|давай|ок|окей|хорошо|конечно|ага|вводи|записывай|добавляй|yes|yeah|yep|sure|please do|ok|okay)[.!]?$/i.test(trimmed)) {
+    return true;
+  }
+
+  // Pure questions without action request: e.g. "почему ты добавляешь воду?", "это много сахара?", "можно пить липтон?"
+  if (trimmed.includes('?') && !/(?:можешь|можно|плиз|пожалуйста|запиши|добавь|введи|please|can you|could you|log|add)/i.test(trimmed)) {
+    return false;
+  }
+
+  // Imperative action patterns in Russian and English:
+  // "запиши", "записать", "введи", "добавь", "сохрани", "занеси", "зафиксируй", "внеси", "подтверждаю", "вбей", "log", "record", "save", "add", "track"
+  const imperativePattern =
+    /(?:запиш(?:и|ить|ите)|введ(?:и|ить|ите)|добав(?:ь|ить|ьте)|сохран(?:и|ить|ите)|занес(?:и|ти|ите)|зафиксир(?:уй|уйте|овать)|внес(?:и|ти|ите)|подтвержд(?:аю|ить)|вбе(?:й|йте|ить)|\blog\b|\brecord\b|\bsave\b|\btrack\b|\badd\b)/i;
+
+  return imperativePattern.test(trimmed);
+}
+
 export async function logMealDirectly(meal: EstimatedMealResult): Promise<void> {
   const now = new Date();
   const timeStr = meal.time || `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -337,6 +368,17 @@ export async function logMealDirectly(meal: EstimatedMealResult): Promise<void> 
     aiEstimated: true,
     createdAt: Date.now(),
   });
+
+  // If beverage or fluid intake was part of the suggested meal name (e.g. "Lipton Iced Tea 2L"), also log the water hydration volume!
+  const fluidMl = extractFluidIntakeMl(rawName) || extractFluidIntakeMl(englishName);
+  if (fluidMl && fluidMl > 0) {
+    await db.waterLogs.add({
+      date: getTodayString(),
+      amountMl: fluidMl,
+      createdAt: Date.now(),
+    });
+  }
+
   triggerTwoWaySync();
 }
 
@@ -377,9 +419,9 @@ async function executePlannerAction(
     // Explicit confirmation guard:
     // Do not automatically commit food to DB unless user explicitly commanded to save/log
     const query = context?.userQuery || '';
-    const hasExplicitIntent = /(?:запиш|введ|добав|сохран|занес|зафиксир|внес|подтвержд|давай|да\b|вбей|log\b|record\b|save\b|add to\b|track\b)/i.test(query);
+    const hasIntent = hasExplicitLogCommand(query);
 
-    if (!hasExplicitIntent && context?.onSuggestMeal) {
+    if (!hasIntent && context?.onSuggestMeal) {
       context.onSuggestMeal({
         name: mealRecord.name,
         kcal: mealRecord.kcal,
@@ -418,6 +460,14 @@ async function executePlannerAction(
     }
   } else if (fnName === 'log_water') {
     const amount = Math.round(Number(args.amountMl) || 250);
+    const query = context?.userQuery || '';
+    const hasIntent = hasExplicitLogCommand(query);
+
+    if (!hasIntent) {
+      // Do not silently commit water to DB without explicit user confirmation/command
+      return;
+    }
+
     await db.waterLogs.add({
       date: getTodayString(),
       amountMl: amount,
@@ -866,16 +916,27 @@ export async function askSumireAI(
     const alreadyAsks = /(?:хотите|добавить|записать|would you like|shall i log|should i log)/i.test(replyText);
     if (!alreadyAsks) {
       const askPrompt = /[а-яё]/i.test(userQuery)
-        ? '\n\nХотите добавить это блюдо в ваш дневник питания?'
-        : '\n\nWould you like me to log this meal into your tracker?';
+        ? '\n\nХотите добавить это в ваш дневник питания и трекер?'
+        : '\n\nWould you like me to log this into your daily tracker?';
       replyText = replyText ? `${replyText}${askPrompt}` : askPrompt.trim();
+    }
+  } else if (!executedActions || (!executedActions.some((a) => a.type === 'log_water') && !hasExplicitLogCommand(userQuery))) {
+    const detectedFluid = extractFluidIntakeMl(userQuery);
+    if (detectedFluid && detectedFluid > 0) {
+      const alreadyAsks = /(?:хотите|добавить|записать|would you like|shall i log|should i log)/i.test(replyText);
+      if (!alreadyAsks) {
+        const askPrompt = /[а-яё]/i.test(userQuery)
+          ? `\n\nХотите добавить ${detectedFluid} мл в ваш трекер гидратации?`
+          : `\n\nWould you like me to log ${detectedFluid} ml into your hydration tracker?`;
+        replyText = replyText ? `${replyText}${askPrompt}` : askPrompt.trim();
+      }
     }
   }
 
-  // 6. Deterministic Hydration Safety Net:
-  // If the user query or any logged meal mentions fluid consumption, and log_water was not yet executed:
+  // 6. Hydration Safety Net (ONLY IF EXPLICIT COMMAND):
+  // Never automatically log water without explicit user command or confirmation!
   const hasLoggedWater = executedActions?.some((a) => a.type === 'log_water');
-  if (!hasLoggedWater) {
+  if (!hasLoggedWater && hasExplicitLogCommand(userQuery)) {
     let detectedFluidMl = extractFluidIntakeMl(userQuery);
 
     // Also check if a meal was logged with a fluid/beverage title (e.g. "Lipton 2л", "Чай 500мл")

@@ -227,30 +227,57 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
 
           {/* Release Notes */}
           <div className="pt-2 border-t border-[#24201D]/10">
-            <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] block mb-0.5">
+            <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] block mb-1">
               Release Notes
             </span>
-            <p className="text-[11px] font-medium text-stone-700 leading-snug whitespace-pre-wrap max-h-24 overflow-y-auto pr-1">
-              {updateInfo.releaseNotes}
-            </p>
+            <div className="text-[11px] font-medium text-stone-700 leading-snug space-y-1.5 max-h-28 overflow-y-auto pr-1">
+              {updateInfo.releaseNotes
+                .split('\n')
+                .filter((line) => line.trim().length > 0)
+                .map((line, idx) => {
+                  const cleanLine = line.replace(/^[•\-*#\s]+/, '').trim();
+                  if (!cleanLine) return null;
+                  return (
+                    <div key={idx} className="flex items-start gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#3D6B52] mt-1 shrink-0" />
+                      <span className="text-[10.5px] leading-tight text-stone-700">{cleanLine}</span>
+                    </div>
+                  );
+                })}
+            </div>
           </div>
         </div>
 
-        {/* In-App Download Progress Display */}
-        {downloadStatus === 'downloading' && (
-          <div className="p-3.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl space-y-2 animate-in fade-in duration-150">
+        {/* Sleek Download & Progress Panel */}
+        {(downloadStatus === 'downloading' || downloadStatus === 'completed') && (
+          <div className="p-3.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl space-y-2 animate-in fade-in duration-200 shadow-2xs">
             <div className="flex items-center justify-between text-xs font-black text-[#24201D]">
               <span className="flex items-center gap-1.5">
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#854D0E]" />
-                <span>Downloading APK...</span>
+                {downloadStatus === 'downloading' ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#854D0E]" />
+                    <span>Downloading APK...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#3D6B52] stroke-[2.5]" />
+                    <span className="text-[#2D503C]">Ready to Install</span>
+                  </>
+                )}
               </span>
-              <span className="font-mono-num font-black text-[#854D0E]">{progressPercent}%</span>
+              <span
+                className={`font-mono-num font-black ${
+                  downloadStatus === 'completed' ? 'text-[#2D503C]' : 'text-[#854D0E]'
+                }`}
+              >
+                {progressPercent}%
+              </span>
             </div>
 
             {/* Progress Track */}
             <div className="w-full h-3 bg-white border border-[#24201D] rounded-full p-0.5 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-[#F0BB58] via-[#E09F3E] to-[#3D6B52] border-r border-[#24201D] rounded-full transition-all duration-150"
+                className="h-full bg-gradient-to-r from-[#F0BB58] via-[#E09F3E] to-[#3D6B52] rounded-full transition-all duration-200"
                 style={{ width: `${Math.max(5, progressPercent)}%` }}
               />
             </div>
@@ -262,22 +289,9 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
           </div>
         )}
 
-        {/* Download Completed Success Box */}
-        {downloadStatus === 'completed' && (
-          <div className="p-3 bg-[#DDE8DE] border-[1.75px] border-[#24201D] rounded-2xl text-center space-y-1 animate-in zoom-in-95 duration-150 shadow-2xs">
-            <div className="flex items-center justify-center gap-1.5 text-xs font-black text-[#2D503C]">
-              <CheckCircle2 className="w-4 h-4 text-[#3D6B52] stroke-[2.5]" />
-              <span>Download Complete!</span>
-            </div>
-            <p className="text-[10px] font-bold text-[#2D503C]">
-              Tap Install below to apply the update.
-            </p>
-          </div>
-        )}
-
         {/* Error Notification Box */}
         {downloadStatus === 'error' && (
-          <div className="p-3 bg-[#F7E3DC] border-[1.5px] border-[#C25E40] rounded-2xl text-left space-y-1 text-[10px] text-[#C25E40]">
+          <div className="p-3 bg-[#F7E3DC] border-[1.5px] border-[#C25E40] rounded-2xl text-left space-y-1 text-[10px] text-[#C25E40] animate-in fade-in duration-150">
             <div className="flex items-center gap-1 font-black">
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
               <span>Download Interrupted</span>
@@ -288,7 +302,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
           </div>
         )}
 
-        {/* Action Buttons */}
+        {/* Action Buttons: Clean & Direct */}
         <div className="space-y-2 pt-1">
           {downloadStatus === 'idle' && (
             <button
@@ -300,20 +314,11 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
             </button>
           )}
 
-          {downloadStatus === 'downloading' && (
-            <button
-              disabled
-              className="w-full py-3.5 px-4 rounded-2xl bg-[#FAF8F5] text-stone-500 border-[2px] border-[#24201D]/40 font-black font-display text-xs uppercase tracking-wider cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Downloading ({progressPercent}%)...</span>
-            </button>
-          )}
-
+          {/* When completed, smoothly fade in the Install button without any redundant notification banners */}
           {downloadStatus === 'completed' && (
             <button
               onClick={handleInstall}
-              className="w-full py-3.5 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[2px] border-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[2px] border-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300"
             >
               <PackageCheck className="w-4 h-4 stroke-[2.5]" />
               <span>Install</span>

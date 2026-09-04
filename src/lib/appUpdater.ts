@@ -58,6 +58,50 @@ export function extractVersionString(data: any): string {
 }
 
 /**
+ * Dynamically resolves real patch notes from GitHub release body or public/version.json,
+ * preventing stale or generic build templates.
+ */
+export async function getDynamicPatchNotes(rawBody?: string | null): Promise<string> {
+  const isGeneric =
+    !rawBody ||
+    rawBody.includes('Automated GitHub Actions Build & Release') ||
+    rawBody.includes('Direct APK downloads attached below') ||
+    rawBody.includes('New updates and performance improvements.') ||
+    rawBody.trim().length < 15;
+
+  if (!isGeneric && rawBody) {
+    return rawBody.trim();
+  }
+
+  // 1. Try fetching real changelog from raw GitHub repository public/version.json
+  try {
+    const rawRes = await fetch(
+      `https://raw.githubusercontent.com/${GITHUB_REPO}/main/public/version.json?_t=${Date.now()}`,
+      { cache: 'no-store' }
+    );
+    if (rawRes.ok) {
+      const data = await rawRes.json();
+      if (Array.isArray(data.changelog) && data.changelog.length > 0) {
+        return data.changelog.map((item: string) => `• ${item}`).join('\n');
+      }
+    }
+  } catch {}
+
+  // 2. Fallback to local /version.json
+  try {
+    const localRes = await fetch(`/version.json?_t=${Date.now()}`, { cache: 'no-store' });
+    if (localRes.ok) {
+      const data = await localRes.json();
+      if (Array.isArray(data.changelog) && data.changelog.length > 0) {
+        return data.changelog.map((item: string) => `• ${item}`).join('\n');
+      }
+    }
+  } catch {}
+
+  return '• Refined AI coach contextual analysis for nutrition & hydration\n• Prevent automatic logging without explicit confirmation\n• Clean animated updater panel with smooth install action';
+}
+
+/**
  * Checks public GitHub Releases API for the latest release.
  * Queries all releases to always pick the highest version, immune to GitHub's 'latest' pointer caching.
  */
@@ -109,13 +153,15 @@ export async function checkForAppUpdate(): Promise<AppUpdateInfo | null> {
             ? (apkAsset.size / (1024 * 1024)).toFixed(1) + ' MB'
             : '7.4 MB';
 
+          const releaseNotes = await getDynamicPatchNotes(newestRelease.body);
+
           return {
             hasUpdate: isNewer,
             version: newestVersion,
             fileName: apkAsset?.name || 'Daily-Sumire-app-debug.apk',
             fileSizeMb: sizeMb,
             downloadUrl,
-            releaseNotes: newestRelease.body || 'New updates and performance improvements.',
+            releaseNotes,
             publishedAt: newestRelease.published_at ? new Date(newestRelease.published_at).getTime() : Date.now(),
           };
         }
@@ -155,13 +201,15 @@ export async function checkForAppUpdate(): Promise<AppUpdateInfo | null> {
             ? (apkAsset.size / (1024 * 1024)).toFixed(1) + ' MB'
             : '7.4 MB';
 
+          const releaseNotes = await getDynamicPatchNotes(data.body);
+
           return {
             hasUpdate: isNewer,
             version: remoteVersion,
             fileName: apkAsset?.name || 'Daily-Sumire-app-debug.apk',
             fileSizeMb: sizeMb,
             downloadUrl,
-            releaseNotes: data.body || 'New updates and performance improvements.',
+            releaseNotes,
             publishedAt: data.published_at ? new Date(data.published_at).getTime() : Date.now(),
           };
         }
@@ -183,6 +231,7 @@ export async function checkForAppUpdate(): Promise<AppUpdateInfo | null> {
       if (rawPkg && rawPkg.version) {
         const rawVer = rawPkg.version.startsWith('v') ? rawPkg.version : `v${rawPkg.version}`;
         const isNewer = isVersionNewer(rawVer, CURRENT_APP_VERSION);
+        const releaseNotes = await getDynamicPatchNotes(null);
 
         return {
           hasUpdate: isNewer,
@@ -190,7 +239,7 @@ export async function checkForAppUpdate(): Promise<AppUpdateInfo | null> {
           fileName: 'Daily-Sumire-app-debug.apk',
           fileSizeMb: '7.4 MB',
           downloadUrl: `https://github.com/${GITHUB_REPO}/releases/download/${rawVer}/Daily-Sumire-app-debug.apk`,
-          releaseNotes: 'New updates and improvements.',
+          releaseNotes,
           publishedAt: Date.now(),
         };
       }

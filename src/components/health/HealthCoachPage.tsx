@@ -757,7 +757,7 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
             {/* Query Text Input */}
             <input
               type="text"
-              placeholder={attachedImage ? 'Add details or a question about this photo...' : 'Ask about nutrition, or say "log 2 slices of pizza for dinner"...'}
+              placeholder={attachedImage ? 'Ask something about this photo...' : 'Ask something...'}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               className="flex-1 px-3.5 py-2.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-stone-400 shadow-2xs focus:outline-none"

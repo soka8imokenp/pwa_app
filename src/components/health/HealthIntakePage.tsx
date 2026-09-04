@@ -140,14 +140,14 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
       setIsVoiceActive(false);
     } else {
       setIsVoiceActive(true);
-      startVoiceDictation(
-        (text) => {
+      startVoiceDictation({
+        onTranscript: (text: string) => {
           setMealText((prev) => (prev ? `${prev} ${text}` : text));
         },
-        () => {
+        onEnd: () => {
           setIsVoiceActive(false);
-        }
-      );
+        },
+      });
     }
   };
 

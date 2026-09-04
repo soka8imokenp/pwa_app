@@ -257,9 +257,9 @@ export async function triggerTwoWaySync(): Promise<boolean> {
     if (pullData.healthProfile) {
       const existing = await db.healthProfile.toArray();
       await db.healthProfile.put({
-        id: 'user',
         ...existing[0],
         ...pullData.healthProfile,
+        id: 'user',
         updatedAt: Date.now(),
       });
     }

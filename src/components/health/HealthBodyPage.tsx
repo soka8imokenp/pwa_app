@@ -400,7 +400,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
         profile={profile}
-        onUpdateProfile={onUpdateProfile}
+        onSaveProfile={onUpdateProfile}
       />
 
       <MetricDetailModal

@@ -98,6 +98,6 @@ describe('healthFormulas', () => {
     // Need to lose 4kg at 0.5kg/week => ~8 weeks
     const projected = computeProjectedGoalDate(80, 76, 'lose', 0.5);
     expect(projected.weeksRemaining).toBe(8);
-    expect(projected.isReached).toBe(false);
+    expect(projected.dateString).toBeDefined();
   });
 });

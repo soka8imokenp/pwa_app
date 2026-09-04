@@ -10,7 +10,6 @@ import {
   ListMusic,
   Plus,
   Trash2,
-  ExternalLink,
   RotateCcw,
 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
@@ -76,13 +75,13 @@ export const InAppMusicPlayer: React.FC = () => {
     setCustomError(null);
 
     if (!customUrl.trim()) {
-      setCustomError('Вставьте ссылку на YouTube или ID видео');
+      setCustomError('Please enter a YouTube URL or Video ID');
       return;
     }
 
     const videoId = extractYouTubeId(customUrl);
     if (!videoId) {
-      setCustomError('Некорректная ссылка на YouTube');
+      setCustomError('Invalid YouTube URL or Video ID');
       return;
     }
 
@@ -91,7 +90,7 @@ export const InAppMusicPlayer: React.FC = () => {
       setCustomUrl('');
       setCustomName('');
     } else {
-      setCustomError('Не удалось добавить станцию');
+      setCustomError('Could not add this station');
     }
   };
 
@@ -105,7 +104,7 @@ export const InAppMusicPlayer: React.FC = () => {
 
   return (
     <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3 font-body select-none transition-all">
-      {/* 1. Header Controls (No TV button, No LIVE badge) */}
+      {/* 1. Header Controls (English, No TV button, No station count) */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-[#F0BB58] border-[1.75px] border-[#24201D] flex items-center justify-center text-sm shadow-2xs shrink-0">
@@ -116,12 +115,12 @@ export const InAppMusicPlayer: React.FC = () => {
               Lofi Radio
             </h3>
             <p className="text-[10px] text-[#6B635B] font-medium leading-none mt-0.5">
-              24/7 Поток
+              24/7 Deep Work Audio
             </p>
           </div>
         </div>
 
-        {/* Stations Drawer Toggle */}
+        {/* Stations Drawer Toggle (No count number!) */}
         <button
           onClick={() => {
             playClickSound();
@@ -134,11 +133,11 @@ export const InAppMusicPlayer: React.FC = () => {
           }`}
         >
           <ListMusic className="w-3.5 h-3.5" />
-          <span>Станции ({stations.length})</span>
+          <span>Stations</span>
         </button>
       </div>
 
-      {/* 2. Main Playing Radio Card (Clean Text, No Image, No Live Stream Badge) */}
+      {/* 2. Main Playing Radio Card (Clean Text, No Image, No Live Stream Badge, No YouTube link) */}
       <div className="p-4 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3.5">
         <div className="space-y-1">
           <div className="flex items-center justify-between gap-2">
@@ -146,7 +145,7 @@ export const InAppMusicPlayer: React.FC = () => {
               {currentStation.name}
             </h4>
 
-            {/* Sound Wave Visualizer */}
+            {/* Dynamic Sound Wave Visualizer */}
             <div className="flex items-end gap-1 h-3.5 shrink-0 px-2 py-1 bg-white border border-[#24201D]/20 rounded-lg">
               {[40, 75, 90, 60, 100, 50, 85].map((height, i) => (
                 <span
@@ -164,28 +163,16 @@ export const InAppMusicPlayer: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs text-[#6B635B] font-medium truncate">
-              {currentStation.subtitle || '24/7 Lofi Radio'}
-            </p>
-            <a
-              href={`https://www.youtube.com/watch?v=${currentStation.videoId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Открыть на YouTube"
-              className="flex items-center gap-1 text-[10px] font-bold text-[#6B635B] hover:text-[#24201D] transition-colors shrink-0"
-            >
-              <span>YouTube</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
+          <p className="text-xs text-[#6B635B] font-medium truncate">
+            {currentStation.subtitle || '24/7 Lofi Live Radio'}
+          </p>
         </div>
 
         {/* Volume Scrubber Bar */}
         <div className="flex items-center gap-2 pt-0.5">
           <button
             onClick={handleToggleMute}
-            title={isMuted ? 'Включить звук' : 'Выключить звук'}
+            title={isMuted ? 'Unmute' : 'Mute'}
             className="w-7 h-7 rounded-lg bg-white hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-[#24201D] cursor-pointer shrink-0 active:translate-y-0.5"
           >
             {isMuted || volume === 0 ? (
@@ -218,7 +205,7 @@ export const InAppMusicPlayer: React.FC = () => {
           <button
             onClick={handlePrevStation}
             className="w-12 h-11 rounded-xl bg-white border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer transition-all hover:bg-stone-50"
-            title="Предыдущая станция"
+            title="Previous Station"
           >
             <SkipBack className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -226,7 +213,7 @@ export const InAppMusicPlayer: React.FC = () => {
           {/* Big Play/Pause Toggle Button */}
           <button
             onClick={handleTogglePlay}
-            title={isPlaying ? 'Пауза' : 'Включить радио'}
+            title={isPlaying ? 'Click to Pause' : 'Click to Play'}
             className="w-20 h-12 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] border-[2px] border-[#24201D] flex items-center justify-center text-white shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
           >
             {isPlaying ? (
@@ -240,24 +227,24 @@ export const InAppMusicPlayer: React.FC = () => {
           <button
             onClick={handleNextStation}
             className="w-12 h-11 rounded-xl bg-white border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer transition-all hover:bg-stone-50"
-            title="Следующая станция"
+            title="Next Station"
           >
             <SkipForward className="w-4 h-4 stroke-[2.5]" />
           </button>
         </div>
       </div>
 
-      {/* 3. Stations Drawer (No "Выберите станцию" header, No images, No top cropping, Delete any station) */}
+      {/* 3. Stations Drawer (No header, No images, No top cropping, Delete any station) */}
       {isStationsOpen && (
         <div className="p-3.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3 animate-in fade-in duration-150 overflow-visible">
-          {/* Add Link Form - Compact & Pleasant */}
+          {/* Add Link Form - Compact & Responsive */}
           <div className="space-y-1.5">
             <form onSubmit={handleAddCustomStation} className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 value={customUrl}
                 onChange={(e) => setCustomUrl(e.target.value)}
-                placeholder="Ссылка на YouTube или ID..."
+                placeholder="YouTube URL or Video ID..."
                 className="flex-1 px-3 py-2 bg-white border border-[#24201D] rounded-xl text-xs font-medium text-[#24201D] outline-none placeholder:text-stone-400"
               />
               <div className="flex items-center gap-2">
@@ -265,15 +252,15 @@ export const InAppMusicPlayer: React.FC = () => {
                   type="text"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  placeholder="Название (опц.)"
-                  className="w-28 sm:w-32 px-3 py-2 bg-white border border-[#24201D] rounded-xl text-xs font-medium text-[#24201D] outline-none placeholder:text-stone-400"
+                  placeholder="Station Name (optional)"
+                  className="w-32 sm:w-36 px-3 py-2 bg-white border border-[#24201D] rounded-xl text-xs font-medium text-[#24201D] outline-none placeholder:text-stone-400"
                 />
                 <button
                   type="submit"
                   className="px-3.5 py-2 bg-[#3D6B52] hover:bg-[#345B45] text-white border border-[#24201D] rounded-xl text-xs font-bold shadow-2xs active:translate-y-0.5 cursor-pointer shrink-0 transition-all flex items-center gap-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Добавить</span>
+                  <span>Add</span>
                 </button>
               </div>
             </form>
@@ -282,7 +269,7 @@ export const InAppMusicPlayer: React.FC = () => {
             )}
           </div>
 
-          {/* Stations List without images */}
+          {/* Stations List */}
           <div className="space-y-1.5 max-h-56 overflow-y-auto pt-1 pb-1 px-0.5">
             {stations.map((station) => {
               const isCurrent = station.id === currentStation.id;
@@ -316,7 +303,7 @@ export const InAppMusicPlayer: React.FC = () => {
                     {stations.length > 1 && (
                       <button
                         onClick={(e) => handleDeleteStation(e, station.id)}
-                        title="Удалить станцию"
+                        title="Delete Station"
                         className="w-7 h-7 rounded-lg hover:bg-red-50 text-stone-400 hover:text-[#E15A46] flex items-center justify-center cursor-pointer transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -350,7 +337,7 @@ export const InAppMusicPlayer: React.FC = () => {
               className="text-[10px] font-bold text-[#6B635B] hover:text-[#24201D] transition-colors flex items-center gap-1 cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>Сбросить станции по умолчанию</span>
+              <span>Reset default stations</span>
             </button>
           </div>
         </div>

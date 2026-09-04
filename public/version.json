@@ -1,15 +1,14 @@
 {
-  "version": "1.8.69",
-  "buildNumber": 73,
+  "version": "1.8.70",
+  "buildNumber": 74,
   "releaseDate": "2026-09-04",
   "changelog": [
-    "Clean text-based Lofi Radio: removed images and live stream badges",
-    "Removed TV/video button for distraction-free background audio focus",
-    "Connected active Lofi Girl live stream (rFZHOHl-L8A)",
-    "Compact responsive 'Add link' panel and ability to delete any station",
-    "Fixed stations drawer top cropping"
+    "Full English localization for Lofi Radio player",
+    "Stations toggle button without count indicator",
+    "Removed YouTube external link to prevent accidental navigation",
+    "Enabled continuous background audio playback when app is minimized and locked (WakeLock + WebView resume + visibility override)"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.69/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.70/Daily-Sumire-app-debug.apk"
 }
 
 

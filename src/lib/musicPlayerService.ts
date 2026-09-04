@@ -49,6 +49,7 @@ class MusicPlayerService {
   private ytPlayer: any = null;
   private isPlayerReady: boolean = false;
   private pendingPlay: boolean = false;
+  private userIntentPlay: boolean = false;
   private listeners: Set<Listener> = new Set();
   private hostElement: HTMLElement | null = null;
   private isInitializing: boolean = false;
@@ -62,6 +63,25 @@ class MusicPlayerService {
 
     if (typeof window !== 'undefined') {
       try {
+        // Prevent visibilitychange from pausing YouTube iframe when app is minimized or screen is locked
+        window.addEventListener('visibilitychange', (e) => {
+          e.stopImmediatePropagation();
+        }, true);
+        document.addEventListener('visibilitychange', (e) => {
+          e.stopImmediatePropagation();
+        }, true);
+
+        try {
+          Object.defineProperty(document, 'hidden', {
+            get: () => false,
+            configurable: true,
+          });
+          Object.defineProperty(document, 'visibilityState', {
+            get: () => 'visible',
+            configurable: true,
+          });
+        } catch {}
+
         const activeStationsRaw = localStorage.getItem('kairo_radio_active_stations');
         if (activeStationsRaw) {
           const parsed = JSON.parse(activeStationsRaw);
@@ -256,6 +276,18 @@ class MusicPlayerService {
               this.syncNativeNotification();
               this.notify();
             } else if (event.data === YT.PlayerState.PAUSED) {
+              if (this.userIntentPlay) {
+                // Device minimization or visibility change attempted to pause stream
+                // Automatically resume playback immediately
+                setTimeout(() => {
+                  if (this.userIntentPlay && this.ytPlayer) {
+                    try {
+                      this.ytPlayer.playVideo();
+                    } catch {}
+                  }
+                }, 80);
+                return;
+              }
               this.state.isPlaying = false;
               this.state.isBuffering = false;
               this.syncMediaSession();
@@ -343,6 +375,7 @@ class MusicPlayerService {
   }
 
   public play() {
+    this.userIntentPlay = true;
     if (!this.ytPlayer || !this.isPlayerReady) {
       this.pendingPlay = true;
       this.state.isPlaying = true;
@@ -364,6 +397,7 @@ class MusicPlayerService {
   }
 
   public pause() {
+    this.userIntentPlay = false;
     if (this.ytPlayer && this.isPlayerReady) {
       try {
         this.ytPlayer.pauseVideo();

@@ -57,6 +57,30 @@ public class MainActivity extends BridgeActivity {
     private MediaSessionCompat mediaSession;
     private NotificationManager notificationManager;
     private MediaReceiver mediaReceiver;
+    private boolean isAudioPlaying = false;
+    private android.os.PowerManager.WakeLock wakeLock;
+
+    private void acquireWakeLock() {
+        try {
+            if (wakeLock == null) {
+                android.os.PowerManager pm = (android.os.PowerManager) getSystemService(Context.POWER_SERVICE);
+                if (pm != null) {
+                    wakeLock = pm.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "DailySumire:AudioPlaybackWakeLock");
+                }
+            }
+            if (wakeLock != null && !wakeLock.isHeld()) {
+                wakeLock.acquire(4 * 60 * 60 * 1000L); // 4 hours max safeguard
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private void releaseWakeLock() {
+        try {
+            if (wakeLock != null && wakeLock.isHeld()) {
+                wakeLock.release();
+            }
+        } catch (Exception ignored) {}
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -73,6 +97,31 @@ public class MainActivity extends BridgeActivity {
     public void onResume() {
         super.onResume();
         applyLightSystemBars();
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().resumeTimers();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        keepAudioAliveInBackground();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        keepAudioAliveInBackground();
+    }
+
+    private void keepAudioAliveInBackground() {
+        try {
+            if (isAudioPlaying && getBridge() != null && getBridge().getWebView() != null) {
+                WebView wv = getBridge().getWebView();
+                wv.onResume();
+                wv.resumeTimers();
+            }
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -87,6 +136,7 @@ public class MainActivity extends BridgeActivity {
     public void onDestroy() {
         super.onDestroy();
         try {
+            releaseWakeLock();
             if (mediaReceiver != null) {
                 unregisterReceiver(mediaReceiver);
             }
@@ -205,6 +255,17 @@ public class MainActivity extends BridgeActivity {
                 webView.addJavascriptInterface(new MediaJsInterface(), "AndroidMediaNotification");
                 webView.addJavascriptInterface(new AppInstallerJsInterface(), "AndroidAppInstaller");
                 webView.addJavascriptInterface(new SpeechRecognizerJsInterface(), "AndroidSpeechRecognizer");
+
+                // Inject visibility spoofing so background audio (like YouTube Radio) continues when minimized
+                webView.evaluateJavascript(
+                    "try {" +
+                    "  window.addEventListener('visibilitychange', function(e) { e.stopImmediatePropagation(); }, true);" +
+                    "  document.addEventListener('visibilitychange', function(e) { e.stopImmediatePropagation(); }, true);" +
+                    "  Object.defineProperty(document, 'hidden', { get: function() { return false; }, configurable: true });" +
+                    "  Object.defineProperty(document, 'visibilityState', { get: function() { return 'visible'; }, configurable: true });" +
+                    "} catch(e) {}",
+                    null
+                );
             }
         } catch (Exception ignored) {}
     }
@@ -248,6 +309,13 @@ public class MainActivity extends BridgeActivity {
     public void showMediaNotification(String title, String artist, boolean isPlaying) {
         try {
             if (notificationManager == null || mediaSession == null) return;
+
+            this.isAudioPlaying = isPlaying;
+            if (isPlaying) {
+                acquireWakeLock();
+            } else {
+                releaseWakeLock();
+            }
 
             PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
                     .setActions(
@@ -312,7 +380,7 @@ public class MainActivity extends BridgeActivity {
                     .addAction(android.R.drawable.ic_media_next, "Next", nextPendingIntent)
                     .setStyle(
                             new androidx.media.app.NotificationCompat.MediaStyle()
-                                    .setMediaSession(mediaSession.getSessionToken())
+                                     .setMediaSession(mediaSession.getSessionToken())
                                     .setShowActionsInCompactView(0, 1, 2)
                     );
 
@@ -322,6 +390,8 @@ public class MainActivity extends BridgeActivity {
 
     public void cancelMediaNotification() {
         try {
+            this.isAudioPlaying = false;
+            releaseWakeLock();
             if (notificationManager != null) {
                 notificationManager.cancel(NOTIFICATION_ID);
             }

@@ -140,6 +140,12 @@ export function App() {
     const handleWebNavigate = (e: any) => {
       if (e.detail?.tab) {
         setActiveTab(e.detail.tab);
+        if (e.detail.tab === 'backlog') {
+          setTimeout(() => {
+            const el = document.getElementById('backlog-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 150);
+        }
       }
     };
 
@@ -362,42 +368,25 @@ export function App() {
             </>
           ) : (
             <>
-              {activeTab === 'priorities' && (
+              {(activeTab === 'priorities' || activeTab === 'backlog') && (
                 <PrioritiesPage
                   selectedDate={selectedDate}
                   onSelectDate={setSelectedDate}
                   priorityTasks={priorityTasks}
+                  backlogTasks={backlogTasks}
+                  canAddPriority={canAddPriority}
                   allTasks={allTasks}
                   focusSessions={allFocusSessions}
                   onToggleComplete={toggleTaskComplete}
                   onToggleSubTaskComplete={toggleSubTaskComplete}
                   onDemoteToBacklog={demoteTaskToBacklog}
+                  onPromoteToPriority={promoteTaskToPriority}
                   onDeleteTask={deleteTask}
                   onOpenAddTask={handleOpenAddTask}
                   onStartFocus={handleStartFocus}
                   onReorderPriority={reorderPriorityTasks}
                   onLogFocusSession={logFocusSession}
                   onQuickCreateTask={addTask}
-                />
-              )}
-
-              {activeTab === 'backlog' && (
-                <BacklogPage
-                  backlogTasks={backlogTasks}
-                  canPromoteToPriority={canAddPriority}
-                  onToggleComplete={toggleTaskComplete}
-                  onPromoteToPriority={promoteTaskToPriority}
-                  onDeleteTask={deleteTask}
-                  onQuickAddTask={(title, category, minutes) =>
-                    addTask({
-                      title,
-                      category: (category as any) || 'general',
-                      estimatedMinutes: minutes || 30,
-                      isPriority: false,
-                      isCompleted: false,
-                      date: selectedDate,
-                    })
-                  }
                 />
               )}
 

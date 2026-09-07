@@ -172,12 +172,18 @@ export const MenuModal: React.FC<MenuModalProps> = ({
 
           {/* Backlog */}
           <button
-            onClick={() => handleTabClick('backlog')}
-            className={`w-full p-3 rounded-2xl border-[1.75px] flex items-center justify-between transition-all cursor-pointer text-left ${
-              activeTab === 'backlog'
-                ? 'bg-[#DDE8DE] border-[#24201D] shadow-[2px_2px_0px_#24201D]'
-                : 'bg-[#F4F0EA] hover:bg-[#E8EFE9] border-stone-200 hover:border-[#24201D] shadow-2xs'
-            }`}
+            onClick={() => {
+              playClickSound();
+              onSelectTab('priorities');
+              onClose();
+              setTimeout(() => {
+                const el = document.getElementById('backlog-section');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }, 150);
+            }}
+            className="w-full p-3 rounded-2xl border-[1.75px] bg-[#F4F0EA] hover:bg-[#E8EFE9] border-stone-200 hover:border-[#24201D] shadow-2xs flex items-center justify-between transition-all cursor-pointer text-left"
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-white border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0">
@@ -185,7 +191,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
               </div>
               <div>
                 <h4 className="text-xs font-bold text-[#24201D]">Task Backlog</h4>
-                <p className="text-[10px] text-[#6B635B] font-medium">Idea pool & postponed tasks</p>
+                <p className="text-[10px] text-[#6B635B] font-medium">Idea pool on Today screen</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-stone-400" />

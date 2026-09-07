@@ -9,11 +9,14 @@ import {
   Plus,
   Play,
   ArrowDown,
+  ArrowUp,
   Clock,
   Layers,
   Repeat,
   ChevronUp,
   ChevronDown,
+  Inbox,
+  Trash2,
 } from 'lucide-react';
 import type { Task, FocusSession, HabitLog } from '../../types';
 import { playTaskCheckSound, playSuccessChime, playClickSound } from '../../lib/sound';
@@ -24,12 +27,15 @@ interface PrioritiesPageProps {
   selectedDate: string;
   onSelectDate: (dateStr: string) => void;
   priorityTasks: Task[];
+  backlogTasks?: Task[];
+  canAddPriority?: boolean;
   allTasks?: Task[];
   focusSessions?: FocusSession[];
   habitLogs?: HabitLog[];
   onToggleComplete: (task: Task) => void;
   onToggleSubTaskComplete?: (taskId: number, subTaskId: string) => void;
   onDemoteToBacklog: (task: Task) => void;
+  onPromoteToPriority?: (task: Task) => void;
   onDeleteTask: (taskId: number) => void;
   onOpenAddTask: (prioritySlotIndex?: number) => void;
   onStartFocus: (task: Task) => void;
@@ -41,9 +47,12 @@ interface PrioritiesPageProps {
 export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
   selectedDate,
   priorityTasks,
+  backlogTasks = [],
   onToggleComplete,
   onToggleSubTaskComplete,
   onDemoteToBacklog,
+  onPromoteToPriority,
+  onDeleteTask,
   onOpenAddTask,
   onStartFocus,
   onReorderPriority,
@@ -114,6 +123,67 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
   };
 
   const SLOT_COLORS = ['#FBECCF', '#DDE8DE', '#F7E3DC'];
+
+  // Backlog integration states
+  const [quickBacklogTitle, setQuickBacklogTitle] = useState('');
+  const [quickBacklogCategory, setQuickBacklogCategory] = useState<Task['category']>('general');
+  const [showCompletedBacklog, setShowCompletedBacklog] = useState(false);
+  const [feedbackNotice, setFeedbackNotice] = useState<string | null>(null);
+
+  const activeBacklogTasks = backlogTasks.filter((t) => !t.isCompleted);
+  const completedBacklogTasks = backlogTasks.filter((t) => t.isCompleted);
+
+  const handlePromote = (task: Task) => {
+    if (localPriorities.length >= 3) {
+      playClickSound();
+      setFeedbackNotice('Top 3 slots are full! Move one to Backlog first.');
+      setTimeout(() => setFeedbackNotice(null), 3500);
+      return;
+    }
+    playSuccessChime();
+    confetti({
+      particleCount: 50,
+      spread: 60,
+      origin: { y: 0.6 },
+      colors: ['#3D6B52', '#E09F3E', '#F0BB58', '#476C85'],
+    });
+    onPromoteToPriority?.(task);
+  };
+
+  const handleDemote = (task: Task) => {
+    playClickSound();
+    onDemoteToBacklog(task);
+  };
+
+  const handleAddBacklogInline = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickBacklogTitle.trim() || !onQuickCreateTask) return;
+    playClickSound();
+    await onQuickCreateTask({
+      title: quickBacklogTitle.trim(),
+      category: quickBacklogCategory || 'general',
+      estimatedMinutes: 30,
+      isPriority: false,
+      isCompleted: false,
+      date: selectedDate,
+    });
+    setQuickBacklogTitle('');
+  };
+
+  const getCategoryBg = (category?: string) => {
+    switch (category) {
+      case 'code':
+        return '#DDE8DE';
+      case 'design':
+        return '#F7E3DC';
+      case 'health':
+        return '#DDE8DE';
+      case 'learn':
+        return '#FBECCF';
+      default:
+        return '#FAF8F5';
+    }
+  };
 
   return (
     <div className="w-full space-y-3.5 pb-3 font-body select-none">
@@ -314,12 +384,12 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                 </button>
 
                 <button
-                  onClick={() => onDemoteToBacklog(task)}
+                  onClick={() => handleDemote(task)}
                   title="Move to Backlog"
-                  className="px-2 py-1 bg-[#F4F0EA] hover:bg-stone-200 border border-[#24201D] rounded-lg text-[10px] font-bold text-[#6B635B] flex items-center gap-1 cursor-pointer shadow-2xs"
+                  className="px-2.5 py-1 bg-[#F4F0EA] hover:bg-stone-200 border border-[#24201D] rounded-lg text-[10px] font-bold text-[#6B635B] flex items-center gap-1 cursor-pointer shadow-2xs active:scale-95 transition-all"
                 >
-                  <ArrowDown className="w-3 h-3" />
-                  <span>Backlog</span>
+                  <ArrowDown className="w-3 h-3 text-[#24201D]" />
+                  <span>To Backlog</span>
                 </button>
               </div>
             </div>
@@ -344,7 +414,214 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
         </button>
       )}
 
-      {/* 5. Bottom Quick Scratchpad Card */}
+      {/* 5. Integrated Task Backlog Section */}
+      <div id="backlog-section" className="space-y-2.5 pt-1">
+        {/* Backlog Header Bar */}
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-2xs">
+              <Inbox className="w-3.5 h-3.5 text-[#2D503C] stroke-[2.25]" />
+            </div>
+            <span className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
+              Task Backlog ({activeBacklogTasks.length})
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {localPriorities.length < 3 ? (
+              <span className="text-[9px] font-black uppercase tracking-wider text-[#2D503C] bg-[#DDE8DE] border border-[#24201D] px-2 py-0.5 rounded-full shadow-2xs">
+                {3 - localPriorities.length} Slot{3 - localPriorities.length > 1 ? 's' : ''} Open in Today
+              </span>
+            ) : (
+              <span className="text-[9px] font-bold text-[#6B635B] bg-[#FAF8F5] border border-[#24201D]/20 px-2 py-0.5 rounded-full">
+                Top 3 Full
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Temporary Feedback Notice (e.g. if trying to promote when full) */}
+        {feedbackNotice && (
+          <div className="p-2.5 bg-[#FBECCF] border-[1.5px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] flex items-center justify-between shadow-2xs animate-in fade-in">
+            <span>{feedbackNotice}</span>
+            <button
+              onClick={() => setFeedbackNotice(null)}
+              className="text-[10px] uppercase font-black underline ml-2 cursor-pointer"
+            >
+              OK
+            </button>
+          </div>
+        )}
+
+        {/* Quick Inline Add Form */}
+        <form
+          onSubmit={handleAddBacklogInline}
+          className="p-2 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center gap-2"
+        >
+          <input
+            type="text"
+            value={quickBacklogTitle}
+            onChange={(e) => setQuickBacklogTitle(e.target.value)}
+            placeholder="+ Add task to backlog..."
+            className="flex-1 min-w-0 px-2.5 py-1.5 bg-transparent text-xs font-bold text-[#24201D] placeholder:text-stone-400 placeholder:font-normal focus:outline-none"
+          />
+
+          <select
+            value={quickBacklogCategory}
+            onChange={(e) => setQuickBacklogCategory(e.target.value as any)}
+            className="text-[10px] font-black uppercase bg-[#FAF8F5] border border-[#24201D]/25 rounded-lg px-2 py-1.5 text-[#24201D] cursor-pointer focus:outline-none shrink-0"
+          >
+            <option value="general">General</option>
+            <option value="code">Code</option>
+            <option value="design">Design</option>
+            <option value="learn">Learn</option>
+            <option value="health">Health</option>
+          </select>
+
+          <button
+            type="submit"
+            disabled={!quickBacklogTitle.trim()}
+            className="px-3 py-1.5 bg-[#3D6B52] hover:bg-[#345c46] disabled:opacity-30 disabled:hover:bg-[#3D6B52] border border-[#24201D] rounded-xl text-[11px] font-black uppercase tracking-wider text-white shadow-2xs active:scale-95 transition-all cursor-pointer shrink-0"
+          >
+            Add
+          </button>
+        </form>
+
+        {/* Active Backlog Tasks List */}
+        {activeBacklogTasks.length === 0 ? (
+          <div className="p-4 bg-[#FAF8F5] border-[1.5px] border-dashed border-[#24201D]/25 rounded-2xl text-center space-y-1">
+            <p className="text-xs font-bold text-[#6B635B]">Backlog is currently empty</p>
+            <p className="text-[10px] text-stone-400 font-medium">
+              Add tasks above or move priorities down to keep them queued for later.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {activeBacklogTasks.map((task) => (
+              <div
+                key={task.id}
+                className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between gap-2.5 transition-all hover:translate-x-0.5"
+              >
+                {/* Complete Checkbox */}
+                <button
+                  type="button"
+                  onClick={() => handleDoneClick(task)}
+                  className="w-6 h-6 rounded-lg border-[1.5px] border-[#24201D] bg-white hover:bg-stone-100 flex items-center justify-center shrink-0 transition-all cursor-pointer shadow-2xs"
+                >
+                  {task.isCompleted && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </button>
+
+                {/* Title & Metadata */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span
+                      className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md border border-[#24201D]/20 text-[#24201D]"
+                      style={{ backgroundColor: getCategoryBg(task.category) }}
+                    >
+                      {task.category || 'general'}
+                    </span>
+                    <span className="text-[10px] text-stone-400 font-mono-num flex items-center gap-0.5">
+                      <Clock className="w-2.5 h-2.5" /> {task.estimatedMinutes || 30}m
+                    </span>
+                  </div>
+                  <p className="text-xs font-bold text-[#24201D] truncate leading-tight">
+                    {task.title}
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {/* Promote to Top 3 Priorities */}
+                  <button
+                    type="button"
+                    onClick={() => handlePromote(task)}
+                    title={localPriorities.length < 3 ? "Promote to Today's Top 3" : "Top 3 is full"}
+                    className={`px-2.5 py-1 rounded-xl border border-[#24201D] text-[10px] font-black uppercase tracking-tight flex items-center gap-1 shadow-2xs transition-all cursor-pointer ${
+                      localPriorities.length < 3
+                        ? 'bg-[#F0BB58] hover:bg-[#e2af51] text-[#24201D] active:scale-95'
+                        : 'bg-stone-100 text-stone-400 border-stone-300'
+                    }`}
+                  >
+                    <ArrowUp className="w-3 h-3 stroke-[2.5]" />
+                    <span className="hidden sm:inline">To Today</span>
+                  </button>
+
+                  {/* Quick Focus Button */}
+                  <button
+                    type="button"
+                    onClick={() => onStartFocus(task)}
+                    title="Start Focus Session"
+                    className="w-7 h-7 rounded-xl bg-[#FAF8F5] hover:bg-[#F7E3DC] border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Play className="w-3 h-3 fill-[#24201D]" />
+                  </button>
+
+                  {/* Delete Button */}
+                  <button
+                    type="button"
+                    onClick={() => task.id && onDeleteTask(task.id)}
+                    title="Delete task"
+                    className="w-7 h-7 rounded-xl bg-[#FAF8F5] hover:bg-rose-100 border border-[#24201D] flex items-center justify-center text-stone-400 hover:text-rose-600 shadow-2xs active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Trash2 className="w-3 h-3 stroke-[2]" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Completed Backlog Tasks Collapsible */}
+        {completedBacklogTasks.length > 0 && (
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => setShowCompletedBacklog((prev) => !prev)}
+              className="w-full py-2 px-3 bg-[#F4F0EA] hover:bg-stone-200 border border-[#24201D]/25 rounded-xl flex items-center justify-between text-[10px] font-bold text-[#6B635B] transition-all cursor-pointer"
+            >
+              <span>
+                Completed in Backlog ({completedBacklogTasks.length})
+              </span>
+              {showCompletedBacklog ? (
+                <ChevronUp className="w-3.5 h-3.5" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5" />
+              )}
+            </button>
+
+            {showCompletedBacklog && (
+              <div className="space-y-1.5 mt-2">
+                {completedBacklogTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="p-2.5 bg-stone-50/90 border border-stone-300 rounded-xl flex items-center justify-between gap-2 text-stone-400"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleDoneClick(task)}
+                      className="w-5 h-5 rounded-md border border-stone-300 bg-[#3D6B52] text-white flex items-center justify-center shrink-0 cursor-pointer"
+                    >
+                      <Check className="w-3 h-3 stroke-[3]" />
+                    </button>
+                    <span className="flex-1 text-xs line-through truncate text-stone-500 font-medium">
+                      {task.title}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => task.id && onDeleteTask(task.id)}
+                      className="text-stone-400 hover:text-rose-600 p-1 cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* 6. Bottom Quick Scratchpad Card */}
       <div className="pt-2">
         <QuickScratchpadCard
           selectedDate={selectedDate}

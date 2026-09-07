@@ -44,8 +44,15 @@ export function usePlannerData(selectedDate: string) {
   }, [dateTasks]);
 
   const backlogTasks = useMemo(() => {
-    return dateTasks.filter((t) => !t.isPriority);
-  }, [dateTasks]);
+    return allTasks
+      .filter((t) => !t.isPriority && (t.date === selectedDate || !t.isCompleted))
+      .sort((a, b) => {
+        if (a.isCompleted !== b.isCompleted) {
+          return a.isCompleted ? 1 : -1;
+        }
+        return (Number(b.id) || 0) - (Number(a.id) || 0);
+      });
+  }, [allTasks, selectedDate]);
 
   const todaysFocusSessions = useMemo(() => {
     return allFocusSessions.filter((s) => s.date === selectedDate);
@@ -123,7 +130,7 @@ export function usePlannerData(selectedDate: string) {
   const promoteTaskToPriority = async (task: Task) => {
     if (!task.id) return;
     if (priorityTasks.length >= 3) return;
-    await db.tasks.update(task.id, { isPriority: true, order: priorityTasks.length });
+    await db.tasks.update(task.id, { isPriority: true, date: selectedDate, order: priorityTasks.length });
     triggerTwoWaySync();
   };
 

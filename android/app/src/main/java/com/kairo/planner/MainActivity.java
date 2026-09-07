@@ -63,12 +63,6 @@ public class MainActivity extends BridgeActivity {
     private boolean isAudioPlaying = false;
     private PowerManager.WakeLock wakeLock;
 
-    // Native MediaPlayer for continuous 24/7 background audio playback
-    private MediaPlayer nativeMediaPlayer;
-    private String currentStreamUrl = null;
-    private float currentVolume = 1.0f;
-    private boolean isNativePrepared = false;
-
     private void acquireWakeLock() {
         try {
             if (wakeLock == null) {
@@ -92,128 +86,31 @@ public class MainActivity extends BridgeActivity {
     }
 
     public void startNativeAudio(String streamUrl, String title, String artist) {
-        try {
-            acquireWakeLock();
-            this.isAudioPlaying = true;
-            showMediaNotification(title, artist, true);
-
-            if (nativeMediaPlayer == null) {
-                nativeMediaPlayer = new MediaPlayer();
-                nativeMediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
-                nativeMediaPlayer.setAudioAttributes(
-                    new AudioAttributes.Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .build()
-                );
-            }
-
-            if (streamUrl != null && streamUrl.equals(currentStreamUrl) && isNativePrepared) {
-                nativeMediaPlayer.setVolume(currentVolume, currentVolume);
-                nativeMediaPlayer.start();
-                notifyJsAudioState(true, false);
-                return;
-            }
-
-            currentStreamUrl = streamUrl;
-            isNativePrepared = false;
-            nativeMediaPlayer.reset();
-            nativeMediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
-            nativeMediaPlayer.setAudioAttributes(
-                new AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .build()
-            );
-            nativeMediaPlayer.setDataSource(streamUrl);
-            notifyJsAudioState(false, true); // buffering
-
-            nativeMediaPlayer.setOnPreparedListener(mp -> {
-                isNativePrepared = true;
-                mp.setVolume(currentVolume, currentVolume);
-                mp.start();
-                notifyJsAudioState(true, false);
-            });
-
-            nativeMediaPlayer.setOnErrorListener((mp, what, extra) -> {
-                isNativePrepared = false;
-                notifyJsAudioState(false, false);
-                return true;
-            });
-
-            nativeMediaPlayer.prepareAsync();
-        } catch (Exception e) {
-            e.printStackTrace();
-            notifyJsAudioState(false, false);
-        }
+        this.isAudioPlaying = true;
+        acquireWakeLock();
+        MediaPlaybackService.startPlay(this, streamUrl, title, artist);
     }
 
     public void pauseNativeAudio() {
-        try {
-            if (nativeMediaPlayer != null && nativeMediaPlayer.isPlaying()) {
-                nativeMediaPlayer.pause();
-            }
-            this.isAudioPlaying = false;
-            releaseWakeLock();
-            if (mediaSession != null && mediaSession.getController() != null && mediaSession.getController().getMetadata() != null) {
-                String title = mediaSession.getController().getMetadata().getString(MediaMetadataCompat.METADATA_KEY_TITLE);
-                String artist = mediaSession.getController().getMetadata().getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
-                showMediaNotification(title != null ? title : "Claude FM", artist != null ? artist : "Lofi Live Radio", false);
-            }
-            notifyJsAudioState(false, false);
-        } catch (Exception ignored) {}
+        this.isAudioPlaying = false;
+        releaseWakeLock();
+        MediaPlaybackService.pause(this);
     }
 
     public void resumeNativeAudio() {
-        try {
-            acquireWakeLock();
-            this.isAudioPlaying = true;
-            if (nativeMediaPlayer != null && isNativePrepared) {
-                nativeMediaPlayer.start();
-                if (mediaSession != null && mediaSession.getController() != null && mediaSession.getController().getMetadata() != null) {
-                    String title = mediaSession.getController().getMetadata().getString(MediaMetadataCompat.METADATA_KEY_TITLE);
-                    String artist = mediaSession.getController().getMetadata().getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
-                    showMediaNotification(title != null ? title : "Claude FM", artist != null ? artist : "Lofi Live Radio", true);
-                }
-                notifyJsAudioState(true, false);
-            } else if (currentStreamUrl != null) {
-                String title = "Claude FM";
-                String artist = "Lofi Live Radio";
-                if (mediaSession != null && mediaSession.getController() != null && mediaSession.getController().getMetadata() != null) {
-                    String t = mediaSession.getController().getMetadata().getString(MediaMetadataCompat.METADATA_KEY_TITLE);
-                    String a = mediaSession.getController().getMetadata().getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
-                    if (t != null) title = t;
-                    if (a != null) artist = a;
-                }
-                startNativeAudio(currentStreamUrl, title, artist);
-            }
-        } catch (Exception ignored) {}
+        this.isAudioPlaying = true;
+        acquireWakeLock();
+        MediaPlaybackService.resume(this);
     }
 
     public void stopNativeAudio() {
-        try {
-            this.isAudioPlaying = false;
-            releaseWakeLock();
-            if (nativeMediaPlayer != null) {
-                try {
-                    if (nativeMediaPlayer.isPlaying()) {
-                        nativeMediaPlayer.stop();
-                    }
-                    nativeMediaPlayer.reset();
-                } catch (Exception ignored) {}
-            }
-            isNativePrepared = false;
-            currentStreamUrl = null;
-        } catch (Exception ignored) {}
+        this.isAudioPlaying = false;
+        releaseWakeLock();
+        MediaPlaybackService.stop(this);
     }
 
     public void setNativeVolume(float volume) {
-        this.currentVolume = Math.max(0.0f, Math.min(1.0f, volume));
-        try {
-            if (nativeMediaPlayer != null) {
-                nativeMediaPlayer.setVolume(currentVolume, currentVolume);
-            }
-        } catch (Exception ignored) {}
+        MediaPlaybackService.setVolume(this, volume);
     }
 
     private void notifyJsAudioState(boolean isPlaying, boolean isBuffering) {
@@ -238,6 +135,36 @@ public class MainActivity extends BridgeActivity {
         requestNotificationPermission();
         requestAudioPermission();
         requestStorageAndCameraPermissions();
+
+        MediaPlaybackService.setStateListener((isPlaying, isBuffering) -> {
+            MainActivity.this.isAudioPlaying = isPlaying;
+            if (isPlaying) {
+                acquireWakeLock();
+            } else {
+                releaseWakeLock();
+            }
+            notifyJsAudioState(isPlaying, isBuffering);
+        });
+
+        MediaPlaybackService.setTrackNavigationListener(new MediaPlaybackService.TrackNavigationListener() {
+            @Override
+            public void onNext() {
+                runOnUiThread(() -> {
+                    if (getBridge() != null && getBridge().getWebView() != null) {
+                        getBridge().getWebView().evaluateJavascript("window.__sumireNextTrack && window.__sumireNextTrack();", null);
+                    }
+                });
+            }
+
+            @Override
+            public void onPrev() {
+                runOnUiThread(() -> {
+                    if (getBridge() != null && getBridge().getWebView() != null) {
+                        getBridge().getWebView().evaluateJavascript("window.__sumirePrevTrack && window.__sumirePrevTrack();", null);
+                    }
+                });
+            }
+        });
     }
 
     @Override
@@ -283,13 +210,8 @@ public class MainActivity extends BridgeActivity {
     public void onDestroy() {
         super.onDestroy();
         try {
-            stopNativeAudio();
-            if (nativeMediaPlayer != null) {
-                try {
-                    nativeMediaPlayer.release();
-                } catch (Exception ignored) {}
-                nativeMediaPlayer = null;
-            }
+            MediaPlaybackService.setStateListener(null);
+            MediaPlaybackService.setTrackNavigationListener(null);
             releaseWakeLock();
             if (mediaReceiver != null) {
                 unregisterReceiver(mediaReceiver);

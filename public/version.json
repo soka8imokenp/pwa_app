@@ -1,11 +1,11 @@
 {
-  "version": "1.8.91",
-  "buildNumber": 95,
+  "version": "1.8.92",
+  "buildNumber": 96,
   "releaseDate": "2026-09-07",
   "changelog": [
-    "Fixed build compile error in XiaomiScaleModal",
-    "Renamed header button to Smart Scale",
-    "Added support and architecture for future multi-brand smart scale integrations"
+    "Refined Smart Scale button placement and design without crowding header text",
+    "Removed simulator and test scan buttons",
+    "Cleaned up BLE and Xiaomi branding from modal and badges"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.91/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.92/Daily-Sumire-app-debug.apk"
 }

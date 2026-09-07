@@ -2,24 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   Bluetooth,
-  Scale,
-  Sparkles,
-  Zap,
-  Activity,
-  Droplets,
-  Flame,
   CheckCircle2,
   AlertCircle,
   RefreshCw,
-  Sliders,
-  Footprints,
   Info,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { playClickSound, playSuccessChime, playTaskCheckSound } from '../../lib/sound';
 import type { HealthProfile } from '../../types/health';
 import {
-  calculateXiaomiBiometrics,
   parseXiaomiScaleAdvertisement,
   isWebBluetoothAvailable,
   XIAOMI_SERVICE_UUID,
@@ -53,10 +44,8 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
   const [impedanceProgress, setImpedanceProgress] = useState<number>(0);
   const [reading, setReading] = useState<XiaomiScaleReading | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isSimulated, setIsSimulated] = useState(false);
 
   const scanAbortController = useRef<AbortController | null>(null);
-  const simulationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Reset state on open/close
   useEffect(() => {
@@ -65,12 +54,8 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
       setErrorMessage('');
       setReading(null);
       setImpedanceProgress(0);
-      setIsSimulated(false);
     } else {
       stopScanning();
-      if (simulationTimerRef.current) {
-        clearInterval(simulationTimerRef.current);
-      }
     }
   }, [isOpen]);
 
@@ -82,7 +67,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
   };
 
   /**
-   * Start Bluetooth LE Scan / Web Bluetooth pairing
+   * Start Bluetooth Scan & scale measurement
    */
   const handleStartScan = async () => {
     playClickSound();
@@ -90,9 +75,8 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
     setStatus('scanning');
 
     if (!isWebBluetoothAvailable()) {
-      // If Web Bluetooth is not supported in this webview/browser, offer simulation or manual test
       setErrorMessage(
-        'Web Bluetooth is not available in this browser view. You can test via simulated scan or use Chrome.'
+        'Bluetooth is not supported or not enabled in this browser view.'
       );
       setStatus('error');
       return;
@@ -101,7 +85,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
     try {
       const navBt = (navigator as any).bluetooth;
 
-      // Request device with Mi Scale filters
+      // Request device with Smart Scale filters
       const device = await navBt.requestDevice({
         filters: [
           { namePrefix: 'MIBFS' },
@@ -155,9 +139,10 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
               }
             }
           );
-        } catch {
-          // Fallback simulation if GATT fails
-          handleSimulate();
+        } catch (subErr) {
+          console.warn('GATT notification error:', subErr);
+          setErrorMessage('Could not read scale sensors. Please step on the scale and try again.');
+          setStatus('error');
         }
       }
     } catch (err: any) {
@@ -171,61 +156,6 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
         setStatus('error');
       }
     }
-  };
-
-  /**
-   * Safe Simulator to test scale metrics without physical proximity
-   */
-  const handleSimulate = () => {
-    playClickSound();
-    setIsSimulated(true);
-    setErrorMessage('');
-    setStatus('stabilizing');
-
-    const baseWeight = profile.currentWeight > 0 ? profile.currentWeight : 72.4;
-    let ticks = 0;
-
-    if (simulationTimerRef.current) clearInterval(simulationTimerRef.current);
-
-    simulationTimerRef.current = setInterval(() => {
-      ticks++;
-      // Fluctuating weight while stepping on
-      const jitter = Number(((Math.sin(ticks) * 0.8)).toFixed(2));
-      const currentSimWeight = Number((baseWeight + jitter).toFixed(2));
-      setLiveWeight(currentSimWeight);
-
-      if (ticks === 4) {
-        setStatus('analyzing');
-        setImpedanceProgress(35);
-      } else if (ticks === 6) {
-        setImpedanceProgress(70);
-      } else if (ticks >= 8) {
-        if (simulationTimerRef.current) clearInterval(simulationTimerRef.current);
-        setImpedanceProgress(100);
-
-        // Calculate realistic biometric output
-        const simulatedImpedance = 485;
-        const metrics = calculateXiaomiBiometrics(
-          baseWeight,
-          simulatedImpedance,
-          profile.height || 176,
-          profile.age || 26,
-          profile.gender || 'male'
-        );
-
-        const simulatedReading: XiaomiScaleReading = {
-          weight: baseWeight,
-          impedance: simulatedImpedance,
-          isStabilized: true,
-          isImpedanceComplete: true,
-          timestamp: new Date(),
-          unit: 'kg',
-          metrics,
-        };
-
-        completeMeasurement(simulatedReading);
-      }
-    }, 450);
   };
 
   const completeMeasurement = (res: XiaomiScaleReading) => {
@@ -262,25 +192,18 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#24201D]/60 backdrop-blur-xs animate-fadeIn select-none font-body">
       <div className="relative w-full max-w-md bg-[#FAF8F5] border-[2px] border-[#24201D] rounded-3xl shadow-[4px_4px_0px_#24201D] overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Header */}
+        {/* Header - Clean, without redundant tags */}
         <div className="p-4 bg-white border-b-[1.75px] border-[#24201D] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#EEF2FF] border border-[#24201D] flex items-center justify-center shadow-2xs">
               <Bluetooth className="w-4 h-4 text-[#4F46E5]" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[9px] font-black uppercase tracking-wider text-[#4F46E5] font-display bg-[#EEF2FF] px-1.5 py-0.2 rounded border border-[#4F46E5]/30">
-                  Xiaomi &amp; Smart BLE Scales
-                </span>
-                {isSimulated && (
-                  <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded border border-amber-300">
-                    Simulator
-                  </span>
-                )}
-              </div>
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#4F46E5] font-display block leading-none">
+                Smart Scale
+              </span>
               <h3 className="text-sm font-black font-display text-[#24201D] leading-tight mt-0.5">
-                Smart Bio-Impedance Sync
+                Bio-Impedance Sync
               </h3>
             </div>
           </div>
@@ -326,28 +249,19 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                   Step on Barefoot
                 </h4>
                 <p className="text-xs text-[#6B635B] max-w-xs mx-auto leading-relaxed">
-                  Make sure your feet touch all 4 silver electrode circles to allow the micro-current impedance scan.
+                  Make sure both feet touch the silver electrode circles to allow the bio-impedance measurement.
                 </p>
               </div>
 
-              {/* Action Buttons */}
-              <div className="pt-2 flex flex-col gap-2">
+              {/* Action Button */}
+              <div className="pt-2">
                 <button
                   type="button"
                   onClick={handleStartScan}
                   className="w-full py-3 px-4 bg-[#4F46E5] hover:bg-[#4338CA] text-white border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer font-display uppercase tracking-wider"
                 >
                   <Bluetooth className="w-4 h-4 stroke-[2.5]" />
-                  <span>Connect &amp; Weigh In (BLE)</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleSimulate}
-                  className="w-full py-2 px-3 bg-white hover:bg-stone-50 text-[#24201D] border border-[#24201D] rounded-xl text-xs font-bold shadow-2xs active:scale-98 transition-all flex items-center justify-center gap-1.5 cursor-pointer font-display"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Test Scale Simulation</span>
+                  <span>Connect &amp; Weigh In</span>
                 </button>
               </div>
             </div>
@@ -382,7 +296,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                   </span>
                 </div>
 
-                {/* Impedance bars (Xiaomi style) */}
+                {/* Impedance bars */}
                 <div className="pt-2">
                   <div className="flex items-center justify-between text-[9px] font-bold text-[#6B635B] mb-1">
                     <span>Bio-Impedance Sensors</span>
@@ -448,7 +362,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                 </div>
               </div>
 
-              {/* 6 Biometrics Grid from Xiaomi Algorithm */}
+              {/* 6 Biometrics Grid from Bio-Impedance Algorithm */}
               {reading.metrics && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -456,7 +370,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                       Decoded Body Composition
                     </span>
                     <span className="text-[9px] font-bold text-[#4F46E5] bg-[#EEF2FF] border border-[#4F46E5]/30 px-1.5 py-0.2 rounded font-mono-num">
-                      openScale / Xiaomi Clinical
+                      Clinical Bio-Impedance
                     </span>
                   </div>
 
@@ -578,26 +492,17 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                 <ul className="list-disc pl-4 space-y-0.5 text-[11px]">
                   <li>Ensure Bluetooth and Location are enabled on your Android phone.</li>
                   <li>Step onto the scale to wake it up before clicking scan.</li>
-                  <li>You can also test the algorithm immediately using the Simulator below.</li>
+                  <li>Keep both feet barefoot on the metal sensor electrodes.</li>
                 </ul>
               </div>
 
-              <div className="flex flex-col gap-2 pt-1">
+              <div className="pt-1">
                 <button
                   type="button"
                   onClick={handleStartScan}
                   className="w-full py-2.5 px-4 bg-[#4F46E5] hover:bg-[#4338CA] text-white border border-[#24201D] rounded-xl text-xs font-black shadow-2xs active:translate-y-0.5 transition-all cursor-pointer font-display uppercase tracking-wider"
                 >
                   Try Bluetooth Scan Again
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleSimulate}
-                  className="w-full py-2 px-3 bg-white hover:bg-stone-50 text-[#24201D] border border-[#24201D] rounded-xl text-xs font-bold shadow-2xs active:scale-98 transition-all flex items-center justify-center gap-1.5 cursor-pointer font-display"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Run Scale Simulator</span>
                 </button>
               </div>
             </div>

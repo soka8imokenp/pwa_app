@@ -208,7 +208,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
   ) => {
     await handleSaveWeightInternal(
       weight,
-      'Xiaomi Mi Scale 2 (BLE)',
+      'Smart Scale',
       undefined,
       bodyFat,
       profile.waistCm
@@ -257,62 +257,33 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
 
       {/* 1. Hero BMI & Weight Card */}
       <div className="p-4 sm:p-5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-4">
-        {/* Top bar with quick buttons */}
+        {/* Top bar - spacious, uncluttered */}
         <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#24201D]/15">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-8 h-8 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0">
               <Scale className="w-4 h-4 text-[#2D503C]" />
             </div>
             <div className="min-w-0">
-              <span className="text-[10px] font-black text-[#6B635B] uppercase tracking-wider block font-display leading-none truncate">
+              <span className="text-[10px] font-black text-[#6B635B] uppercase tracking-wider block font-display leading-none">
                 Biometrics & Body OS
               </span>
-              <h2 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none truncate">
+              <h2 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none">
                 BMI & Weight Tracker
               </h2>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
-            {/* Unique Smart Scale BLE Button in our signature tactile aesthetic */}
-            <button
-              type="button"
-              onClick={() => {
-                playClickSound();
-                setIsScaleModalOpen(true);
-              }}
-              title="Sync with Smart Scale (Xiaomi & BLE)"
-              className="px-2.5 py-1.5 bg-[#EEF2FF] hover:bg-[#E0E7FF] text-[#4F46E5] border-[1.5px] border-[#24201D] rounded-xl text-xs font-black shadow-2xs cursor-pointer active:translate-y-0.5 transition-all flex items-center gap-1.5 uppercase tracking-wider font-display"
-            >
-              <Bluetooth className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Smart Scale</span>
-            </button>
-
-            {/* Clean Weigh-In Button (without '+' icon) */}
-            <button
-              type="button"
-              onClick={() => {
-                playClickSound();
-                setIsLogWeightOpen(true);
-              }}
-              className="px-2.5 py-1.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border border-[#24201D] rounded-xl text-xs font-black shadow-2xs cursor-pointer active:translate-y-0.5 transition-all flex items-center justify-center uppercase tracking-wider font-display"
-            >
-              Weigh-In
-            </button>
-
-            {/* Profile Settings */}
-            <button
-              type="button"
-              onClick={() => {
-                playClickSound();
-                setIsProfileOpen(true);
-              }}
-              title="Edit Profile Parameters"
-              className="p-1.5 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
-            >
-              <Settings2 className="w-4 h-4 stroke-[2]" />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              setIsProfileOpen(true);
+            }}
+            title="Edit Profile Parameters"
+            className="p-1.5 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer shrink-0"
+          >
+            <Settings2 className="w-4 h-4 stroke-[2]" />
+          </button>
         </div>
 
         {/* Big Weight Numbers & BMI Badge */}
@@ -364,6 +335,39 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
               {idealWeightMin > 0 ? `Ideal: ${idealWeightMin}–${idealWeightMax} kg` : 'Ideal: —'}
             </span>
           </div>
+        </div>
+
+        {/* Dedicated Action Strip: Smart Scale & Weigh-In (Side-by-side, no crowding) */}
+        <div className="grid grid-cols-2 gap-2 pt-1">
+          {/* Unique Smart Scale Button */}
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              setIsScaleModalOpen(true);
+            }}
+            title="Sync with Smart Scale"
+            className="py-2.5 px-3 bg-[#EEF2FF] hover:bg-[#E0E7FF] text-[#4F46E5] border-[1.75px] border-[#24201D] rounded-xl text-xs font-black shadow-[2px_2px_0px_#24201D] cursor-pointer active:translate-y-0.5 transition-all flex items-center justify-center gap-2 uppercase tracking-wider font-display"
+          >
+            <span className="relative flex h-2 w-2 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4F46E5] opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4F46E5]" />
+            </span>
+            <Bluetooth className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
+            <span>Smart Scale</span>
+          </button>
+
+          {/* Clean Weigh-In Button (without '+' icon) */}
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              setIsLogWeightOpen(true);
+            }}
+            className="py-2.5 px-3 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-black shadow-[2px_2px_0px_#24201D] cursor-pointer active:translate-y-0.5 transition-all flex items-center justify-center uppercase tracking-wider font-display"
+          >
+            Weigh-In
+          </button>
         </div>
 
         {/* BMI Color Gauge Bar */}

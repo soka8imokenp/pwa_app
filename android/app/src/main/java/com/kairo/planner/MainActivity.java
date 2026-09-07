@@ -778,14 +778,10 @@ public class MainActivity extends BridgeActivity {
             runOnUiThread(() -> {
                 try {
                     if (ACTION_PLAY_PAUSE.equals(action)) {
-                        if (nativeMediaPlayer != null && isNativePrepared) {
-                            if (nativeMediaPlayer.isPlaying()) {
-                                pauseNativeAudio();
-                            } else {
-                                resumeNativeAudio();
-                            }
-                        } else if (getBridge() != null && getBridge().getWebView() != null) {
-                            getBridge().getWebView().evaluateJavascript("window.__sumireTogglePlay && window.__sumireTogglePlay();", null);
+                        if (isAudioPlaying) {
+                            pauseNativeAudio();
+                        } else {
+                            resumeNativeAudio();
                         }
                     } else if (ACTION_PREV.equals(action)) {
                         if (getBridge() != null && getBridge().getWebView() != null) {

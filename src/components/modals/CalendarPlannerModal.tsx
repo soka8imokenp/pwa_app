@@ -175,7 +175,7 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
                   playClickSound();
                   onOpenExport();
                 }}
-                title="Экспорт расписания в iCalendar (.ics)"
+                title="Export schedule to iCalendar (.ics)"
                 className="w-8 h-8 rounded-xl bg-[#FAF8F5] hover:bg-[#F4F0EA] border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
               >
                 <Download className="w-4 h-4 stroke-[2.25]" />

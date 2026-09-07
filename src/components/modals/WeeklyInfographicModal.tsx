@@ -215,9 +215,11 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
           {/* Header Brand Badge */}
           <div className="relative z-10 flex items-center justify-between pb-2 border-b border-[#24201D]/20">
             <div className="flex items-center gap-2 text-left">
-              <div className="w-9 h-9 rounded-xl bg-[#F0BB58] border-[1.5px] border-[#24201D] flex items-center justify-center shadow-2xs font-display font-black text-sm text-[#24201D]">
-                DS
-              </div>
+              <img
+                src="/icon-192x192.png"
+                alt="Daily Sumire"
+                className="w-9 h-9 rounded-xl border-[1.5px] border-[#24201D] shadow-2xs object-cover"
+              />
               <div>
                 <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
                   Daily Sumire

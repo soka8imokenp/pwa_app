@@ -92,10 +92,10 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-black font-display text-[#24201D]">
-                Экспорт в Календарь
+                Calendar Export
               </h3>
               <p className="text-[10px] text-[#6B635B] font-bold">
-                Универсальный файл .ics для любых календарей
+                Universal .ics file for Google, Apple & Outlook
               </p>
             </div>
           </div>
@@ -115,9 +115,9 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
         {/* Scope Selector */}
         <div className="grid grid-cols-3 gap-2">
           {[
-            { id: 'today', label: 'Только день', desc: selectedDate },
-            { id: 'week', label: 'Неделя (7д)', desc: 'Текущая неделя' },
-            { id: 'all', label: 'Все задачи', desc: 'Полный план' },
+            { id: 'today', label: 'Today Only', desc: selectedDate },
+            { id: 'week', label: 'Week (7d)', desc: 'Current Week' },
+            { id: 'all', label: 'All Tasks', desc: 'Full Schedule' },
           ].map((item) => (
             <button
               key={item.id}
@@ -143,7 +143,7 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-stone-700 stroke-[2.25]" />
             <span className="text-xs font-black text-[#24201D]">
-              {filteredTasks.length} {filteredTasks.length === 1 ? 'задача' : 'задач'} к экспорту
+              {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'} to export
             </span>
           </div>
 
@@ -154,7 +154,7 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
               onChange={(e) => setIncludeCompleted(e.target.checked)}
               className="accent-[#3D6B52] w-3.5 h-3.5 rounded cursor-pointer"
             />
-            <span className="text-[10px] font-bold text-[#6B635B]">Включая выполненные</span>
+            <span className="text-[10px] font-bold text-[#6B635B]">Include completed</span>
           </label>
         </div>
 
@@ -162,7 +162,7 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
         <div className="flex-1 overflow-y-auto space-y-1.5 max-h-48 pr-1">
           {filteredTasks.length === 0 ? (
             <div className="p-6 text-center text-xs text-stone-400 font-semibold bg-[#FAF8F5] rounded-2xl border border-dashed border-stone-200">
-              Нет задач для экспорта в выбранном периоде
+              No tasks found for export in selected timeframe
             </div>
           ) : (
             filteredTasks.map((t) => (
@@ -185,7 +185,7 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0 text-[10px] font-mono-num text-[#6B635B] font-bold">
-                  {t.estimatedMinutes ? `${t.estimatedMinutes}м` : '30м'}
+                  {t.estimatedMinutes ? `${t.estimatedMinutes}m` : '30m'}
                   {t.isCompleted && <Check className="w-3 h-3 text-[#3D6B52] stroke-[3]" />}
                 </div>
               </div>
@@ -204,12 +204,12 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
             {isDownloaded ? (
               <>
                 <CheckCircle2 className="w-4 h-4 text-emerald-200 stroke-[2.5]" />
-                <span>Скачано!</span>
+                <span>Downloaded!</span>
               </>
             ) : (
               <>
                 <Download className="w-4 h-4 stroke-[2.25]" />
-                <span>Скачать .ics</span>
+                <span>Download .ics</span>
               </>
             )}
           </button>
@@ -223,12 +223,12 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
             {isShared ? (
               <>
                 <CheckCircle2 className="w-4 h-4 text-[#3D6B52] stroke-[2.5]" />
-                <span>Отправлено!</span>
+                <span>Shared!</span>
               </>
             ) : (
               <>
                 <Share2 className="w-4 h-4 stroke-[2.25]" />
-                <span>Поделиться</span>
+                <span>Share .ics</span>
               </>
             )}
           </button>

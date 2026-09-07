@@ -1,15 +1,14 @@
 {
-  "version": "1.8.76",
-  "buildNumber": 80,
+  "version": "1.8.77",
+  "buildNumber": 81,
   "releaseDate": "2026-09-07",
   "changelog": [
-    "Lock screen mini player album art: uses official Sumire app icon (matching phone launcher)",
-    "Dedicated Android MediaPlaybackService (Foreground Service with mediaPlayback type)",
-    "Continuous 24/7 background radio streaming with Partial WakeLock and High-Performance WifiLock",
-    "Automatic reconnection on network hiccups",
-    "Lock screen play/pause/prev/next controls with hardware instant response"
+    "Menu modal redesign: removed Lock Vault and Evening Review entries",
+    "Enhanced dual-card panel for Weekly Infographic and Calendar Export with rich badges",
+    "Complete English localization of Calendar Export modal and iCal export buttons",
+    "Branded Weekly Infographic progress card with Sumire mascot icon"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.76/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.77/Daily-Sumire-app-debug.apk"
 }
 
 

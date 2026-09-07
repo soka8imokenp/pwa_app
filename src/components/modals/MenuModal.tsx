@@ -9,13 +9,10 @@ import {
   ChevronRight,
   Share2,
   Calendar,
-  Lock,
-  Moon,
   Flower2,
   User,
 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
-import { isPinSet } from '../../lib/securityService';
 import type { TabView } from '../layout/BottomNav';
 
 interface MenuModalProps {
@@ -218,107 +215,80 @@ export const MenuModal: React.FC<MenuModalProps> = ({
         </div>
 
         {/* Section 2: Actions & Tools */}
-        <div className="space-y-1.5 pt-1">
-          <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block px-1">
-            Tools & Actions
-          </span>
+        <div className="space-y-2 pt-1">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B]">
+              Tools & Export
+            </span>
+            <span className="text-[9px] font-bold text-[#2D503C] bg-[#DDE8DE] px-2 py-0.5 rounded-full border border-[#24201D]">
+              Productivity Cards
+            </span>
+          </div>
 
-          {/* Evening Debrief */}
-          {onOpenEveningReview && (
-            <button
-              onClick={() => {
-                playClickSound();
-                onClose();
-                onOpenEveningReview();
-              }}
-              className="w-full p-3 rounded-2xl bg-[#FBECCF] hover:bg-[#F7E2BB] border-[1.75px] border-[#24201D] flex items-center justify-between transition-all cursor-pointer text-left shadow-2xs"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-[#F0BB58] border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0">
-                  <Moon className="w-4 h-4 text-[#854D0E] stroke-[2.25]" />
+          <div className="grid grid-cols-2 gap-2.5">
+            {/* Weekly Infographic Card */}
+            {onOpenWeeklyInfographic && (
+              <button
+                onClick={() => {
+                  playClickSound();
+                  onClose();
+                  onOpenWeeklyInfographic();
+                }}
+                className="p-3.5 rounded-2xl bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[1.75px] border-[#24201D] flex flex-col justify-between transition-all cursor-pointer text-left shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 group min-h-[110px]"
+              >
+                <div className="flex items-center justify-between w-full mb-2">
+                  <div className="w-8 h-8 rounded-xl bg-white border border-[#24201D] flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform">
+                    <Share2 className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
+                  </div>
+                  <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-white/80 border border-[#24201D]/20 text-[#2D503C]">
+                    PNG
+                  </span>
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-[#24201D]">Evening Review</h4>
-                  <p className="text-[10px] text-[#6B635B] font-medium">Daily summary & rollover</p>
+                  <h4 className="text-xs font-black text-[#2D503C] font-display uppercase tracking-wide">
+                    Weekly Card
+                  </h4>
+                  <p className="text-[10px] text-[#2D503C]/80 font-medium leading-tight mt-0.5">
+                    Infographic digest & XP stats
+                  </p>
                 </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-stone-400" />
-            </button>
-          )}
+              </button>
+            )}
 
-          {/* Weekly Infographic */}
-          {onOpenWeeklyInfographic && (
-            <button
-              onClick={() => {
-                playClickSound();
-                onClose();
-                onOpenWeeklyInfographic();
-              }}
-              className="w-full p-3 rounded-2xl bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[1.75px] border-[#24201D] flex items-center justify-between transition-all cursor-pointer text-left shadow-2xs"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-white border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0">
-                  <Share2 className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
+            {/* Calendar Export Card */}
+            {onOpenCalendarExport && (
+              <button
+                onClick={() => {
+                  playClickSound();
+                  onClose();
+                  onOpenCalendarExport();
+                }}
+                className="p-3.5 rounded-2xl bg-[#FBECCF] hover:bg-[#F7E2BB] border-[1.75px] border-[#24201D] flex flex-col justify-between transition-all cursor-pointer text-left shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 group min-h-[110px]"
+              >
+                <div className="flex items-center justify-between w-full mb-2">
+                  <div className="w-8 h-8 rounded-xl bg-white border border-[#24201D] flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform">
+                    <Calendar className="w-4 h-4 text-[#854D0E] stroke-[2.25]" />
+                  </div>
+                  <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-white/80 border border-[#24201D]/20 text-[#854D0E]">
+                    .ICS
+                  </span>
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-[#24201D]">Weekly Infographic</h4>
-                  <p className="text-[10px] text-[#6B635B] font-medium">Export progress card</p>
+                  <h4 className="text-xs font-black text-[#854D0E] font-display uppercase tracking-wide">
+                    Calendar Export
+                  </h4>
+                  <p className="text-[10px] text-[#854D0E]/80 font-medium leading-tight mt-0.5">
+                    Sync schedule to external apps
+                  </p>
                 </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-stone-400" />
-            </button>
-          )}
-
-          {/* Calendar Sync & .ics Export */}
-          {onOpenCalendarExport && (
-            <button
-              onClick={() => {
-                playClickSound();
-                onClose();
-                onOpenCalendarExport();
-              }}
-              className="w-full p-3 rounded-2xl bg-[#F4F0EA] hover:bg-stone-200 border-[1.75px] border-[#24201D] flex items-center justify-between transition-all cursor-pointer text-left shadow-2xs"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-[#FBECCF] border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0">
-                  <Calendar className="w-4 h-4 text-[#854D0E] stroke-[2.25]" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-[#24201D]">Calendar Export (.ics)</h4>
-                  <p className="text-[10px] text-[#6B635B] font-medium">Sync schedule with external apps</p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-stone-400" />
-            </button>
-          )}
-
-          {/* Quick Lock App Button (If PIN is set) */}
-          {isPinSet() && onLockApp && (
-            <button
-              onClick={() => {
-                playClickSound();
-                onClose();
-                onLockApp();
-              }}
-              className="w-full p-3 rounded-2xl bg-white hover:bg-stone-100 border-[1.75px] border-[#24201D] flex items-center justify-between transition-all cursor-pointer text-left shadow-2xs group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-[#F7E3DC] border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0">
-                  <Lock className="w-4 h-4 text-[#C25E40] stroke-[2.25]" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-[#24201D]">Lock Vault</h4>
-                  <p className="text-[10px] text-[#6B635B] font-medium">Instant security lock</p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-stone-400 group-hover:translate-x-0.5 transition-transform" />
-            </button>
-          )}
+              </button>
+            )}
+          </div>
 
           {/* Settings */}
           <button
             onClick={handleSettingsClick}
-            className="w-full p-3 rounded-2xl bg-[#24201D] text-white border-[1.75px] border-[#24201D] flex items-center justify-between transition-all cursor-pointer text-left shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 mt-1"
+            className="w-full p-3 rounded-2xl bg-[#24201D] text-white border-[1.75px] border-[#24201D] flex items-center justify-between transition-all cursor-pointer text-left shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 mt-2"
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shadow-2xs shrink-0">

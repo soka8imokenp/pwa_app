@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../lib/db';
 import type { HealthProfile, WeightLog, MealLog, WaterLog, WorkoutLog } from '../types/health';
 import { DEFAULT_HEALTH_PROFILE, calculateComprehensiveMetrics, calculateBmi } from '../lib/healthFormulas';
+import { logActivity } from '../lib/activityLogger';
 
 export function useHealthData(selectedDate: string) {
   // 1. Live queries
@@ -94,14 +95,31 @@ export function useHealthData(selectedDate: string) {
     const profileUpdates: Partial<HealthProfile> = { currentWeight: weight };
     if (waistCm && waistCm > 0) profileUpdates.waistCm = waistCm;
     await updateProfile(profileUpdates);
+
+    logActivity({
+      action: 'weight',
+      entity: 'scale',
+      title: `${weight.toFixed(1)} kg`,
+      details: `Weight recorded${bodyFat ? ` • Body Fat ${bodyFat.toFixed(1)}%` : ''}${note ? ` • ${note}` : ''}`,
+      date,
+    });
   };
 
   const deleteWeightLog = async (id: number) => {
+    const entry = await db.weightLogs.get(id);
     await db.weightLogs.delete(id);
     const remaining = await db.weightLogs.orderBy('date').toArray();
     if (remaining.length > 0) {
       const latest = remaining[remaining.length - 1];
       await updateProfile({ currentWeight: latest.weight });
+    }
+    if (entry) {
+      logActivity({
+        action: 'deleted',
+        entity: 'scale',
+        title: `${entry.weight.toFixed(1)} kg record`,
+        details: 'Deleted weight entry',
+      });
     }
   };
 

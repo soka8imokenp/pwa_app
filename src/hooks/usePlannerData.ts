@@ -6,11 +6,13 @@ import type { Task, Habit, HabitLog, FocusSession, HabitWithStats, DayOverviewSt
 import { calculateHabitStats, calculateOverallActivityStreak, OverallActivityStats } from '../lib/streaks';
 import { triggerTwoWaySync } from '../lib/syncEngine';
 import { sendLocalNotification } from '../lib/notifications';
+import { logActivity, seedInitialActivityFromHistoryIfEmpty } from '../lib/activityLogger';
 
 export function usePlannerData(selectedDate: string) {
   // Ensure database is initialized with initial sample data on first load and trigger sync
   useEffect(() => {
     seedDemoDataIfEmpty().then(() => {
+      seedInitialActivityFromHistoryIfEmpty();
       migrateExistingMealsToEnglish().finally(() => {
         triggerTwoWaySync();
       });
@@ -104,6 +106,12 @@ export function usePlannerData(selectedDate: string) {
       createdAt: Date.now(),
     });
     triggerTwoWaySync();
+    logActivity({
+      action: 'created',
+      entity: task.isPriority ? 'priority' : 'backlog',
+      title: task.title,
+      details: task.isPriority ? 'Added to Top 3 Priorities' : 'Added to Backlog',
+    });
     sendLocalNotification(
       'Task Scheduled',
       `"${task.title}" saved to ${task.isPriority ? 'Top Priorities' : 'Backlog'}`,
@@ -113,8 +121,15 @@ export function usePlannerData(selectedDate: string) {
 
   const toggleTaskComplete = async (task: Task) => {
     if (!task.id) return;
-    await db.tasks.update(task.id, { isCompleted: !task.isCompleted });
+    const nextDone = !task.isCompleted;
+    await db.tasks.update(task.id, { isCompleted: nextDone, updatedAt: Date.now() });
     triggerTwoWaySync();
+    logActivity({
+      action: nextDone ? 'completed' : 'uncompleted',
+      entity: task.isPriority ? 'priority' : 'task',
+      title: task.title,
+      details: nextDone ? 'Marked as completed' : 'Reopened task',
+    });
   };
 
   const toggleSubTaskComplete = async (taskId: number, subTaskId: string) => {
@@ -123,21 +138,33 @@ export function usePlannerData(selectedDate: string) {
     const updatedSubtasks = task.subtasks.map((st) =>
       st.id === subTaskId ? { ...st, isCompleted: !st.isCompleted } : st
     );
-    await db.tasks.update(taskId, { subtasks: updatedSubtasks });
+    await db.tasks.update(taskId, { subtasks: updatedSubtasks, updatedAt: Date.now() });
     triggerTwoWaySync();
   };
 
   const promoteTaskToPriority = async (task: Task) => {
     if (!task.id) return;
     if (priorityTasks.length >= 3) return;
-    await db.tasks.update(task.id, { isPriority: true, date: selectedDate, order: priorityTasks.length });
+    await db.tasks.update(task.id, { isPriority: true, date: selectedDate, order: priorityTasks.length, updatedAt: Date.now() });
     triggerTwoWaySync();
+    logActivity({
+      action: 'promoted',
+      entity: 'priority',
+      title: task.title,
+      details: 'Promoted from Backlog to Top 3 Priorities',
+    });
   };
 
   const demoteTaskToBacklog = async (task: Task) => {
     if (!task.id) return;
-    await db.tasks.update(task.id, { isPriority: false, order: undefined });
+    await db.tasks.update(task.id, { isPriority: false, order: undefined, updatedAt: Date.now() });
     triggerTwoWaySync();
+    logActivity({
+      action: 'demoted',
+      entity: 'backlog',
+      title: task.title,
+      details: 'Moved from Top 3 to Backlog',
+    });
   };
 
   const reorderPriorityTasks = async (sourceIndex: number, targetIndex: number) => {
@@ -166,8 +193,17 @@ export function usePlannerData(selectedDate: string) {
   };
 
   const deleteTask = async (taskId: number) => {
+    const taskToDelete = await db.tasks.get(taskId);
     await db.tasks.delete(taskId);
     triggerTwoWaySync();
+    if (taskToDelete) {
+      logActivity({
+        action: 'deleted',
+        entity: taskToDelete.isPriority ? 'priority' : 'task',
+        title: taskToDelete.title,
+        details: 'Task deleted permanently',
+      });
+    }
   };
 
   const addHabit = async (habit: Omit<Habit, 'id' | 'createdAt' | 'archived'>) => {
@@ -177,6 +213,12 @@ export function usePlannerData(selectedDate: string) {
       createdAt: Date.now(),
     });
     triggerTwoWaySync();
+    logActivity({
+      action: 'created',
+      entity: 'habit',
+      title: habit.title,
+      details: 'Created new daily habit tracker',
+    });
     sendLocalNotification(
       'Habit Created',
       `"${habit.title}" added to daily habits streak tracker`,
@@ -185,16 +227,25 @@ export function usePlannerData(selectedDate: string) {
   };
 
   const updateTaskDate = async (taskId: number, newDate: string) => {
-    await db.tasks.update(taskId, { date: newDate });
+    await db.tasks.update(taskId, { date: newDate, updatedAt: Date.now() });
     triggerTwoWaySync();
   };
 
   const deleteHabit = async (habitId: number) => {
+    const habitToDelete = await db.habits.get(habitId);
     await db.transaction('rw', [db.habits, db.habitLogs], async () => {
       await db.habits.delete(habitId);
       await db.habitLogs.where('habitId').equals(habitId).delete();
     });
     triggerTwoWaySync();
+    if (habitToDelete) {
+      logActivity({
+        action: 'deleted',
+        entity: 'habit',
+        title: habitToDelete.title,
+        details: 'Habit deleted permanently',
+      });
+    }
   };
 
   const toggleHabitLog = async (habitId: number, dateStr: string, currentStatus: boolean) => {
@@ -203,24 +254,41 @@ export function usePlannerData(selectedDate: string) {
       .equals([habitId, dateStr])
       .first();
 
+    const nextCompleted = !currentStatus;
     if (existingLog && existingLog.id) {
-      await db.habitLogs.update(existingLog.id, { completed: !currentStatus });
+      await db.habitLogs.update(existingLog.id, { completed: nextCompleted });
     } else {
       await db.habitLogs.add({
         habitId,
         date: dateStr,
-        completed: !currentStatus,
+        completed: nextCompleted,
       });
     }
     triggerTwoWaySync();
+
+    const targetHabit = allHabits.find((h) => h.id === habitId);
+    logActivity({
+      action: nextCompleted ? 'completed' : 'uncompleted',
+      entity: 'habit',
+      title: targetHabit?.title || 'Habit',
+      details: nextCompleted ? `Logged completion for ${dateStr}` : `Unchecked for ${dateStr}`,
+    });
   };
 
   const logFocusSession = async (session: Omit<FocusSession, 'id' | 'completedAt'>) => {
+    const now = Date.now();
     await db.focusSessions.add({
       ...session,
-      completedAt: Date.now(),
+      completedAt: now,
     });
     triggerTwoWaySync();
+    logActivity({
+      action: 'focus',
+      entity: 'focus',
+      title: session.taskTitle || 'Focus Session',
+      details: `${session.durationMinutes}m focus completed (${session.mode})`,
+      timestamp: now,
+    });
   };
 
   const deleteFocusSession = async (sessionId: number) => {

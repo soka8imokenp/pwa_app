@@ -35,6 +35,9 @@ const WeeklyInfographicModal = lazy(() =>
 const CalendarExportModal = lazy(() =>
   import('../modals/CalendarExportModal').then((m) => ({ default: m.CalendarExportModal }))
 );
+const ActivityLogsModal = lazy(() =>
+  import('../modals/ActivityLogsModal').then((m) => ({ default: m.ActivityLogsModal }))
+);
 
 export interface ModalManagerProps {
   // Task & Habit modals
@@ -80,6 +83,7 @@ export interface ModalManagerProps {
   onOpenEveningReview: () => void;
   onOpenWeeklyInfographic: () => void;
   onOpenCalendarExport: () => void;
+  onOpenActivityLogs: () => void;
   onLockApp: () => void;
 
   // Profile Modal
@@ -129,6 +133,10 @@ export interface ModalManagerProps {
   // Security Lock
   isLocked: boolean;
   onUnlockApp: () => void;
+
+  // Activity Logs Modal
+  isActivityLogsOpen: boolean;
+  onCloseActivityLogs: () => void;
 }
 
 export const ModalManager: React.FC<ModalManagerProps> = ({
@@ -165,6 +173,7 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
   onOpenEveningReview,
   onOpenWeeklyInfographic,
   onOpenCalendarExport,
+  onOpenActivityLogs,
   onLockApp,
   isProfileOpen,
   onCloseProfile,
@@ -198,6 +207,8 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
   onCloseCalendarExport,
   isLocked,
   onUnlockApp,
+  isActivityLogsOpen,
+  onCloseActivityLogs,
 }) => {
   const streak = overallStreak ?? streakCount ?? 0;
 
@@ -229,6 +240,7 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
         onOpenEveningReview={onOpenEveningReview}
         onOpenWeeklyInfographic={onOpenWeeklyInfographic}
         onOpenCalendarExport={onOpenCalendarExport}
+        onOpenActivityLogs={onOpenActivityLogs}
         onLockApp={onLockApp}
       />
 
@@ -337,6 +349,13 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
             onClose={onCloseCalendarExport}
             allTasks={allTasks}
             selectedDate={selectedDate}
+          />
+        )}
+
+        {isActivityLogsOpen && (
+          <ActivityLogsModal
+            isOpen={isActivityLogsOpen}
+            onClose={onCloseActivityLogs}
           />
         )}
       </Suspense>

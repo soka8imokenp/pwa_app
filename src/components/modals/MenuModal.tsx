@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   X,
   LayoutGrid,
-  Inbox,
+  History,
   BarChart3,
   Compass,
   Settings,
@@ -27,6 +27,7 @@ interface MenuModalProps {
   onOpenEveningReview?: () => void;
   onOpenWeeklyInfographic?: () => void;
   onOpenCalendarExport?: () => void;
+  onOpenActivityLogs?: () => void;
   onLockApp?: () => void;
 }
 
@@ -41,6 +42,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
   onOpenEveningReview,
   onOpenWeeklyInfographic,
   onOpenCalendarExport,
+  onOpenActivityLogs,
   onLockApp,
 }) => {
   const [avatarId, setAvatarId] = useState<string>('sumire-scout');
@@ -170,31 +172,30 @@ export const MenuModal: React.FC<MenuModalProps> = ({
             Views & Workload
           </span>
 
-          {/* Backlog */}
+          {/* Activity Log */}
           <button
             onClick={() => {
               playClickSound();
-              onSelectTab('priorities');
               onClose();
-              setTimeout(() => {
-                const el = document.getElementById('backlog-section');
-                if (el) {
-                  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-              }, 150);
+              onOpenActivityLogs?.();
             }}
-            className="w-full p-3 rounded-2xl border-[1.75px] bg-[#F4F0EA] hover:bg-[#E8EFE9] border-stone-200 hover:border-[#24201D] shadow-2xs flex items-center justify-between transition-all cursor-pointer text-left"
+            className="w-full p-3 rounded-2xl border-[1.75px] bg-[#F4F0EA] hover:bg-[#E8EFE9] border-stone-200 hover:border-[#24201D] shadow-2xs hover:shadow-[2px_2px_0px_#24201D] flex items-center justify-between transition-all cursor-pointer text-left group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-white border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0">
-                <Inbox className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
+              <div className="w-8 h-8 rounded-xl bg-white border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
+                <History className="w-4 h-4 text-[#3D6B52] stroke-[2.25]" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-[#24201D]">Task Backlog</h4>
-                <p className="text-[10px] text-[#6B635B] font-medium">Idea pool on Today screen</p>
+                <h4 className="text-xs font-bold text-[#24201D]">Activity Log</h4>
+                <p className="text-[10px] text-[#6B635B] font-medium">Recent actions, edits & audit trail</p>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-stone-400" />
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#3D6B52]/10 text-[#3D6B52] border border-[#3D6B52]/20">
+                Feed
+              </span>
+              <ChevronRight className="w-4 h-4 text-stone-400 group-hover:translate-x-0.5 transition-transform" />
+            </div>
           </button>
 
           {/* Stats */}

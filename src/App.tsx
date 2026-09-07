@@ -110,6 +110,7 @@ export function App() {
   const [isStreakModalOpen, setIsStreakModalOpen] = useState(false);
   const [isWeeklyInfographicOpen, setIsWeeklyInfographicOpen] = useState(false);
   const [isCalendarExportOpen, setIsCalendarExportOpen] = useState(false);
+  const [isActivityLogsOpen, setIsActivityLogsOpen] = useState(false);
   const [availableUpdate, setAvailableUpdate] = useState<AppUpdateInfo | null>(null);
   const [isLocked, setIsLocked] = useState<boolean>(() => isAppLocked());
 
@@ -482,6 +483,7 @@ export function App() {
           onOpenEveningReview={() => setIsEveningReviewOpen(true)}
           onOpenWeeklyInfographic={() => setIsWeeklyInfographicOpen(true)}
           onOpenCalendarExport={() => setIsCalendarExportOpen(true)}
+          onOpenActivityLogs={() => setIsActivityLogsOpen(true)}
           onLockApp={handleLockApp}
           isProfileOpen={isProfileOpen}
           onCloseProfile={() => setIsProfileOpen(false)}
@@ -518,6 +520,8 @@ export function App() {
           onCloseCalendarExport={() => setIsCalendarExportOpen(false)}
           isLocked={isLocked}
           onUnlockApp={handleUnlockApp}
+          isActivityLogsOpen={isActivityLogsOpen}
+          onCloseActivityLogs={() => setIsActivityLogsOpen(false)}
         />
       </div>
     </div>

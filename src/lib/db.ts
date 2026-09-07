@@ -9,6 +9,18 @@ export interface UserSettingRecord {
   value: any;
 }
 
+export interface ActivityLog {
+  id?: number;
+  timestamp: number;
+  date: string;
+  action: 'created' | 'completed' | 'uncompleted' | 'deleted' | 'promoted' | 'demoted' | 'focus' | 'weight' | 'habit' | 'meal' | 'water';
+  entity: 'task' | 'priority' | 'backlog' | 'habit' | 'focus' | 'scale' | 'nutrition' | 'system';
+  title: string;
+  details?: string;
+  badge?: string;
+  metadata?: any;
+}
+
 export class PlannerDatabase extends Dexie {
   tasks!: Table<Task>;
   habits!: Table<Habit>;
@@ -21,6 +33,7 @@ export class PlannerDatabase extends Dexie {
   mealLogs!: Table<MealLog>;
   waterLogs!: Table<WaterLog>;
   workoutLogs!: Table<WorkoutLog>;
+  activityLogs!: Table<ActivityLog>;
 
   constructor() {
     super('PragmaticPlannerDB');
@@ -46,6 +59,9 @@ export class PlannerDatabase extends Dexie {
       tasks: '++id, date, isPriority, isCompleted, createdAt, order, updatedAt, deletedAt',
       habits: '++id, archived, createdAt, updatedAt, deletedAt',
       links: '++id, title, category, clicks, createdAt, updatedAt, deletedAt',
+    });
+    this.version(6).stores({
+      activityLogs: '++id, timestamp, date, action, entity',
     });
   }
 }

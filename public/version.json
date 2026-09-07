@@ -1,10 +1,11 @@
 {
-  "version": "1.8.98",
-  "buildNumber": 102,
+  "version": "1.8.99",
+  "buildNumber": 103,
   "releaseDate": "2026-09-07",
   "changelog": [
-    "Redesigned Backlog section: custom neo-brutalist category dropdown, removed slots counter, sleek panels",
-    "Unified aesthetic with tactile buttons, rounded-2xl panels, and minimalist controls"
+    "Replaced Task Backlog in Menu with comprehensive Activity Log (Журнал действий)",
+    "Track all recent actions: tasks created/completed/reopened/deleted, habits tracked, smart scale weigh-ins, focus sessions",
+    "Neo-brutalist modal with category filtering, search, relative timestamps, and audit summary"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.98/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.99/Daily-Sumire-app-debug.apk"
 }

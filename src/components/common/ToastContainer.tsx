@@ -57,7 +57,7 @@ export const ToastContainer: React.FC = () => {
 
         if (toast.type === 'success') {
           bgStyle = 'bg-[#DDE8DE] text-[#2D503C] border-[#24201D]';
-          icon = '✨';
+          icon = '🌿';
         } else if (toast.type === 'warn') {
           bgStyle = 'bg-[#FEF08A] text-[#24201D] border-[#24201D]';
           icon = '⚠️';

@@ -12,7 +12,6 @@ import {
   Target,
   Heart,
   Coffee,
-  Sparkles,
 } from 'lucide-react';
 import type { HabitWithStats } from '../../types';
 import { playTaskCheckSound, playSuccessChime, playClickSound } from '../../lib/sound';

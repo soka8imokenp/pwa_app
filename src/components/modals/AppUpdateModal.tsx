@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Download,
   X,
-  Sparkles,
   CheckCircle2,
   FileDown,
   Loader2,

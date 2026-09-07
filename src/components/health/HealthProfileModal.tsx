@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Target, Activity, Info, Check, Sparkles, ArrowRight } from 'lucide-react';
+import { X, User, Target, Activity, Info, Check, Wand2, ArrowRight } from 'lucide-react';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import type { HealthProfile, ActivityLevel, HealthGoal, Gender } from '../../types/health';
 
@@ -56,6 +56,9 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     playSuccessChime();
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kairo_health_onboarded', 'true');
+    }
     await onSaveProfile({
       age: Number(age),
       gender,
@@ -109,7 +112,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
             className="w-full p-2.5 rounded-2xl bg-[#DDE8DE] hover:bg-[#CDE0CE] border-[1.5px] border-[#24201D] text-xs font-black text-[#2D503C] flex items-center justify-between shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-[#2D503C]" />
+              <Wand2 className="w-3.5 h-3.5 text-[#2D503C]" />
               <span>Run Guided Calibration Wizard</span>
             </div>
             <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />

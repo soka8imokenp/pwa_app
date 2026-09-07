@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Share2, X, Flame, Sparkles, Target } from 'lucide-react';
+import { Share2, X, Flame, Target } from 'lucide-react';
 import fireAnimation from '../../assets/fire.json';
 import { LottiePlayer } from '../common/LottiePlayer';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
@@ -77,7 +77,7 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
     playClickSound();
     const shareText = streakCount > 0
       ? `I'm on a ${streakCount} day streak on Daily Sumire! 🔥 Keep the momentum going!`
-      : `Starting my productivity streak on Daily Sumire! ✨`;
+      : `Starting my productivity streak on Daily Sumire! 🔥`;
 
     if (navigator.share) {
       try {

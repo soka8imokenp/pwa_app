@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, FileText, AlertTriangle, Sparkles, Scale } from 'lucide-react';
+import { X, FileText, AlertTriangle, Bot, Scale } from 'lucide-react';
 import { BrutalButton } from '../common/BrutalButton';
 
 interface TermsOfServiceModalProps {
@@ -54,7 +54,7 @@ export const TermsOfServiceModal: React.FC<TermsOfServiceModalProps> = ({ isOpen
 
           <div className="p-3 bg-white border border-[#24201D] rounded-2xl shadow-2xs space-y-1.5">
             <div className="flex items-center gap-2 font-black text-[#2D503C]">
-              <Sparkles className="w-4 h-4" />
+              <Bot className="w-4 h-4" />
               <span>2. Artificial Intelligence Estimates</span>
             </div>
             <p className="text-[#6B635B]">

@@ -1,7 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   X,
-  Sparkles,
+  HeartPulse,
+  Trophy,
+  Zap,
   ArrowRight,
   ArrowLeft,
   CheckCircle2,
@@ -152,7 +154,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
         <div className="px-5 py-3.5 bg-white border-b-[2px] border-[#24201D] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-2xs">
-              <Sparkles className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
+              <HeartPulse className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
             </div>
             <div>
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
@@ -611,8 +613,9 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
 
               {/* Calculated Targets Preview Strip */}
               <div className="p-3 bg-[#DDE8DE] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-1.5">
-                <span className="text-[9px] font-black uppercase tracking-wider text-[#2D503C] block font-display">
-                  ✨ Computed Daily Baseline:
+                <span className="text-[9px] font-black uppercase tracking-wider text-[#2D503C] flex items-center gap-1 font-display">
+                  <Zap className="w-3 h-3 text-[#2D503C]" />
+                  <span>Computed Daily Baseline:</span>
                 </span>
                 <div className="grid grid-cols-2 gap-2 text-xs font-bold text-[#24201D]">
                   <div className="p-2 rounded-xl bg-white border border-[#24201D]/20">
@@ -637,8 +640,8 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
           {/* ========================================================================= */}
           {step === 4 && (
             <div className="space-y-4 text-center py-2 animate-in zoom-in-95 duration-200">
-              <div className="w-16 h-16 rounded-3xl bg-[#DDE8DE] border-[2px] border-[#24201D] flex items-center justify-center mx-auto shadow-[3px_3px_0px_#24201D]">
-                <Sparkles className="w-8 h-8 text-[#2D503C] stroke-[2.25]" />
+              <div className="w-16 h-16 rounded-3xl bg-[#FBECCF] border-[2px] border-[#24201D] flex items-center justify-center mx-auto shadow-[3px_3px_0px_#24201D]">
+                <Trophy className="w-8 h-8 text-[#854D0E] stroke-[2.25]" />
               </div>
 
               <div className="space-y-1">

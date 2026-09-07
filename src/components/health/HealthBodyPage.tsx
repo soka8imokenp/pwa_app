@@ -6,7 +6,7 @@ import {
   Settings2,
   RefreshCw,
   Bot,
-  Sparkles,
+  Compass,
 } from 'lucide-react';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import type { HealthProfile, CalculatedHealthMetrics, WeightLog } from '../../types/health';
@@ -50,9 +50,9 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
   const [activeMetricDetail, setActiveMetricDetail] = useState<MetricDetailModalInfo | null>(null);
 
   // Guided Health Onboarding State
-  const [isOnboardingWizardOpen, setIsOnboardingWizardOpen] = useState(() => {
+  const [isOnboarded, setIsOnboarded] = useState(() => {
     if (typeof window !== 'undefined') {
-      return !localStorage.getItem('kairo_health_onboarded');
+      return localStorage.getItem('kairo_health_onboarded') === 'true';
     }
     return false;
   });
@@ -64,10 +64,19 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
     return false;
   });
 
+  const [isOnboardingWizardOpen, setIsOnboardingWizardOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !localStorage.getItem('kairo_health_onboarded');
+    }
+    return false;
+  });
+
   const handleCloseWizard = () => {
     setIsOnboardingWizardOpen(false);
     if (typeof window !== 'undefined') {
-      setIsOnboardingSkipped(localStorage.getItem('kairo_health_onboarded') === 'skipped');
+      const status = localStorage.getItem('kairo_health_onboarded');
+      setIsOnboarded(status === 'true');
+      setIsOnboardingSkipped(status === 'skipped');
     }
   };
 
@@ -188,7 +197,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
         <div className="p-3 bg-[#FBECCF] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between gap-3 animate-in fade-in duration-200">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-xl bg-white border border-[#24201D] flex items-center justify-center shrink-0 shadow-2xs">
-              <Sparkles className="w-4 h-4 text-[#854D0E] stroke-[2.25]" />
+              <Compass className="w-4 h-4 text-[#854D0E] stroke-[2.25]" />
             </div>
             <div className="min-w-0">
               <h4 className="text-xs font-black text-[#854D0E] font-display uppercase tracking-wide truncate">
@@ -457,10 +466,17 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
 
       <HealthProfileModal
         isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
+        onClose={() => {
+          setIsProfileOpen(false);
+          if (typeof window !== 'undefined') {
+            const status = localStorage.getItem('kairo_health_onboarded');
+            setIsOnboarded(status === 'true');
+            setIsOnboardingSkipped(status === 'skipped');
+          }
+        }}
         profile={profile}
         onSaveProfile={onUpdateProfile}
-        onLaunchWizard={() => setIsOnboardingWizardOpen(true)}
+        onLaunchWizard={!isOnboarded ? () => setIsOnboardingWizardOpen(true) : undefined}
       />
 
       <HealthOnboardingWizard

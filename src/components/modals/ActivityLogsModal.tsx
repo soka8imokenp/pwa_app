@@ -182,7 +182,7 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
 
   return (
     <div className="fixed inset-0 z-50 bg-[#24201D]/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 select-none animate-in fade-in duration-200">
-      <div className="w-full max-w-lg h-[84vh] max-h-[660px] min-h-[500px] bg-[#FAF8F5] border-[2px] border-[#24201D] rounded-3xl shadow-[6px_6px_0px_#24201D] flex flex-col overflow-hidden">
+      <div className="relative w-full max-w-lg h-[84vh] max-h-[660px] min-h-[500px] bg-[#FAF8F5] border-[2px] border-[#24201D] rounded-3xl shadow-[6px_6px_0px_#24201D] flex flex-col overflow-hidden">
         
         {/* 1. Header Bar */}
         <div className="p-4 bg-white border-b-[1.75px] border-[#24201D] flex items-center justify-between shrink-0">
@@ -200,9 +200,9 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            {/* Clear button */}
-            {logs.length > 0 && !isConfirmingClear && (
+          <div className="flex items-center gap-2">
+            {/* Prominent Clear Button */}
+            {logs.length > 0 && (
               <button
                 type="button"
                 onClick={() => {
@@ -210,29 +210,13 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
                   setIsConfirmingClear(true);
                 }}
                 title="Clear all logs"
-                className="w-8 h-8 rounded-xl bg-white hover:bg-rose-50 border border-[#24201D] flex items-center justify-center text-[#8C827A] hover:text-rose-600 shadow-2xs active:scale-95 transition-all cursor-pointer"
+                className="px-2.5 py-1.5 rounded-xl bg-[#FEE2E2] hover:bg-[#FECACA] border-[1.75px] border-[#24201D] text-[#991B1B] flex items-center gap-1.5 shadow-[2px_2px_0px_#24201D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer font-display"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span className="text-[10px] font-black uppercase tracking-wider">
+                  Clear
+                </span>
               </button>
-            )}
-
-            {isConfirmingClear && (
-              <div className="flex items-center gap-1 bg-rose-50 p-1 rounded-xl border border-rose-300 animate-in fade-in">
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className="px-2 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-black uppercase cursor-pointer"
-                >
-                  Confirm Clear
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsConfirmingClear(false)}
-                  className="px-1.5 py-1 bg-white text-stone-600 rounded-lg text-[10px] font-bold cursor-pointer"
-                >
-                  Cancel
-                </button>
-              </div>
             )}
 
             {/* Close button */}
@@ -245,6 +229,47 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
             </button>
           </div>
         </div>
+
+        {/* "Are You Sure?" Confirmation Popup Dialog in signature aesthetic */}
+        {isConfirmingClear && (
+          <div className="absolute inset-0 z-40 bg-[#24201D]/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+            <div className="w-full max-w-[310px] bg-[#FAF8F5] border-[2.5px] border-[#24201D] rounded-3xl shadow-[5px_5px_0px_#24201D] p-5 text-center space-y-3.5 animate-in zoom-in-95 duration-150 select-none">
+              <div className="w-12 h-12 rounded-2xl bg-[#FEE2E2] border-[2px] border-[#24201D] shadow-[2px_2px_0px_#24201D] flex items-center justify-center mx-auto text-[#991B1B]">
+                <Trash2 className="w-6 h-6 stroke-[2.25]" />
+              </div>
+              
+              <div className="space-y-1">
+                <h4 className="text-sm font-black font-display uppercase tracking-wide text-[#24201D]">
+                  Clear Activity Log?
+                </h4>
+                <p className="text-[11px] text-[#6B635B] font-medium leading-snug">
+                  Are you sure you want to delete all activity history? This cannot be undone.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    playClickSound();
+                    setIsConfirmingClear(false);
+                  }}
+                  className="flex-1 py-2.5 rounded-xl border-[1.75px] border-[#24201D] bg-white text-[#24201D] font-bold text-xs hover:bg-[#F4F0EA] shadow-[2px_2px_0px_#24201D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="flex-1 py-2.5 rounded-xl border-[1.75px] border-[#24201D] bg-[#DC2626] hover:bg-[#B91C1C] text-white font-black text-xs shadow-[2px_2px_0px_#24201D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>Yes, Clear</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 2. Controls & Search Bar */}
         <div className="p-3 bg-[#F4F0EA] border-b border-[#24201D]/15 space-y-2 shrink-0">

@@ -190,12 +190,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                 <p className="text-[10px] text-[#6B635B] font-medium">Recent actions, edits & audit trail</p>
               </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#3D6B52]/10 text-[#3D6B52] border border-[#3D6B52]/20">
-                Feed
-              </span>
-              <ChevronRight className="w-4 h-4 text-stone-400 group-hover:translate-x-0.5 transition-transform" />
-            </div>
+            <ChevronRight className="w-4 h-4 text-stone-400 group-hover:translate-x-0.5 transition-transform" />
           </button>
 
           {/* Stats */}

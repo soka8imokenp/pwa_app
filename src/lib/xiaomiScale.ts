@@ -118,8 +118,19 @@ export function parseXiaomiScaleAdvertisement(
     return null;
   }
 
-  const flags0 = dataView.getUint8(0);
-  const flags1 = dataView.getUint8(1);
+  let offset = 0;
+  if (dataView.byteLength > 13) {
+    for (let i = 0; i <= dataView.byteLength - 13; i++) {
+      const candidateYear = dataView.getUint16(i + 2, true);
+      if (candidateYear >= 2020 && candidateYear <= 2035) {
+        offset = i;
+        break;
+      }
+    }
+  }
+
+  const flags0 = dataView.getUint8(offset + 0);
+  const flags1 = dataView.getUint8(offset + 1);
 
   // Unit detection
   let unit: 'kg' | 'lbs' | 'jin' = 'kg';
@@ -134,20 +145,20 @@ export function parseXiaomiScaleAdvertisement(
   const isImpedanceComplete = (flags1 & 0x80) !== 0;
 
   // Timestamp
-  const year = dataView.getUint16(2, true);
-  const month = dataView.getUint8(4) - 1;
-  const day = dataView.getUint8(5);
-  const hour = dataView.getUint8(6);
-  const minute = dataView.getUint8(7);
-  const second = dataView.getUint8(8);
+  const year = dataView.getUint16(offset + 2, true);
+  const month = Math.max(0, Math.min(11, dataView.getUint8(offset + 4) - 1));
+  const day = Math.max(1, Math.min(31, dataView.getUint8(offset + 5)));
+  const hour = Math.min(23, dataView.getUint8(offset + 6));
+  const minute = Math.min(59, dataView.getUint8(offset + 7));
+  const second = Math.min(59, dataView.getUint8(offset + 8));
 
   const timestamp = new Date(year, month, day, hour, minute, second);
 
   // Impedance (bytes 9-10, Little-Endian)
-  const impedance = dataView.getUint16(9, true);
+  const impedance = dataView.getUint16(offset + 9, true);
 
   // Weight (bytes 11-12, Little-Endian, factor 0.005)
-  const rawWeight = dataView.getUint16(11, true);
+  const rawWeight = dataView.getUint16(offset + 11, true);
   let weight = Number((rawWeight * 0.005).toFixed(2));
 
   // Convert unit to kg if needed
@@ -180,9 +191,12 @@ export function parseXiaomiScaleAdvertisement(
 }
 
 /**
- * Checks whether Web Bluetooth is supported in the current runtime.
+ * Checks whether Bluetooth scale support is available (via native Android bridge or Web Bluetooth).
  */
 export function isWebBluetoothAvailable(): boolean {
+  if (typeof window !== 'undefined' && Boolean((window as any).AndroidBluetoothScale?.isAvailable?.())) {
+    return true;
+  }
   return typeof navigator !== 'undefined' && 'bluetooth' in navigator && !!(navigator as any).bluetooth;
 }
 

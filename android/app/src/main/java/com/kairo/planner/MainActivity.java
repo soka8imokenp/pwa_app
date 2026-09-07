@@ -51,6 +51,14 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Locale;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanRecord;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
+import android.os.ParcelUuid;
 
 public class MainActivity extends BridgeActivity {
     private static final String CHANNEL_ID = "daily_sumire_music_channel";
@@ -65,6 +73,7 @@ public class MainActivity extends BridgeActivity {
     private MediaReceiver mediaReceiver;
     private boolean isAudioPlaying = false;
     private PowerManager.WakeLock wakeLock;
+    private BluetoothScaleJsInterface bluetoothScaleInterface;
 
     private void acquireWakeLock() {
         try {
@@ -222,6 +231,9 @@ public class MainActivity extends BridgeActivity {
             if (mediaSession != null) {
                 mediaSession.release();
             }
+            if (bluetoothScaleInterface != null) {
+                bluetoothScaleInterface.stopScan();
+            }
             if (notificationManager != null) {
                 notificationManager.cancel(NOTIFICATION_ID);
             }
@@ -258,6 +270,34 @@ public class MainActivity extends BridgeActivity {
         }
         if (!perms.isEmpty()) {
             ActivityCompat.requestPermissions(this, perms.toArray(new String[0]), 103);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 104) {
+            boolean allGranted = true;
+            for (int res : grantResults) {
+                if (res != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    break;
+                }
+            }
+            if (allGranted && bluetoothScaleInterface != null) {
+                bluetoothScaleInterface.startScan();
+            } else {
+                runOnUiThread(() -> {
+                    try {
+                        if (getBridge() != null && getBridge().getWebView() != null) {
+                            getBridge().getWebView().evaluateJavascript(
+                                "window.__onNativeScaleError && window.__onNativeScaleError('Bluetooth and Location permissions are required to scan for the smart scale.');",
+                                null
+                            );
+                        }
+                    } catch (Exception ignored) {}
+                });
+            }
         }
     }
 
@@ -334,6 +374,8 @@ public class MainActivity extends BridgeActivity {
                 webView.addJavascriptInterface(new MediaJsInterface(), "AndroidMediaNotification");
                 webView.addJavascriptInterface(new AppInstallerJsInterface(), "AndroidAppInstaller");
                 webView.addJavascriptInterface(new SpeechRecognizerJsInterface(), "AndroidSpeechRecognizer");
+                bluetoothScaleInterface = new BluetoothScaleJsInterface();
+                webView.addJavascriptInterface(bluetoothScaleInterface, "AndroidBluetoothScale");
 
                 // Inject visibility spoofing so background audio (like YouTube Radio) continues when minimized
                 webView.evaluateJavascript(
@@ -785,6 +827,195 @@ public class MainActivity extends BridgeActivity {
                     } catch (Exception ignored) {}
                 }
             });
+        }
+
+        private void notifyJs(String jsCode) {
+            runOnUiThread(() -> {
+                try {
+                    if (getBridge() != null && getBridge().getWebView() != null) {
+                        getBridge().getWebView().evaluateJavascript(jsCode, null);
+                    }
+                } catch (Exception ignored) {}
+            });
+        }
+    }
+
+    public class BluetoothScaleJsInterface {
+        private BluetoothLeScanner bleScanner;
+        private ScanCallback scanCallback;
+        private boolean isScanning = false;
+
+        @JavascriptInterface
+        public boolean isAvailable() {
+            try {
+                BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+                return bm != null && bm.getAdapter() != null;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public void startScan() {
+            runOnUiThread(() -> {
+                try {
+                    ArrayList<String> neededPerms = new ArrayList<>();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                            neededPerms.add(Manifest.permission.BLUETOOTH_SCAN);
+                        }
+                        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                            neededPerms.add(Manifest.permission.BLUETOOTH_CONNECT);
+                        }
+                    }
+                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        neededPerms.add(Manifest.permission.ACCESS_FINE_LOCATION);
+                    }
+
+                    if (!neededPerms.isEmpty()) {
+                        ActivityCompat.requestPermissions(MainActivity.this, neededPerms.toArray(new String[0]), 104);
+                        notifyJs("window.__onNativeScaleStatus && window.__onNativeScaleStatus('requesting_permissions');");
+                        return;
+                    }
+
+                    BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+                    if (bm == null || bm.getAdapter() == null) {
+                        notifyJs("window.__onNativeScaleError && window.__onNativeScaleError('Bluetooth hardware not available on this device.');");
+                        return;
+                    }
+
+                    BluetoothAdapter adapter = bm.getAdapter();
+                    if (!adapter.isEnabled()) {
+                        notifyJs("window.__onNativeScaleError && window.__onNativeScaleError('Bluetooth is turned off. Please turn on Bluetooth in Android Settings.');");
+                        return;
+                    }
+
+                    bleScanner = adapter.getBluetoothLeScanner();
+                    if (bleScanner == null) {
+                        notifyJs("window.__onNativeScaleError && window.__onNativeScaleError('Bluetooth LE Scanner not available on this device.');");
+                        return;
+                    }
+
+                    if (isScanning && scanCallback != null) {
+                        try {
+                            bleScanner.stopScan(scanCallback);
+                        } catch (Exception ignored) {}
+                    }
+
+                    scanCallback = new ScanCallback() {
+                        @Override
+                        public void onScanResult(int callbackType, ScanResult result) {
+                            super.onScanResult(callbackType, result);
+                            processScanResult(result);
+                        }
+
+                        @Override
+                        public void onBatchScanResults(java.util.List<ScanResult> results) {
+                            super.onBatchScanResults(results);
+                            if (results != null) {
+                                for (ScanResult r : results) {
+                                    processScanResult(r);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onScanFailed(int errorCode) {
+                            super.onScanFailed(errorCode);
+                            isScanning = false;
+                            String msg = "Bluetooth scan failed (Code " + errorCode + "). Please step onto the scale to wake it up.";
+                            notifyJs("window.__onNativeScaleError && window.__onNativeScaleError('" + msg + "');");
+                        }
+                    };
+
+                    ScanSettings settings = new ScanSettings.Builder()
+                            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                            .build();
+
+                    bleScanner.startScan(null, settings, scanCallback);
+                    isScanning = true;
+                    notifyJs("window.__onNativeScaleStatus && window.__onNativeScaleStatus('scanning');");
+
+                } catch (Exception e) {
+                    isScanning = false;
+                    notifyJs("window.__onNativeScaleError && window.__onNativeScaleError('" + e.getMessage() + "');");
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void stopScan() {
+            runOnUiThread(() -> {
+                try {
+                    if (isScanning && bleScanner != null && scanCallback != null) {
+                        bleScanner.stopScan(scanCallback);
+                    }
+                } catch (Exception ignored) {}
+                isScanning = false;
+                notifyJs("window.__onNativeScaleStatus && window.__onNativeScaleStatus('stopped');");
+            });
+        }
+
+        private void processScanResult(ScanResult result) {
+            if (result == null) return;
+            ScanRecord record = result.getScanRecord();
+            if (record == null) return;
+
+            byte[] scaleData = null;
+
+            // 1. Check standard Body Composition Service UUID 0x181B
+            ParcelUuid bodyCompUuid = ParcelUuid.fromString("0000181b-0000-1000-8000-00805f9b34fb");
+            scaleData = record.getServiceData(bodyCompUuid);
+
+            // 2. Check standard Weight Scale Service UUID 0x181D
+            if (scaleData == null) {
+                ParcelUuid weightScaleUuid = ParcelUuid.fromString("0000181d-0000-1000-8000-00805f9b34fb");
+                scaleData = record.getServiceData(weightScaleUuid);
+            }
+
+            // 3. Check Xiaomi manufacturer data (Company ID 0x0157 = 343)
+            if (scaleData == null) {
+                byte[] mfg = record.getManufacturerSpecificData(343);
+                if (mfg != null && mfg.length >= 10) {
+                    scaleData = mfg;
+                }
+            }
+
+            // 4. Check any available service data with length >= 13
+            if (scaleData == null && record.getServiceData() != null) {
+                for (byte[] data : record.getServiceData().values()) {
+                    if (data != null && data.length >= 13) {
+                        scaleData = data;
+                        break;
+                    }
+                }
+            }
+
+            // 5. Check raw advertising payload if device name matches Xiaomi Scale
+            if (scaleData == null) {
+                String devName = record.getDeviceName();
+                if (devName == null && result.getDevice() != null) {
+                    try {
+                        devName = result.getDevice().getName();
+                    } catch (SecurityException ignored) {}
+                }
+                if (devName != null) {
+                    String lower = devName.toLowerCase();
+                    if (lower.contains("mibfs") || lower.contains("scale") || lower.contains("mibody") || lower.contains("body")) {
+                        byte[] raw = record.getBytes();
+                        if (raw != null && raw.length >= 13) {
+                            scaleData = raw;
+                        }
+                    }
+                }
+            }
+
+            if (scaleData != null && scaleData.length >= 10) {
+                final String base64Payload = Base64.encodeToString(scaleData, Base64.NO_WRAP);
+                runOnUiThread(() -> {
+                    notifyJs("window.__onNativeScaleData && window.__onNativeScaleData('" + base64Payload + "');");
+                });
+            }
         }
 
         private void notifyJs(String jsCode) {

@@ -1,11 +1,11 @@
 {
-  "version": "1.8.93",
-  "buildNumber": 97,
+  "version": "1.8.94",
+  "buildNumber": 98,
   "releaseDate": "2026-09-07",
   "changelog": [
-    "Removed pulsing beacon dot from Smart Scale button",
-    "Repositioned CSV download button to the right side of Weight Dynamics panel",
-    "Made Moving Average info button interactive with expandable explanation box"
+    "Added Android Native Bluetooth LE Bridge to support smart scales in WebView",
+    "Renamed action button to 'Connect' in Smart Scale modal",
+    "Enabled automatic BLE permissions and hardware detection"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.93/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.94/Daily-Sumire-app-debug.apk"
 }

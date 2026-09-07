@@ -60,6 +60,14 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
   }, [isOpen]);
 
   const stopScanning = () => {
+    if (typeof window !== 'undefined' && (window as any).AndroidBluetoothScale) {
+      try {
+        (window as any).AndroidBluetoothScale.stopScan();
+      } catch (e) {}
+      delete (window as any).__onNativeScaleData;
+      delete (window as any).__onNativeScaleError;
+      delete (window as any).__onNativeScaleStatus;
+    }
     if (scanAbortController.current) {
       scanAbortController.current.abort();
       scanAbortController.current = null;
@@ -74,14 +82,75 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
     setErrorMessage('');
     setStatus('scanning');
 
-    if (!isWebBluetoothAvailable()) {
+    const isNativeBt =
+      typeof window !== 'undefined' &&
+      Boolean((window as any).AndroidBluetoothScale?.isAvailable?.());
+    const isWebBt = isWebBluetoothAvailable();
+
+    if (!isNativeBt && !isWebBt) {
       setErrorMessage(
-        'Bluetooth is not supported or not enabled in this browser view.'
+        'Bluetooth is not supported in this browser view. Please open the Daily Sumire Android app or Google Chrome with Bluetooth enabled.'
       );
       setStatus('error');
       return;
     }
 
+    // 1. Android Native Bluetooth Low Energy Bridge
+    if (isNativeBt) {
+      (window as any).__onNativeScaleData = (base64Payload: string) => {
+        try {
+          const binaryStr = atob(base64Payload);
+          const bytes = new Uint8Array(binaryStr.length);
+          for (let i = 0; i < binaryStr.length; i++) {
+            bytes[i] = binaryStr.charCodeAt(i);
+          }
+          const view = new DataView(bytes.buffer);
+          const parsed = parseXiaomiScaleAdvertisement(view, {
+            height: profile.height,
+            age: profile.age,
+            gender: profile.gender,
+          });
+
+          if (parsed) {
+            setLiveWeight(parsed.weight);
+            if (!parsed.isStabilized) {
+              setStatus('stabilizing');
+            } else if (parsed.isStabilized && !parsed.isImpedanceComplete) {
+              setStatus('analyzing');
+              setImpedanceProgress(65);
+            } else if (parsed.isImpedanceComplete) {
+              try {
+                (window as any).AndroidBluetoothScale?.stopScan?.();
+              } catch (e) {}
+              completeMeasurement(parsed);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to parse native scale packet:', err);
+        }
+      };
+
+      (window as any).__onNativeScaleError = (msg: string) => {
+        setErrorMessage(msg);
+        setStatus('error');
+      };
+
+      (window as any).__onNativeScaleStatus = (statusStr: string) => {
+        if (statusStr === 'scanning') {
+          setStatus('scanning');
+        }
+      };
+
+      try {
+        (window as any).AndroidBluetoothScale.startScan();
+      } catch (nativeErr: any) {
+        setErrorMessage(nativeErr?.message || 'Could not start Bluetooth scan.');
+        setStatus('error');
+      }
+      return;
+    }
+
+    // 2. Standard Web Bluetooth API (Google Chrome fallback)
     try {
       const navBt = (navigator as any).bluetooth;
 
@@ -261,7 +330,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                   className="w-full py-3 px-4 bg-[#4F46E5] hover:bg-[#4338CA] text-white border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer font-display uppercase tracking-wider"
                 >
                   <Bluetooth className="w-4 h-4 stroke-[2.5]" />
-                  <span>Connect &amp; Weigh In</span>
+                  <span>Connect</span>
                 </button>
               </div>
             </div>
@@ -502,7 +571,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                   onClick={handleStartScan}
                   className="w-full py-2.5 px-4 bg-[#4F46E5] hover:bg-[#4338CA] text-white border border-[#24201D] rounded-xl text-xs font-black shadow-2xs active:translate-y-0.5 transition-all cursor-pointer font-display uppercase tracking-wider"
                 >
-                  Try Bluetooth Scan Again
+                  Connect Again
                 </button>
               </div>
             </div>

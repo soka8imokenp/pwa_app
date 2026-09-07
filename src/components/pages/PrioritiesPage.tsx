@@ -17,6 +17,8 @@ import {
   ChevronDown,
   Inbox,
   Trash2,
+  CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 import type { Task, FocusSession, HabitLog } from '../../types';
 import { playTaskCheckSound, playSuccessChime, playClickSound } from '../../lib/sound';
@@ -124,11 +126,23 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
 
   const SLOT_COLORS = ['#FBECCF', '#DDE8DE', '#F7E3DC'];
 
+  const CATEGORY_CONFIG = [
+    { id: 'general', label: 'General', icon: Layers, bg: '#FAF8F5', text: '#6B635B' },
+    { id: 'code', label: 'Code', icon: Code, bg: '#DDE8DE', text: '#2D503C' },
+    { id: 'design', label: 'Design', icon: Palette, bg: '#F7E3DC', text: '#C25E40' },
+    { id: 'learn', label: 'Learn', icon: BookOpen, bg: '#FBECCF', text: '#854D0E' },
+    { id: 'health', label: 'Health', icon: Activity, bg: '#DDE8DE', text: '#2D503C' },
+  ] as const;
+
   // Backlog integration states
   const [quickBacklogTitle, setQuickBacklogTitle] = useState('');
   const [quickBacklogCategory, setQuickBacklogCategory] = useState<Task['category']>('general');
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [showCompletedBacklog, setShowCompletedBacklog] = useState(false);
   const [feedbackNotice, setFeedbackNotice] = useState<string | null>(null);
+
+  const currentCategoryConfig = CATEGORY_CONFIG.find((c) => c.id === quickBacklogCategory) || CATEGORY_CONFIG[0];
+  const CurrentCategoryIcon = currentCategoryConfig.icon;
 
   const activeBacklogTasks = backlogTasks.filter((t) => !t.isCompleted);
   const completedBacklogTasks = backlogTasks.filter((t) => t.isCompleted);
@@ -419,199 +433,260 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
         {/* Backlog Header Bar */}
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-2xs">
+            <div className="w-7 h-7 rounded-xl bg-[#DDE8DE] border-[1.5px] border-[#24201D] flex items-center justify-center shadow-[1px_1px_0px_#24201D]">
               <Inbox className="w-3.5 h-3.5 text-[#2D503C] stroke-[2.25]" />
             </div>
-            <span className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
-              Task Backlog ({activeBacklogTasks.length})
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            {localPriorities.length < 3 ? (
-              <span className="text-[9px] font-black uppercase tracking-wider text-[#2D503C] bg-[#DDE8DE] border border-[#24201D] px-2 py-0.5 rounded-full shadow-2xs">
-                {3 - localPriorities.length} Slot{3 - localPriorities.length > 1 ? 's' : ''} Open in Today
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
+                Task Backlog
               </span>
-            ) : (
-              <span className="text-[9px] font-bold text-[#6B635B] bg-[#FAF8F5] border border-[#24201D]/20 px-2 py-0.5 rounded-full">
-                Top 3 Full
+              <span className="px-2 py-0.5 bg-[#FAF8F5] border border-[#24201D]/25 rounded-full text-[10px] font-black font-mono-num text-[#6B635B] shadow-2xs">
+                {activeBacklogTasks.length}
               </span>
-            )}
+            </div>
           </div>
         </div>
 
-        {/* Temporary Feedback Notice (e.g. if trying to promote when full) */}
+        {/* Temporary Feedback Notice */}
         {feedbackNotice && (
-          <div className="p-2.5 bg-[#FBECCF] border-[1.5px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] flex items-center justify-between shadow-2xs animate-in fade-in">
-            <span>{feedbackNotice}</span>
+          <div className="p-3 bg-[#FBECCF] border-[1.75px] border-[#24201D] rounded-2xl text-xs font-bold text-[#24201D] flex items-center justify-between shadow-[2px_2px_0px_#24201D] animate-in fade-in slide-in-from-top-1">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#C25E40] shrink-0" />
+              <span>{feedbackNotice}</span>
+            </div>
             <button
+              type="button"
               onClick={() => setFeedbackNotice(null)}
-              className="text-[10px] uppercase font-black underline ml-2 cursor-pointer"
+              className="text-[10px] uppercase font-black px-2 py-1 bg-white border border-[#24201D] rounded-lg shadow-2xs cursor-pointer active:scale-95 ml-2"
             >
               OK
             </button>
           </div>
         )}
 
-        {/* Quick Inline Add Form */}
-        <form
-          onSubmit={handleAddBacklogInline}
-          className="p-2 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center gap-2"
-        >
-          <input
-            type="text"
-            value={quickBacklogTitle}
-            onChange={(e) => setQuickBacklogTitle(e.target.value)}
-            placeholder="+ Add task to backlog..."
-            className="flex-1 min-w-0 px-2.5 py-1.5 bg-transparent text-xs font-bold text-[#24201D] placeholder:text-stone-400 placeholder:font-normal focus:outline-none"
-          />
-
-          <select
-            value={quickBacklogCategory}
-            onChange={(e) => setQuickBacklogCategory(e.target.value as any)}
-            className="text-[10px] font-black uppercase bg-[#FAF8F5] border border-[#24201D]/25 rounded-lg px-2 py-1.5 text-[#24201D] cursor-pointer focus:outline-none shrink-0"
+        {/* Quick Inline Add Form with Custom Neo-Brutalist Dropdown */}
+        <div className="relative">
+          <form
+            onSubmit={handleAddBacklogInline}
+            className="p-2 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center gap-2 transition-all focus-within:shadow-[3px_3px_0px_#24201D]"
           >
-            <option value="general">General</option>
-            <option value="code">Code</option>
-            <option value="design">Design</option>
-            <option value="learn">Learn</option>
-            <option value="health">Health</option>
-          </select>
+            <input
+              type="text"
+              value={quickBacklogTitle}
+              onChange={(e) => setQuickBacklogTitle(e.target.value)}
+              placeholder="Quick add to backlog..."
+              className="flex-1 min-w-0 px-2.5 py-1.5 bg-transparent text-xs font-bold text-[#24201D] placeholder:text-[#8C827A] placeholder:font-normal focus:outline-none"
+            />
 
-          <button
-            type="submit"
-            disabled={!quickBacklogTitle.trim()}
-            className="px-3 py-1.5 bg-[#3D6B52] hover:bg-[#345c46] disabled:opacity-30 disabled:hover:bg-[#3D6B52] border border-[#24201D] rounded-xl text-[11px] font-black uppercase tracking-wider text-white shadow-2xs active:scale-95 transition-all cursor-pointer shrink-0"
-          >
-            Add
-          </button>
-        </form>
+            {/* Custom Category Dropdown Trigger */}
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsCategoryDropdownOpen((prev) => !prev)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[#24201D] text-[10px] font-black uppercase tracking-tight shadow-2xs cursor-pointer active:scale-95 transition-all"
+                style={{ backgroundColor: currentCategoryConfig.bg, color: currentCategoryConfig.text }}
+              >
+                <CurrentCategoryIcon className="w-3 h-3 stroke-[2.5]" />
+                <span>{currentCategoryConfig.label}</span>
+                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Custom Popover Dropdown Panel */}
+              {isCategoryDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsCategoryDropdownOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-1.5 z-50 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[3px_3px_0px_#24201D] p-1.5 min-w-[145px] space-y-1 animate-in fade-in zoom-in-95">
+                    <div className="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-[#8C827A] border-b border-[#24201D]/10">
+                      Category
+                    </div>
+                    {CATEGORY_CONFIG.map((cat) => {
+                      const Icon = cat.icon;
+                      const isSelected = quickBacklogCategory === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => {
+                            setQuickBacklogCategory(cat.id as any);
+                            setIsCategoryDropdownOpen(false);
+                            playClickSound();
+                          }}
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-[#FAF8F5] border border-[#24201D] shadow-2xs text-[#24201D]'
+                              : 'hover:bg-[#FAF8F5] text-[#24201D] border border-transparent'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-5 h-5 rounded-lg border border-[#24201D]/20 flex items-center justify-center shrink-0"
+                              style={{ backgroundColor: cat.bg, color: cat.text }}
+                            >
+                              <Icon className="w-3 h-3 stroke-[2.5]" />
+                            </div>
+                            <span className="text-[11px] font-bold">{cat.label}</span>
+                          </div>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-[#3D6B52] stroke-[3]" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={!quickBacklogTitle.trim()}
+              className="px-3.5 py-1.5 bg-[#3D6B52] hover:bg-[#325843] disabled:opacity-30 disabled:hover:bg-[#3D6B52] border-[1.5px] border-[#24201D] rounded-xl text-xs font-black uppercase tracking-wider text-white shadow-[1px_1px_0px_#24201D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer shrink-0"
+            >
+              Add
+            </button>
+          </form>
+        </div>
 
         {/* Active Backlog Tasks List */}
         {activeBacklogTasks.length === 0 ? (
-          <div className="p-4 bg-[#FAF8F5] border-[1.5px] border-dashed border-[#24201D]/25 rounded-2xl text-center space-y-1">
+          <div className="p-4 bg-white/70 border-[1.75px] border-dashed border-[#24201D]/25 rounded-2xl text-center space-y-1 shadow-2xs">
             <p className="text-xs font-bold text-[#6B635B]">Backlog is currently empty</p>
             <p className="text-[10px] text-stone-400 font-medium">
-              Add tasks above or move priorities down to keep them queued for later.
+              Queue secondary tasks here or demote priorities anytime.
             </p>
           </div>
         ) : (
           <div className="space-y-2">
-            {activeBacklogTasks.map((task) => (
-              <div
-                key={task.id}
-                className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between gap-2.5 transition-all hover:translate-x-0.5"
-              >
-                {/* Complete Checkbox */}
-                <button
-                  type="button"
-                  onClick={() => handleDoneClick(task)}
-                  className="w-6 h-6 rounded-lg border-[1.5px] border-[#24201D] bg-white hover:bg-stone-100 flex items-center justify-center shrink-0 transition-all cursor-pointer shadow-2xs"
+            {activeBacklogTasks.map((task) => {
+              const catConfig = CATEGORY_CONFIG.find((c) => c.id === task.category) || CATEGORY_CONFIG[0];
+              const CatIcon = catConfig.icon;
+
+              return (
+                <div
+                  key={task.id}
+                  className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between gap-2.5 transition-all hover:translate-x-0.5"
                 >
-                  {task.isCompleted && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                </button>
+                  {/* Checkbox */}
+                  <button
+                    type="button"
+                    onClick={() => handleDoneClick(task)}
+                    className="w-6 h-6 rounded-xl border-[1.75px] border-[#24201D] bg-white hover:bg-stone-100 flex items-center justify-center shrink-0 transition-all cursor-pointer shadow-2xs"
+                  >
+                    {task.isCompleted && <Check className="w-3.5 h-3.5 stroke-[3] text-[#3D6B52]" />}
+                  </button>
 
-                {/* Title & Metadata */}
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <span
-                      className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md border border-[#24201D]/20 text-[#24201D]"
-                      style={{ backgroundColor: getCategoryBg(task.category) }}
-                    >
-                      {task.category || 'general'}
-                    </span>
-                    <span className="text-[10px] text-stone-400 font-mono-num flex items-center gap-0.5">
-                      <Clock className="w-2.5 h-2.5" /> {task.estimatedMinutes || 30}m
-                    </span>
+                  {/* Title & Metadata */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span
+                        className="inline-flex items-center gap-1 text-[9px] font-black uppercase px-2 py-0.5 rounded-lg border border-[#24201D]/20 shadow-2xs"
+                        style={{ backgroundColor: catConfig.bg, color: catConfig.text }}
+                      >
+                        <CatIcon className="w-2.5 h-2.5 stroke-[2.5]" />
+                        {catConfig.label}
+                      </span>
+                      <span className="text-[10px] text-[#8C827A] font-mono-num flex items-center gap-0.5 font-bold">
+                        <Clock className="w-2.5 h-2.5" /> {task.estimatedMinutes || 30}m
+                      </span>
+                    </div>
+                    <p className={`text-xs font-bold text-[#24201D] truncate leading-tight ${task.isCompleted ? 'line-through text-stone-400' : ''}`}>
+                      {task.title}
+                    </p>
                   </div>
-                  <p className="text-xs font-bold text-[#24201D] truncate leading-tight">
-                    {task.title}
-                  </p>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {/* Promote to Top 3 Priorities */}
+                    <button
+                      type="button"
+                      onClick={() => handlePromote(task)}
+                      title={localPriorities.length < 3 ? "Promote to Top 3 Priorities" : "Top 3 is full"}
+                      className={`px-2.5 py-1 rounded-xl border-[1.5px] border-[#24201D] text-[10px] font-black uppercase tracking-tight flex items-center gap-1 shadow-[1px_1px_0px_#24201D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer ${
+                        localPriorities.length < 3
+                          ? 'bg-[#F0BB58] hover:bg-[#e2af51] text-[#24201D]'
+                          : 'bg-stone-100 text-stone-400 border-stone-300 shadow-none cursor-not-allowed'
+                      }`}
+                    >
+                      <ArrowUp className="w-3 h-3 stroke-[2.5]" />
+                      <span>To Today</span>
+                    </button>
+
+                    {/* Quick Focus Button */}
+                    <button
+                      type="button"
+                      onClick={() => onStartFocus(task)}
+                      title="Start Focus Session"
+                      className="w-7 h-7 rounded-xl bg-[#FAF8F5] hover:bg-[#F7E3DC] border-[1.5px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-[1px_1px_0px_#24201D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
+                    >
+                      <Play className="w-3 h-3 fill-[#24201D]" />
+                    </button>
+
+                    {/* Delete Button */}
+                    <button
+                      type="button"
+                      onClick={() => task.id && onDeleteTask(task.id)}
+                      title="Delete task"
+                      className="w-7 h-7 rounded-xl bg-[#FAF8F5] hover:bg-rose-100 border-[1.5px] border-[#24201D] flex items-center justify-center text-[#8C827A] hover:text-rose-600 shadow-[1px_1px_0px_#24201D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3 stroke-[2]" />
+                    </button>
+                  </div>
                 </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {/* Promote to Top 3 Priorities */}
-                  <button
-                    type="button"
-                    onClick={() => handlePromote(task)}
-                    title={localPriorities.length < 3 ? "Promote to Today's Top 3" : "Top 3 is full"}
-                    className={`px-2.5 py-1 rounded-xl border border-[#24201D] text-[10px] font-black uppercase tracking-tight flex items-center gap-1 shadow-2xs transition-all cursor-pointer ${
-                      localPriorities.length < 3
-                        ? 'bg-[#F0BB58] hover:bg-[#e2af51] text-[#24201D] active:scale-95'
-                        : 'bg-stone-100 text-stone-400 border-stone-300'
-                    }`}
-                  >
-                    <ArrowUp className="w-3 h-3 stroke-[2.5]" />
-                    <span className="hidden sm:inline">To Today</span>
-                  </button>
-
-                  {/* Quick Focus Button */}
-                  <button
-                    type="button"
-                    onClick={() => onStartFocus(task)}
-                    title="Start Focus Session"
-                    className="w-7 h-7 rounded-xl bg-[#FAF8F5] hover:bg-[#F7E3DC] border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
-                  >
-                    <Play className="w-3 h-3 fill-[#24201D]" />
-                  </button>
-
-                  {/* Delete Button */}
-                  <button
-                    type="button"
-                    onClick={() => task.id && onDeleteTask(task.id)}
-                    title="Delete task"
-                    className="w-7 h-7 rounded-xl bg-[#FAF8F5] hover:bg-rose-100 border border-[#24201D] flex items-center justify-center text-stone-400 hover:text-rose-600 shadow-2xs active:scale-95 transition-all cursor-pointer"
-                  >
-                    <Trash2 className="w-3 h-3 stroke-[2]" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
-        {/* Completed Backlog Tasks Collapsible */}
+        {/* Completed Backlog Tasks Panel in our Style */}
         {completedBacklogTasks.length > 0 && (
           <div className="pt-1">
             <button
               type="button"
-              onClick={() => setShowCompletedBacklog((prev) => !prev)}
-              className="w-full py-2 px-3 bg-[#F4F0EA] hover:bg-stone-200 border border-[#24201D]/25 rounded-xl flex items-center justify-between text-[10px] font-bold text-[#6B635B] transition-all cursor-pointer"
+              onClick={() => {
+                playClickSound();
+                setShowCompletedBacklog((prev) => !prev);
+              }}
+              className="w-full py-2 px-3.5 bg-white hover:bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between text-xs font-bold text-[#6B635B] transition-all cursor-pointer active:translate-x-[1px] active:translate-y-[1px]"
             >
-              <span>
-                Completed in Backlog ({completedBacklogTasks.length})
-              </span>
-              {showCompletedBacklog ? (
-                <ChevronUp className="w-3.5 h-3.5" />
-              ) : (
-                <ChevronDown className="w-3.5 h-3.5" />
-              )}
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#3D6B52]" />
+                <span className="font-display uppercase tracking-wider text-[10px] font-black text-[#24201D]">
+                  Completed Backlog ({completedBacklogTasks.length})
+                </span>
+              </div>
+              <div className="w-5 h-5 rounded-lg bg-[#FAF8F5] border border-[#24201D]/25 flex items-center justify-center text-[#24201D]">
+                {showCompletedBacklog ? (
+                  <ChevronUp className="w-3 h-3 stroke-[2.5]" />
+                ) : (
+                  <ChevronDown className="w-3 h-3 stroke-[2.5]" />
+                )}
+              </div>
             </button>
 
             {showCompletedBacklog && (
-              <div className="space-y-1.5 mt-2">
+              <div className="space-y-2 mt-2 p-2 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
                 {completedBacklogTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="p-2.5 bg-stone-50/90 border border-stone-300 rounded-xl flex items-center justify-between gap-2 text-stone-400"
+                    className="p-2.5 bg-white border border-[#24201D]/20 rounded-xl flex items-center justify-between gap-2.5 shadow-2xs"
                   >
                     <button
                       type="button"
                       onClick={() => handleDoneClick(task)}
-                      className="w-5 h-5 rounded-md border border-stone-300 bg-[#3D6B52] text-white flex items-center justify-center shrink-0 cursor-pointer"
+                      className="w-5 h-5 rounded-lg border-[1.5px] border-[#24201D] bg-[#3D6B52] text-white flex items-center justify-center shrink-0 cursor-pointer shadow-2xs"
                     >
                       <Check className="w-3 h-3 stroke-[3]" />
                     </button>
-                    <span className="flex-1 text-xs line-through truncate text-stone-500 font-medium">
+                    <span className="flex-1 text-xs line-through truncate text-stone-400 font-medium">
                       {task.title}
                     </span>
                     <button
                       type="button"
                       onClick={() => task.id && onDeleteTask(task.id)}
-                      className="text-stone-400 hover:text-rose-600 p-1 cursor-pointer"
+                      className="text-stone-400 hover:text-rose-600 p-1 cursor-pointer transition-colors"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}

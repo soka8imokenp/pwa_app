@@ -1,10 +1,10 @@
 {
-  "version": "1.8.97",
-  "buildNumber": 101,
+  "version": "1.8.98",
+  "buildNumber": 102,
   "releaseDate": "2026-09-07",
   "changelog": [
-    "Unified Task Backlog into Today screen: manage Top 3 priorities and task backlog on a single page",
-    "Instant inline backlog task addition and one-tap promotion/demotion between Today and Backlog"
+    "Redesigned Backlog section: custom neo-brutalist category dropdown, removed slots counter, sleek panels",
+    "Unified aesthetic with tactile buttons, rounded-2xl panels, and minimalist controls"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.97/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.98/Daily-Sumire-app-debug.apk"
 }

@@ -42,28 +42,20 @@ export function calculateXiaomiBiometrics(
   const safeAge = Math.max(12, Math.min(95, age || 25));
   const safeImpedance = impedance > 50 && impedance < 2500 ? impedance : 500;
 
-  // 1. Lean Body Mass (LBM) in kg
+  // 1. Lean Body Mass (LBM) in kg via Bioelectrical Impedance Analysis (H^2 / R)
+  const impedanceIndex = (safeHeight * safeHeight) / safeImpedance;
   let lbm: number;
   if (gender === 'female') {
-    lbm =
-      (safeHeight * 9.058) / 100 * (safeHeight / 100) -
-      safeImpedance * 0.0028 +
-      safeWeight * 0.32 +
-      12.226 -
-      safeAge * 0.0542;
+    lbm = 0.48 * impedanceIndex + 0.26 * safeWeight + 4.5 - 0.03 * safeAge;
+    const minLbm = safeWeight * 0.50;
+    const maxLbm = safeWeight * 0.85;
+    lbm = Math.max(minLbm, Math.min(maxLbm, lbm));
   } else {
-    lbm =
-      (safeHeight * 8.001) / 100 * (safeHeight / 100) -
-      safeImpedance * 0.0032 +
-      safeWeight * 0.38 +
-      10.924 -
-      safeAge * 0.0482;
+    lbm = 0.52 * impedanceIndex + 0.32 * safeWeight + 4.5 - 0.03 * safeAge;
+    const minLbm = safeWeight * 0.55;
+    const maxLbm = safeWeight * 0.90;
+    lbm = Math.max(minLbm, Math.min(maxLbm, lbm));
   }
-
-  // Biological safety clamps: 45% - 92% of total weight
-  const minLbm = safeWeight * 0.45;
-  const maxLbm = safeWeight * 0.92;
-  lbm = Math.max(minLbm, Math.min(maxLbm, lbm));
   lbm = Number(lbm.toFixed(2));
 
   // 2. Body Fat Percentage (%)
@@ -75,11 +67,13 @@ export function calculateXiaomiBiometrics(
   water = Math.max(35.0, Math.min(75.0, Number(water.toFixed(1))));
 
   // 4. Bone Mass (kg)
-  let bone = 2.2 + lbm * 0.045;
+  let bone: number;
   if (gender === 'female') {
-    bone = 1.8 + lbm * 0.042;
+    bone = 1.0 + lbm * 0.035;
+  } else {
+    bone = 1.1 + lbm * 0.035;
   }
-  bone = Math.max(1.5, Math.min(5.5, Number(bone.toFixed(1))));
+  bone = Math.max(1.5, Math.min(4.5, Number(bone.toFixed(1))));
 
   // 5. Muscle Mass (kg)
   let muscle = Math.max(15.0, lbm - bone);

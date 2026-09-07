@@ -1,11 +1,12 @@
 {
-  "version": "1.8.89",
-  "buildNumber": 93,
+  "version": "1.8.90",
+  "buildNumber": 94,
   "releaseDate": "2026-09-07",
   "changelog": [
-    "Fixed Health Onboarding Wizard: only appears when switching to an empty Health & Body panel, never on app launch",
-    "Clean empty states on database reset: all telemetry panels display dashes (—) instead of default 76 kg",
-    "Removed Run Guided Calibration Wizard button from Health Profile Setup modal"
+    "Integrated direct Bluetooth LE sync for Xiaomi Mi Body Composition Scale 2",
+    "Real-time bio-impedance decoding: automatic calculation of Body Fat %, Muscle Mass, Water %, Bone Mass, Visceral Fat & BMR",
+    "Added interactive Mi Scale measurement modal with live telemetry radar",
+    "Refined Hero Card top bar: added unique Mi Scale button, removed '+' from Weigh-In, and anti-overlap responsive layout"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.89/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.90/Daily-Sumire-app-debug.apk"
 }

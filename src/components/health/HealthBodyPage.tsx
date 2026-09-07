@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Scale,
   Target,
-  Plus,
+  Bluetooth,
   Settings2,
   RefreshCw,
   Bot,
@@ -13,6 +13,8 @@ import type { HealthProfile, CalculatedHealthMetrics, WeightLog } from '../../ty
 import { LogWeightModal } from './LogWeightModal';
 import { HealthProfileModal } from './HealthProfileModal';
 import { HealthOnboardingWizard } from './HealthOnboardingWizard';
+import { XiaomiScaleModal } from './XiaomiScaleModal';
+import type { XiaomiBiometricMetrics } from '../../lib/xiaomiScale';
 import { generateClinicalHealthSummaryAI } from '../../lib/aiHealthService';
 import {
   computeWeightMovingAverage,
@@ -51,6 +53,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
 }) => {
   const [isLogWeightOpen, setIsLogWeightOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isScaleModalOpen, setIsScaleModalOpen] = useState(false);
   const [activeMetricDetail, setActiveMetricDetail] = useState<MetricDetailModalInfo | null>(null);
 
   // Guided Health Onboarding State
@@ -198,6 +201,26 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
     }, 300);
   };
 
+  const handleSaveScaleReading = async (
+    weight: number,
+    bodyFat?: number,
+    _scaleMetrics?: XiaomiBiometricMetrics
+  ) => {
+    await handleSaveWeightInternal(
+      weight,
+      'Xiaomi Mi Scale 2 (BLE)',
+      undefined,
+      bodyFat,
+      profile.waistCm
+    );
+
+    const profileUpdates: Partial<HealthProfile> = {
+      currentWeight: weight,
+      updatedAt: Date.now(),
+    };
+    await onUpdateProfile(profileUpdates);
+  };
+
   return (
     <div className="w-full space-y-3.5 pb-3 font-body select-none">
       {/* Onboarding / Calibration Banner if Skipped or Uncalibrated */}
@@ -235,34 +258,49 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
       {/* 1. Hero BMI & Weight Card */}
       <div className="p-4 sm:p-5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-4">
         {/* Top bar with quick buttons */}
-        <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#24201D]/15">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-2xs">
+        <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#24201D]/15">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0">
               <Scale className="w-4 h-4 text-[#2D503C]" />
             </div>
-            <div>
-              <span className="text-[10px] font-black text-[#6B635B] uppercase tracking-wider block font-display leading-none">
+            <div className="min-w-0">
+              <span className="text-[10px] font-black text-[#6B635B] uppercase tracking-wider block font-display leading-none truncate">
                 Biometrics & Body OS
               </span>
-              <h2 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none">
+              <h2 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none truncate">
                 BMI & Weight Tracker
               </h2>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Unique Mi Scale BLE Button in our signature tactile aesthetic */}
+            <button
+              type="button"
+              onClick={() => {
+                playClickSound();
+                setIsScaleModalOpen(true);
+              }}
+              title="Sync with Xiaomi Mi Body Composition Scale 2"
+              className="px-2.5 py-1.5 bg-[#EEF2FF] hover:bg-[#E0E7FF] text-[#4F46E5] border-[1.5px] border-[#24201D] rounded-xl text-xs font-black shadow-2xs cursor-pointer active:translate-y-0.5 transition-all flex items-center gap-1.5 uppercase tracking-wider font-display"
+            >
+              <Bluetooth className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Mi Scale</span>
+            </button>
+
+            {/* Clean Weigh-In Button (without '+' icon) */}
             <button
               type="button"
               onClick={() => {
                 playClickSound();
                 setIsLogWeightOpen(true);
               }}
-              className="px-3 py-1.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border border-[#24201D] rounded-xl text-xs font-black shadow-2xs cursor-pointer active:translate-y-0.5 transition-all flex items-center gap-1.5 uppercase tracking-wider font-display"
+              className="px-2.5 py-1.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border border-[#24201D] rounded-xl text-xs font-black shadow-2xs cursor-pointer active:translate-y-0.5 transition-all flex items-center justify-center uppercase tracking-wider font-display"
             >
-              <Plus className="w-3.5 h-3.5 stroke-[3]" />
-              <span>Weigh-In</span>
+              Weigh-In
             </button>
 
+            {/* Profile Settings */}
             <button
               type="button"
               onClick={() => {
@@ -516,6 +554,13 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
       <MetricDetailModal
         info={activeMetricDetail}
         onClose={() => setActiveMetricDetail(null)}
+      />
+
+      <XiaomiScaleModal
+        isOpen={isScaleModalOpen}
+        onClose={() => setIsScaleModalOpen(false)}
+        profile={profile}
+        onSaveReading={handleSaveScaleReading}
       />
     </div>
   );

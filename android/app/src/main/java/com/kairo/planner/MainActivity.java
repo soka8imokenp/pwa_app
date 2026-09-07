@@ -932,7 +932,21 @@ public class MainActivity extends BridgeActivity {
                             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                             .build();
 
-                    bleScanner.startScan(null, settings, scanCallback);
+                    List<ScanFilter> filters = new ArrayList<>();
+                    // Filter 1: Xiaomi Mi Body Composition Scale 2 Service 0x181B
+                    filters.add(new ScanFilter.Builder()
+                            .setServiceData(ParcelUuid.fromString("0000181b-0000-1000-8000-00805f9b34fb"), null)
+                            .build());
+                    // Filter 2: Xiaomi Mi Scale 1 Service 0x181D
+                    filters.add(new ScanFilter.Builder()
+                            .setServiceData(ParcelUuid.fromString("0000181d-0000-1000-8000-00805f9b34fb"), null)
+                            .build());
+
+                    try {
+                        bleScanner.startScan(filters, settings, scanCallback);
+                    } catch (Exception filterEx) {
+                        bleScanner.startScan(null, settings, scanCallback);
+                    }
                     isScanning = true;
                     notifyJs("window.__onNativeScaleStatus && window.__onNativeScaleStatus('scanning');");
 
@@ -963,54 +977,18 @@ public class MainActivity extends BridgeActivity {
 
             byte[] scaleData = null;
 
-            // 1. Check standard Body Composition Service UUID 0x181B
+            // 1. Check Body Composition Service UUID 0x181B (Xiaomi Scale 2)
             ParcelUuid bodyCompUuid = ParcelUuid.fromString("0000181b-0000-1000-8000-00805f9b34fb");
             scaleData = record.getServiceData(bodyCompUuid);
 
-            // 2. Check standard Weight Scale Service UUID 0x181D
+            // 2. Check Weight Scale Service UUID 0x181D (Xiaomi Scale 1)
             if (scaleData == null) {
                 ParcelUuid weightScaleUuid = ParcelUuid.fromString("0000181d-0000-1000-8000-00805f9b34fb");
                 scaleData = record.getServiceData(weightScaleUuid);
             }
 
-            // 3. Check Xiaomi manufacturer data (Company ID 0x0157 = 343)
-            if (scaleData == null) {
-                byte[] mfg = record.getManufacturerSpecificData(343);
-                if (mfg != null && mfg.length >= 10) {
-                    scaleData = mfg;
-                }
-            }
-
-            // 4. Check any available service data with length >= 13
-            if (scaleData == null && record.getServiceData() != null) {
-                for (byte[] data : record.getServiceData().values()) {
-                    if (data != null && data.length >= 13) {
-                        scaleData = data;
-                        break;
-                    }
-                }
-            }
-
-            // 5. Check raw advertising payload if device name matches Xiaomi Scale
-            if (scaleData == null) {
-                String devName = record.getDeviceName();
-                if (devName == null && result.getDevice() != null) {
-                    try {
-                        devName = result.getDevice().getName();
-                    } catch (SecurityException ignored) {}
-                }
-                if (devName != null) {
-                    String lower = devName.toLowerCase();
-                    if (lower.contains("mibfs") || lower.contains("scale") || lower.contains("mibody") || lower.contains("body")) {
-                        byte[] raw = record.getBytes();
-                        if (raw != null && raw.length >= 13) {
-                            scaleData = raw;
-                        }
-                    }
-                }
-            }
-
-            if (scaleData != null && scaleData.length >= 10) {
+            // Strictly accept ONLY valid 13-byte body composition or 10-byte weight packets
+            if (scaleData != null && (scaleData.length == 13 || scaleData.length == 10)) {
                 final String base64Payload = Base64.encodeToString(scaleData, Base64.NO_WRAP);
                 runOnUiThread(() -> {
                     notifyJs("window.__onNativeScaleData && window.__onNativeScaleData('" + base64Payload + "');");

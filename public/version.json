@@ -1,11 +1,11 @@
 {
-  "version": "1.8.94",
-  "buildNumber": 98,
+  "version": "1.8.95",
+  "buildNumber": 99,
   "releaseDate": "2026-09-07",
   "changelog": [
-    "Added Android Native Bluetooth LE Bridge to support smart scales in WebView",
-    "Renamed action button to 'Connect' in Smart Scale modal",
-    "Enabled automatic BLE permissions and hardware detection"
+    "Fixed ghost reading issue: strictly filtered Bluetooth scanning to official Xiaomi Scale UUIDs (0x181B, 0x181D)",
+    "Added strict timestamp and weight sanity validation (rejecting non-scale BLE packets)",
+    "Set initial telemetry weight to placeholder until user steps on scale"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.94/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.95/Daily-Sumire-app-debug.apk"
 }

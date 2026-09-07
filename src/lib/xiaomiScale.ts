@@ -120,13 +120,25 @@ export function parseXiaomiScaleAdvertisement(
 
   let offset = 0;
   if (dataView.byteLength > 13) {
+    let found = false;
     for (let i = 0; i <= dataView.byteLength - 13; i++) {
       const candidateYear = dataView.getUint16(i + 2, true);
-      if (candidateYear >= 2020 && candidateYear <= 2035) {
+      const candidateMonth = dataView.getUint8(i + 4);
+      const candidateDay = dataView.getUint8(i + 5);
+      if (
+        candidateYear >= 2020 &&
+        candidateYear <= 2035 &&
+        candidateMonth >= 1 &&
+        candidateMonth <= 12 &&
+        candidateDay >= 1 &&
+        candidateDay <= 31
+      ) {
         offset = i;
+        found = true;
         break;
       }
     }
+    if (!found) return null;
   }
 
   const flags0 = dataView.getUint8(offset + 0);
@@ -146,13 +158,19 @@ export function parseXiaomiScaleAdvertisement(
 
   // Timestamp
   const year = dataView.getUint16(offset + 2, true);
-  const month = Math.max(0, Math.min(11, dataView.getUint8(offset + 4) - 1));
-  const day = Math.max(1, Math.min(31, dataView.getUint8(offset + 5)));
-  const hour = Math.min(23, dataView.getUint8(offset + 6));
-  const minute = Math.min(59, dataView.getUint8(offset + 7));
-  const second = Math.min(59, dataView.getUint8(offset + 8));
+  const rawMonth = dataView.getUint8(offset + 4);
+  const day = dataView.getUint8(offset + 5);
+  const hour = dataView.getUint8(offset + 6);
+  const minute = dataView.getUint8(offset + 7);
+  const second = dataView.getUint8(offset + 8);
 
-  const timestamp = new Date(year, month, day, hour, minute, second);
+  // Strict sanity checks to reject noise or non-scale packets
+  if (year < 2018 || year > 2035) return null;
+  if (rawMonth < 1 || rawMonth > 12) return null;
+  if (day < 1 || day > 31) return null;
+  if (hour > 23 || minute > 59 || second > 59) return null;
+
+  const timestamp = new Date(year, rawMonth - 1, day, hour, minute, second);
 
   // Impedance (bytes 9-10, Little-Endian)
   const impedance = dataView.getUint16(offset + 9, true);
@@ -168,8 +186,13 @@ export function parseXiaomiScaleAdvertisement(
     weight = Number((weight * 0.5).toFixed(2));
   }
 
+  // Sanity check: Human body weight must be within realistic physical range
+  if (weight < 5.0 || weight > 250.0) {
+    return null;
+  }
+
   let metrics: XiaomiBiometricMetrics | undefined;
-  if (isImpedanceComplete && impedance > 50 && userProfile) {
+  if (isImpedanceComplete && impedance > 50 && impedance < 2500 && userProfile) {
     metrics = calculateXiaomiBiometrics(
       weight,
       impedance,

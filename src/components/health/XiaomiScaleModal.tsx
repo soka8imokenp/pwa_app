@@ -40,7 +40,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
 }) => {
   const [status, setStatus] = useState<ScanStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [liveWeight, setLiveWeight] = useState<number>(profile.currentWeight || 70.0);
+  const [liveWeight, setLiveWeight] = useState<number>(0);
   const [impedanceProgress, setImpedanceProgress] = useState<number>(0);
   const [reading, setReading] = useState<XiaomiScaleReading | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -52,6 +52,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
     if (isOpen) {
       setStatus('idle');
       setErrorMessage('');
+      setLiveWeight(0);
       setReading(null);
       setImpedanceProgress(0);
     } else {
@@ -80,6 +81,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
   const handleStartScan = async () => {
     playClickSound();
     setErrorMessage('');
+    setLiveWeight(0);
     setStatus('scanning');
 
     const isNativeBt =
@@ -111,14 +113,14 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
             gender: profile.gender,
           });
 
-          if (parsed) {
+          if (parsed && parsed.weight >= 10.0) {
             setLiveWeight(parsed.weight);
             if (!parsed.isStabilized) {
               setStatus('stabilizing');
             } else if (parsed.isStabilized && !parsed.isImpedanceComplete) {
               setStatus('analyzing');
               setImpedanceProgress(65);
-            } else if (parsed.isImpedanceComplete) {
+            } else if (parsed.isStabilized && parsed.isImpedanceComplete) {
               try {
                 (window as any).AndroidBluetoothScale?.stopScan?.();
               } catch (e) {}
@@ -197,12 +199,14 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                 gender: profile.gender,
               });
 
-              if (parsed) {
+              if (parsed && parsed.weight >= 10.0) {
                 setLiveWeight(parsed.weight);
-                if (parsed.isStabilized && !parsed.isImpedanceComplete) {
+                if (!parsed.isStabilized) {
+                  setStatus('stabilizing');
+                } else if (parsed.isStabilized && !parsed.isImpedanceComplete) {
                   setStatus('analyzing');
                   setImpedanceProgress(65);
-                } else if (parsed.isImpedanceComplete) {
+                } else if (parsed.isStabilized && parsed.isImpedanceComplete) {
                   completeMeasurement(parsed);
                 }
               }
@@ -358,12 +362,17 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                 </span>
                 <div className="flex items-baseline justify-center gap-1.5">
                   <span className="text-4xl font-black font-mono-num text-[#24201D] tracking-tight">
-                    {liveWeight}
+                    {liveWeight > 0 ? liveWeight : '—.—'}
                   </span>
                   <span className="text-sm font-black text-[#6B635B] uppercase font-display">
                     kg
                   </span>
                 </div>
+                {liveWeight === 0 && (
+                  <p className="text-[11px] text-[#6B635B] font-medium pt-1">
+                    Step onto your scale barefoot to start measuring
+                  </p>
+                )}
 
                 {/* Impedance bars */}
                 <div className="pt-2">

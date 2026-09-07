@@ -1,11 +1,11 @@
 {
-  "version": "1.8.85",
-  "buildNumber": 89,
+  "version": "1.8.86",
+  "buildNumber": 90,
   "releaseDate": "2026-09-07",
   "changelog": [
-    "Removed mascot name badges (such as Caffeine Turbo) from Features & Archive modal",
-    "Redesigned Resident Profile modal into minimalist layout without header edit button",
-    "Swapped + Weigh-In and settings button positions on Body tracker page"
+    "Added interactive 3-step Health & Body Onboarding Wizard (Option 1) with Sumire mascot",
+    "Real-time WHO healthy range, BMR, TDEE, and hydration calculations during calibration",
+    "Added reminder banner for skipped onboarding and seamless re-launch from profile settings"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.85/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.86/Daily-Sumire-app-debug.apk"
 }

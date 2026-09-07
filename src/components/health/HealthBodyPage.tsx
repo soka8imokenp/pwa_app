@@ -6,11 +6,13 @@ import {
   Settings2,
   RefreshCw,
   Bot,
+  Sparkles,
 } from 'lucide-react';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import type { HealthProfile, CalculatedHealthMetrics, WeightLog } from '../../types/health';
 import { LogWeightModal } from './LogWeightModal';
 import { HealthProfileModal } from './HealthProfileModal';
+import { HealthOnboardingWizard } from './HealthOnboardingWizard';
 import { generateClinicalHealthSummaryAI } from '../../lib/aiHealthService';
 import {
   computeWeightMovingAverage,
@@ -46,6 +48,28 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
   const [isLogWeightOpen, setIsLogWeightOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [activeMetricDetail, setActiveMetricDetail] = useState<MetricDetailModalInfo | null>(null);
+
+  // Guided Health Onboarding State
+  const [isOnboardingWizardOpen, setIsOnboardingWizardOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !localStorage.getItem('kairo_health_onboarded');
+    }
+    return false;
+  });
+
+  const [isOnboardingSkipped, setIsOnboardingSkipped] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('kairo_health_onboarded') === 'skipped';
+    }
+    return false;
+  });
+
+  const handleCloseWizard = () => {
+    setIsOnboardingWizardOpen(false);
+    if (typeof window !== 'undefined') {
+      setIsOnboardingSkipped(localStorage.getItem('kairo_health_onboarded') === 'skipped');
+    }
+  };
 
   // AI-generated clinical summary state (in English)
   const [aiSummary, setAiSummary] = useState<string>(() => {
@@ -159,6 +183,36 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
 
   return (
     <div className="w-full space-y-3.5 pb-3 font-body select-none">
+      {/* Onboarding Reminder Banner if Skipped */}
+      {isOnboardingSkipped && (
+        <div className="p-3 bg-[#FBECCF] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between gap-3 animate-in fade-in duration-200">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-white border border-[#24201D] flex items-center justify-center shrink-0 shadow-2xs">
+              <Sparkles className="w-4 h-4 text-[#854D0E] stroke-[2.25]" />
+            </div>
+            <div className="min-w-0">
+              <h4 className="text-xs font-black text-[#854D0E] font-display uppercase tracking-wide truncate">
+                Personalize Your Targets
+              </h4>
+              <p className="text-[10px] text-[#854D0E]/80 font-medium truncate">
+                Calibrate metabolism, water goal & WHO healthy weight
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              setIsOnboardingWizardOpen(true);
+            }}
+            className="py-1.5 px-3 rounded-xl bg-[#854D0E] hover:bg-[#6D3E0B] text-white border border-[#24201D] text-xs font-black shadow-2xs active:translate-y-0.5 transition-all cursor-pointer shrink-0 font-display uppercase tracking-wider"
+          >
+            Calibrate
+          </button>
+        </div>
+      )}
+
       {/* 1. Hero BMI & Weight Card */}
       <div className="p-4 sm:p-5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-4">
         {/* Top bar with quick buttons */}
@@ -406,6 +460,18 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
         onClose={() => setIsProfileOpen(false)}
         profile={profile}
         onSaveProfile={onUpdateProfile}
+        onLaunchWizard={() => setIsOnboardingWizardOpen(true)}
+      />
+
+      <HealthOnboardingWizard
+        isOpen={isOnboardingWizardOpen}
+        onClose={handleCloseWizard}
+        profile={profile}
+        onSaveProfile={onUpdateProfile}
+        onSaveInitialWeight={async (w) => {
+          await onSaveWeight(w);
+        }}
+        hasExistingWeightLogs={weightLogs.length > 0}
       />
 
       <MetricDetailModal

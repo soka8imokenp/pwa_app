@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Target, Activity, Info, Check } from 'lucide-react';
+import { X, User, Target, Activity, Info, Check, Sparkles, ArrowRight } from 'lucide-react';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import type { HealthProfile, ActivityLevel, HealthGoal, Gender } from '../../types/health';
 
@@ -8,6 +8,7 @@ interface HealthProfileModalProps {
   onClose: () => void;
   profile: HealthProfile;
   onSaveProfile: (updates: Partial<HealthProfile>) => Promise<void>;
+  onLaunchWizard?: () => void;
 }
 
 export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
@@ -15,6 +16,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
   onClose,
   profile,
   onSaveProfile,
+  onLaunchWizard,
 }) => {
   const [age, setAge] = useState<number>(profile.age || 25);
   const [gender, setGender] = useState<Gender>(profile.gender || 'male');
@@ -94,6 +96,25 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
             <X className="w-4 h-4 stroke-[2.5]" />
           </button>
         </div>
+
+        {/* Quick Launch Setup Wizard Button */}
+        {onLaunchWizard && (
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              onClose();
+              onLaunchWizard();
+            }}
+            className="w-full p-2.5 rounded-2xl bg-[#DDE8DE] hover:bg-[#CDE0CE] border-[1.5px] border-[#24201D] text-xs font-black text-[#2D503C] flex items-center justify-between shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-[#2D503C]" />
+              <span>Run Guided Calibration Wizard</span>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+          </button>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3.5">

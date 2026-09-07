@@ -588,15 +588,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <RotateCcw className="w-3 h-3 stroke-[2.25]" />
               <span>Reset & Reload Sample Data</span>
             </button>
-
-            {/* GDPR Right to be Forgotten */}
-            <button
-              onClick={handleDeleteAllData}
-              disabled={isProcessing}
-              className="w-full py-1.5 rounded-xl bg-[#F9E2E5] hover:bg-[#F4CCD1] border border-[#8C2B39] text-[10px] font-black text-[#8C2B39] flex items-center justify-center gap-1 shadow-2xs active:translate-y-0.5 cursor-pointer transition-all"
-            >
-              <span>Purge All Data (GDPR Right to be Forgotten) ⚠️</span>
-            </button>
           </div>
 
           {/* Legal Compliance Links */}

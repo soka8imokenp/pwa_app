@@ -1,11 +1,11 @@
 {
-  "version": "1.8.83",
-  "buildNumber": 87,
+  "version": "1.8.84",
+  "buildNumber": 88,
   "releaseDate": "2026-09-07",
   "changelog": [
-    "Redesign User Profile button: elegant Sumire wisteria violet card with real mascot avatar medallion",
-    "Redesign Settings button: warm ivory porcelain card with rotating golden gear icon",
-    "Enhanced header Settings and User Profile buttons with tactile feedback and micro-interactions"
+    "Removed Purge All Data button from App Settings modal",
+    "Removed PNG, .ICS, and App badges from Features & Archive modal",
+    "Removed Productivity Cards badge from Features & Archive modal"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.83/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.84/Daily-Sumire-app-debug.apk"
 }

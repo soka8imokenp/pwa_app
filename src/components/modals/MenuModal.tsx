@@ -241,12 +241,9 @@ export const MenuModal: React.FC<MenuModalProps> = ({
 
         {/* Section 2: Actions & Tools */}
         <div className="space-y-2 pt-1">
-          <div className="flex items-center justify-between px-1">
+          <div className="px-1">
             <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B]">
               Tools & Export
-            </span>
-            <span className="text-[9px] font-bold text-[#2D503C] bg-[#DDE8DE] px-2 py-0.5 rounded-full border border-[#24201D]">
-              Productivity Cards
             </span>
           </div>
 
@@ -261,13 +258,8 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                 }}
                 className="p-3.5 rounded-2xl bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[1.75px] border-[#24201D] flex flex-col justify-between transition-all cursor-pointer text-left shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 group min-h-[110px]"
               >
-                <div className="flex items-center justify-between w-full mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-white border border-[#24201D] flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform">
-                    <Share2 className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
-                  </div>
-                  <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-white/80 border border-[#24201D]/20 text-[#2D503C]">
-                    PNG
-                  </span>
+                <div className="w-8 h-8 rounded-xl bg-white border border-[#24201D] flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform mb-2">
+                  <Share2 className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-[#2D503C] font-display uppercase tracking-wide">
@@ -290,13 +282,8 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                 }}
                 className="p-3.5 rounded-2xl bg-[#FBECCF] hover:bg-[#F7E2BB] border-[1.75px] border-[#24201D] flex flex-col justify-between transition-all cursor-pointer text-left shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 group min-h-[110px]"
               >
-                <div className="flex items-center justify-between w-full mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-white border border-[#24201D] flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform">
-                    <Calendar className="w-4 h-4 text-[#854D0E] stroke-[2.25]" />
-                  </div>
-                  <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-white/80 border border-[#24201D]/20 text-[#854D0E]">
-                    .ICS
-                  </span>
+                <div className="w-8 h-8 rounded-xl bg-white border border-[#24201D] flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform mb-2">
+                  <Calendar className="w-4 h-4 text-[#854D0E] stroke-[2.25]" />
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-[#854D0E] font-display uppercase tracking-wide">
@@ -320,14 +307,9 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                 <Settings className="w-5 h-5 text-[#F0BB58] stroke-[2.25]" />
               </div>
               <div>
-                <div className="flex items-center gap-1.5">
-                  <h4 className="text-xs font-black text-[#24201D] font-display uppercase tracking-wide">
-                    Settings
-                  </h4>
-                  <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-[#EDE7DA] text-[#6B635B] border border-[#24201D]/20">
-                    App
-                  </span>
-                </div>
+                <h4 className="text-xs font-black text-[#24201D] font-display uppercase tracking-wide">
+                  Settings
+                </h4>
                 <p className="text-[10px] text-[#6B635B] font-medium">Sound, Security, AI & Backup</p>
               </div>
             </div>

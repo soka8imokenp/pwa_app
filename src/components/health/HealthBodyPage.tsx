@@ -349,10 +349,6 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             title="Sync with Smart Scale"
             className="py-2.5 px-3 bg-[#EEF2FF] hover:bg-[#E0E7FF] text-[#4F46E5] border-[1.75px] border-[#24201D] rounded-xl text-xs font-black shadow-[2px_2px_0px_#24201D] cursor-pointer active:translate-y-0.5 transition-all flex items-center justify-center gap-2 uppercase tracking-wider font-display"
           >
-            <span className="relative flex h-2 w-2 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4F46E5] opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4F46E5]" />
-            </span>
             <Bluetooth className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
             <span>Smart Scale</span>
           </button>

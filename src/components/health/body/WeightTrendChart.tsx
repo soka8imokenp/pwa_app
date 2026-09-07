@@ -45,6 +45,7 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
 }) => {
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
   const [selectedPointIndex, setSelectedPointIndex] = useState<number | null>(null);
+  const [showInfo, setShowInfo] = useState(false);
 
   // Time-range filtered logs
   const filteredLogs = useMemo(() => {
@@ -201,25 +202,25 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
           <span className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
             Weight Dynamics & Moving Avg
           </span>
-          <div
-            title="Dots represent daily weigh-ins. The solid dark green line is the 7-day Moving Average filter."
-            className="cursor-help"
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              setShowInfo((prev) => !prev);
+            }}
+            title="What is Moving Average?"
+            aria-label="Toggle description"
+            className={`p-1 rounded-lg border transition-all cursor-pointer flex items-center justify-center ${
+              showInfo
+                ? 'bg-[#EEF2FF] border-[#4F46E5] text-[#4F46E5] shadow-2xs'
+                : 'bg-[#FAF8F5] hover:bg-stone-100 border-[#24201D]/20 text-[#6B635B] hover:text-[#24201D]'
+            }`}
           >
-            <Info className="w-3.5 h-3.5 text-stone-400 hover:text-stone-600" />
-          </div>
+            <Info className="w-3.5 h-3.5" />
+          </button>
         </div>
 
         <div className="flex items-center gap-1.5">
-          {/* Export CSV button */}
-          <button
-            type="button"
-            onClick={handleExportCsv}
-            title="Export CSV history"
-            className="p-1.5 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] text-[#24201D] flex items-center justify-center cursor-pointer shadow-2xs active:scale-95 transition-all"
-          >
-            <Download className="w-3.5 h-3.5 stroke-[2]" />
-          </button>
-
           {/* Time range selector */}
           <div className="flex items-center p-0.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl">
             {(['7d', '30d', '90d', 'all'] as const).map((range) => (
@@ -241,8 +242,40 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
               </button>
             ))}
           </div>
+
+          {/* Export CSV button placed on the right side */}
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            title="Export CSV history"
+            className="p-1.5 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] text-[#24201D] flex items-center justify-center cursor-pointer shadow-2xs active:scale-95 transition-all"
+          >
+            <Download className="w-3.5 h-3.5 stroke-[2]" />
+          </button>
         </div>
       </div>
+
+      {/* Collapsible Explanation Box */}
+      {showInfo && (
+        <div className="p-3 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1.5 animate-in fade-in duration-150">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
+              <Info className="w-3.5 h-3.5 text-[#3D6B52]" />
+              <span>Weight Dynamics & Moving Average</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowInfo(false)}
+              className="p-1 text-stone-400 hover:text-[#24201D] rounded-md transition-colors cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <p className="text-[11px] text-[#6B635B] leading-relaxed">
+            Daily body weight naturally fluctuates by 1–2 kg due to water balance, sodium intake, and digestive contents. The dots represent your daily logged weigh-ins, while the solid green line is your <strong>7-Day Moving Average</strong>, filtering out day-to-day noise to reveal your true physiological fat loss or muscle gain trend.
+          </p>
+        </div>
+      )}
 
       {/* 2. Real-time Moving Average Insight Bar */}
       {stats && (

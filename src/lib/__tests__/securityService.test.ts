@@ -2,9 +2,34 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { hashPin, savePin, verifyPin, removePin, isPinSet } from '../securityService';
 
 describe('securityService', () => {
+  const localStore: Record<string, string> = {};
+  const sessionStore: Record<string, string> = {};
+
   beforeEach(() => {
-    localStorage.clear();
-    sessionStorage.clear();
+    if (typeof window === 'undefined' || !(globalThis as any).window?.localStorage) {
+      (globalThis as any).window = {
+        localStorage: {
+          getItem: (k: string) => localStore[k] ?? null,
+          setItem: (k: string, v: string) => { localStore[k] = String(v); },
+          removeItem: (k: string) => { delete localStore[k]; },
+          clear: () => {
+            Object.keys(localStore).forEach((k) => delete localStore[k]);
+          },
+        },
+        sessionStorage: {
+          getItem: (k: string) => sessionStore[k] ?? null,
+          setItem: (k: string, v: string) => { sessionStore[k] = String(v); },
+          removeItem: (k: string) => { delete sessionStore[k]; },
+          clear: () => {
+            Object.keys(sessionStore).forEach((k) => delete sessionStore[k]);
+          },
+        },
+      };
+      (globalThis as any).localStorage = (globalThis as any).window.localStorage;
+      (globalThis as any).sessionStorage = (globalThis as any).window.sessionStorage;
+    }
+    Object.keys(localStore).forEach((k) => delete localStore[k]);
+    Object.keys(sessionStore).forEach((k) => delete sessionStore[k]);
   });
 
   it('hashPin: returns deterministic SHA-256 hash', async () => {

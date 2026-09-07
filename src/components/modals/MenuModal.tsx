@@ -150,16 +150,11 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                 {activeAvatar.renderSvg('w-full h-full')}
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <h4 className="text-xs font-black text-[#382B5C] font-display uppercase tracking-wide truncate">
-                    User Profile
-                  </h4>
-                  <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-[#E2D6F5] text-[#4E3982] border border-[#24201D]/20">
-                    {activeAvatar.name}
-                  </span>
-                </div>
+                <h4 className="text-xs font-black text-[#382B5C] font-display uppercase tracking-wide truncate">
+                  User Profile
+                </h4>
                 <p className="text-[10px] text-[#55437E] font-medium truncate">
-                  {userName ? `${userName} · Identity & mascot` : 'Identity, mascot avatar & account data'}
+                  {userName || 'Identity, mascot avatar & account data'}
                 </p>
               </div>
             </div>

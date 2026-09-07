@@ -182,24 +182,24 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
               type="button"
               onClick={() => {
                 playClickSound();
-                setIsProfileOpen(true);
-              }}
-              title="Edit Profile Parameters"
-              className="p-1.5 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
-            >
-              <Settings2 className="w-4 h-4 stroke-[2]" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                playClickSound();
                 setIsLogWeightOpen(true);
               }}
               className="px-3 py-1.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border border-[#24201D] rounded-xl text-xs font-black shadow-2xs cursor-pointer active:translate-y-0.5 transition-all flex items-center gap-1.5 uppercase tracking-wider font-display"
             >
               <Plus className="w-3.5 h-3.5 stroke-[3]" />
               <span>Weigh-In</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                playClickSound();
+                setIsProfileOpen(true);
+              }}
+              title="Edit Profile Parameters"
+              className="p-1.5 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
+            >
+              <Settings2 className="w-4 h-4 stroke-[2]" />
             </button>
           </div>
         </div>

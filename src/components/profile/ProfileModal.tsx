@@ -6,24 +6,15 @@ import {
   AtSign,
   Smile,
   LogOut,
-  Check,
-  Shield,
   Flame,
   CheckCircle2,
-  Sparkles,
   Save,
   Briefcase,
   Quote,
   Target,
   Download,
   Clock,
-  Calendar,
-  Zap,
   Edit3,
-  ArrowLeft,
-  ChevronRight,
-  Sliders,
-  Compass,
 } from 'lucide-react';
 import type { UserProfile } from '../auth/AuthContainer';
 import type { Task, Habit, HabitLog, FocusSession, HabitWithStats } from '../../types';
@@ -269,11 +260,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     setTimeout(() => setFeedback(null), 3000);
   };
 
-  // Progress of today's focus towards daily goal
-  const dailyFocusProgressPct = Math.min(
-    100,
-    Math.round((parseFloat(lifetimeStats.todaysFocusHours) / (focusDailyGoalHours || 4)) * 100)
-  );
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#24201D]/55 backdrop-blur-md animate-in fade-in duration-200 font-body select-none">
@@ -290,48 +277,21 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 Resident Profile
               </h3>
               <p className="text-[10px] font-bold text-[#6B635B]">
-                {activeTab === 'overview' ? 'Identity, Stats & Productivity DNA' : 'Editing Personal Information'}
+                Identity & Mascot Companion
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            {activeTab === 'overview' ? (
-              <button
-                type="button"
-                onClick={() => {
-                  playClickSound();
-                  setActiveTab('edit');
-                }}
-                className="px-3 py-1.5 rounded-xl bg-[#F4F0EA] hover:bg-[#DDE8DE] border-[1.5px] border-[#24201D] text-xs font-black text-[#24201D] flex items-center gap-1.5 shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
-              >
-                <Edit3 className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span className="hidden sm:inline">Edit</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  playClickSound();
-                  setActiveTab('overview');
-                }}
-                className="px-3 py-1.5 rounded-xl bg-[#F4F0EA] hover:bg-stone-200 border-[1.5px] border-[#24201D] text-xs font-black text-[#24201D] flex items-center gap-1.5 shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
-              >
-                <ArrowLeft className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Back</span>
-              </button>
-            )}
-
-            <button
-              onClick={() => {
-                playClickSound();
-                onClose();
-              }}
-              className="w-8 h-8 rounded-xl bg-[#F4F0EA] hover:bg-rose-50 hover:text-rose-600 border-[1.5px] border-[#24201D] flex items-center justify-center text-[#24201D] cursor-pointer shadow-2xs active:scale-95 transition-all"
-            >
-              <X className="w-4 h-4 stroke-[2.5]" />
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              playClickSound();
+              onClose();
+            }}
+            className="w-8 h-8 rounded-xl bg-[#F4F0EA] hover:bg-rose-50 hover:text-rose-600 border-[1.5px] border-[#24201D] flex items-center justify-center text-[#24201D] cursor-pointer shadow-2xs active:scale-95 transition-all"
+            title="Close"
+          >
+            <X className="w-4 h-4 stroke-[2.5]" />
+          </button>
         </div>
 
         {/* Feedback Alert Toast */}
@@ -342,36 +302,71 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           </div>
         )}
 
+        {/* Segmented Tab Control */}
+        <div className="px-4 sm:px-5 pt-3 pb-1 shrink-0">
+          <div className="p-1 bg-[#EAE5DC] border-[1.75px] border-[#24201D] rounded-2xl grid grid-cols-2 gap-1 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => {
+                playClickSound();
+                setActiveTab('overview');
+              }}
+              className={`py-2 px-3 rounded-xl text-xs font-black uppercase tracking-wider font-display transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                activeTab === 'overview'
+                  ? 'bg-white text-[#24201D] border border-[#24201D] shadow-2xs'
+                  : 'text-[#6B635B] hover:text-[#24201D]'
+              }`}
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Overview</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                playClickSound();
+                setActiveTab('edit');
+              }}
+              className={`py-2 px-3 rounded-xl text-xs font-black uppercase tracking-wider font-display transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                activeTab === 'edit'
+                  ? 'bg-white text-[#24201D] border border-[#24201D] shadow-2xs'
+                  : 'text-[#6B635B] hover:text-[#24201D]'
+              }`}
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Edit Profile</span>
+            </button>
+          </div>
+        </div>
+
         {/* Scrollable Content Body */}
         <div className="p-4 sm:p-5 overflow-y-auto space-y-4">
           
           {activeTab === 'overview' ? (
             /* ========================================================================= */
-            /* OVERVIEW MODE                                                             */
+            /* MINIMALIST OVERVIEW MODE                                                  */
             /* ========================================================================= */
             <>
-              {/* 1. Japanese Resident Hero Card */}
-              <div className="relative p-4 sm:p-5 bg-white border-[2px] border-[#24201D] rounded-3xl shadow-[3px_3px_0px_#24201D] space-y-3.5 overflow-hidden">
-                {/* Avatar & Main Credentials */}
-                <div className="flex items-center gap-4">
+              {/* 1. Resident Identity Hero Card */}
+              <div className="p-4 sm:p-5 bg-white border-[2px] border-[#24201D] rounded-3xl shadow-[3px_3px_0px_#24201D] space-y-3.5">
+                <div className="flex items-center gap-3.5">
                   <div className="relative">
                     <div
-                      className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl border-[2px] border-[#24201D] flex items-center justify-center p-1.5 shadow-[2px_2px_0px_#24201D] shrink-0"
+                      className="w-16 h-16 rounded-2xl border-[2px] border-[#24201D] flex items-center justify-center p-1 shadow-[2px_2px_0px_#24201D] shrink-0"
                       style={{ backgroundColor: activeAvatar.bg }}
                     >
                       {activeAvatar.renderSvg('w-full h-full')}
                     </div>
-                    <span className="absolute -bottom-1.5 -right-1.5 bg-[#F0BB58] text-[#24201D] text-[9px] font-black font-mono-num px-1.5 py-0.5 rounded-md border border-[#24201D] shadow-2xs">
+                    <span className="absolute -bottom-1 -right-1 bg-[#F0BB58] text-[#24201D] text-[9px] font-black font-mono-num px-1.5 py-0.2 rounded-md border border-[#24201D] shadow-2xs">
                       Lv.{lifetimeStats.calculatedLevel}
                     </span>
                   </div>
 
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-base sm:text-lg font-black font-display text-[#24201D] truncate leading-tight">
+                      <h4 className="text-base font-black font-display text-[#24201D] truncate leading-tight">
                         {fullName}
                       </h4>
-                      <span className="w-2 h-2 rounded-full bg-[#3D6B52] shrink-0 animate-pulse" title="Active Citizen" />
+                      <span className="w-2 h-2 rounded-full bg-[#3D6B52] shrink-0" title="Active" />
                     </div>
 
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -385,129 +380,47 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                         @{currentUser.username || 'resident'}
                       </span>
                     </div>
+
+                    {motto && (
+                      <p className="text-[11px] font-bold text-[#6B635B] italic truncate">
+                        "{motto}"
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                {/* Personal Motto / Zen Quote Container */}
-                <div className="p-3 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-2xl flex items-start gap-2 shadow-2xs">
-                  <Quote className="w-4 h-4 text-[#E09F3E] shrink-0 mt-0.5 stroke-[2.5]" />
-                  <p className="text-xs font-bold text-[#24201D] italic leading-relaxed">
-                    "{motto || 'Focus on what matters, let the rest flow.'}"
-                  </p>
-                </div>
-
-                {/* Status Badges Row */}
-                <div className="grid grid-cols-3 gap-2 pt-1">
-                  <div className="p-2 rounded-xl bg-[#FBECCF] border border-[#24201D] flex items-center justify-center gap-1.5 shadow-2xs">
-                    <Flame className="w-3.5 h-3.5 fill-[#E09F3E] text-[#C25E40] shrink-0" />
-                    <span className="text-[11px] font-black font-mono-num text-[#854D0E]">
-                      {streakCount}d Streak
+                {/* 3 Core Metric Badges */}
+                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#24201D]/10">
+                  <div className="p-2 rounded-xl bg-[#FBECCF] border border-[#24201D] flex flex-col items-center text-center shadow-2xs">
+                    <span className="text-[9px] font-black uppercase text-[#854D0E] flex items-center gap-1">
+                      <Flame className="w-3 h-3 fill-[#E09F3E] text-[#C25E40]" /> Streak
+                    </span>
+                    <span className="text-sm font-black font-mono-num text-[#24201D] mt-0.5">
+                      {streakCount}d
                     </span>
                   </div>
 
-                  <div className="p-2 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center gap-1.5 shadow-2xs">
-                    <Shield className="w-3.5 h-3.5 text-[#2D503C] shrink-0 stroke-[2.5]" />
-                    <span className="text-[11px] font-black text-[#2D503C] truncate">
-                      Vault Safe
+                  <div className="p-2 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex flex-col items-center text-center shadow-2xs">
+                    <span className="text-[9px] font-black uppercase text-[#2D503C] flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Tasks
                     </span>
-                  </div>
-
-                  <div className="p-2 rounded-xl bg-[#EDE9FE] border border-[#24201D] flex items-center justify-center gap-1.5 shadow-2xs">
-                    <Zap className="w-3.5 h-3.5 text-[#7E22CE] shrink-0 stroke-[2.5]" />
-                    <span className="text-[11px] font-black text-[#6B21A8] truncate">
-                      {WORK_STYLES.find((w) => w.id === workStyle)?.badge || '50/10'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 2. Lifetime Productivity Grid */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between px-1">
-                  <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                    Lifetime Productivity Matrix
-                  </h4>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-1">
-                    <div className="flex items-center justify-between text-[#2D503C]">
-                      <span className="text-[10px] font-black uppercase text-[#6B635B]">Tasks</span>
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="text-xl font-black font-display font-mono-num text-[#24201D]">
+                    <span className="text-sm font-black font-mono-num text-[#24201D] mt-0.5">
                       {lifetimeStats.totalCompletedTasks}
-                    </div>
-                    <p className="text-[9px] font-bold text-[#6B635B]">completed</p>
+                    </span>
                   </div>
 
-                  <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-1">
-                    <div className="flex items-center justify-between text-[#B45309]">
-                      <span className="text-[10px] font-black uppercase text-[#6B635B]">Focus</span>
-                      <Clock className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="text-xl font-black font-display font-mono-num text-[#24201D]">
+                  <div className="p-2 rounded-xl bg-[#EDE9FE] border border-[#24201D] flex flex-col items-center text-center shadow-2xs">
+                    <span className="text-[9px] font-black uppercase text-[#6B21A8] flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> Focus
+                    </span>
+                    <span className="text-sm font-black font-mono-num text-[#24201D] mt-0.5">
                       {lifetimeStats.totalFocusHours}h
-                    </div>
-                    <p className="text-[9px] font-bold text-[#6B635B]">accumulated</p>
-                  </div>
-
-                  <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-1">
-                    <div className="flex items-center justify-between text-[#C25E40]">
-                      <span className="text-[10px] font-black uppercase text-[#6B635B]">Habits</span>
-                      <Flame className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="text-xl font-black font-display font-mono-num text-[#24201D]">
-                      {lifetimeStats.totalHabitCompletions}
-                    </div>
-                    <p className="text-[9px] font-bold text-[#6B635B]">check-ins</p>
-                  </div>
-
-                  <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-1">
-                    <div className="flex items-center justify-between text-[#4338CA]">
-                      <span className="text-[10px] font-black uppercase text-[#6B635B]">Active</span>
-                      <Calendar className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="text-xl font-black font-display font-mono-num text-[#24201D]">
-                      {lifetimeStats.totalActiveDays}d
-                    </div>
-                    <p className="text-[9px] font-bold text-[#6B635B]">recorded days</p>
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* 3. Daily Target & Focus Goal Card */}
-              <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-xl bg-[#FBECCF] border border-[#24201D] flex items-center justify-center shadow-2xs">
-                      <Target className="w-3.5 h-3.5 text-[#854D0E] stroke-[2.5]" />
-                    </div>
-                    <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                      Daily Focus Target
-                    </h4>
-                  </div>
-                  <span className="text-[10px] font-black font-mono-num text-[#854D0E] bg-[#FBECCF] px-2 py-0.5 rounded-full border border-[#24201D]">
-                    {lifetimeStats.todaysFocusHours}h / {focusDailyGoalHours}h Goal
-                  </span>
-                </div>
-
-                {/* Progress bar */}
-                <div className="space-y-1">
-                  <div className="w-full h-3 bg-[#F4F0EA] border border-[#24201D] rounded-full overflow-hidden p-0.5">
-                    <div
-                      className="h-full bg-[#3D6B52] rounded-full transition-all duration-500 shadow-2xs"
-                      style={{ width: `${dailyFocusProgressPct}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] font-bold text-[#6B635B]">
-                    <span>Today: {lifetimeStats.todaysFocusMinutes} mins</span>
-                    <span>{dailyFocusProgressPct}% Completed</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 4. Mascot Companion Quick Switcher */}
+              {/* 2. Active Mascot Companion Selector */}
               <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -518,6 +431,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                       Active Mascot Companion
                     </h4>
                   </div>
+                  <span className="text-[10px] font-black text-[#6B635B] font-display">
+                    {activeAvatar.name}
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-4 gap-2 pt-1">
@@ -548,48 +464,24 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 </div>
               </div>
 
-              {/* 5. Vault Data Sovereignty & Actions */}
-              <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] flex items-center gap-1.5">
-                    <Shield className="w-3.5 h-3.5 text-[#3D6B52]" />
-                    <span>Local Vault Management</span>
-                  </h4>
-                </div>
+              {/* 3. Actions: Backup Data & Sign Out */}
+              <div className="grid grid-cols-2 gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={handleExportVaultBackup}
+                  className="py-2.5 px-3 rounded-2xl bg-white hover:bg-[#F4F0EA] border-[1.75px] border-[#24201D] text-xs font-black text-[#24201D] flex items-center justify-center gap-1.5 shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>Backup JSON</span>
+                </button>
 
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={handleExportVaultBackup}
-                    className="py-2.5 px-3 rounded-xl bg-[#F4F0EA] hover:bg-[#DDE8DE] border-[1.5px] border-[#24201D] text-xs font-black text-[#24201D] flex items-center justify-center gap-1.5 shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
-                  >
-                    <Download className="w-3.5 h-3.5 stroke-[2.5]" />
-                    <span>Backup JSON</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      playClickSound();
-                      setActiveTab('edit');
-                    }}
-                    className="py-2.5 px-3 rounded-xl bg-[#FAF8F5] hover:bg-stone-200 border-[1.5px] border-[#24201D] text-xs font-black text-[#24201D] flex items-center justify-center gap-1.5 shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
-                  >
-                    <Sliders className="w-3.5 h-3.5 stroke-[2.5]" />
-                    <span>Edit Profile</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* 6. Sign Out Button */}
-              <div className="pt-1">
                 <button
                   type="button"
                   onClick={handleLogoutClick}
-                  className="w-full py-3 px-4 bg-[#F7E3DC] hover:bg-[#F0D0C5] text-[#C25E40] border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black shadow-[2px_2px_0px_#24201D] flex items-center justify-center gap-2 cursor-pointer active:translate-y-0.5 transition-all uppercase tracking-wider"
+                  className="py-2.5 px-3 rounded-2xl bg-[#F9E2E5] hover:bg-[#F4CCD1] text-[#8C2B39] border-[1.75px] border-[#8C2B39] text-xs font-black shadow-[2px_2px_0px_#8C2B39] flex items-center justify-center gap-1.5 active:translate-y-0.5 transition-all cursor-pointer"
                 >
-                  <LogOut className="w-4 h-4 stroke-[2.5]" />
-                  <span>Sign Out of Vault</span>
+                  <LogOut className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>Sign Out</span>
                 </button>
               </div>
             </>

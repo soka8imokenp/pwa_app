@@ -53,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onOpenSettings();
               }
             }}
-            className="w-10 h-10 rounded-2xl border-[1.75px] border-[#24201D] flex items-center justify-center shadow-[1.5px_1.5px_0px_#24201D] shrink-0 cursor-pointer active:translate-y-0.5 active:shadow-none transition-all p-0.5"
+            className="w-10 h-10 rounded-2xl border-[1.75px] border-[#24201D] flex items-center justify-center shadow-[2px_2px_0px_#24201D] shrink-0 cursor-pointer active:translate-y-0.5 active:shadow-none transition-all p-0.5 group hover:scale-105"
             style={{ backgroundColor: activeAvatar.bg }}
             title="User Profile & Identity"
           >
@@ -104,9 +104,9 @@ export const Header: React.FC<HeaderProps> = ({
               onOpenSettings();
             }}
             title="Settings"
-            className="w-8 h-8 rounded-xl bg-white hover:bg-stone-100 border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+            className="w-8.5 h-8.5 rounded-xl bg-[#F8F5EE] hover:bg-[#F2ECE0] border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer group"
           >
-            <Settings className="w-4 h-4 text-[#24201D] stroke-[2]" />
+            <Settings className="w-4 h-4 text-[#24201D] stroke-[2.25] group-hover:rotate-45 transition-transform duration-300" />
           </button>
         </div>
       </div>

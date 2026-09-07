@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   LayoutGrid,
@@ -13,6 +13,7 @@ import {
   User,
 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
+import { getAvatarById } from '../../data/avatars';
 import type { TabView } from '../layout/BottomNav';
 
 interface MenuModalProps {
@@ -42,6 +43,20 @@ export const MenuModal: React.FC<MenuModalProps> = ({
   onOpenCalendarExport,
   onLockApp,
 }) => {
+  const [avatarId, setAvatarId] = useState<string>('sumire-scout');
+  const [userName, setUserName] = useState<string>('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedAvatar = localStorage.getItem('kairo_selected_avatar');
+      if (savedAvatar) setAvatarId(savedAvatar);
+      const savedUser = localStorage.getItem('kairo_user_name');
+      if (savedUser) setUserName(savedUser);
+    }
+  }, [isOpen]);
+
+  const activeAvatar = getAvatarById(avatarId);
+
   if (!isOpen) return null;
 
   const handleTabClick = (tab: TabView) => {
@@ -125,22 +140,32 @@ export const MenuModal: React.FC<MenuModalProps> = ({
               onClose();
               onOpenProfile();
             }}
-            className="w-full p-3.5 rounded-2xl bg-[#FAF8F5] hover:bg-[#F4F0EA] border-[1.75px] border-[#24201D] flex items-center justify-between transition-all cursor-pointer text-left shadow-2xs active:translate-y-0.5 group"
+            className="w-full p-3.5 rounded-2xl bg-[#F4EFFC] hover:bg-[#EAE2F7] border-[1.75px] border-[#24201D] flex items-center justify-between transition-all cursor-pointer text-left shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#FBECCF] border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0">
-                <User className="w-5 h-5 text-[#854D0E] stroke-[2.25]" />
+              <div
+                className="w-10 h-10 rounded-xl border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0 p-0.5 group-hover:scale-105 transition-transform"
+                style={{ backgroundColor: activeAvatar.bg }}
+              >
+                {activeAvatar.renderSvg('w-full h-full')}
               </div>
               <div className="min-w-0">
-                <h4 className="text-xs font-black text-[#24201D] font-display uppercase tracking-wide truncate">
-                  User Profile
-                </h4>
-                <p className="text-[10px] text-[#6B635B] font-medium truncate">
-                  Identity, mascot avatar & account data
+                <div className="flex items-center gap-1.5">
+                  <h4 className="text-xs font-black text-[#382B5C] font-display uppercase tracking-wide truncate">
+                    User Profile
+                  </h4>
+                  <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-[#E2D6F5] text-[#4E3982] border border-[#24201D]/20">
+                    {activeAvatar.name}
+                  </span>
+                </div>
+                <p className="text-[10px] text-[#55437E] font-medium truncate">
+                  {userName ? `${userName} · Identity & mascot` : 'Identity, mascot avatar & account data'}
                 </p>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-stone-400 group-hover:translate-x-0.5 transition-transform" />
+            <div className="w-6 h-6 rounded-lg bg-white border border-[#24201D]/20 flex items-center justify-center text-[#4E3982] shadow-2xs group-hover:translate-x-0.5 transition-transform shrink-0">
+              <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+            </div>
           </button>
         )}
 
@@ -288,20 +313,27 @@ export const MenuModal: React.FC<MenuModalProps> = ({
           {/* Settings */}
           <button
             onClick={handleSettingsClick}
-            className="w-full p-3 rounded-2xl bg-[#24201D] text-white border-[1.75px] border-[#24201D] flex items-center justify-between transition-all cursor-pointer text-left shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 mt-2"
+            className="w-full p-3.5 rounded-2xl bg-[#F8F5EE] hover:bg-[#F2ECE0] border-[1.75px] border-[#24201D] flex items-center justify-between transition-all cursor-pointer text-left shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 mt-2 group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shadow-2xs shrink-0">
-                <Settings className="w-4 h-4 text-white stroke-[2.25]" />
+              <div className="w-10 h-10 rounded-xl bg-[#24201D] text-white border border-[#24201D] flex items-center justify-center shadow-2xs shrink-0 group-hover:rotate-45 transition-transform duration-300">
+                <Settings className="w-5 h-5 text-[#F0BB58] stroke-[2.25]" />
               </div>
               <div>
-                <h4 className="text-xs font-black text-white font-display uppercase tracking-wide">
-                  Settings
-                </h4>
-                <p className="text-[10px] text-white/70 font-medium">Sound, Security, AI & Backup</p>
+                <div className="flex items-center gap-1.5">
+                  <h4 className="text-xs font-black text-[#24201D] font-display uppercase tracking-wide">
+                    Settings
+                  </h4>
+                  <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-[#EDE7DA] text-[#6B635B] border border-[#24201D]/20">
+                    App
+                  </span>
+                </div>
+                <p className="text-[10px] text-[#6B635B] font-medium">Sound, Security, AI & Backup</p>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-white/60" />
+            <div className="w-6 h-6 rounded-lg bg-white border border-[#24201D]/20 flex items-center justify-center text-[#24201D] shadow-2xs group-hover:translate-x-0.5 transition-transform shrink-0">
+              <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+            </div>
           </button>
         </div>
 

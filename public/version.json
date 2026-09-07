@@ -1,14 +1,13 @@
 {
-  "version": "1.8.77",
-  "buildNumber": 81,
+  "version": "1.8.78",
+  "buildNumber": 82,
   "releaseDate": "2026-09-07",
   "changelog": [
-    "Menu modal redesign: removed Lock Vault and Evening Review entries",
-    "Enhanced dual-card panel for Weekly Infographic and Calendar Export with rich badges",
-    "Complete English localization of Calendar Export modal and iCal export buttons",
-    "Branded Weekly Infographic progress card with Sumire mascot icon"
+    "Weekly Infographic Card now integrates full Health & Body analytics (weight, nutrition, hydration, workouts)",
+    "Dual 7-Day Mind & Body rhythm heatmap matrix",
+    "Clean neo-brutalist biometrics cards with trend indicators and targets"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.77/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.78/Daily-Sumire-app-debug.apk"
 }
 
 

@@ -9,12 +9,24 @@ import {
   Target,
   Trophy,
   Zap,
+  Scale,
+  Utensils,
+  Droplets,
+  Dumbbell,
+  Heart,
+  TrendingDown,
+  TrendingUp,
+  Minus,
+  Sparkles,
 } from 'lucide-react';
 import { toPng, toBlob } from 'html-to-image';
 import type { Task, HabitLog, FocusSession } from '../../types';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
-import { format, subDays, parseISO } from 'date-fns';
+import { format, subDays, startOfDay, parseISO } from 'date-fns';
 import confetti from 'canvas-confetti';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../../lib/db';
+import { DEFAULT_HEALTH_PROFILE, calculateComprehensiveMetrics } from '../../lib/healthFormulas';
 
 interface WeeklyInfographicModalProps {
   isOpen: boolean;
@@ -37,11 +49,19 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
   const [isCopied, setIsCopied] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
+  // Live Query Health Data from Dexie
+  const profileList = useLiveQuery(() => db.healthProfile.toArray(), []) || [];
+  const healthProfile = profileList[0] || DEFAULT_HEALTH_PROFILE;
+  const allWeightLogs = useLiveQuery(() => db.weightLogs.orderBy('date').toArray(), []) || [];
+  const allMealLogs = useLiveQuery(() => db.mealLogs.toArray(), []) || [];
+  const allWaterLogs = useLiveQuery(() => db.waterLogs.toArray(), []) || [];
+  const allWorkoutLogs = useLiveQuery(() => db.workoutLogs.toArray(), []) || [];
+
   if (!isOpen) return null;
 
   // Calculate Last 7 Days Metrics
   const today = new Date();
-  const weekStart = subDays(today, 6);
+  const weekStart = startOfDay(subDays(today, 6));
   const weekRangeLabel = `${format(weekStart, 'MMM d')} – ${format(today, 'MMM d, yyyy')}`;
 
   const past7DaysTasks = tasks.filter((t) => parseISO(t.date) >= weekStart);
@@ -57,6 +77,36 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
   const totalXP = (completedTasks * 50) + (totalHabitChecks * 20) + (totalFocusMins * 2);
   const level = Math.floor(totalXP / 500) + 1;
 
+  // Health Metrics (Past 7 Days)
+  const past7DaysWeights = allWeightLogs.filter((w) => parseISO(w.date) >= weekStart);
+  const past7DaysMeals = allMealLogs.filter((m) => parseISO(m.date) >= weekStart);
+  const past7DaysWater = allWaterLogs.filter((w) => parseISO(w.date) >= weekStart);
+  const past7DaysWorkouts = allWorkoutLogs.filter((w) => parseISO(w.date) >= weekStart);
+
+  // Weight Calculation & Trend
+  const latestWeightLog = allWeightLogs.length > 0 ? allWeightLogs[allWeightLogs.length - 1] : null;
+  const currentWeightVal = latestWeightLog ? latestWeightLog.weight : healthProfile.currentWeight;
+  const weekStartWeight = past7DaysWeights.length > 0 ? past7DaysWeights[0].weight : currentWeightVal;
+  const weightChangeDiff = Number((currentWeightVal - weekStartWeight).toFixed(1));
+
+  // Calories: daily average over 7 days
+  const totalWeeklyKcal = past7DaysMeals.reduce((acc, m) => acc + (m.kcal || 0), 0);
+  const uniqueMealDays = new Set(past7DaysMeals.map((m) => m.date)).size;
+  const avgDailyKcal = uniqueMealDays > 0 ? Math.round(totalWeeklyKcal / uniqueMealDays) : 0;
+
+  // Water: daily average in Liters
+  const totalWeeklyWaterMl = past7DaysWater.reduce((acc, w) => acc + (w.amountMl || 0), 0);
+  const uniqueWaterDays = new Set(past7DaysWater.map((w) => w.date)).size;
+  const avgDailyWaterL = uniqueWaterDays > 0 ? (totalWeeklyWaterMl / uniqueWaterDays / 1000).toFixed(1) : '0.0';
+
+  // Workouts: sessions and total minutes
+  const totalWorkoutCount = past7DaysWorkouts.length;
+  const totalWorkoutMins = past7DaysWorkouts.reduce((acc, w) => acc + (w.durationMinutes || 0), 0);
+  const totalWorkoutBurned = past7DaysWorkouts.reduce((acc, w) => acc + (w.caloriesBurned || 0), 0);
+
+  // Calculated biometrics
+  const healthMetrics = calculateComprehensiveMetrics(healthProfile);
+
   // 7-day Breakdown
   const daysArray = Array.from({ length: 7 }).map((_, idx) => {
     const d = subDays(today, 6 - idx);
@@ -67,21 +117,27 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
 
     const doneCount = dayTasks.filter((t) => t.isCompleted).length;
     const focusMinutes = dayFocus.reduce((acc, s) => acc + s.durationMinutes, 0);
-    const score = Math.min(
-      100,
-      Math.round(
-        (dayTasks.length > 0 ? (doneCount / dayTasks.length) * 50 : 30) +
-        Math.min(dayHabits.length * 10, 30) +
-        Math.min(focusMinutes / 3, 20)
-      )
-    );
+
+    const hasMeals = allMealLogs.some((m) => m.date === dateStr);
+    const hasWater = allWaterLogs.some((w) => w.date === dateStr);
+    const hasWorkout = allWorkoutLogs.some((w) => w.date === dateStr);
+    const hasWeight = allWeightLogs.some((w) => w.date === dateStr);
+    const hasHealthActivity = hasMeals || hasWater || hasWorkout || hasWeight;
+
+    const taskScore = dayTasks.length > 0 ? (doneCount / dayTasks.length) * 40 : 25;
+    const habitScore = Math.min(dayHabits.length * 10, 25);
+    const focusScore = Math.min(focusMinutes / 3, 20);
+    const healthScore = hasHealthActivity ? 15 : 0;
+
+    const score = Math.min(100, Math.round(taskScore + habitScore + focusScore + healthScore));
 
     return {
       dayShort: format(d, 'EEE'),
       dayNum: format(d, 'd'),
       dateStr,
       score,
-      completed: doneCount > 0 || dayHabits.length > 0 || focusMinutes > 0,
+      focusCompleted: doneCount > 0 || dayHabits.length > 0 || focusMinutes > 0,
+      healthCompleted: hasHealthActivity,
     };
   });
 
@@ -139,8 +195,8 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
 
         if (navigator.canShare({ files: [file] })) {
           await navigator.share({
-            title: 'My Weekly Productivity • Daily Sumire',
-            text: `I completed ${completedTasks} tasks and logged ${totalFocusHours}h of deep focus this week with Daily Sumire!`,
+            title: 'My Weekly Productivity & Health • Daily Sumire',
+            text: `This week with Daily Sumire: ${completedTasks} tasks, ${totalFocusHours}h deep focus, ${currentWeightVal}kg, and ${totalWorkoutCount} workout sessions!`,
             files: [file],
           });
           playSuccessChime();
@@ -182,7 +238,7 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
                 Weekly Infographic
               </h3>
               <p className="text-[10px] text-[#6B635B] font-bold">
-                Export & Share your progress card
+                Mind, Body & Productivity Digest
               </p>
             </div>
           </div>
@@ -201,7 +257,7 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
         {/* The Visual Infographic Card to Rasterize */}
         <div
           ref={cardRef}
-          className="p-5 bg-[#FAF8F5] border-[2px] border-[#24201D] rounded-[2rem] shadow-[3px_3px_0px_#24201D] space-y-4 text-center relative overflow-hidden"
+          className="p-5 bg-[#FAF8F5] border-[2px] border-[#24201D] rounded-[2rem] shadow-[3px_3px_0px_#24201D] space-y-3.5 text-center relative overflow-hidden"
         >
           {/* Subtle Japanese Paper Dots Accent Background */}
           <div
@@ -214,11 +270,11 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
 
           {/* Header Brand Badge */}
           <div className="relative z-10 flex items-center justify-between pb-2 border-b border-[#24201D]/20">
-            <div className="flex items-center gap-2 text-left">
+            <div className="flex items-center gap-2.5 text-left">
               <img
                 src="/icon-192x192.png"
                 alt="Daily Sumire"
-                className="w-9 h-9 rounded-xl border-[1.5px] border-[#24201D] shadow-2xs object-cover"
+                className="w-9 h-9 rounded-xl border-[1.5px] border-[#24201D] shadow-2xs object-cover shrink-0"
               />
               <div>
                 <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
@@ -230,17 +286,20 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
               </div>
             </div>
 
-            <span className="px-2.5 py-1 bg-[#DDE8DE] border border-[#24201D] rounded-full text-[9px] font-black text-[#2D503C] shadow-2xs uppercase">
-              Level {level}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="px-2.5 py-1 bg-[#DDE8DE] border border-[#24201D] rounded-full text-[9px] font-black text-[#2D503C] shadow-2xs uppercase">
+                Level {level}
+              </span>
+            </div>
           </div>
 
           {/* Title & User Hero */}
-          <div className="relative z-10 space-y-0.5 pt-1">
-            <span className="text-[10px] font-black uppercase tracking-wider text-[#854D0E] bg-[#FBECCF] px-2.5 py-0.5 rounded-full border border-[#24201D]">
-              Weekly Performance Digest
-            </span>
-            <h2 className="text-lg font-black font-display uppercase tracking-tight text-[#24201D] pt-1">
+          <div className="relative z-10 space-y-1">
+            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FBECCF] border border-[#24201D] text-[10px] font-black uppercase tracking-wider text-[#854D0E]">
+              <Sparkles className="w-3 h-3" />
+              <span>Weekly Holistic Digest</span>
+            </div>
+            <h2 className="text-lg font-black font-display uppercase tracking-tight text-[#24201D]">
               {userName}
             </h2>
             <p className="text-[11px] font-bold text-[#6B635B]">
@@ -248,89 +307,220 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
             </p>
           </div>
 
-          {/* 4 Metric Badges Grid */}
-          <div className="relative z-10 grid grid-cols-2 gap-2">
-            {/* 1. Tasks */}
-            <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs text-left">
-              <div className="flex items-center justify-between">
-                <Target className="w-4 h-4 text-[#3D6B52]" />
-                <span className="text-[9px] font-black text-stone-400 uppercase">Tasks</span>
-              </div>
-              <p className="text-base font-black font-mono-num text-[#24201D] mt-1">
-                {completedTasks}/{totalTasks}
-              </p>
-              <p className="text-[9px] font-bold text-[#6B635B] truncate">
-                Completed this week
-              </p>
+          {/* SECTION 1: EXECUTION & FOCUS */}
+          <div className="relative z-10 space-y-1.5 text-left">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[10px] font-black font-display uppercase tracking-wider text-[#24201D] flex items-center gap-1.5">
+                <Target className="w-3.5 h-3.5 text-[#3D6B52] stroke-[2.25]" />
+                Execution & Deep Flow
+              </span>
+              <span className="text-[9px] font-bold text-[#3D6B52] font-mono-num">
+                {completedTasks}/{totalTasks} tasks
+              </span>
             </div>
 
-            {/* 2. Focus Time */}
-            <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs text-left">
-              <div className="flex items-center justify-between">
-                <Clock className="w-4 h-4 text-[#476C85]" />
-                <span className="text-[9px] font-black text-stone-400 uppercase">Deep Flow</span>
+            <div className="grid grid-cols-2 gap-2">
+              {/* Tasks */}
+              <div className="p-2.5 bg-white border-[1.5px] border-[#24201D] rounded-2xl shadow-2xs text-left">
+                <div className="flex items-center justify-between">
+                  <div className="w-6 h-6 rounded-lg bg-[#DDE8DE] border border-[#24201D]/40 flex items-center justify-center">
+                    <Target className="w-3.5 h-3.5 text-[#3D6B52]" />
+                  </div>
+                  <span className="text-[8px] font-black text-[#6B635B] uppercase">Tasks</span>
+                </div>
+                <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
+                  {completedTasks}/{totalTasks}
+                </p>
+                <p className="text-[9px] font-bold text-[#6B635B] truncate">
+                  Completed this week
+                </p>
               </div>
-              <p className="text-base font-black font-mono-num text-[#24201D] mt-1">
-                {totalFocusHours}h
-              </p>
-              <p className="text-[9px] font-bold text-[#6B635B] truncate">
-                Focused work logged
-              </p>
-            </div>
 
-            {/* 3. Habits */}
-            <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs text-left">
-              <div className="flex items-center justify-between">
-                <Flame className="w-4 h-4 text-[#C25E40] fill-[#F0BB58]" />
-                <span className="text-[9px] font-black text-stone-400 uppercase">Habits</span>
+              {/* Deep Flow */}
+              <div className="p-2.5 bg-white border-[1.5px] border-[#24201D] rounded-2xl shadow-2xs text-left">
+                <div className="flex items-center justify-between">
+                  <div className="w-6 h-6 rounded-lg bg-[#DEE8EF] border border-[#24201D]/40 flex items-center justify-center">
+                    <Clock className="w-3.5 h-3.5 text-[#476C85]" />
+                  </div>
+                  <span className="text-[8px] font-black text-[#6B635B] uppercase">Deep Flow</span>
+                </div>
+                <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
+                  {totalFocusHours}h
+                </p>
+                <p className="text-[9px] font-bold text-[#6B635B] truncate">
+                  Focused time logged
+                </p>
               </div>
-              <p className="text-base font-black font-mono-num text-[#24201D] mt-1">
-                {totalHabitChecks}
-              </p>
-              <p className="text-[9px] font-bold text-[#6B635B] truncate">
-                Streak completions
-              </p>
-            </div>
 
-            {/* 4. Experience Points */}
-            <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs text-left">
-              <div className="flex items-center justify-between">
-                <Zap className="w-4 h-4 text-[#E09F3E]" />
-                <span className="text-[9px] font-black text-stone-400 uppercase">XP Earned</span>
+              {/* Habits */}
+              <div className="p-2.5 bg-white border-[1.5px] border-[#24201D] rounded-2xl shadow-2xs text-left">
+                <div className="flex items-center justify-between">
+                  <div className="w-6 h-6 rounded-lg bg-[#FBECCF] border border-[#24201D]/40 flex items-center justify-center">
+                    <Flame className="w-3.5 h-3.5 text-[#854D0E] fill-[#F0BB58]" />
+                  </div>
+                  <span className="text-[8px] font-black text-[#6B635B] uppercase">Habits</span>
+                </div>
+                <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
+                  {totalHabitChecks}
+                </p>
+                <p className="text-[9px] font-bold text-[#6B635B] truncate">
+                  Rituals maintained
+                </p>
               </div>
-              <p className="text-base font-black font-mono-num text-[#24201D] mt-1">
-                +{totalXP}
-              </p>
-              <p className="text-[9px] font-bold text-[#6B635B] truncate">
-                Productivity points
-              </p>
+
+              {/* XP */}
+              <div className="p-2.5 bg-white border-[1.5px] border-[#24201D] rounded-2xl shadow-2xs text-left">
+                <div className="flex items-center justify-between">
+                  <div className="w-6 h-6 rounded-lg bg-[#FAF0EC] border border-[#24201D]/40 flex items-center justify-center">
+                    <Zap className="w-3.5 h-3.5 text-[#C25E40]" />
+                  </div>
+                  <span className="text-[8px] font-black text-[#6B635B] uppercase">Mastery</span>
+                </div>
+                <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
+                  +{totalXP} XP
+                </p>
+                <p className="text-[9px] font-bold text-[#6B635B] truncate">
+                  Productivity points
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* 7-Day Consistency Pills */}
-          <div className="relative z-10 p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs space-y-1.5">
-            <div className="flex items-center justify-between text-[9px] font-black uppercase text-stone-400 px-1">
-              <span>7-Day Heatmap</span>
-              <span>Mon - Sun</span>
+          {/* SECTION 2: HEALTH & BODY VITALITY (NEW!) */}
+          <div className="relative z-10 space-y-1.5 text-left">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[10px] font-black font-display uppercase tracking-wider text-[#24201D] flex items-center gap-1.5">
+                <Heart className="w-3.5 h-3.5 text-[#C25E40] fill-[#F7E3DC] stroke-[2.25]" />
+                Health & Body Vitality
+              </span>
+              <span className="text-[9px] font-bold text-[#854D0E] bg-[#FBECCF] px-2 py-0.5 rounded-full border border-[#24201D]/30 uppercase">
+                {healthProfile.goal === 'lose' ? 'Weight Loss' : healthProfile.goal === 'gain' ? 'Muscle Gain' : 'Maintain'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {/* Weight & Trend */}
+              <div className="p-2.5 bg-white border-[1.5px] border-[#24201D] rounded-2xl shadow-2xs text-left">
+                <div className="flex items-center justify-between">
+                  <div className="w-6 h-6 rounded-lg bg-[#DDE8DE] border border-[#24201D]/40 flex items-center justify-center">
+                    <Scale className="w-3.5 h-3.5 text-[#2D503C]" />
+                  </div>
+                  <span className="text-[8px] font-black uppercase text-[#2D503C] flex items-center gap-0.5">
+                    {weightChangeDiff < 0 ? (
+                      <TrendingDown className="w-2.5 h-2.5 text-emerald-600" />
+                    ) : weightChangeDiff > 0 ? (
+                      <TrendingUp className="w-2.5 h-2.5 text-amber-600" />
+                    ) : (
+                      <Minus className="w-2.5 h-2.5 text-stone-400" />
+                    )}
+                    {Math.abs(weightChangeDiff)} kg
+                  </span>
+                </div>
+                <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
+                  {currentWeightVal} kg
+                </p>
+                <p className="text-[9px] font-bold text-[#6B635B] truncate">
+                  BMI {healthMetrics.bmi.toFixed(1)} • {healthMetrics.bmiCategoryLabel}
+                </p>
+              </div>
+
+              {/* Nutrition & Calories */}
+              <div className="p-2.5 bg-white border-[1.5px] border-[#24201D] rounded-2xl shadow-2xs text-left">
+                <div className="flex items-center justify-between">
+                  <div className="w-6 h-6 rounded-lg bg-[#FBECCF] border border-[#24201D]/40 flex items-center justify-center">
+                    <Utensils className="w-3.5 h-3.5 text-[#854D0E]" />
+                  </div>
+                  <span className="text-[8px] font-black text-[#854D0E] uppercase">Nutrition</span>
+                </div>
+                <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
+                  {avgDailyKcal > 0 ? `${avgDailyKcal} kcal` : `${healthProfile.targetDailyCalories || 2000} kcal`}
+                </p>
+                <p className="text-[9px] font-bold text-[#6B635B] truncate">
+                  {uniqueMealDays > 0 ? `${uniqueMealDays}d logged • avg/day` : 'Target energy'}
+                </p>
+              </div>
+
+              {/* Hydration */}
+              <div className="p-2.5 bg-white border-[1.5px] border-[#24201D] rounded-2xl shadow-2xs text-left">
+                <div className="flex items-center justify-between">
+                  <div className="w-6 h-6 rounded-lg bg-[#DEE8EF] border border-[#24201D]/40 flex items-center justify-center">
+                    <Droplets className="w-3.5 h-3.5 text-[#2A495E]" />
+                  </div>
+                  <span className="text-[8px] font-black text-[#2A495E] uppercase">Hydration</span>
+                </div>
+                <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
+                  {Number(avgDailyWaterL) > 0 ? `${avgDailyWaterL}L` : `${((healthProfile.currentWeight * 35) / 1000).toFixed(1)}L`}
+                </p>
+                <p className="text-[9px] font-bold text-[#6B635B] truncate">
+                  {uniqueWaterDays > 0 ? `${uniqueWaterDays}d logged • avg/day` : 'Recommended/day'}
+                </p>
+              </div>
+
+              {/* Workouts & Movement */}
+              <div className="p-2.5 bg-white border-[1.5px] border-[#24201D] rounded-2xl shadow-2xs text-left">
+                <div className="flex items-center justify-between">
+                  <div className="w-6 h-6 rounded-lg bg-[#F7E3DC] border border-[#24201D]/40 flex items-center justify-center">
+                    <Dumbbell className="w-3.5 h-3.5 text-[#C25E40]" />
+                  </div>
+                  <span className="text-[8px] font-black text-[#C25E40] uppercase">Active</span>
+                </div>
+                <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
+                  {totalWorkoutCount > 0 ? `${totalWorkoutCount} sessions` : 'Active living'}
+                </p>
+                <p className="text-[9px] font-bold text-[#6B635B] truncate">
+                  {totalWorkoutMins > 0 ? `${totalWorkoutMins}m • ${totalWorkoutBurned} kcal` : 'Daily workouts'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 3: 7-DAY HARMONY MATRIX */}
+          <div className="relative z-10 p-2.5 bg-white border-[1.5px] border-[#24201D] rounded-2xl shadow-2xs space-y-1.5">
+            <div className="flex items-center justify-between text-[9px] font-black uppercase text-stone-500 px-1">
+              <span>7-Day Mind & Body Rhythm</span>
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#3D6B52]" /> Focus</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#E09F3E]" /> Body</span>
+              </div>
             </div>
 
             <div className="grid grid-cols-7 gap-1">
               {daysArray.map((day) => (
                 <div
                   key={day.dateStr}
-                  className={`py-1.5 px-0.5 rounded-xl border flex flex-col items-center justify-center text-center ${
-                    day.score >= 50
-                      ? 'bg-[#3D6B52] border-[#24201D] text-white shadow-2xs'
-                      : day.completed
-                      ? 'bg-[#DDE8DE] border-[#3D6B52]/40 text-[#2D503C]'
-                      : 'bg-[#F4F0EA] border-[#24201D]/20 text-stone-400'
+                  className={`py-1.5 px-0.5 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${
+                    day.score >= 60
+                      ? 'bg-[#DDE8DE] border-[#24201D] text-[#24201D] shadow-2xs'
+                      : day.focusCompleted || day.healthCompleted
+                      ? 'bg-[#FAF8F5] border-[#24201D]/50 text-[#24201D]'
+                      : 'bg-stone-50 border-stone-200 text-stone-400'
                   }`}
                 >
                   <span className="text-[8px] font-black uppercase">{day.dayShort}</span>
                   <span className="text-[10px] font-mono-num font-black mt-0.5">{day.dayNum}</span>
+                  <div className="flex items-center gap-0.5 mt-1">
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        day.focusCompleted ? 'bg-[#3D6B52]' : 'bg-stone-200'
+                      }`}
+                      title="Focus activity"
+                    />
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        day.healthCompleted ? 'bg-[#E09F3E]' : 'bg-stone-200'
+                      }`}
+                      title="Health & Body log"
+                    />
+                  </div>
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Brand Footer */}
+          <div className="relative z-10 pt-1 flex items-center justify-between border-t border-[#24201D]/15 text-[8px] font-bold text-[#6B635B]">
+            <span>Daily Sumire • Mind, Body & Focus</span>
+            <span className="font-mono-num">Weekly Certified Card</span>
           </div>
         </div>
 

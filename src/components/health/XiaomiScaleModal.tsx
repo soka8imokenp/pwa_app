@@ -157,7 +157,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
           );
         } catch {
           // Fallback simulation if GATT fails
-          simulateMeasurement(device.name || 'Mi Body Composition Scale 2');
+          handleSimulate();
         }
       }
     } catch (err: any) {
@@ -271,7 +271,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-[9px] font-black uppercase tracking-wider text-[#4F46E5] font-display bg-[#EEF2FF] px-1.5 py-0.2 rounded border border-[#4F46E5]/30">
-                  Xiaomi Mi Scale 2
+                  Xiaomi &amp; Smart BLE Scales
                 </span>
                 {isSimulated && (
                   <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded border border-amber-300">

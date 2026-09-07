@@ -274,18 +274,18 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            {/* Unique Mi Scale BLE Button in our signature tactile aesthetic */}
+            {/* Unique Smart Scale BLE Button in our signature tactile aesthetic */}
             <button
               type="button"
               onClick={() => {
                 playClickSound();
                 setIsScaleModalOpen(true);
               }}
-              title="Sync with Xiaomi Mi Body Composition Scale 2"
+              title="Sync with Smart Scale (Xiaomi & BLE)"
               className="px-2.5 py-1.5 bg-[#EEF2FF] hover:bg-[#E0E7FF] text-[#4F46E5] border-[1.5px] border-[#24201D] rounded-xl text-xs font-black shadow-2xs cursor-pointer active:translate-y-0.5 transition-all flex items-center gap-1.5 uppercase tracking-wider font-display"
             >
               <Bluetooth className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Mi Scale</span>
+              <span>Smart Scale</span>
             </button>
 
             {/* Clean Weigh-In Button (without '+' icon) */}

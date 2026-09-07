@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Lock, Fingerprint, Delete, Shield, X, KeyRound, ArrowLeft } from 'lucide-react';
+import { Lock, Fingerprint, Delete, KeyRound } from 'lucide-react';
 import {
   verifyPin,
   isBiometricsEnabled,
@@ -27,7 +27,7 @@ const KEYPAD_DIGITS = [
 ];
 
 export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock, userName }) => {
-  // Biometrics appear initially if enabled; closing it reveals the PIN keypad
+  // Biometrics appear initially if enabled; clicking Enter PIN Code reveals the PIN keypad
   const [authMode, setAuthMode] = useState<'biometric' | 'pin'>(() => {
     return isBiometricsEnabled() ? 'biometric' : 'pin';
   });
@@ -152,27 +152,20 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
   }, [authMode, handleDigitPress, handleDelete]);
 
   return (
-    <div className="fixed inset-0 z-[999] bg-[#F4F0EA] select-none flex flex-col items-center justify-between pt-[calc(env(safe-area-inset-top,0px)+14px)] pb-[calc(env(safe-area-inset-bottom,0px)+34px)] px-6 sm:px-8 font-body overflow-y-auto animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[999] bg-[#F4F0EA] select-none flex flex-col items-center justify-between pt-[calc(env(safe-area-inset-top,0px)+20px)] pb-[calc(env(safe-area-inset-bottom,0px)+34px)] px-6 sm:px-8 font-body overflow-y-auto animate-in fade-in duration-300">
       
       {/* Subtle Japanese Washi Aura */}
       <div className="absolute top-1/3 -left-32 w-80 h-80 bg-[#3D6B52]/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-[#E09F3E]/8 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Top Security Status Header */}
-      <div className="relative z-10 w-full max-w-[320px] flex items-center justify-between">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border-[1.5px] border-[#24201D] rounded-full shadow-[1.5px_1.5px_0px_#24201D]">
-          <Shield className="w-3.5 h-3.5 text-[#3D6B52] stroke-[2.5]" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#24201D] font-display">
-            Secure Vault
-          </span>
-        </div>
-
+      {/* Top Bar in PIN mode: Switch to Touch ID */}
+      <div className="relative z-10 w-full max-w-[290px] flex items-center justify-end min-h-[36px]">
         {authMode === 'pin' && isBiometricsEnabled() && (
           <button
             type="button"
             onClick={handleSwitchToBiometric}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#DDE8DE] text-[#2D503C] border-[1.5px] border-[#24201D] rounded-full shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none text-[10px] font-black uppercase tracking-wider font-display cursor-pointer transition-all"
-            title="Switch to Touch ID"
+            title="Return to Touch ID"
           >
             <Fingerprint className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>Touch ID</span>
@@ -181,85 +174,55 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
       </div>
 
       {authMode === 'biometric' ? (
-        /* ================= BIOMETRIC / TOUCH ID INITIAL PANEL ================= */
-        <div className="relative z-10 my-auto w-full max-w-[320px] flex flex-col items-center animate-in fade-in zoom-in-95 duration-250">
-          <div className="w-full bg-white border-[2px] border-[#24201D] rounded-[2.25rem] p-6 sm:p-7 shadow-[4px_4px_0px_#24201D] relative flex flex-col items-center text-center">
+        /* ================= MINIMALIST BIOMETRIC INITIAL VIEW ================= */
+        <div className="relative z-10 my-auto w-full max-w-xs flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-250">
+          
+          {/* Tactile Minimalist Avatar Medallion with Lock Badge */}
+          <button
+            type="button"
+            onClick={handleBiometricUnlock}
+            disabled={isAuthenticatingBio}
+            className="relative group cursor-pointer focus:outline-none transition-transform active:scale-95"
+            title="Tap to verify biometric identity"
+          >
+            <div className="absolute -inset-2.5 rounded-[2rem] bg-[#3D6B52]/10 blur-md pointer-events-none group-hover:bg-[#3D6B52]/20 transition-all" />
             
-            {/* Top Close Button (✕) - Closes Biometric Card to Open PIN Keypad */}
-            <button
-              type="button"
-              onClick={handleCloseBiometric}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[#F4F0EA] hover:bg-[#EAE4DC] active:bg-[#DED6CC] border-[1.5px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer group"
-              title="Close & enter PIN code"
+            <div
+              className="relative w-22 h-22 rounded-[1.75rem] border-[2px] border-[#24201D] flex items-center justify-center shadow-[3.5px_3.5px_0px_#24201D] p-2 bg-white"
+              style={{ backgroundColor: activeAvatar.bg }}
             >
-              <X className="w-4 h-4 stroke-[2.5] group-hover:rotate-90 transition-transform duration-200" />
-            </button>
-
-            {/* Avatar / Lock Medallion */}
-            <div className="relative mb-3 mt-1">
-              <div
-                className="w-16 h-16 rounded-[1.5rem] border-[2px] border-[#24201D] flex items-center justify-center shadow-[3px_3px_0px_#24201D] p-1.5 animate-neo-float relative"
-                style={{ backgroundColor: activeAvatar.bg }}
-              >
-                {activeAvatar.renderSvg('w-full h-full')}
-              </div>
-              <div className="absolute -bottom-1 -right-1 p-1 bg-[#3D6B52] text-white border-[1.5px] border-[#24201D] rounded-lg shadow-[1px_1px_0px_#24201D]">
-                <Lock className="w-3 h-3 stroke-[2.5]" />
-              </div>
+              {activeAvatar.renderSvg('w-full h-full')}
             </div>
 
-            {/* Header Title & Subtitle */}
-            <h2 className="text-lg font-black font-display text-[#24201D] tracking-tight">
-              {userName ? `Welcome back, ${userName}` : 'Touch ID Unlock'}
+            <div className="absolute -bottom-1 -right-1 p-1.5 bg-[#3D6B52] text-white border-[1.75px] border-[#24201D] rounded-xl shadow-[1.5px_1.5px_0px_#24201D] group-hover:scale-110 transition-transform">
+              <Lock className="w-3.5 h-3.5 stroke-[2.5]" />
+            </div>
+          </button>
+
+          {/* Minimalist Title & Hint */}
+          <div className="mt-5 space-y-1">
+            <h2 className="text-xl font-black font-display text-[#24201D] tracking-tight">
+              {userName ? `Welcome back, ${userName}` : 'Touch ID'}
             </h2>
-            <p className="text-xs font-bold text-[#6B635B] mt-1 max-w-[210px] leading-relaxed">
-              Touch fingerprint sensor or scan face to unlock vault
+            <p className="text-xs font-bold text-[#6B635B] max-w-[200px] leading-relaxed mx-auto">
+              Touch the sensor to unlock
             </p>
+          </div>
 
-            {/* Luxury Tactile Biometric Scanner Medallion */}
-            <div className="relative my-6 flex items-center justify-center">
-              {/* Outer pulsing wave rings */}
-              <div className="absolute w-28 h-28 rounded-full bg-[#3D6B52]/15 animate-ping opacity-60 pointer-events-none" />
-              <div className="absolute w-26 h-26 rounded-full border-[1.5px] border-dashed border-[#3D6B52]/40 animate-[spin_20s_linear_infinite] pointer-events-none" />
-
-              <button
-                type="button"
-                onClick={handleBiometricUnlock}
-                disabled={isAuthenticatingBio}
-                className="relative z-10 w-20 h-20 rounded-full bg-gradient-to-b from-[#EDF5EE] to-[#D5E7D8] hover:from-[#E3EFE4] hover:to-[#C6DEC9] active:scale-95 border-[2.25px] border-[#24201D] flex flex-col items-center justify-center shadow-[3px_3px_0px_#24201D] active:shadow-none active:translate-y-0.5 cursor-pointer transition-all group"
-                title="Tap to scan fingerprint"
-              >
-                <Fingerprint
-                  className={`w-10 h-10 text-[#2D503C] stroke-[2.25] transition-transform ${
-                    isAuthenticatingBio ? 'animate-pulse scale-110 text-[#3D6B52]' : 'group-hover:scale-110'
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* Status Pill */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#F4F0EA] border border-[#24201D]/20 text-[10px] font-black uppercase tracking-wider text-[#3D6B52]">
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  isAuthenticatingBio ? 'bg-amber-500 animate-pulse' : 'bg-[#3D6B52]'
-                }`}
-              />
-              <span>{isAuthenticatingBio ? 'Verifying Identity...' : 'Sensor Ready'}</span>
-            </div>
-
-            {/* Close / Enter PIN Code Action Button */}
+          {/* Clean & Beautifully Positioned Enter PIN Code Button */}
+          <div className="mt-8 w-full max-w-[240px]">
             <button
               type="button"
               onClick={handleCloseBiometric}
-              className="w-full mt-6 py-3 px-4 bg-[#F4F0EA] hover:bg-[#EAE4DC] active:bg-[#3D6B52] active:text-white text-[#24201D] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all group"
+              className="w-full py-3.5 px-5 bg-white hover:bg-[#FAF8F5] active:bg-[#3D6B52] active:text-white text-[#24201D] border-[2px] border-[#24201D] rounded-2xl shadow-[3px_3px_0px_#24201D] active:translate-y-0.5 active:shadow-none font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 cursor-pointer transition-all group"
             >
               <KeyRound className="w-4 h-4 stroke-[2.25] text-[#6B635B] group-hover:text-[#24201D] group-active:text-white transition-colors" />
-              <span>Enter PIN Code Instead</span>
+              <span>Enter PIN Code</span>
             </button>
           </div>
         </div>
       ) : (
-        /* ================= PIN KEYPAD PANEL (SHOWN ON CLOSE) ================= */
+        /* ================= PIN KEYPAD PANEL (ON ENTER PIN CODE) ================= */
         <>
           {/* Center Hero: Avatar Medallion, Title & PIN Dots */}
           <div className="relative z-10 flex flex-col items-center text-center max-w-xs w-full space-y-3 my-auto py-2 animate-in fade-in zoom-in-95 duration-200">

@@ -91,7 +91,9 @@ export async function isBiometricsSupported(): Promise<boolean> {
  */
 export function isBiometricsEnabled(): boolean {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem(STORAGE_BIOMETRICS) === 'true';
+    const val = localStorage.getItem(STORAGE_BIOMETRICS);
+    if (val === 'false') return false;
+    return true;
   }
   return false;
 }
@@ -118,10 +120,10 @@ export async function registerBiometrics(): Promise<boolean> {
     }
 
     await NativeBiometric.verifyIdentity({
-      reason: 'Подтвердите отпечаток пальца для включения защиты',
+      reason: 'Confirm your biometric identity to enable vault protection',
       title: 'Daily Sumire',
-      subtitle: 'Настройка биометрии',
-      description: 'Прикоснитесь к сканеру отпечатков пальцев',
+      subtitle: 'Biometric Setup',
+      description: 'Touch the fingerprint sensor or scan face',
     });
 
     setBiometricsEnabled(true);
@@ -147,10 +149,10 @@ export async function authenticateWithBiometrics(): Promise<boolean> {
 
   try {
     await NativeBiometric.verifyIdentity({
-      reason: 'Разблокируйте приложение Daily Sumire',
+      reason: 'Unlock Daily Sumire Vault',
       title: 'Daily Sumire',
-      subtitle: 'Вход по отпечатку пальца',
-      description: 'Прикоснитесь к сканеру отпечатков пальцев',
+      subtitle: 'Biometric Verification',
+      description: 'Touch the fingerprint sensor or scan face',
     });
     setBiometricsEnabled(true);
     return true;

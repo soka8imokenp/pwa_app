@@ -17,7 +17,6 @@ import {
   TrendingDown,
   TrendingUp,
   Minus,
-  Sparkles,
 } from 'lucide-react';
 import { toPng, toBlob } from 'html-to-image';
 import type { Task, HabitLog, FocusSession } from '../../types';
@@ -295,9 +294,8 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
 
           {/* Title & User Hero */}
           <div className="relative z-10 space-y-1">
-            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FBECCF] border border-[#24201D] text-[10px] font-black uppercase tracking-wider text-[#854D0E]">
-              <Sparkles className="w-3 h-3" />
-              <span>Weekly Holistic Digest</span>
+            <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#FBECCF] border border-[#24201D] text-[10px] font-black uppercase tracking-wider text-[#854D0E]">
+              Weekly Digest
             </div>
             <h2 className="text-lg font-black font-display uppercase tracking-tight text-[#24201D]">
               {userName}

@@ -1,11 +1,10 @@
 {
-  "version": "1.8.95",
-  "buildNumber": 99,
+  "version": "1.8.96",
+  "buildNumber": 100,
   "releaseDate": "2026-09-07",
   "changelog": [
-    "Fixed ghost reading issue: strictly filtered Bluetooth scanning to official Xiaomi Scale UUIDs (0x181B, 0x181D)",
-    "Added strict timestamp and weight sanity validation (rejecting non-scale BLE packets)",
-    "Set initial telemetry weight to placeholder until user steps on scale"
+    "Fixed Android build compilation by adding missing ScanFilter and List imports",
+    "Smart Scale BLE background scan filter optimizations"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.95/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.96/Daily-Sumire-app-debug.apk"
 }

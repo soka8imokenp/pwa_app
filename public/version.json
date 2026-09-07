@@ -1,11 +1,12 @@
 {
-  "version": "1.8.99",
-  "buildNumber": 103,
+  "version": "1.8.100",
+  "buildNumber": 104,
   "releaseDate": "2026-09-07",
   "changelog": [
-    "Replaced Task Backlog in Menu with comprehensive Activity Log (Журнал действий)",
-    "Track all recent actions: tasks created/completed/reopened/deleted, habits tracked, smart scale weigh-ins, focus sessions",
-    "Neo-brutalist modal with category filtering, search, relative timestamps, and audit summary"
+    "Refined Activity Log: fixed tall modal container with smooth inner scroll",
+    "Removed footer text (realtime audit / showing 0 of 0 events)",
+    "Removed count badges from header and filter pills for a clean minimalist aesthetic",
+    "Shortened subtitle to avoid taking full panel width"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.99/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.100/Daily-Sumire-app-debug.apk"
 }

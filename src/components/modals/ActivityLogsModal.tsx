@@ -180,17 +180,9 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
     return `${monthNames[d.getMonth()]} ${d.getDate()}, ${timeStr}`;
   };
 
-  const counts = {
-    all: logs.length,
-    task: logs.filter((l) => l.entity === 'task' || l.entity === 'priority' || l.entity === 'backlog').length,
-    habit: logs.filter((l) => l.entity === 'habit').length,
-    scale: logs.filter((l) => l.entity === 'scale').length,
-    focus: logs.filter((l) => l.entity === 'focus').length,
-  };
-
   return (
     <div className="fixed inset-0 z-50 bg-[#24201D]/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 select-none animate-in fade-in duration-200">
-      <div className="w-full max-w-lg bg-[#FAF8F5] border-[2px] border-[#24201D] rounded-3xl shadow-[6px_6px_0px_#24201D] flex flex-col max-h-[90vh] overflow-hidden">
+      <div className="w-full max-w-lg h-[84vh] max-h-[660px] min-h-[500px] bg-[#FAF8F5] border-[2px] border-[#24201D] rounded-3xl shadow-[6px_6px_0px_#24201D] flex flex-col overflow-hidden">
         
         {/* 1. Header Bar */}
         <div className="p-4 bg-white border-b-[1.75px] border-[#24201D] flex items-center justify-between shrink-0">
@@ -199,16 +191,11 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
               <History className="w-5 h-5 text-[#2D503C] stroke-[2.25]" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                  Activity Log
-                </h3>
-                <span className="px-2 py-0.5 rounded-full bg-[#FAF8F5] border border-[#24201D]/25 text-[10px] font-mono-num font-black text-[#6B635B]">
-                  {logs.length}
-                </span>
-              </div>
+              <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
+                Activity Log
+              </h3>
               <p className="text-[10px] text-[#8C827A] font-medium leading-tight">
-                Chronological record of recent actions & changes
+                Recent activity & history
               </p>
             </div>
           </div>
@@ -285,11 +272,11 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
           {/* Filter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
             {[
-              { id: 'all', label: 'All', count: counts.all },
-              { id: 'task', label: 'Tasks', count: counts.task },
-              { id: 'habit', label: 'Habits', count: counts.habit },
-              { id: 'scale', label: 'Scale', count: counts.scale },
-              { id: 'focus', label: 'Focus', count: counts.focus },
+              { id: 'all', label: 'All' },
+              { id: 'task', label: 'Tasks' },
+              { id: 'habit', label: 'Habits' },
+              { id: 'scale', label: 'Scale' },
+              { id: 'focus', label: 'Focus' },
             ].map((tab) => {
               const isActive = selectedFilter === tab.id;
               return (
@@ -300,30 +287,23 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
                     playClickSound();
                     setSelectedFilter(tab.id as FilterCategory);
                   }}
-                  className={`px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-tight flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-tight whitespace-nowrap transition-all cursor-pointer ${
                     isActive
                       ? 'bg-[#24201D] text-white shadow-2xs'
                       : 'bg-white text-[#6B635B] hover:bg-[#FAF8F5] border border-[#24201D]/20 shadow-2xs'
                   }`}
                 >
                   <span>{tab.label}</span>
-                  <span
-                    className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono-num ${
-                      isActive ? 'bg-white/20 text-white' : 'bg-[#FAF8F5] text-[#8C827A]'
-                    }`}
-                  >
-                    {tab.count}
-                  </span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* 3. Feed List */}
+        {/* 3. Feed List (Scrollable Area) */}
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
           {filteredLogs.length === 0 ? (
-            <div className="py-12 px-4 text-center space-y-2 bg-white/60 border-[1.75px] border-dashed border-[#24201D]/25 rounded-2xl">
+            <div className="h-full min-h-[260px] flex flex-col items-center justify-center py-10 px-4 text-center space-y-2 bg-white/60 border-[1.75px] border-dashed border-[#24201D]/25 rounded-2xl">
               <div className="w-10 h-10 rounded-2xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center justify-center mx-auto text-[#8C827A]">
                 <History className="w-5 h-5 stroke-[1.75]" />
               </div>
@@ -391,12 +371,6 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
               );
             })
           )}
-        </div>
-
-        {/* 4. Footer Summary */}
-        <div className="p-2.5 bg-[#FAF8F5] border-t border-[#24201D]/15 flex items-center justify-between px-4 text-[10px] font-bold text-[#8C827A] shrink-0">
-          <span>Showing {filteredLogs.length} of {logs.length} events</span>
-          <span className="font-mono-num">Realtime Audit</span>
         </div>
 
       </div>

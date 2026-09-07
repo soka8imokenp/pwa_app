@@ -433,7 +433,7 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
                   <span className="text-[8px] font-black text-[#854D0E] uppercase">Nutrition</span>
                 </div>
                 <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
-                  {avgDailyKcal > 0 ? `${avgDailyKcal} kcal` : `${healthProfile.targetDailyCalories || 2000} kcal`}
+                  {avgDailyKcal > 0 ? `${avgDailyKcal} kcal` : `${healthMetrics.targetDailyCalories || 2000} kcal`}
                 </p>
                 <p className="text-[9px] font-bold text-[#6B635B] truncate">
                   {uniqueMealDays > 0 ? `${uniqueMealDays}d logged • avg/day` : 'Target energy'}

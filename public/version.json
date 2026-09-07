@@ -1,14 +1,15 @@
 {
-  "version": "1.8.71",
-  "buildNumber": 75,
-  "releaseDate": "2026-09-04",
+  "version": "1.8.72",
+  "buildNumber": 76,
+  "releaseDate": "2026-09-07",
   "changelog": [
     "Native Android MediaPlayer engine for continuous 24/7 background radio streaming",
     "Removed red blinking ping indicator next to station in Zen Mode",
     "Added high-reliability direct audio streams (Claude FM, Lofi Girl, Chillhop, Synthwave)",
-    "Lock screen play/pause/prev/next controls with instant hardware response"
+    "Lock screen play/pause/prev/next controls with instant hardware response",
+    "Fixed TypeScript build error for previousStation method reference"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.71/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.72/Daily-Sumire-app-debug.apk"
 }
 
 

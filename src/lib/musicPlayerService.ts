@@ -168,7 +168,7 @@ class MusicPlayerService {
         this.nextStation();
       };
       (window as any).__sumirePrevTrack = () => {
-        this.previousStation();
+        this.prevStation();
       };
 
       if (document.readyState === 'complete') {
@@ -587,6 +587,10 @@ class MusicPlayerService {
   }
 
   public prevTrack() {
+    this.prevStation();
+  }
+
+  public previousStation() {
     this.prevStation();
   }
 

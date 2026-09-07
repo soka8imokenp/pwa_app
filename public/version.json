@@ -1,11 +1,11 @@
 {
-  "version": "1.8.81",
-  "buildNumber": 85,
+  "version": "1.8.82",
+  "buildNumber": 86,
   "releaseDate": "2026-09-07",
   "changelog": [
-    "Minimalist Touch ID lock screen: removed sensor ready panel and secure vault pill",
-    "Beautiful centered Enter PIN Code button and clean avatar lock medallion",
-    "Streamlined biometric to PIN transition"
+    "Lock Screen: immediate PIN keypad display with native Touch ID auto-prompt overlay",
+    "Clean header layout without Secure Vault pill",
+    "Simplified Weekly Digest badge"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.81/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.82/Daily-Sumire-app-debug.apk"
 }

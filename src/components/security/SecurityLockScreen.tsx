@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Lock, Fingerprint, Delete, KeyRound } from 'lucide-react';
+import { Lock, Fingerprint, Delete } from 'lucide-react';
 import {
   verifyPin,
   isBiometricsEnabled,
@@ -27,11 +27,6 @@ const KEYPAD_DIGITS = [
 ];
 
 export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock, userName }) => {
-  // Biometrics appear initially if enabled; clicking Enter PIN Code reveals the PIN keypad
-  const [authMode, setAuthMode] = useState<'biometric' | 'pin'>(() => {
-    return isBiometricsEnabled() ? 'biometric' : 'pin';
-  });
-
   const [pin, setPin] = useState<string>('');
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -47,9 +42,9 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
 
   const activeAvatar = getAvatarById(avatarId);
 
-  // Auto-attempt biometrics on mount if in biometric mode
+  // Auto-attempt biometrics on mount if enabled (native prompt pops up over PIN keypad)
   useEffect(() => {
-    if (authMode === 'biometric') {
+    if (isBiometricsEnabled()) {
       const timer = setTimeout(() => {
         handleBiometricUnlock();
       }, 350);
@@ -73,17 +68,6 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
     } finally {
       setIsAuthenticatingBio(false);
     }
-  };
-
-  const handleCloseBiometric = () => {
-    playClickSound();
-    setAuthMode('pin');
-  };
-
-  const handleSwitchToBiometric = () => {
-    playClickSound();
-    setAuthMode('biometric');
-    handleBiometricUnlock();
   };
 
   const handleDigitPress = useCallback(
@@ -128,213 +112,132 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
   // Keyboard listener for desktop/hardware keyboards
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (authMode === 'pin') {
-        if (/^[0-9]$/.test(e.key)) {
-          handleDigitPress(e.key);
-        } else if (e.key === 'Backspace' || e.key === 'Delete') {
-          handleDelete();
-        } else if (e.key === 'Escape' && isBiometricsEnabled()) {
-          handleSwitchToBiometric();
-        }
-      } else {
-        // In biometric mode
-        if (e.key === 'Escape') {
-          handleCloseBiometric();
-        } else if (/^[0-9]$/.test(e.key)) {
-          // Immediately open PIN keypad and register digit
-          setAuthMode('pin');
-          handleDigitPress(e.key);
-        }
+      if (/^[0-9]$/.test(e.key)) {
+        handleDigitPress(e.key);
+      } else if (e.key === 'Backspace' || e.key === 'Delete') {
+        handleDelete();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [authMode, handleDigitPress, handleDelete]);
+  }, [handleDigitPress, handleDelete]);
 
   return (
-    <div className="fixed inset-0 z-[999] bg-[#F4F0EA] select-none flex flex-col items-center justify-between pt-[calc(env(safe-area-inset-top,0px)+20px)] pb-[calc(env(safe-area-inset-bottom,0px)+34px)] px-6 sm:px-8 font-body overflow-y-auto animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[999] bg-[#F4F0EA] select-none flex flex-col items-center justify-between pt-[calc(env(safe-area-inset-top,0px)+16px)] pb-[calc(env(safe-area-inset-bottom,0px)+24px)] px-6 sm:px-8 font-body overflow-y-auto animate-in fade-in duration-300">
       
       {/* Subtle Japanese Washi Aura */}
       <div className="absolute top-1/3 -left-32 w-80 h-80 bg-[#3D6B52]/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-[#E09F3E]/8 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Top Bar in PIN mode: Switch to Touch ID */}
-      <div className="relative z-10 w-full max-w-[290px] flex items-center justify-end min-h-[36px]">
-        {authMode === 'pin' && isBiometricsEnabled() && (
-          <button
-            type="button"
-            onClick={handleSwitchToBiometric}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#DDE8DE] text-[#2D503C] border-[1.5px] border-[#24201D] rounded-full shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none text-[10px] font-black uppercase tracking-wider font-display cursor-pointer transition-all"
-            title="Return to Touch ID"
+      {/* Center Hero: Avatar Medallion, Title & PIN Dots */}
+      <div className="relative z-10 flex flex-col items-center text-center max-w-xs w-full space-y-3.5 my-auto py-2">
+        
+        {/* Avatar / Lock Medallion */}
+        <div className="relative">
+          <div
+            className="w-16 h-16 rounded-[1.5rem] border-[2px] border-[#24201D] flex items-center justify-center shadow-[3px_3px_0px_#24201D] p-1.5 animate-neo-float relative"
+            style={{ backgroundColor: activeAvatar.bg }}
           >
-            <Fingerprint className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>Touch ID</span>
-          </button>
-        )}
+            {activeAvatar.renderSvg('w-full h-full')}
+          </div>
+          <div className="absolute -bottom-1 -right-1 p-1 bg-[#3D6B52] text-white border-[1.5px] border-[#24201D] rounded-lg shadow-[1px_1px_0px_#24201D]">
+            <Lock className="w-3 h-3 stroke-[2.5]" />
+          </div>
+        </div>
+
+        {/* User Greeting & Error Status */}
+        <div className="space-y-0.5">
+          <h2 className="text-lg font-black font-display text-[#24201D] tracking-tight">
+            {userName ? `Welcome back, ${userName}` : 'Unlock Vault'}
+          </h2>
+          <p
+            className={`text-xs font-bold transition-colors ${
+              errorMessage ? 'text-rose-600 animate-shake' : 'text-[#6B635B]'
+            }`}
+          >
+            {errorMessage || 'Enter 4-digit PIN or Touch ID'}
+          </p>
+        </div>
+
+        {/* 4 Tactile PIN Dots */}
+        <div
+          className={`flex items-center justify-center gap-4.5 py-1.5 ${
+            isError ? 'animate-shake' : ''
+          }`}
+        >
+          {[0, 1, 2, 3].map((index) => {
+            const isFilled = pin.length > index;
+            return (
+              <div
+                key={index}
+                className={`w-4.5 h-4.5 rounded-full border-[1.75px] border-[#24201D] transition-all duration-200 ${
+                  isError
+                    ? 'bg-rose-500 border-rose-900 scale-110 shadow-[1px_1px_0px_#9F1239]'
+                    : isFilled
+                    ? 'bg-[#3D6B52] scale-125 shadow-[1.5px_1.5px_0px_#24201D]'
+                    : 'bg-white shadow-[1px_1px_0px_#24201D]'
+                }`}
+              />
+            );
+          })}
+        </div>
       </div>
 
-      {authMode === 'biometric' ? (
-        /* ================= MINIMALIST BIOMETRIC INITIAL VIEW ================= */
-        <div className="relative z-10 my-auto w-full max-w-xs flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-250">
-          
-          {/* Tactile Minimalist Avatar Medallion with Lock Badge */}
+      {/* Luxury Tactile Keypad Grid */}
+      <div className="relative z-10 w-full max-w-[290px] mb-2 space-y-2.5">
+        <div className="grid grid-cols-3 gap-2.5">
+          {KEYPAD_DIGITS.map(({ num, letters }) => (
+            <button
+              key={num}
+              type="button"
+              onClick={() => handleDigitPress(num)}
+              className="h-13 sm:h-14 rounded-2xl bg-white hover:bg-[#FAF8F5] active:bg-[#F0BB58] border-[1.75px] border-[#24201D] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex flex-col items-center justify-center transition-all group"
+            >
+              <span className="text-xl font-black font-display text-[#24201D] leading-none group-active:scale-95 transition-transform">
+                {num}
+              </span>
+              {letters && (
+                <span className="text-[8px] font-extrabold tracking-widest text-[#6B635B] mt-0.5 font-display">
+                  {letters}
+                </span>
+              )}
+            </button>
+          ))}
+
+          {/* Row 4: Biometric Scanner Button (Always Present), '0', Delete Button */}
           <button
             type="button"
             onClick={handleBiometricUnlock}
             disabled={isAuthenticatingBio}
-            className="relative group cursor-pointer focus:outline-none transition-transform active:scale-95"
-            title="Tap to verify biometric identity"
+            className="h-13 sm:h-14 rounded-2xl bg-[#DDE8DE] hover:bg-[#C9DCCB] active:bg-[#3D6B52] active:text-white border-[1.75px] border-[#24201D] text-[#2D503C] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex flex-col items-center justify-center transition-all group"
+            title="Biometric Fingerprint / Touch ID"
           >
-            <div className="absolute -inset-2.5 rounded-[2rem] bg-[#3D6B52]/10 blur-md pointer-events-none group-hover:bg-[#3D6B52]/20 transition-all" />
-            
-            <div
-              className="relative w-22 h-22 rounded-[1.75rem] border-[2px] border-[#24201D] flex items-center justify-center shadow-[3.5px_3.5px_0px_#24201D] p-2 bg-white"
-              style={{ backgroundColor: activeAvatar.bg }}
-            >
-              {activeAvatar.renderSvg('w-full h-full')}
-            </div>
-
-            <div className="absolute -bottom-1 -right-1 p-1.5 bg-[#3D6B52] text-white border-[1.75px] border-[#24201D] rounded-xl shadow-[1.5px_1.5px_0px_#24201D] group-hover:scale-110 transition-transform">
-              <Lock className="w-3.5 h-3.5 stroke-[2.5]" />
-            </div>
+            <Fingerprint className="w-5 h-5 stroke-[2.25] group-hover:scale-110 transition-transform" />
+            <span className="text-[8px] font-extrabold tracking-wider uppercase mt-0.5">
+              Touch ID
+            </span>
           </button>
 
-          {/* Minimalist Title & Hint */}
-          <div className="mt-5 space-y-1">
-            <h2 className="text-xl font-black font-display text-[#24201D] tracking-tight">
-              {userName ? `Welcome back, ${userName}` : 'Touch ID'}
-            </h2>
-            <p className="text-xs font-bold text-[#6B635B] max-w-[200px] leading-relaxed mx-auto">
-              Touch the sensor to unlock
-            </p>
-          </div>
+          <button
+            type="button"
+            onClick={() => handleDigitPress('0')}
+            className="h-13 sm:h-14 rounded-2xl bg-white hover:bg-[#FAF8F5] active:bg-[#F0BB58] border-[1.75px] border-[#24201D] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex flex-col items-center justify-center transition-all"
+          >
+            <span className="text-xl font-black font-display text-[#24201D] leading-none">
+              0
+            </span>
+          </button>
 
-          {/* Clean & Beautifully Positioned Enter PIN Code Button */}
-          <div className="mt-8 w-full max-w-[240px]">
-            <button
-              type="button"
-              onClick={handleCloseBiometric}
-              className="w-full py-3.5 px-5 bg-white hover:bg-[#FAF8F5] active:bg-[#3D6B52] active:text-white text-[#24201D] border-[2px] border-[#24201D] rounded-2xl shadow-[3px_3px_0px_#24201D] active:translate-y-0.5 active:shadow-none font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 cursor-pointer transition-all group"
-            >
-              <KeyRound className="w-4 h-4 stroke-[2.25] text-[#6B635B] group-hover:text-[#24201D] group-active:text-white transition-colors" />
-              <span>Enter PIN Code</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="h-13 sm:h-14 rounded-2xl bg-white hover:bg-rose-50 active:bg-rose-100 border-[1.75px] border-[#24201D] text-[#6B635B] hover:text-rose-700 shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex items-center justify-center transition-all"
+            title="Delete digit"
+          >
+            <Delete className="w-5 h-5 stroke-[2.25]" />
+          </button>
         </div>
-      ) : (
-        /* ================= PIN KEYPAD PANEL (ON ENTER PIN CODE) ================= */
-        <>
-          {/* Center Hero: Avatar Medallion, Title & PIN Dots */}
-          <div className="relative z-10 flex flex-col items-center text-center max-w-xs w-full space-y-3 my-auto py-2 animate-in fade-in zoom-in-95 duration-200">
-            
-            {/* Avatar / Lock Medallion */}
-            <div className="relative">
-              <div
-                className="w-15 h-15 rounded-[1.4rem] border-[2px] border-[#24201D] flex items-center justify-center shadow-[3px_3px_0px_#24201D] p-1.5 animate-neo-float relative"
-                style={{ backgroundColor: activeAvatar.bg }}
-              >
-                {activeAvatar.renderSvg('w-full h-full')}
-              </div>
-              <div className="absolute -bottom-1 -right-1 p-1 bg-[#3D6B52] text-white border-[1.5px] border-[#24201D] rounded-lg shadow-[1px_1px_0px_#24201D]">
-                <Lock className="w-3 h-3 stroke-[2.5]" />
-              </div>
-            </div>
-
-            {/* User Greeting & Error Status */}
-            <div className="space-y-0.5">
-              <h2 className="text-lg font-black font-display text-[#24201D] tracking-tight">
-                {userName ? `Welcome back, ${userName}` : 'Enter PIN Code'}
-              </h2>
-              <p
-                className={`text-xs font-bold transition-colors ${
-                  errorMessage ? 'text-rose-600 animate-shake' : 'text-[#6B635B]'
-                }`}
-              >
-                {errorMessage || 'Enter your 4-digit vault PIN'}
-              </p>
-            </div>
-
-            {/* 4 Tactile PIN Dots */}
-            <div
-              className={`flex items-center justify-center gap-4.5 py-1.5 ${
-                isError ? 'animate-shake' : ''
-              }`}
-            >
-              {[0, 1, 2, 3].map((index) => {
-                const isFilled = pin.length > index;
-                return (
-                  <div
-                    key={index}
-                    className={`w-4.5 h-4.5 rounded-full border-[1.75px] border-[#24201D] transition-all duration-200 ${
-                      isError
-                        ? 'bg-rose-500 border-rose-900 scale-110 shadow-[1px_1px_0px_#9F1239]'
-                        : isFilled
-                        ? 'bg-[#3D6B52] scale-125 shadow-[1.5px_1.5px_0px_#24201D]'
-                        : 'bg-white shadow-[1px_1px_0px_#24201D]'
-                    }`}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Tactile Keypad Grid */}
-          <div className="relative z-10 w-full max-w-[290px] mb-1 space-y-2.5 animate-in fade-in duration-200">
-            <div className="grid grid-cols-3 gap-2.5">
-              {KEYPAD_DIGITS.map(({ num, letters }) => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => handleDigitPress(num)}
-                  className="h-13 sm:h-14 rounded-2xl bg-white hover:bg-[#FAF8F5] active:bg-[#F0BB58] border-[1.75px] border-[#24201D] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex flex-col items-center justify-center transition-all group"
-                >
-                  <span className="text-xl font-black font-display text-[#24201D] leading-none group-active:scale-95 transition-transform">
-                    {num}
-                  </span>
-                  {letters && (
-                    <span className="text-[8px] font-extrabold tracking-widest text-[#6B635B] mt-0.5 font-display">
-                      {letters}
-                    </span>
-                  )}
-                </button>
-              ))}
-
-              {/* Row 4: Biometric Return Button, '0', Delete Button */}
-              <button
-                type="button"
-                onClick={handleSwitchToBiometric}
-                disabled={isAuthenticatingBio}
-                className="h-13 sm:h-14 rounded-2xl bg-[#DDE8DE] hover:bg-[#C9DCCB] active:bg-[#3D6B52] active:text-white border-[1.75px] border-[#24201D] text-[#2D503C] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex flex-col items-center justify-center transition-all group"
-                title="Return to Touch ID"
-              >
-                <Fingerprint className="w-5 h-5 stroke-[2.25] group-hover:scale-110 transition-transform" />
-                <span className="text-[8px] font-extrabold tracking-wider uppercase mt-0.5">
-                  Touch ID
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDigitPress('0')}
-                className="h-13 sm:h-14 rounded-2xl bg-white hover:bg-[#FAF8F5] active:bg-[#F0BB58] border-[1.75px] border-[#24201D] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex flex-col items-center justify-center transition-all"
-              >
-                <span className="text-xl font-black font-display text-[#24201D] leading-none">
-                  0
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleDelete}
-                className="h-13 sm:h-14 rounded-2xl bg-white hover:bg-rose-50 active:bg-rose-100 border-[1.75px] border-[#24201D] text-[#6B635B] hover:text-rose-700 shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex items-center justify-center transition-all"
-                title="Delete digit"
-              >
-                <Delete className="w-5 h-5 stroke-[2.25]" />
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+      </div>
     </div>
   );
 };

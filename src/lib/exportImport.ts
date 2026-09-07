@@ -107,6 +107,10 @@ export async function importDatabaseFromJson(jsonString: string): Promise<{ succ
 }
 
 export async function resetAndSeedDatabase() {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('kairo_health_onboarded');
+    localStorage.removeItem('kairo_clinical_health_summary');
+  }
   await db.transaction(
     'rw',
     [

@@ -176,13 +176,5 @@ export async function seedDemoDataIfEmpty() {
   const profileCount = await db.healthProfile.count();
   if (profileCount === 0) {
     await db.healthProfile.put(DEFAULT_HEALTH_PROFILE);
-    const today = format(new Date(), 'yyyy-MM-dd');
-    await db.weightLogs.add({
-      date: today,
-      weight: DEFAULT_HEALTH_PROFILE.currentWeight,
-      bmi: calculateBmi(DEFAULT_HEALTH_PROFILE.currentWeight, DEFAULT_HEALTH_PROFILE.height),
-      note: 'Initial baseline',
-      createdAt: Date.now(),
-    });
   }
 }

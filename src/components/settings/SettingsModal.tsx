@@ -245,11 +245,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     if (window.confirm('Reset database and reload sample tasks & habits?')) {
       playClickSound();
       setIsProcessing(true);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('kairo_health_onboarded');
+        localStorage.removeItem('kairo_clinical_health_summary');
+      }
       await resetAndSeedDatabase();
       playSuccessChime();
-      setFeedback({ text: 'Demo data loaded successfully!', success: true });
-      onDataChanged();
-      setIsProcessing(false);
+      setFeedback({ text: 'Reset completed! Reloading app...', success: true });
+      setTimeout(() => {
+        window.location.reload();
+      }, 450);
     }
   };
 

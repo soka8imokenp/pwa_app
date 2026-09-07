@@ -1,11 +1,11 @@
 {
-  "version": "1.8.87",
-  "buildNumber": 91,
+  "version": "1.8.88",
+  "buildNumber": 92,
   "releaseDate": "2026-09-07",
   "changelog": [
-    "Replaced generic Sparkles icon everywhere with unique, premium Lucide icons (Compass, HeartPulse, Trophy, Wand2, Bot, Zap)",
-    "Removed Run Guided Calibration Wizard button from profile editor once health data has been saved",
-    "Preserved setup guide button only when onboarding was initially skipped"
+    "Clarified local-only storage architecture: data is NEVER sent or synced to Google Account",
+    "Fixed Reset & Reload to clear health onboarding and prevent ghost baseline weight logs",
+    "Added automatic reload after reset to ensure completely clean database state"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.87/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.88/Daily-Sumire-app-debug.apk"
 }

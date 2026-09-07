@@ -413,8 +413,9 @@ class MusicPlayerService {
         artist: station.subtitle || '24/7 Lofi Live Radio',
         album: 'Daily Sumire Radio',
         artwork: [
-          { src: station.thumbnailUrl, sizes: '480x360', type: 'image/jpeg' },
+          { src: `${origin}/icon-512x512.png`, sizes: '512x512', type: 'image/png' },
           { src: `${origin}/icon-192x192.png`, sizes: '192x192', type: 'image/png' },
+          ...(station.thumbnailUrl ? [{ src: station.thumbnailUrl, sizes: '480x360', type: 'image/jpeg' }] : []),
         ],
       });
 

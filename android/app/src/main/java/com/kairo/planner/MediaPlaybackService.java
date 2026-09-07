@@ -12,6 +12,9 @@ import android.content.IntentFilter;
 import android.content.pm.ServiceInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.net.wifi.WifiManager;
@@ -24,6 +27,7 @@ import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 public class MediaPlaybackService extends Service {
     public static final String CHANNEL_ID = "daily_sumire_music_channel";
@@ -349,7 +353,42 @@ public class MediaPlaybackService extends Service {
         } catch (Exception ignored) {}
     }
 
+    private Bitmap appIconBitmap = null;
+
+    private Bitmap getAppIconBitmap() {
+        if (appIconBitmap != null && !appIconBitmap.isRecycled()) {
+            return appIconBitmap;
+        }
+
+        try {
+            appIconBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.app_icon_cover);
+        } catch (Exception ignored) {}
+
+        if (appIconBitmap == null) {
+            try {
+                Drawable drawable = ContextCompat.getDrawable(this, R.mipmap.ic_launcher);
+                if (drawable != null) {
+                    if (drawable instanceof BitmapDrawable) {
+                        appIconBitmap = ((BitmapDrawable) drawable).getBitmap();
+                    } else {
+                        int w = drawable.getIntrinsicWidth() > 0 ? drawable.getIntrinsicWidth() : 512;
+                        int h = drawable.getIntrinsicHeight() > 0 ? drawable.getIntrinsicHeight() : 512;
+                        Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+                        Canvas canvas = new Canvas(bitmap);
+                        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                        drawable.draw(canvas);
+                        appIconBitmap = bitmap;
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+
+        return appIconBitmap;
+    }
+
     private Notification buildNotification(String title, String artist, boolean isPlaying) {
+        Bitmap iconBitmap = getAppIconBitmap();
+
         if (mediaSession != null) {
             PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
                     .setActions(
@@ -368,7 +407,14 @@ public class MediaPlaybackService extends Service {
             MediaMetadataCompat.Builder metaBuilder = new MediaMetadataCompat.Builder()
                     .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
                     .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
-                    .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "Daily Sumire");
+                    .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "Daily Sumire Music");
+
+            if (iconBitmap != null) {
+                metaBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, iconBitmap);
+                metaBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ART, iconBitmap);
+                metaBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, iconBitmap);
+            }
+
             mediaSession.setMetadata(metaBuilder.build());
         }
 
@@ -396,7 +442,6 @@ public class MediaPlaybackService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        Bitmap iconBitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
         int playPauseIcon = isPlaying ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play;
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -404,7 +449,6 @@ public class MediaPlaybackService extends Service {
                 .setContentText(artist)
                 .setSubText("Daily Sumire Music")
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setLargeIcon(iconBitmap)
                 .setContentIntent(openAppPendingIntent)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -413,6 +457,10 @@ public class MediaPlaybackService extends Service {
                 .addAction(android.R.drawable.ic_media_previous, "Prev", prevPendingIntent)
                 .addAction(playPauseIcon, isPlaying ? "Pause" : "Play", playPausePendingIntent)
                 .addAction(android.R.drawable.ic_media_next, "Next", nextPendingIntent);
+
+        if (iconBitmap != null) {
+            builder.setLargeIcon(iconBitmap);
+        }
 
         if (mediaSession != null) {
             builder.setStyle(

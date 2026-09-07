@@ -11,7 +11,10 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -382,6 +385,39 @@ public class MainActivity extends BridgeActivity {
         } catch (Exception ignored) {}
     }
 
+    private Bitmap appIconBitmap = null;
+
+    private Bitmap getAppIconBitmap() {
+        if (appIconBitmap != null && !appIconBitmap.isRecycled()) {
+            return appIconBitmap;
+        }
+
+        try {
+            appIconBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.app_icon_cover);
+        } catch (Exception ignored) {}
+
+        if (appIconBitmap == null) {
+            try {
+                Drawable drawable = ContextCompat.getDrawable(this, R.mipmap.ic_launcher);
+                if (drawable != null) {
+                    if (drawable instanceof BitmapDrawable) {
+                        appIconBitmap = ((BitmapDrawable) drawable).getBitmap();
+                    } else {
+                        int w = drawable.getIntrinsicWidth() > 0 ? drawable.getIntrinsicWidth() : 512;
+                        int h = drawable.getIntrinsicHeight() > 0 ? drawable.getIntrinsicHeight() : 512;
+                        Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+                        Canvas canvas = new Canvas(bitmap);
+                        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                        drawable.draw(canvas);
+                        appIconBitmap = bitmap;
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+
+        return appIconBitmap;
+    }
+
     public void showMediaNotification(String title, String artist, boolean isPlaying) {
         try {
             if (notificationManager == null || mediaSession == null) return;
@@ -392,6 +428,8 @@ public class MainActivity extends BridgeActivity {
             } else {
                 releaseWakeLock();
             }
+
+            Bitmap iconBitmap = getAppIconBitmap();
 
             PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
                     .setActions(
@@ -410,7 +448,14 @@ public class MainActivity extends BridgeActivity {
             MediaMetadataCompat.Builder metaBuilder = new MediaMetadataCompat.Builder()
                     .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
                     .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
-                    .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "Daily Sumire");
+                    .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "Daily Sumire Music");
+
+            if (iconBitmap != null) {
+                metaBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, iconBitmap);
+                metaBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ART, iconBitmap);
+                metaBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, iconBitmap);
+            }
+
             mediaSession.setMetadata(metaBuilder.build());
 
             Intent openAppIntent = new Intent(this, MainActivity.class);
@@ -437,7 +482,6 @@ public class MainActivity extends BridgeActivity {
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
             );
 
-            Bitmap iconBitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
             int playPauseIcon = isPlaying ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play;
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -445,7 +489,6 @@ public class MainActivity extends BridgeActivity {
                     .setContentText(artist)
                     .setSubText("Daily Sumire Music")
                     .setSmallIcon(R.mipmap.ic_launcher)
-                    .setLargeIcon(iconBitmap)
                     .setContentIntent(openAppPendingIntent)
                     .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                     .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -453,12 +496,16 @@ public class MainActivity extends BridgeActivity {
                     .setOnlyAlertOnce(true)
                     .addAction(android.R.drawable.ic_media_previous, "Prev", prevPendingIntent)
                     .addAction(playPauseIcon, isPlaying ? "Pause" : "Play", playPausePendingIntent)
-                    .addAction(android.R.drawable.ic_media_next, "Next", nextPendingIntent)
-                    .setStyle(
-                            new androidx.media.app.NotificationCompat.MediaStyle()
-                                     .setMediaSession(mediaSession.getSessionToken())
-                                    .setShowActionsInCompactView(0, 1, 2)
-                    );
+                    .addAction(android.R.drawable.ic_media_next, "Next", nextPendingIntent);
+
+            if (iconBitmap != null) {
+                builder.setLargeIcon(iconBitmap);
+            }
+            builder.setStyle(
+                    new androidx.media.app.NotificationCompat.MediaStyle()
+                            .setMediaSession(mediaSession.getSessionToken())
+                            .setShowActionsInCompactView(0, 1, 2)
+            );
 
             notificationManager.notify(NOTIFICATION_ID, builder.build());
         } catch (Exception ignored) {}

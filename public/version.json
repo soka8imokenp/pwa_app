@@ -1,15 +1,15 @@
 {
-  "version": "1.8.74",
-  "buildNumber": 78,
+  "version": "1.8.75",
+  "buildNumber": 79,
   "releaseDate": "2026-09-07",
   "changelog": [
+    "Lock screen mini player album art: displays crisp application icon instead of empty placeholder",
     "Dedicated Android MediaPlaybackService (Foreground Service with mediaPlayback type)",
-    "Fixed MediaReceiver build symbol resolution in MainActivity",
     "Continuous 24/7 background radio streaming with Partial WakeLock and High-Performance WifiLock",
     "Automatic reconnection on network hiccups",
     "Lock screen play/pause/prev/next controls with hardware instant response"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.74/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.75/Daily-Sumire-app-debug.apk"
 }
 
 

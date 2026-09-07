@@ -172,9 +172,4 @@ export async function seedDemoDataIfEmpty() {
     ]);
   }
 
-  // Seed default health profile if empty
-  const profileCount = await db.healthProfile.count();
-  if (profileCount === 0) {
-    await db.healthProfile.put(DEFAULT_HEALTH_PROFILE);
-  }
 }

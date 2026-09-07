@@ -34,6 +34,8 @@ interface HealthBodyPageProps {
   onSaveWeight: (weight: number, note?: string, date?: string, bodyFat?: number, waistCm?: number) => Promise<void>;
   onDeleteWeightLog: (id: number) => Promise<void>;
   onUpdateProfile: (updates: Partial<HealthProfile>) => Promise<void>;
+  autoOpenWizard?: boolean;
+  onWizardHandled?: () => void;
 }
 
 export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
@@ -44,6 +46,8 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
   onSaveWeight,
   onDeleteWeightLog,
   onUpdateProfile,
+  autoOpenWizard,
+  onWizardHandled,
 }) => {
   const [isLogWeightOpen, setIsLogWeightOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -64,12 +68,15 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
     return false;
   });
 
-  const [isOnboardingWizardOpen, setIsOnboardingWizardOpen] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return !localStorage.getItem('kairo_health_onboarded');
+  // Never auto-open wizard on initial app mount; only open when explicitly commanded by autoOpenWizard
+  const [isOnboardingWizardOpen, setIsOnboardingWizardOpen] = useState(false);
+
+  useEffect(() => {
+    if (autoOpenWizard) {
+      setIsOnboardingWizardOpen(true);
+      onWizardHandled?.();
     }
-    return false;
-  });
+  }, [autoOpenWizard, onWizardHandled]);
 
   const handleCloseWizard = () => {
     setIsOnboardingWizardOpen(false);
@@ -154,6 +161,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
 
   // Generate / refresh AI clinical summary
   const handleGenerateSummary = async () => {
+    if (currentWeight <= 0) return;
     setIsGeneratingSummary(true);
     playClickSound();
 
@@ -172,7 +180,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
   };
 
   useEffect(() => {
-    if (!aiSummary) {
+    if (!aiSummary && profile.currentWeight > 0) {
       handleGenerateSummary();
     }
   }, [profile.currentWeight, profile.targetWeight, profile.goal, profile.height, profile.age]);
@@ -192,8 +200,8 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
 
   return (
     <div className="w-full space-y-3.5 pb-3 font-body select-none">
-      {/* Onboarding Reminder Banner if Skipped */}
-      {isOnboardingSkipped && (
+      {/* Onboarding / Calibration Banner if Skipped or Uncalibrated */}
+      {(isOnboardingSkipped || currentWeight <= 0) && (
         <div className="p-3 bg-[#FBECCF] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between gap-3 animate-in fade-in duration-200">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-xl bg-white border border-[#24201D] flex items-center justify-center shrink-0 shadow-2xs">
@@ -201,10 +209,12 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             </div>
             <div className="min-w-0">
               <h4 className="text-xs font-black text-[#854D0E] font-display uppercase tracking-wide truncate">
-                Personalize Your Targets
+                {currentWeight <= 0 ? 'Calibrate Your Health Profile' : 'Personalize Your Targets'}
               </h4>
               <p className="text-[10px] text-[#854D0E]/80 font-medium truncate">
-                Calibrate metabolism, water goal & WHO healthy weight
+                {currentWeight <= 0
+                  ? 'Set your baseline weight & biometrics to unlock telemetry'
+                  : 'Calibrate metabolism, water goal & WHO healthy weight'}
               </p>
             </div>
           </div>
@@ -275,13 +285,15 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             </span>
             <div className="flex items-baseline gap-1.5 mt-0.5">
               <span className="text-4xl sm:text-5xl font-black font-mono-num text-[#24201D] tracking-tight">
-                {currentWeight}
+                {currentWeight > 0 ? currentWeight : '—'}
               </span>
-              <span className="text-sm font-black text-[#6B635B] uppercase font-display">
-                kg
-              </span>
+              {currentWeight > 0 && (
+                <span className="text-sm font-black text-[#6B635B] uppercase font-display">
+                  kg
+                </span>
+              )}
 
-              {deltaFromPrev !== null && deltaFromPrev !== 0 && (
+              {currentWeight > 0 && deltaFromPrev !== null && deltaFromPrev !== 0 && (
                 <span
                   className={`ml-2 text-xs font-black font-mono-num px-1.5 py-0.5 rounded-lg border ${
                     deltaFromPrev < 0
@@ -301,17 +313,17 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             </span>
             <div className="flex items-center justify-end gap-1.5 mt-0.5">
               <span className="text-2xl font-black font-mono-num text-[#24201D]">
-                {bmi}
+                {bmi > 0 ? bmi : '—'}
               </span>
               <span
                 className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase text-white shadow-2xs"
                 style={{ backgroundColor: bmiColor }}
               >
-                {bmiCategoryLabel.split(' ')[0]}
+                {bmi > 0 ? bmiCategoryLabel.split(' ')[0] : 'NOT SET'}
               </span>
             </div>
             <span className="text-[10px] font-bold text-[#6B635B] block">
-              Ideal: {idealWeightMin}–{idealWeightMax} kg
+              {idealWeightMin > 0 ? `Ideal: ${idealWeightMin}–${idealWeightMax} kg` : 'Ideal: —'}
             </span>
           </div>
         </div>
@@ -333,12 +345,14 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
           </div>
 
           {/* Marker pointer */}
-          <div className="relative w-full h-2">
-            <div
-              className="absolute -top-1 -translate-x-1/2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[6px] border-b-[#24201D] transition-all duration-300"
-              style={{ left: `${gaugePercent}%` }}
-            />
-          </div>
+          {bmi > 0 && (
+            <div className="relative w-full h-2">
+              <div
+                className="absolute -top-1 -translate-x-1/2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[6px] border-b-[#24201D] transition-all duration-300"
+                style={{ left: `${gaugePercent}%` }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Live Goal Progress & Pace Milestones */}
@@ -347,49 +361,57 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-[#854D0E]" />
               <span className="text-[11px] font-black font-display uppercase tracking-wider text-[#854D0E]">
-                Goal: {targetWeight} kg ({profile.goal.toUpperCase()})
+                {targetWeight > 0 ? `Goal: ${targetWeight} kg (${profile.goal.toUpperCase()})` : 'Goal: Not Set'}
               </span>
             </div>
-            <span className="text-xs font-black font-mono-num text-[#24201D] px-2 py-0.5 rounded-lg bg-white border border-[#24201D]/20 shadow-2xs">
-              {progressPercent}% Done
-            </span>
+            {targetWeight > 0 && currentWeight > 0 ? (
+              <span className="text-xs font-black font-mono-num text-[#24201D] px-2 py-0.5 rounded-lg bg-white border border-[#24201D]/20 shadow-2xs">
+                {progressPercent}% Done
+              </span>
+            ) : (
+              <span className="text-xs font-bold text-[#854D0E] font-display uppercase tracking-wider">
+                Setup Target
+              </span>
+            )}
           </div>
 
           {/* Progress Bar */}
           <div className="w-full h-3 bg-white border border-[#24201D] rounded-full overflow-hidden p-0.5 shadow-2xs">
             <div
               className="h-full bg-[#3D6B52] rounded-full transition-all duration-500"
-              style={{ width: `${progressPercent}%` }}
+              style={{ width: targetWeight > 0 && currentWeight > 0 ? `${progressPercent}%` : '0%' }}
             />
           </div>
 
           {/* Start vs Current vs Goal Markers */}
           <div className="flex items-center justify-between text-[10px] font-bold text-[#6B635B] pt-0.5">
-            <span>Start: <b className="font-mono-num text-[#24201D]">{startingWeight}kg</b></span>
-            <span>Now: <b className="font-mono-num text-[#24201D]">{currentWeight}kg</b></span>
-            <span>Target: <b className="font-mono-num text-[#24201D]">{targetWeight}kg</b></span>
+            <span>Start: <b className="font-mono-num text-[#24201D]">{startingWeight > 0 ? `${startingWeight}kg` : '—'}</b></span>
+            <span>Now: <b className="font-mono-num text-[#24201D]">{currentWeight > 0 ? `${currentWeight}kg` : '—'}</b></span>
+            <span>Target: <b className="font-mono-num text-[#24201D]">{targetWeight > 0 ? `${targetWeight}kg` : '—'}</b></span>
           </div>
 
           {/* Rate of Change & ETA Badge */}
-          <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#854D0E]/20">
-            <div className="p-2 bg-white/80 border border-[#24201D]/20 rounded-xl space-y-0.5">
-              <span className="text-[9px] font-bold text-[#6B635B] uppercase block font-display">
-                Weekly Pace:
-              </span>
-              <span className={`text-[11px] font-black font-mono-num block ${weeklyPaceInfo.isOptimal ? 'text-[#2D503C]' : 'text-[#854D0E]'}`}>
-                {weeklyPaceInfo.paceLabel}
-              </span>
-            </div>
+          {targetWeight > 0 && currentWeight > 0 && (
+            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#854D0E]/20">
+              <div className="p-2 bg-white/80 border border-[#24201D]/20 rounded-xl space-y-0.5">
+                <span className="text-[9px] font-bold text-[#6B635B] uppercase block font-display">
+                  Weekly Pace:
+                </span>
+                <span className={`text-[11px] font-black font-mono-num block ${weeklyPaceInfo.isOptimal ? 'text-[#2D503C]' : 'text-[#854D0E]'}`}>
+                  {weeklyPaceInfo.paceLabel}
+                </span>
+              </div>
 
-            <div className="p-2 bg-white/80 border border-[#24201D]/20 rounded-xl space-y-0.5">
-              <span className="text-[9px] font-bold text-[#6B635B] uppercase block font-display">
-                Projected Finish:
-              </span>
-              <span className="text-[11px] font-black font-mono-num text-[#24201D] block">
-                {projectedGoal.dateString}
-              </span>
+              <div className="p-2 bg-white/80 border border-[#24201D]/20 rounded-xl space-y-0.5">
+                <span className="text-[9px] font-bold text-[#6B635B] uppercase block font-display">
+                  Projected Finish:
+                </span>
+                <span className="text-[11px] font-black font-mono-num text-[#24201D] block">
+                  {projectedGoal.dateString}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -428,7 +450,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
           <button
             type="button"
             onClick={handleGenerateSummary}
-            disabled={isGeneratingSummary}
+            disabled={isGeneratingSummary || currentWeight <= 0}
             className="p-1.5 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer disabled:opacity-50"
             title="Refresh Insights"
           >
@@ -442,6 +464,8 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
               <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#3D6B52]" />
               <span>Analyzing metabolic telemetry and scientific literature...</span>
             </div>
+          ) : currentWeight <= 0 ? (
+            'Calibrate your health profile to generate personalized clinical analysis.'
           ) : (
             aiSummary || 'Tap the refresh button to generate an evidence-based clinical analysis.'
           )}
@@ -476,7 +500,6 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
         }}
         profile={profile}
         onSaveProfile={onUpdateProfile}
-        onLaunchWizard={!isOnboarded ? () => setIsOnboardingWizardOpen(true) : undefined}
       />
 
       <HealthOnboardingWizard

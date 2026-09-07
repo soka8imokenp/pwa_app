@@ -100,17 +100,17 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
 
   // Calorie calculations including active workout burn
   const effectiveTarget = targetDailyCalories + todaysActiveCaloriesBurned;
-  const kcalPercent = Math.min(100, Math.round((todaysTotalKcal / effectiveTarget) * 100));
-  const remainingKcal = effectiveTarget - todaysTotalKcal;
+  const kcalPercent = effectiveTarget > 0 ? Math.min(100, Math.round((todaysTotalKcal / effectiveTarget) * 100)) : 0;
+  const remainingKcal = effectiveTarget > 0 ? effectiveTarget - todaysTotalKcal : 0;
 
   // Macro percentages and remainders
-  const proteinPercent = Math.min(100, Math.round((todaysProteinGrams / targetProteinGrams) * 100));
-  const carbsPercent = Math.min(100, Math.round((todaysCarbsGrams / targetCarbsGrams) * 100));
-  const fatPercent = Math.min(100, Math.round((todaysFatGrams / targetFatGrams) * 100));
+  const proteinPercent = targetProteinGrams > 0 ? Math.min(100, Math.round((todaysProteinGrams / targetProteinGrams) * 100)) : 0;
+  const carbsPercent = targetCarbsGrams > 0 ? Math.min(100, Math.round((todaysCarbsGrams / targetCarbsGrams) * 100)) : 0;
+  const fatPercent = targetFatGrams > 0 ? Math.min(100, Math.round((todaysFatGrams / targetFatGrams) * 100)) : 0;
 
-  const proteinRemaining = Math.max(0, targetProteinGrams - todaysProteinGrams);
-  const carbsRemaining = Math.max(0, targetCarbsGrams - todaysCarbsGrams);
-  const fatRemaining = Math.max(0, targetFatGrams - todaysFatGrams);
+  const proteinRemaining = targetProteinGrams > 0 ? Math.max(0, targetProteinGrams - todaysProteinGrams) : 0;
+  const carbsRemaining = targetCarbsGrams > 0 ? Math.max(0, targetCarbsGrams - todaysCarbsGrams) : 0;
+  const fatRemaining = targetFatGrams > 0 ? Math.max(0, targetFatGrams - todaysFatGrams) : 0;
 
   const handleAddWaterInternal = async (amountMl = 250) => {
     playTaskCheckSound();

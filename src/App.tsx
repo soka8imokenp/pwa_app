@@ -53,10 +53,19 @@ export function App() {
   });
   const [activeHealthTab, setActiveHealthTab] = useState<HealthTab>('body');
 
+  const [autoOpenHealthWizard, setAutoOpenHealthWizard] = useState<boolean>(false);
+
   const handleSetAppMode = (mode: 'planner' | 'health') => {
     setAppMode(mode);
     if (typeof window !== 'undefined') {
       localStorage.setItem('kairo_app_mode', mode);
+      if (mode === 'health') {
+        const onboarded = localStorage.getItem('kairo_health_onboarded');
+        const isUncalibrated = !onboarded || !healthProfile?.currentWeight || healthProfile.currentWeight <= 0;
+        if (isUncalibrated) {
+          setAutoOpenHealthWizard(true);
+        }
+      }
     }
   };
 
@@ -299,6 +308,8 @@ export function App() {
                   onSaveWeight={logWeight}
                   onDeleteWeightLog={deleteWeightLog}
                   onUpdateProfile={updateHealthProfile}
+                  autoOpenWizard={autoOpenHealthWizard}
+                  onWizardHandled={() => setAutoOpenHealthWizard(false)}
                 />
               )}
 

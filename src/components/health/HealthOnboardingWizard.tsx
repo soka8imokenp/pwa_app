@@ -50,13 +50,13 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
 }) => {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
-  // Form states initialized with existing profile values
+  // Form states initialized with existing profile values or friendly defaults
   const [gender, setGender] = useState<Gender>(profile.gender || 'male');
-  const [age, setAge] = useState<number>(profile.age || 26);
-  const [height, setHeight] = useState<number>(profile.height || 178);
-  const [currentWeight, setCurrentWeight] = useState<number>(profile.currentWeight || 75.0);
-  const [targetWeight, setTargetWeight] = useState<number>(profile.targetWeight || 70.0);
-  const [waistCm, setWaistCm] = useState<number>(profile.waistCm || 82);
+  const [age, setAge] = useState<number>(profile.age > 0 ? profile.age : 25);
+  const [height, setHeight] = useState<number>(profile.height > 0 ? profile.height : 175);
+  const [currentWeight, setCurrentWeight] = useState<number>(profile.currentWeight > 0 ? profile.currentWeight : 70.0);
+  const [targetWeight, setTargetWeight] = useState<number>(profile.targetWeight > 0 ? profile.targetWeight : 68.0);
+  const [waistCm, setWaistCm] = useState<number>(profile.waistCm && profile.waistCm > 0 ? profile.waistCm : 80);
   const [goal, setGoal] = useState<HealthGoal>(profile.goal || 'lose');
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>(profile.activityLevel || 'moderate');
   const [isSaving, setIsSaving] = useState(false);

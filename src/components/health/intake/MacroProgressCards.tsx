@@ -80,7 +80,7 @@ export const MacroProgressCards: React.FC<MacroProgressCardsProps> = ({
                 {todaysTotalKcal}
               </span>
               <span className="text-xs font-bold text-[#6B635B] uppercase font-display">
-                / {effectiveTarget} kcal
+                / {effectiveTarget > 0 ? `${effectiveTarget} kcal` : '—'}
               </span>
             </div>
           </div>
@@ -89,13 +89,19 @@ export const MacroProgressCards: React.FC<MacroProgressCardsProps> = ({
             <span className="text-[10px] font-black uppercase text-[#6B635B] font-display block">
               Remaining Budget
             </span>
-            <span
-              className={`text-xl font-black font-mono-num block ${
-                remainingKcal >= 0 ? 'text-[#3D6B52]' : 'text-[#DC2626]'
-              }`}
-            >
-              {remainingKcal >= 0 ? `${remainingKcal} kcal` : `${Math.abs(remainingKcal)} over`}
-            </span>
+            {effectiveTarget > 0 ? (
+              <span
+                className={`text-xl font-black font-mono-num block ${
+                  remainingKcal >= 0 ? 'text-[#3D6B52]' : 'text-[#DC2626]'
+                }`}
+              >
+                {remainingKcal >= 0 ? `${remainingKcal} kcal` : `${Math.abs(remainingKcal)} over`}
+              </span>
+            ) : (
+              <span className="text-xl font-black font-mono-num text-[#6B635B] block">
+                —
+              </span>
+            )}
           </div>
         </div>
 
@@ -115,16 +121,16 @@ export const MacroProgressCards: React.FC<MacroProgressCardsProps> = ({
         <div className="p-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1">
           <div className="flex items-center justify-between text-[9px] font-black uppercase text-[#6B635B] font-display">
             <span>Protein</span>
-            <span className="font-mono-num">{proteinPercent}%</span>
+            <span className="font-mono-num">{targetProteinGrams > 0 ? `${proteinPercent}%` : '—'}</span>
           </div>
           <div className="text-xs font-black font-mono-num text-[#24201D]">
-            {todaysProteinGrams} <span className="text-[10px] text-[#6B635B]">/ {targetProteinGrams}g</span>
+            {todaysProteinGrams} <span className="text-[10px] text-[#6B635B]">/ {targetProteinGrams > 0 ? `${targetProteinGrams}g` : '—'}</span>
           </div>
           <div className="w-full bg-white border border-[#24201D]/30 h-1.5 rounded-full overflow-hidden">
-            <div className="h-full bg-[#10B981] rounded-full" style={{ width: `${proteinPercent}%` }} />
+            <div className="h-full bg-[#10B981] rounded-full" style={{ width: targetProteinGrams > 0 ? `${proteinPercent}%` : '0%' }} />
           </div>
           <span className="text-[8px] font-bold text-stone-400 block font-mono-num">
-            {proteinRemaining > 0 ? `${proteinRemaining}g left` : 'Goal reached'}
+            {targetProteinGrams > 0 ? (proteinRemaining > 0 ? `${proteinRemaining}g left` : 'Goal reached') : '—'}
           </span>
         </div>
 
@@ -132,16 +138,16 @@ export const MacroProgressCards: React.FC<MacroProgressCardsProps> = ({
         <div className="p-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1">
           <div className="flex items-center justify-between text-[9px] font-black uppercase text-[#6B635B] font-display">
             <span>Carbs</span>
-            <span className="font-mono-num">{carbsPercent}%</span>
+            <span className="font-mono-num">{targetCarbsGrams > 0 ? `${carbsPercent}%` : '—'}</span>
           </div>
           <div className="text-xs font-black font-mono-num text-[#24201D]">
-            {todaysCarbsGrams} <span className="text-[10px] text-[#6B635B]">/ {targetCarbsGrams}g</span>
+            {todaysCarbsGrams} <span className="text-[10px] text-[#6B635B]">/ {targetCarbsGrams > 0 ? `${targetCarbsGrams}g` : '—'}</span>
           </div>
           <div className="w-full bg-white border border-[#24201D]/30 h-1.5 rounded-full overflow-hidden">
-            <div className="h-full bg-[#3B82F6] rounded-full" style={{ width: `${carbsPercent}%` }} />
+            <div className="h-full bg-[#3B82F6] rounded-full" style={{ width: targetCarbsGrams > 0 ? `${carbsPercent}%` : '0%' }} />
           </div>
           <span className="text-[8px] font-bold text-stone-400 block font-mono-num">
-            {carbsRemaining > 0 ? `${carbsRemaining}g left` : 'Goal reached'}
+            {targetCarbsGrams > 0 ? (carbsRemaining > 0 ? `${carbsRemaining}g left` : 'Goal reached') : '—'}
           </span>
         </div>
 
@@ -149,16 +155,16 @@ export const MacroProgressCards: React.FC<MacroProgressCardsProps> = ({
         <div className="p-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1">
           <div className="flex items-center justify-between text-[9px] font-black uppercase text-[#6B635B] font-display">
             <span>Fat</span>
-            <span className="font-mono-num">{fatPercent}%</span>
+            <span className="font-mono-num">{targetFatGrams > 0 ? `${fatPercent}%` : '—'}</span>
           </div>
           <div className="text-xs font-black font-mono-num text-[#24201D]">
-            {todaysFatGrams} <span className="text-[10px] text-[#6B635B]">/ {targetFatGrams}g</span>
+            {todaysFatGrams} <span className="text-[10px] text-[#6B635B]">/ {targetFatGrams > 0 ? `${targetFatGrams}g` : '—'}</span>
           </div>
           <div className="w-full bg-white border border-[#24201D]/30 h-1.5 rounded-full overflow-hidden">
-            <div className="h-full bg-[#F59E0B] rounded-full" style={{ width: `${fatPercent}%` }} />
+            <div className="h-full bg-[#F59E0B] rounded-full" style={{ width: targetFatGrams > 0 ? `${fatPercent}%` : '0%' }} />
           </div>
           <span className="text-[8px] font-bold text-stone-400 block font-mono-num">
-            {fatRemaining > 0 ? `${fatRemaining}g left` : 'Goal reached'}
+            {targetFatGrams > 0 ? (fatRemaining > 0 ? `${fatRemaining}g left` : 'Goal reached') : '—'}
           </span>
         </div>
       </div>

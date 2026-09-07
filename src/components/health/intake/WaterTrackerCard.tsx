@@ -17,13 +17,13 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
   onAddWater,
   onRemoveWater,
 }) => {
-  const targetGlasses = Math.max(1, Math.round(targetWaterMl / GLASS_SIZE_ML));
+  const targetGlasses = targetWaterMl > 0 ? Math.max(1, Math.round(targetWaterMl / GLASS_SIZE_ML)) : 8;
   const consumedGlasses = Math.round(todaysWaterTotalMl / GLASS_SIZE_ML);
-  const waterPercent = Math.min(100, Math.round((todaysWaterTotalMl / targetWaterMl) * 100));
-  const isGoalReached = todaysWaterTotalMl >= targetWaterMl && targetWaterMl > 0;
+  const waterPercent = targetWaterMl > 0 ? Math.min(100, Math.round((todaysWaterTotalMl / targetWaterMl) * 100)) : 0;
+  const isGoalReached = targetWaterMl > 0 && todaysWaterTotalMl >= targetWaterMl;
 
   const currentLiters = (todaysWaterTotalMl / 1000).toFixed(2);
-  const targetLiters = (targetWaterMl / 1000).toFixed(2);
+  const targetLiters = targetWaterMl > 0 ? `${(targetWaterMl / 1000).toFixed(2)} L` : '—';
 
   // Handle glass tap: fill up to this glass, or remove last glass
   const handleGlassClick = (index: number) => {
@@ -63,7 +63,7 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
                 {currentLiters}
               </span>
               <span className="text-xs font-bold font-mono-num text-[#8C827A]">
-                / {targetLiters} L
+                / {targetLiters}
               </span>
             </div>
           </div>

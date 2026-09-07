@@ -109,7 +109,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
             <HelpCircle className="w-3 h-3 text-stone-400" />
           </div>
           <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
-            {bodyFatPercentage}%
+            {profile.currentWeight > 0 ? `${bodyFatPercentage}%` : '—'}
           </span>
           <span className="text-[9px] text-stone-400">Scale or formula</span>
         </button>
@@ -137,7 +137,13 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
             <HelpCircle className="w-3 h-3 text-stone-400" />
           </div>
           <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
-            {muscleMassKg} <span className="text-xs">kg</span>
+            {profile.currentWeight > 0 ? (
+              <>
+                {muscleMassKg} <span className="text-xs">kg</span>
+              </>
+            ) : (
+              '—'
+            )}
           </span>
           <span className="text-[9px] text-stone-400">Active lean tissue</span>
         </button>
@@ -165,7 +171,13 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
             <HelpCircle className="w-3 h-3 text-stone-400" />
           </div>
           <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
-            {bmr} <span className="text-xs">kcal</span>
+            {profile.currentWeight > 0 ? (
+              <>
+                {bmr} <span className="text-xs">kcal</span>
+              </>
+            ) : (
+              '—'
+            )}
           </span>
           <span className="text-[9px] text-stone-400">Resting metabolism</span>
         </button>
@@ -193,7 +205,13 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
             <HelpCircle className="w-3 h-3 text-stone-400" />
           </div>
           <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
-            {tdee} <span className="text-xs">kcal</span>
+            {profile.currentWeight > 0 ? (
+              <>
+                {tdee} <span className="text-xs">kcal</span>
+              </>
+            ) : (
+              '—'
+            )}
           </span>
           <span className="text-[9px] text-stone-400">Maintenance energy</span>
         </button>
@@ -226,7 +244,13 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
             <HelpCircle className="w-3 h-3 text-[#854D0E]" />
           </div>
           <span className="text-lg font-black font-mono-num text-[#854D0E] mt-0.5 block">
-            {targetDailyCalories} <span className="text-xs">kcal</span>
+            {profile.currentWeight > 0 ? (
+              <>
+                {targetDailyCalories} <span className="text-xs">kcal</span>
+              </>
+            ) : (
+              '—'
+            )}
           </span>
           <span className="text-[9px] font-bold text-[#A16207]">
             {profile.goal === 'lose' ? 'Cut (-400)' : profile.goal === 'gain' ? 'Bulk (+350)' : 'Maintain'}
@@ -256,7 +280,13 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
             <HelpCircle className="w-3 h-3 text-[#2D503C]" />
           </div>
           <span className="text-lg font-black font-mono-num text-[#2D503C] mt-0.5 block">
-            {targetProteinGrams} <span className="text-xs">g</span>
+            {profile.currentWeight > 0 ? (
+              <>
+                {targetProteinGrams} <span className="text-xs">g</span>
+              </>
+            ) : (
+              '—'
+            )}
           </span>
           <span className="text-[9px] font-bold text-[#3D6B52]">Muscle synthesis</span>
         </button>
@@ -283,8 +313,14 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
             <span className="text-[9px] font-bold text-[#1E3A8A] uppercase">Water Goal</span>
             <HelpCircle className="w-3 h-3 text-[#1E3A8A]" />
           </div>
-          <span className="text-lg font-black font-mono-num text-[#1E3A8A] mt-0.5 block">
-            {targetWaterMl} <span className="text-xs">ml</span>
+          <span className="text-lg font-black font-mono-num text-[#2A495E] mt-0.5 block">
+            {profile.currentWeight > 0 ? (
+              <>
+                {targetWaterMl} <span className="text-xs">ml</span>
+              </>
+            ) : (
+              '—'
+            )}
           </span>
           <span className="text-[9px] font-bold text-[#2563EB]">Intracellular water</span>
         </button>

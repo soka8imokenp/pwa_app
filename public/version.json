@@ -1,11 +1,11 @@
 {
-  "version": "1.8.88",
-  "buildNumber": 92,
+  "version": "1.8.89",
+  "buildNumber": 93,
   "releaseDate": "2026-09-07",
   "changelog": [
-    "Clarified local-only storage architecture: data is NEVER sent or synced to Google Account",
-    "Fixed Reset & Reload to clear health onboarding and prevent ghost baseline weight logs",
-    "Added automatic reload after reset to ensure completely clean database state"
+    "Fixed Health Onboarding Wizard: only appears when switching to an empty Health & Body panel, never on app launch",
+    "Clean empty states on database reset: all telemetry panels display dashes (—) instead of default 76 kg",
+    "Removed Run Guided Calibration Wizard button from Health Profile Setup modal"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.88/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.89/Daily-Sumire-app-debug.apk"
 }

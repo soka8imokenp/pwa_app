@@ -13,7 +13,9 @@ export function calculateBmi(weightKg: number, heightCm: number): number {
  * Returns the BMI category and presentation data
  */
 export function getBmiCategory(bmi: number): { category: BmiCategory; label: string; color: string } {
-  if (bmi < 18.5) {
+  if (bmi <= 0) {
+    return { category: 'normal', label: '—', color: '#6B635B' };
+  } else if (bmi < 18.5) {
     return { category: 'underweight', label: 'Underweight', color: '#60A5FA' };
   } else if (bmi <= 24.9) {
     return { category: 'normal', label: 'Normal / Healthy', color: '#3D6B52' };
@@ -52,6 +54,29 @@ export function calculateTdee(bmr: number, activityLevel: HealthProfile['activit
  */
 export function calculateComprehensiveMetrics(profile: HealthProfile): CalculatedHealthMetrics {
   const { currentWeight, height, age, gender, activityLevel, goal } = profile;
+
+  if (!currentWeight || !height || currentWeight <= 0 || height <= 0) {
+    return {
+      bmi: 0,
+      bmiCategory: 'normal',
+      bmiCategoryLabel: '—',
+      bmiColor: '#6B635B',
+      idealWeightMin: 0,
+      idealWeightMax: 0,
+      idealWeightOptimal: 0,
+      targetDailyCalories: 0,
+      targetProteinGrams: 0,
+      targetCarbsGrams: 0,
+      targetFatGrams: 0,
+      targetWaterMl: 0,
+      bmr: 0,
+      tdee: 0,
+      bodyFatPercentage: 0,
+      muscleMassKg: 0,
+      waterPercentage: 0,
+      boneMassKg: 0,
+    };
+  }
 
   const bmi = calculateBmi(currentWeight, height);
   const { category, label, color } = getBmiCategory(bmi);
@@ -236,13 +261,13 @@ export function computeProjectedGoalDate(
 export const DEFAULT_HEALTH_PROFILE: HealthProfile = {
   id: 'user',
   name: '',
-  age: 26,
+  age: 0,
   gender: 'male',
-  height: 178,
-  currentWeight: 76.5,
-  targetWeight: 72.0,
-  waistCm: 82,
+  height: 0,
+  currentWeight: 0,
+  targetWeight: 0,
+  waistCm: 0,
   activityLevel: 'moderate',
-  goal: 'lose',
-  updatedAt: Date.now(),
+  goal: 'maintain',
+  updatedAt: 0,
 };

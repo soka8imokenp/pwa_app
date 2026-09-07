@@ -1,11 +1,12 @@
 {
-  "version": "1.8.101",
-  "buildNumber": 105,
+  "version": "1.8.102",
+  "buildNumber": 106,
   "releaseDate": "2026-09-07",
   "changelog": [
-    "Removed Feed badge from Activity Log menu item",
-    "Redesigned Clear button with prominent styling, tactile icon and bold label",
-    "Added signature neo-brutalist 'Are You Sure?' popup confirmation modal"
+    "Redesigned all 8 Mascot Companions with modern Japanese aesthetic & soft pastel minimalism",
+    "Removed harsh black comic strokes in favor of harmonious shapes and gentle warm tones",
+    "Introduced Sumire Kitsune, Kuro Neko, Zen Capy, Mochi Panda, Komorebi Sprout, Tori Dawn, Tsuki Moon, and Miso Shiba",
+    "Enlarged avatar preview icons in Profile modal for crystal-clear clarity"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.101/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.102/Daily-Sumire-app-debug.apk"
 }

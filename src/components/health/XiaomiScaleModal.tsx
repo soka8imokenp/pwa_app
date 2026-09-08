@@ -474,7 +474,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                   className="w-full py-2.5 px-4 bg-[#2D503C] hover:bg-[#233F2F] text-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-black shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer font-display uppercase tracking-wider"
                 >
                   <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
-                  <span>Зафиксировать {liveWeight} кг</span>
+                  <span>Lock in {liveWeight} kg</span>
                 </button>
               )}
 
@@ -521,7 +521,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                     </span>
                   ) : (
                     <span className="text-[10px] font-bold text-[#92400E] bg-[#FEF3C7] px-1.5 py-0.5 rounded border border-[#F59E0B]/30 block mt-1">
-                      Вес зафиксирован (босиком для жира %)
+                      Weight locked (step barefoot for bio-impedance)
                     </span>
                   )}
                 </div>
@@ -538,23 +538,23 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                           {reading.metrics.bodyScore}
                         </span>
                         <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-100 mt-0.5">
-                          Баллов
+                          Score
                         </span>
                       </div>
                       <div>
                         <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-100 font-display block">
-                          Оценка тела
+                          Body Score
                         </span>
                         <h4 className="text-sm font-black font-display text-white">
-                          Телосложение: {reading.metrics.bodyType}
+                          Physique: {reading.metrics.bodyType}
                         </h4>
                       </div>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-[10px] font-bold text-white/80 block">Идеальный вес</span>
+                      <span className="text-[10px] font-bold text-white/80 block">Ideal Weight</span>
                       <span className="text-xs font-black font-mono-num text-white">
-                        ~{reading.metrics.idealWeightKg} кг
+                        ~{reading.metrics.idealWeightKg} kg
                       </span>
                     </div>
                   </div>
@@ -563,10 +563,10 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                        Показатели состава тела
+                        Body Composition Telemetry
                       </span>
                       <span className="text-[9px] font-bold text-[#059669] bg-[#ECFDF5] border border-[#059669]/30 px-2 py-0.5 rounded-full font-mono-num">
-                        10 параметров
+                        10 Parameters
                       </span>
                     </div>
 
@@ -591,7 +591,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                               )}
                             </div>
                             <span className="text-[9px] text-[#6B635B] block">
-                              Норма: {item.normRange}
+                              Target: {item.normRange}
                             </span>
                           </div>
 
@@ -639,10 +639,10 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                     handleStartScan();
                   }}
                   className="py-3 px-3.5 bg-white hover:bg-stone-100 border border-[#24201D] rounded-2xl text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold font-display uppercase tracking-wider"
-                  title="Взвеситься заново"
+                  title="Weigh In Again"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  <span className="hidden sm:inline">Взвеситься снова</span>
+                  <span className="hidden sm:inline">Weigh In Again</span>
                 </button>
               </div>
             </div>

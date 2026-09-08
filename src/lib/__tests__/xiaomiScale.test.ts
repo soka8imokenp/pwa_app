@@ -125,8 +125,8 @@ describe('xiaomiScale', () => {
     // BMI: 74.3 / (1.8^2) = 22.9
     expect(metrics.bmi).toBe(22.9);
 
-    // Body Type: standard ("Среднее")
-    expect(metrics.bodyType).toBe('Среднее');
+    // Body Type: standard ("Standard")
+    expect(metrics.bodyType).toBe('Standard');
 
     // Protein % should be in healthy range (19% - 23%)
     expect(metrics.proteinPercentage).toBeGreaterThanOrEqual(18);

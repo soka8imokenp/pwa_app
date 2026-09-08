@@ -302,10 +302,10 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-black text-[#6B635B] uppercase tracking-wider block font-display leading-none">
-                Biometrics & Body OS
+                Weight & Milestones
               </span>
               <h2 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none">
-                BMI & Weight Tracker
+                Goal & BMI Telemetry
               </h2>
             </div>
           </div>

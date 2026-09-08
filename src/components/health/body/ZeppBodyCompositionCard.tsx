@@ -49,10 +49,10 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
             </div>
             <div>
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                Состав тела (Bio-Impedance)
+                Body Composition (Bio-Impedance)
               </h3>
               <p className="text-[10px] text-[#6B635B] font-medium">
-                Анализ Zepp Life: жир, мышцы, вода, белок и оценка тела
+                Zepp Life BIA analysis: fat, muscle, water, protein & body score
               </p>
             </div>
           </div>
@@ -60,7 +60,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
 
         <div className="p-4 bg-[#FAF8F5] border border-[#24201D]/20 rounded-2xl text-center space-y-2">
           <p className="text-xs text-[#6B635B] font-medium leading-relaxed max-w-xs mx-auto">
-            Встаньте на весы босиком для полного клинического анализа состава тела (оценка тела, белок, мышцы, вода, висцеральный жир).
+            Step on the smart scale barefoot for full clinical bio-impedance analysis (body score, protein, muscle, water, visceral fat).
           </p>
           <button
             type="button"
@@ -71,7 +71,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
             className="py-2.5 px-4 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.5px] border-[#24201D] rounded-xl text-xs font-black shadow-2xs active:translate-y-0.5 transition-all inline-flex items-center gap-2 cursor-pointer font-display uppercase tracking-wider"
           >
             <Scale className="w-3.5 h-3.5" />
-            <span>Взвеситься на умных весах</span>
+            <span>Weigh in on Smart Scale</span>
           </button>
         </div>
       </div>
@@ -121,7 +121,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
         category: item.statusLabel,
         description: item.description,
         formula: item.normRange,
-        clinicalTip: `Референсный диапазон нормы: ${item.normRange}. Текущий статус: ${item.statusLabel}.`,
+        clinicalTip: `Clinical reference range: ${item.normRange}. Current status: ${item.statusLabel}.`,
       });
     }
   };
@@ -174,7 +174,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
             )}
           </div>
           <span className="text-[9px] text-[#6B635B] block">
-            Норма: {item.normRange}
+            Target: {item.normRange}
           </span>
         </div>
       </div>
@@ -205,11 +205,11 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
               </h4>
               <span className="text-[9px] text-white/80 font-medium">
                 {latestLog?.date
-                  ? new Date(latestLog.date).toLocaleDateString('ru-RU', {
+                  ? new Date(latestLog.date).toLocaleDateString('en-US', {
                       day: 'numeric',
                       month: 'short',
                     })
-                  : 'Сегодня'}
+                  : 'Today'}
               </span>
             </div>
           </div>
@@ -221,16 +221,16 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
               setIsExpanded(!isExpanded);
             }}
             className="p-1.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/30 text-white shadow-2xs active:scale-95 transition-all cursor-pointer"
-            title={isExpanded ? 'Свернуть' : 'Развернуть'}
+            title={isExpanded ? 'Collapse' : 'Expand'}
           >
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
         </div>
 
-        {/* Body Score Hero (Оценка тела: 90) */}
+        {/* Body Score Hero (Body Score: 90) */}
         <div className="text-center py-1 space-y-0.5">
           <span className="text-[11px] font-bold uppercase tracking-widest text-white/85 font-display block">
-            Оценка тела
+            Body Score
           </span>
           <div className="flex items-center justify-center">
             <span className="text-5xl font-black font-mono-num tracking-tight text-white drop-shadow-sm">
@@ -239,12 +239,12 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
           </div>
           {prevWeight !== undefined && (
             <span className="text-[10px] font-bold text-emerald-100 font-mono-num block">
-              Прогресс: {deltaSign} кг
+              Progress: {deltaSign} kg
             </span>
           )}
         </div>
 
-        {/* Twin Pill Bar: Вес & Телосложение */}
+        {/* Twin Pill Bar: Weight & Physique */}
         <div className="grid grid-cols-2 gap-2 pt-1">
           <div className="p-2.5 bg-black/15 backdrop-blur-xs border border-white/25 rounded-2xl flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-white shrink-0">
@@ -255,10 +255,10 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                 <span className="text-base font-black font-mono-num text-white leading-none">
                   {currentWeight.toFixed(2).replace('.', ',')}
                 </span>
-                <span className="text-[10px] font-bold text-white/80">кг</span>
+                <span className="text-[10px] font-bold text-white/80">kg</span>
               </div>
               <span className="text-[9px] font-bold text-white/70 uppercase font-display block mt-0.5">
-                Вес
+                Weight
               </span>
             </div>
           </div>
@@ -272,7 +272,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                 {metrics.bodyType}
               </span>
               <span className="text-[9px] font-bold text-white/70 uppercase font-display block mt-0.5">
-                Телосложение
+                Physique
               </span>
             </div>
           </div>
@@ -282,7 +282,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
       {/* Accordion Content Body */}
       {isExpanded && (
         <div className="p-4 bg-[#FAF8F5] space-y-4">
-          {/* Section 1: Элементы не достигшие цели (Red / Rose) */}
+          {/* Section 1: Items below target (Red / Rose) */}
           {notReachedItems.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#B91C1C]">
@@ -290,8 +290,8 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                 <span>
                   {notReachedItems.length}{' '}
                   {notReachedItems.length === 1
-                    ? 'элемент не достиг цели'
-                    : 'элементов не достигли цели'}
+                    ? 'item below target'
+                    : 'items below target'}
                 </span>
               </div>
               <div className="space-y-1.5">
@@ -300,7 +300,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
             </div>
           )}
 
-          {/* Section 2: Элементы, нуждающиеся в вашем внимании (Amber / Yellow) */}
+          {/* Section 2: Items needing attention (Amber / Yellow) */}
           {attentionItems.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#B45309]">
@@ -308,8 +308,8 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                 <span>
                   {attentionItems.length}{' '}
                   {attentionItems.length === 1
-                    ? 'элемент нуждается в вашем внимании'
-                    : 'элементов нуждаются в вашем внимании'}
+                    ? 'item needs attention'
+                    : 'items need attention'}
                 </span>
               </div>
               <div className="space-y-1.5">
@@ -318,18 +318,16 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
             </div>
           )}
 
-          {/* Section 3: Достигнутые цели (Emerald / Green) */}
+          {/* Section 3: Goals achieved (Emerald / Green) */}
           {achievedItems.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#065F46]">
                 <div className="w-2 h-2 rounded-full bg-[#10B981]" />
                 <span>
-                  Достигнуто {achievedItems.length}{' '}
+                  {achievedItems.length}{' '}
                   {achievedItems.length === 1
-                    ? 'цель'
-                    : achievedItems.length >= 2 && achievedItems.length <= 4
-                    ? 'цели'
-                    : 'целей'}
+                    ? 'goal achieved'
+                    : 'goals achieved'}
                 </span>
               </div>
               <div className="space-y-1.5">
@@ -341,7 +339,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
           {/* Footer Sync Button */}
           <div className="pt-1 flex items-center justify-between text-[10px] text-[#6B635B]">
             <span className="font-medium">
-              Алгоритм клинического BIA (Zepp Life / openScale)
+              Clinical BIA Telemetry (openScale & Zepp)
             </span>
             <button
               type="button"
@@ -352,7 +350,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
               className="text-[#059669] hover:underline font-bold cursor-pointer inline-flex items-center gap-1"
             >
               <Scale className="w-3 h-3" />
-              <span>Новый замер</span>
+              <span>New Weigh-In</span>
             </button>
           </div>
         </div>

@@ -16,10 +16,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
   onSelectMetric,
 }) => {
   const {
-    bmr,
     tdee,
-    bodyFatPercentage,
-    muscleMassKg,
     targetWaterMl,
     targetDailyCalories,
     targetProteinGrams,
@@ -27,21 +24,36 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
     waistRiskCategory,
   } = metrics;
 
+  const deficitSurplusKcal =
+    profile.goal === 'lose' ? -400 : profile.goal === 'gain' ? 350 : 0;
+  const energyBalanceValue =
+    deficitSurplusKcal < 0
+      ? `${deficitSurplusKcal} kcal`
+      : deficitSurplusKcal > 0
+      ? `+${deficitSurplusKcal} kcal`
+      : '±0 kcal';
+  const energyBalanceLabel =
+    profile.goal === 'lose'
+      ? 'Caloric Deficit'
+      : profile.goal === 'gain'
+      ? 'Caloric Surplus'
+      : 'Energy Balance';
+
   return (
-    <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
+    <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3 font-body">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
-            Metabolic Rate & Body Composition
+            Daily Energy & Nutrition Targets
           </h3>
-          <span className="text-[9px] text-stone-400 font-bold block">
-            Tap any metric to view clinical science & recommendations
+          <span className="text-[9px] text-stone-400 font-bold block mt-0.5">
+            Prescribed targets based on your metabolic expenditure & goal
           </span>
         </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-        {/* Waist-to-Height Ratio (WHtR) */}
+        {/* 1. Waist-to-Height Ratio (WHtR) */}
         <button
           type="button"
           onClick={() => {
@@ -60,14 +72,14 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
           className="p-2.5 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-[#6B635B] uppercase">WHtR Ratio</span>
+            <span className="text-[9px] font-bold text-[#6B635B] uppercase font-display">WHtR Ratio</span>
             <HelpCircle className="w-3 h-3 text-stone-400" />
           </div>
           <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
             {waistToHeightRatio ?? '—'}
           </span>
           <span
-            className={`text-[9px] font-bold ${
+            className={`text-[9px] font-bold block truncate ${
               waistToHeightRatio && waistToHeightRatio < 0.5 ? 'text-[#3D6B52]' : 'text-[#DC2626]'
             }`}
           >
@@ -75,114 +87,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
           </span>
         </button>
 
-        {/* Body Fat % */}
-        <button
-          type="button"
-          onClick={() => {
-            playClickSound();
-            onSelectMetric({
-              title: 'Body Fat Percentage',
-              value: `${bodyFatPercentage}%`,
-              category:
-                profile.gender === 'male'
-                  ? bodyFatPercentage < 15
-                    ? 'Athletic'
-                    : bodyFatPercentage <= 20
-                    ? 'Fitness'
-                    : 'Acceptable'
-                  : bodyFatPercentage < 22
-                  ? 'Athletic'
-                  : bodyFatPercentage <= 28
-                  ? 'Fitness'
-                  : 'Acceptable',
-              description:
-                'Estimated total adipose tissue mass relative to total body weight. Can be updated directly from smart bioimpedance scales or calculated via Deurenberg adult formula.',
-              formula: 'Deurenberg: 1.20 × BMI + 0.23 × Age - 10.8 × Sex - 5.4',
-              clinicalTip:
-                'Optimal range for longevity: 12-18% for men, 18-24% for women. Avoid rapid crashes below 8% (men) or 14% (women) to preserve hormonal health.',
-            });
-          }}
-          className="p-2.5 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-[#6B635B] uppercase">Body Fat %</span>
-            <HelpCircle className="w-3 h-3 text-stone-400" />
-          </div>
-          <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
-            {profile.currentWeight > 0 ? `${bodyFatPercentage}%` : '—'}
-          </span>
-          <span className="text-[9px] text-stone-400">Scale or formula</span>
-        </button>
-
-        {/* Muscle Mass */}
-        <button
-          type="button"
-          onClick={() => {
-            playClickSound();
-            onSelectMetric({
-              title: 'Lean Muscle & Tissue Mass',
-              value: `${muscleMassKg} kg`,
-              category: 'Metabolic Engine',
-              description:
-                'Lean body mass represents all non-fat tissues: skeletal muscle, organs, bone, and intracellular water. Muscle is your primary glucose sink and metabolic engine.',
-              formula: 'Total Body Weight × (1 - Body Fat% ÷ 100)',
-              clinicalTip:
-                'Consume at least 1.6–2.2g of protein per kg of body weight during calorie restriction to safeguard lean tissue against catabolism.',
-            });
-          }}
-          className="p-2.5 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-[#6B635B] uppercase">Lean Mass</span>
-            <HelpCircle className="w-3 h-3 text-stone-400" />
-          </div>
-          <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
-            {profile.currentWeight > 0 ? (
-              <>
-                {muscleMassKg} <span className="text-xs">kg</span>
-              </>
-            ) : (
-              '—'
-            )}
-          </span>
-          <span className="text-[9px] text-stone-400">Active lean tissue</span>
-        </button>
-
-        {/* Basal BMR */}
-        <button
-          type="button"
-          onClick={() => {
-            playClickSound();
-            onSelectMetric({
-              title: 'Basal Metabolic Rate (BMR)',
-              value: `${bmr} kcal`,
-              category: 'Mifflin-St Jeor Formula',
-              description:
-                'The baseline energy your body expends completely at rest just to maintain vital physiological processes: breathing, heart contractions, cellular repair, and brain activity.',
-              formula: 'Mifflin-St Jeor: 10 × weight(kg) + 6.25 × height(cm) - 5 × age + s',
-              clinicalTip:
-                'Never consume less than your BMR for extended periods. Chronic sub-BMR diets cause hormonal downregulation, thyroid slowing, and metabolic adaptation.',
-            });
-          }}
-          className="p-2.5 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-[#6B635B] uppercase">BMR (Basal)</span>
-            <HelpCircle className="w-3 h-3 text-stone-400" />
-          </div>
-          <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
-            {profile.currentWeight > 0 ? (
-              <>
-                {bmr} <span className="text-xs">kcal</span>
-              </>
-            ) : (
-              '—'
-            )}
-          </span>
-          <span className="text-[9px] text-stone-400">Resting metabolism</span>
-        </button>
-
-        {/* Maintenance TDEE */}
+        {/* 2. Total Daily Energy Expenditure (TDEE) */}
         <button
           type="button"
           onClick={() => {
@@ -201,7 +106,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
           className="p-2.5 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-[#6B635B] uppercase">TDEE Total</span>
+            <span className="text-[9px] font-bold text-[#6B635B] uppercase font-display">TDEE Total</span>
             <HelpCircle className="w-3 h-3 text-stone-400" />
           </div>
           <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
@@ -213,10 +118,10 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
               '—'
             )}
           </span>
-          <span className="text-[9px] text-stone-400">Maintenance energy</span>
+          <span className="text-[9px] text-stone-400 font-medium block truncate">Maintenance energy</span>
         </button>
 
-        {/* Target Daily Intake */}
+        {/* 3. Target Daily Caloric Intake */}
         <button
           type="button"
           onClick={() => {
@@ -240,7 +145,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
           className="p-2.5 bg-[#FBECCF] hover:bg-[#F7E3DC] border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-[#854D0E] uppercase">Target Kcal</span>
+            <span className="text-[9px] font-bold text-[#854D0E] uppercase font-display">Target Intake</span>
             <HelpCircle className="w-3 h-3 text-[#854D0E]" />
           </div>
           <span className="text-lg font-black font-mono-num text-[#854D0E] mt-0.5 block">
@@ -252,12 +157,54 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
               '—'
             )}
           </span>
-          <span className="text-[9px] font-bold text-[#A16207]">
-            {profile.goal === 'lose' ? 'Cut (-400)' : profile.goal === 'gain' ? 'Bulk (+350)' : 'Maintain'}
+          <span className="text-[9px] font-bold text-[#A16207] block truncate">
+            {profile.goal === 'lose' ? 'Cut (-400)' : profile.goal === 'gain' ? 'Bulk (+350)' : 'Maintain (0)'}
           </span>
         </button>
 
-        {/* Daily Protein Target */}
+        {/* 4. Energy Balance Delta */}
+        <button
+          type="button"
+          onClick={() => {
+            playClickSound();
+            onSelectMetric({
+              title: 'Prescribed Energy Balance Delta',
+              value: energyBalanceValue,
+              category: energyBalanceLabel,
+              description:
+                profile.goal === 'lose'
+                  ? 'A moderate 400 kcal daily caloric deficit creates a negative energy balance of ~2,800 kcal per week, translating into approximately 0.4 kg of sustainable fat loss per week without provoking metabolic adaptation.'
+                  : profile.goal === 'gain'
+                  ? 'A controlled 350 kcal daily surplus provides sufficient energy to drive myofibrillar protein synthesis and muscle hypertrophy while minimizing unwanted adipose tissue gain.'
+                  : 'A neutral energy balance maintains your current body weight while supporting physical performance and metabolic homeostasis.',
+              formula: 'Target Calories - Maintenance TDEE',
+              clinicalTip:
+                'Consistent energy deficits/surpluses require accurate food logging. Track intake for 2 weeks to calibrate against true body weight change.',
+            });
+          }}
+          className="p-2.5 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] font-bold text-[#6B635B] uppercase font-display">Energy Delta</span>
+            <HelpCircle className="w-3 h-3 text-stone-400" />
+          </div>
+          <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
+            {profile.currentWeight > 0 ? energyBalanceValue : '—'}
+          </span>
+          <span
+            className={`text-[9px] font-bold block truncate ${
+              profile.goal === 'lose'
+                ? 'text-[#2563EB]'
+                : profile.goal === 'gain'
+                ? 'text-[#D97706]'
+                : 'text-[#059669]'
+            }`}
+          >
+            {energyBalanceLabel}
+          </span>
+        </button>
+
+        {/* 5. Daily Protein Target */}
         <button
           type="button"
           onClick={() => {
@@ -276,7 +223,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
           className="p-2.5 bg-[#DDE8DE] hover:bg-[#C9DCCB] border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-[#2D503C] uppercase">Protein Goal</span>
+            <span className="text-[9px] font-bold text-[#2D503C] uppercase font-display">Protein Goal</span>
             <HelpCircle className="w-3 h-3 text-[#2D503C]" />
           </div>
           <span className="text-lg font-black font-mono-num text-[#2D503C] mt-0.5 block">
@@ -288,10 +235,10 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
               '—'
             )}
           </span>
-          <span className="text-[9px] font-bold text-[#3D6B52]">Muscle synthesis</span>
+          <span className="text-[9px] font-bold text-[#3D6B52] block truncate">Muscle synthesis</span>
         </button>
 
-        {/* Hydration Target */}
+        {/* 6. Hydration Target */}
         <button
           type="button"
           onClick={() => {
@@ -310,7 +257,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
           className="p-2.5 bg-[#DEE8EF] hover:bg-[#CADBE6] border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-[#1E3A8A] uppercase">Water Goal</span>
+            <span className="text-[9px] font-bold text-[#1E3A8A] uppercase font-display">Water Goal</span>
             <HelpCircle className="w-3 h-3 text-[#1E3A8A]" />
           </div>
           <span className="text-lg font-black font-mono-num text-[#2A495E] mt-0.5 block">
@@ -322,7 +269,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
               '—'
             )}
           </span>
-          <span className="text-[9px] font-bold text-[#2563EB]">Intracellular water</span>
+          <span className="text-[9px] font-bold text-[#2563EB] block truncate">Intracellular water</span>
         </button>
       </div>
     </div>

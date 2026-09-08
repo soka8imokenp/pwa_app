@@ -14,7 +14,7 @@ export interface ZeppMetricItem {
   value: number;
   valueFormatted: string;
   unit: string;
-  statusLabel: string; // e.g. 'В пределах нормы', 'Хорошо', 'Нормальный', 'Цели не достигнуты'
+  statusLabel: string; // e.g. 'Normal Range', 'Optimal', 'Below Target'
   statusType: ZeppMetricStatusType;
   group: ZeppMetricGroup;
   normRange: string;
@@ -34,7 +34,7 @@ export interface XiaomiBiometricMetrics {
   proteinPercentage: number;
   idealWeightKg: number;
   bodyScore: number; // 0 - 100
-  bodyType: string; // e.g. 'Среднее', 'Мускулистое'
+  bodyType: string; // e.g. 'Standard', 'Athletic', 'Muscular'
   bodyTypeCode: string;
   items: ZeppMetricItem[];
 }
@@ -134,7 +134,7 @@ export function calculateXiaomiBiometrics(
   const bodyAge = Math.max(18, Math.min(85, Math.round(safeAge + fatDelta * 0.45)));
 
   // 12. Body Type (9-box Somatotype Matrix matching Zepp Life)
-  let bodyType = 'Среднее';
+  let bodyType = 'Standard';
   let bodyTypeCode = 'standard';
 
   const fatLowThreshold = isMale ? 14 : 21;
@@ -142,35 +142,35 @@ export function calculateXiaomiBiometrics(
 
   if (bmi < 18.5) {
     if (bodyFat < fatLowThreshold) {
-      bodyType = 'Худощавое';
+      bodyType = 'Skinny';
       bodyTypeCode = 'skinny';
     } else if (bodyFat <= fatHighThreshold) {
-      bodyType = 'Стройное';
+      bodyType = 'Balanced Skinny';
       bodyTypeCode = 'balanced_skinny';
     } else {
-      bodyType = 'Скрытая полнота';
+      bodyType = 'Skinny Fat';
       bodyTypeCode = 'skinny_fat';
     }
   } else if (bmi <= 24.9) {
     if (bodyFat < fatLowThreshold) {
-      bodyType = 'Спортивное';
+      bodyType = 'Athletic';
       bodyTypeCode = 'skinny_muscle';
     } else if (bodyFat <= fatHighThreshold) {
-      bodyType = 'Среднее';
+      bodyType = 'Standard';
       bodyTypeCode = 'standard';
     } else {
-      bodyType = 'Недостаток движения';
+      bodyType = 'Sedentary';
       bodyTypeCode = 'lack_exercise';
     }
   } else {
     if (bodyFat < fatLowThreshold) {
-      bodyType = 'Мускулистое';
+      bodyType = 'Muscular';
       bodyTypeCode = 'standard_muscle';
     } else if (bodyFat <= fatHighThreshold) {
-      bodyType = 'Плотное';
+      bodyType = 'Thick-set';
       bodyTypeCode = 'thick_set';
     } else {
-      bodyType = 'Ожирение';
+      bodyType = 'Obese';
       bodyTypeCode = 'obese';
     }
   }
@@ -187,15 +187,15 @@ export function calculateXiaomiBiometrics(
   const isBmrLow = bmr < expectedBmr - 40;
   items.push({
     id: 'bmr',
-    title: 'Основной обмен',
+    title: 'Basal Metabolic Rate (BMR)',
     value: bmr,
-    valueFormatted: bmr.toLocaleString('ru-RU'),
-    unit: 'ккал',
-    statusLabel: isBmrLow ? 'Цели не достигнуты' : 'В пределах нормы',
+    valueFormatted: bmr.toLocaleString('en-US'),
+    unit: 'kcal',
+    statusLabel: isBmrLow ? 'Below Target' : 'Normal',
     statusType: isBmrLow ? 'alert' : 'optimal',
     group: isBmrLow ? 'not_reached' : 'achieved',
-    normRange: `≥ ${expectedBmr.toLocaleString('ru-RU')} ккал`,
-    description: 'Базовый расход калорий организма в состоянии полного покоя для поддержания дыхания и работы органов.',
+    normRange: `≥ ${expectedBmr.toLocaleString('en-US')} kcal`,
+    description: 'Minimum daily calories required by your body to sustain vital biological functions at complete rest.',
   });
 
   // Visceral Fat (1-9 normal, 9 is on the upper edge -> flagged for attention in Zepp Life!):
@@ -203,15 +203,15 @@ export function calculateXiaomiBiometrics(
   const isVisceralBorderline = visceral === 9;
   items.push({
     id: 'visceral',
-    title: 'Висцеральный жир',
+    title: 'Visceral Fat',
     value: visceral,
     valueFormatted: String(visceral),
-    unit: '',
-    statusLabel: isVisceralHigh ? 'Высокий' : 'В пределах нормы',
+    unit: 'Level',
+    statusLabel: isVisceralHigh ? 'High' : isVisceralBorderline ? 'Normal Range' : 'Normal Range',
     statusType: isVisceralHigh ? 'alert' : isVisceralBorderline ? 'attention' : 'optimal',
     group: isVisceralHigh ? 'not_reached' : isVisceralBorderline ? 'attention' : 'achieved',
     normRange: '1 - 9',
-    description: 'Глубинный жир вокруг внутренних органов брюшной полости. Норма — до 9 единиц.',
+    description: 'Deep adipose tissue surrounding abdominal organs. Safe healthy range is between level 1 and 9.',
   });
 
   // BMI:
@@ -219,15 +219,15 @@ export function calculateXiaomiBiometrics(
   const isBmiAttention = bmi > 24.0 && bmi <= 25.5;
   items.push({
     id: 'bmi',
-    title: 'ИМТ',
+    title: 'BMI',
     value: bmi,
-    valueFormatted: String(bmi).replace('.', ','),
+    valueFormatted: String(bmi),
     unit: '',
-    statusLabel: isBmiNormal ? 'Нормальный' : bmi < 18.5 ? 'Недостаточный' : 'Избыточный',
+    statusLabel: isBmiNormal ? 'Normal' : bmi < 18.5 ? 'Underweight' : 'Overweight',
     statusType: isBmiNormal ? 'optimal' : isBmiAttention ? 'attention' : 'alert',
     group: isBmiNormal ? 'achieved' : isBmiAttention ? 'attention' : 'not_reached',
-    normRange: '18,5 - 24,9',
-    description: 'Индекс массы тела по стандартам Всемирной организации здравоохранения.',
+    normRange: '18.5 - 24.9',
+    description: 'Body Mass Index: clinical ratio of body mass to height defined by the World Health Organization.',
   });
 
   // Body Fat:
@@ -235,15 +235,15 @@ export function calculateXiaomiBiometrics(
   const isFatBorderline = bodyFat > (isMale ? 21 : 28) && bodyFat <= (isMale ? 24 : 31);
   items.push({
     id: 'bodyFat',
-    title: 'Жир',
+    title: 'Body Fat',
     value: bodyFat,
-    valueFormatted: `${String(bodyFat).replace('.', ',')} %`,
+    valueFormatted: `${String(bodyFat)} %`,
     unit: '%',
-    statusLabel: isFatOptimal || isFatBorderline ? 'В пределах нормы' : bodyFat < (isMale ? 10 : 18) ? 'Низкий' : 'Избыток',
+    statusLabel: isFatOptimal || isFatBorderline ? 'Normal Range' : bodyFat < (isMale ? 10 : 18) ? 'Low' : 'High',
     statusType: isFatOptimal ? 'optimal' : isFatBorderline ? 'attention' : 'alert',
     group: isFatOptimal ? 'achieved' : isFatBorderline ? 'attention' : 'not_reached',
-    normRange: isMale ? '10,0 - 20,0 %' : '18,0 - 28,0 %',
-    description: 'Доля жировой ткани в организме от общего веса.',
+    normRange: isMale ? '10.0 - 20.0 %' : '18.0 - 28.0 %',
+    description: 'Percentage of total body weight composed of adipose fat tissue.',
   });
 
   // Muscle Mass:
@@ -251,45 +251,45 @@ export function calculateXiaomiBiometrics(
   const isMuscleGood = muscle >= minMuscle;
   items.push({
     id: 'muscle',
-    title: 'Мышцы',
+    title: 'Muscle Mass',
     value: muscle,
-    valueFormatted: `${String(muscle).replace('.', ',')} кг`,
-    unit: 'кг',
-    statusLabel: isMuscleGood ? 'В пределах нормы' : 'Недостаточно',
+    valueFormatted: `${String(muscle)} kg`,
+    unit: 'kg',
+    statusLabel: isMuscleGood ? 'Normal Range' : 'Below Target',
     statusType: isMuscleGood ? 'optimal' : 'alert',
     group: isMuscleGood ? 'achieved' : 'not_reached',
-    normRange: `≥ ${minMuscle.toFixed(1)} кг`,
-    description: 'Общая масса мышечной ткани, участвующей в активном метаболизме.',
+    normRange: `≥ ${minMuscle.toFixed(1)} kg`,
+    description: 'Total active muscle tissue weight contributing directly to basal energy expenditure.',
   });
 
   // Water:
   const isWaterNormal = water >= 50.0 && water <= 65.0;
   items.push({
     id: 'water',
-    title: 'Вода',
+    title: 'Body Water',
     value: water,
-    valueFormatted: `${String(water).replace('.', ',')} %`,
+    valueFormatted: `${String(water)} %`,
     unit: '%',
-    statusLabel: isWaterNormal ? 'Нормальный' : water < 50 ? 'Недостаточно' : 'Высокий',
+    statusLabel: isWaterNormal ? 'Normal' : water < 50 ? 'Below Target' : 'High',
     statusType: isWaterNormal ? 'optimal' : 'attention',
     group: isWaterNormal ? 'achieved' : 'attention',
-    normRange: '50,0 - 65,0 %',
-    description: 'Общее содержание жидкости в клетках и тканях организма.',
+    normRange: '50.0 - 65.0 %',
+    description: 'Intracellular and extracellular hydration percentage across body tissues.',
   });
 
   // Protein:
   const isProteinGood = protein >= (isMale ? 16.0 : 15.0);
   items.push({
     id: 'protein',
-    title: 'Белок',
+    title: 'Protein',
     value: protein,
-    valueFormatted: `${String(protein).replace('.', ',')} %`,
+    valueFormatted: `${String(protein)} %`,
     unit: '%',
-    statusLabel: isProteinGood ? 'Хорошо' : 'Недостаточно',
+    statusLabel: isProteinGood ? 'Optimal' : 'Below Target',
     statusType: isProteinGood ? 'optimal' : 'alert',
     group: isProteinGood ? 'achieved' : 'not_reached',
-    normRange: isMale ? '16,0 - 22,0 %' : '15,0 - 21,0 %',
-    description: 'Процент белковых соединений. Основной строительный компонент мышц и органов.',
+    normRange: isMale ? '16.0 - 22.0 %' : '15.0 - 21.0 %',
+    description: 'Proportion of protein structures in cellular tissues, organs, and skeletal muscle.',
   });
 
   // Bone Mass:
@@ -299,18 +299,18 @@ export function calculateXiaomiBiometrics(
   const isBoneNormal = bone >= expectedBoneMin - 0.2;
   items.push({
     id: 'bone',
-    title: 'Костная масса',
+    title: 'Bone Mass',
     value: bone,
-    valueFormatted: `${String(bone).replace('.', ',')} кг`,
-    unit: 'кг',
-    statusLabel: isBoneNormal ? 'Нормальная' : 'Недостаточная',
+    valueFormatted: `${String(bone)} kg`,
+    unit: 'kg',
+    statusLabel: isBoneNormal ? 'Normal' : 'Needs Attention',
     statusType: isBoneNormal ? 'optimal' : 'attention',
     group: isBoneNormal ? 'achieved' : 'attention',
-    normRange: `≥ ${expectedBoneMin.toFixed(2)} кг`,
-    description: 'Минеральная плотность и вес костной структуры скелета.',
+    normRange: `≥ ${expectedBoneMin.toFixed(2)} kg`,
+    description: 'Mineral density and structural weight of bone matrix (calcium and phosphorus).',
   });
 
-  // 14. Composite Body Score (Оценка тела: 0 - 100)
+  // 14. Composite Body Score (Body Score: 0 - 100)
   let score = 100;
   if (isBmrLow) score -= 6;
   if (isVisceralHigh) score -= 8;

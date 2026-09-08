@@ -1,14 +1,13 @@
 {
-  "version": "1.8.107",
-  "buildNumber": 111,
+  "version": "1.8.108",
+  "buildNumber": 112,
   "releaseDate": "2026-09-08",
   "changelog": [
-    "Removed all sparkle icons and BIA tags across health panels",
-    "Cleaned filter buttons by removing numerical counts (All, Achieved, Attention, Below Target)",
-    "Removed openScale/Zepp citations and redundant footer action",
-    "Signature Bento Hero redesign for Body Health Score with dynamic status pill and clean gauge track",
-    "Ultra-compact, space-efficient metric rows with unique status capsules and micro-icons",
-    "Refined Clinical Science inspection modal with spectrum gauge and evidence-based guidance"
+    "Redesigned Zepp Body Composition card with structured 2-line metric rows preventing text truncation",
+    "Ultra-compact status capsules (Low, Normal, Check, Optimal, High) saving 50%+ horizontal width",
+    "Fixed duplicate metric units bug (% % and kg kg)",
+    "Upgraded Clinical Telemetry & Energy Matrix (BiometricsGrid) with rich Bento cards and pastel palettes",
+    "Enhanced Body Health Score Bento Hero with stepped 3-zone telemetry gauge and 8-pip resilience strip"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.107/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.108/Daily-Sumire-app-debug.apk"
 }

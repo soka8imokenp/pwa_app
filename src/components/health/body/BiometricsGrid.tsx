@@ -1,5 +1,16 @@
 import React from 'react';
-import { HelpCircle } from 'lucide-react';
+import {
+  Activity,
+  Flame,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Dumbbell,
+  Droplets,
+  ChevronRight,
+  ShieldCheck,
+  ShieldAlert,
+} from 'lucide-react';
 import { playClickSound } from '../../../lib/sound';
 import type { HealthProfile, CalculatedHealthMetrics } from '../../../types/health';
 import type { MetricDetailModalInfo } from './MetricDetailModal';
@@ -39,19 +50,32 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
       ? 'Caloric Surplus'
       : 'Energy Balance';
 
+  const isWhtrOptimal = waistToHeightRatio ? waistToHeightRatio < 0.5 : false;
+
   return (
-    <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3 font-body select-none">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
-            Daily Energy & Nutrition Targets
-          </h3>
-          <span className="text-[9px] text-stone-400 font-bold block mt-0.5">
-            Prescribed targets based on your metabolic expenditure & goal
-          </span>
+    <div className="p-4 sm:p-5 bg-white border-[1.75px] border-[#24201D] rounded-3xl shadow-[3px_3px_0px_#24201D] space-y-3.5 font-body select-none">
+      {/* Section Header */}
+      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#24201D]/15">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center text-[#2D503C] shadow-2xs shrink-0">
+            <Activity className="w-4 h-4 stroke-[2.5]" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#6B635B] font-display block leading-none">
+              Clinical Telemetry Matrix
+            </span>
+            <h3 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none truncate">
+              Daily Energy & Metabolic Targets
+            </h3>
+          </div>
+        </div>
+
+        <div className="px-2 py-0.5 rounded-full bg-[#FAF8F5] border border-[#24201D]/20 text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display shadow-2xs shrink-0">
+          WHO / NICE
         </div>
       </div>
 
+      {/* 6 High-Contrast Bento Telemetry Pods */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
         {/* 1. Waist-to-Height Ratio (WHtR) */}
         <button
@@ -62,8 +86,8 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
               title: 'Waist-to-Height Ratio (WHtR)',
               value: waistToHeightRatio ? String(waistToHeightRatio) : 'N/A',
               category: waistRiskCategory || 'Enter waist in Profile',
-              statusType: waistToHeightRatio && waistToHeightRatio < 0.5 ? 'optimal' : 'alert',
-              statusLabel: waistRiskCategory || 'Set in profile',
+              statusType: isWhtrOptimal ? 'optimal' : 'alert',
+              statusLabel: isWhtrOptimal ? 'Safe (<0.50)' : waistRiskCategory || 'Attention',
               normRange: '< 0.50 Ratio',
               numericValue: waistToHeightRatio,
               metricId: 'whtr',
@@ -74,22 +98,31 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
                 'Keep your waist circumference under half your height (WHtR < 0.50) to minimize metabolic syndrome and visceral adiposity risk.',
             });
           }}
-          className="p-2.5 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
+          className="p-3 bg-[#F0FDF4] hover:bg-[#DCFCE7] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] text-left cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#24201D] group flex flex-col justify-between space-y-2"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-[#6B635B] uppercase font-display">WHtR Ratio</span>
-            <HelpCircle className="w-3 h-3 text-stone-400" />
+          <div className="flex items-center justify-between gap-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <div className="w-6 h-6 rounded-lg bg-white border border-[#24201D]/20 flex items-center justify-center text-[#16A34A] shrink-0 shadow-2xs">
+                {isWhtrOptimal ? <ShieldCheck className="w-3.5 h-3.5" /> : <ShieldAlert className="w-3.5 h-3.5" />}
+              </div>
+              <span className="text-[10px] font-black text-[#15803D] uppercase tracking-wider font-display truncate">
+                WHtR Ratio
+              </span>
+            </div>
+            <ChevronRight className="w-3 h-3 text-[#15803D]/60 group-hover:text-[#15803D] transition-colors shrink-0" />
           </div>
-          <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
-            {waistToHeightRatio ?? '—'}
-          </span>
-          <span
-            className={`text-[9px] font-bold block truncate ${
-              waistToHeightRatio && waistToHeightRatio < 0.5 ? 'text-[#3D6B52]' : 'text-[#DC2626]'
-            }`}
-          >
-            {waistRiskCategory || 'Set in profile'}
-          </span>
+
+          <div>
+            <span className="text-lg sm:text-xl font-black font-mono-num text-[#24201D] leading-none block">
+              {waistToHeightRatio ?? '—'}
+            </span>
+          </div>
+
+          <div className="pt-1 border-t border-[#15803D]/20 flex items-center justify-between text-[9px] font-bold">
+            <span className={isWhtrOptimal ? 'text-[#15803D]' : 'text-[#DC2626]'}>
+              {isWhtrOptimal ? '● Safe (< 0.50)' : waistRiskCategory || 'Set in profile'}
+            </span>
+          </div>
         </button>
 
         {/* 2. Total Daily Energy Expenditure (TDEE) */}
@@ -113,22 +146,35 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
                 'To maintain steady weight, your average caloric intake should match this TDEE number. For sustainable fat loss, stay 300–500 kcal below TDEE.',
             });
           }}
-          className="p-2.5 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
+          className="p-3 bg-[#FFFBEB] hover:bg-[#FEF3C7] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] text-left cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#24201D] group flex flex-col justify-between space-y-2"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-[#6B635B] uppercase font-display">TDEE Total</span>
-            <HelpCircle className="w-3 h-3 text-stone-400" />
+          <div className="flex items-center justify-between gap-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <div className="w-6 h-6 rounded-lg bg-white border border-[#24201D]/20 flex items-center justify-center text-[#D97706] shrink-0 shadow-2xs">
+                <Flame className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-[10px] font-black text-[#B45309] uppercase tracking-wider font-display truncate">
+                TDEE Total
+              </span>
+            </div>
+            <ChevronRight className="w-3 h-3 text-[#B45309]/60 group-hover:text-[#B45309] transition-colors shrink-0" />
           </div>
-          <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
-            {profile.currentWeight > 0 ? (
-              <>
-                {tdee} <span className="text-xs">kcal</span>
-              </>
-            ) : (
-              '—'
-            )}
-          </span>
-          <span className="text-[9px] text-stone-400 font-medium block truncate">Maintenance energy</span>
+
+          <div>
+            <span className="text-lg sm:text-xl font-black font-mono-num text-[#24201D] leading-none block">
+              {profile.currentWeight > 0 ? (
+                <>
+                  {tdee} <span className="text-[10px] font-bold text-[#6B635B] font-display uppercase">kcal</span>
+                </>
+              ) : (
+                '—'
+              )}
+            </span>
+          </div>
+
+          <div className="pt-1 border-t border-[#B45309]/20 flex items-center justify-between text-[9px] font-bold text-[#92400E]">
+            <span>Maintenance Burn</span>
+          </div>
         </button>
 
         {/* 3. Target Daily Caloric Intake */}
@@ -157,24 +203,35 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
                 'Adherence beats perfection: eating within ±100 kcal of this target 80% of the time guarantees body recomposition results.',
             });
           }}
-          className="p-2.5 bg-[#FBECCF] hover:bg-[#F7E3DC] border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
+          className="p-3 bg-[#FBECCF] hover:bg-[#F7E3DC] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] text-left cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#24201D] group flex flex-col justify-between space-y-2"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-[#854D0E] uppercase font-display">Target Intake</span>
-            <HelpCircle className="w-3 h-3 text-[#854D0E]" />
+          <div className="flex items-center justify-between gap-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <div className="w-6 h-6 rounded-lg bg-white border border-[#24201D]/20 flex items-center justify-center text-[#854D0E] shrink-0 shadow-2xs">
+                <Target className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-[10px] font-black text-[#854D0E] uppercase tracking-wider font-display truncate">
+                Target Intake
+              </span>
+            </div>
+            <ChevronRight className="w-3 h-3 text-[#854D0E]/60 group-hover:text-[#854D0E] transition-colors shrink-0" />
           </div>
-          <span className="text-lg font-black font-mono-num text-[#854D0E] mt-0.5 block">
-            {profile.currentWeight > 0 ? (
-              <>
-                {targetDailyCalories} <span className="text-xs">kcal</span>
-              </>
-            ) : (
-              '—'
-            )}
-          </span>
-          <span className="text-[9px] font-bold text-[#A16207] block truncate">
-            {profile.goal === 'lose' ? 'Cut (-400)' : profile.goal === 'gain' ? 'Bulk (+350)' : 'Maintain (0)'}
-          </span>
+
+          <div>
+            <span className="text-lg sm:text-xl font-black font-mono-num text-[#854D0E] leading-none block">
+              {profile.currentWeight > 0 ? (
+                <>
+                  {targetDailyCalories} <span className="text-[10px] font-bold text-[#854D0E]/80 font-display uppercase">kcal</span>
+                </>
+              ) : (
+                '—'
+              )}
+            </span>
+          </div>
+
+          <div className="pt-1 border-t border-[#854D0E]/20 flex items-center justify-between text-[9px] font-bold text-[#854D0E]">
+            <span>{profile.goal === 'lose' ? 'Cut (-400)' : profile.goal === 'gain' ? 'Bulk (+350)' : 'Maintain (0)'}</span>
+          </div>
         </button>
 
         {/* 4. Energy Balance Delta */}
@@ -201,26 +258,35 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
                 'Consistent energy deficits/surpluses require accurate food logging. Track intake for 2 weeks to calibrate against true body weight change.',
             });
           }}
-          className="p-2.5 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
+          className={`p-3 border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] text-left cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#24201D] group flex flex-col justify-between space-y-2 ${
+            profile.goal === 'lose' ? 'bg-[#EFF6FF] hover:bg-[#DBEAFE]' : 'bg-[#FAF5FF] hover:bg-[#F3E8FF]'
+          }`}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-[#6B635B] uppercase font-display">Energy Delta</span>
-            <HelpCircle className="w-3 h-3 text-stone-400" />
+          <div className="flex items-center justify-between gap-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <div className="w-6 h-6 rounded-lg bg-white border border-[#24201D]/20 flex items-center justify-center text-[#2563EB] shrink-0 shadow-2xs">
+                {deficitSurplusKcal < 0 ? (
+                  <TrendingDown className="w-3.5 h-3.5 text-[#2563EB]" />
+                ) : (
+                  <TrendingUp className="w-3.5 h-3.5 text-[#7C3AED]" />
+                )}
+              </div>
+              <span className="text-[10px] font-black text-[#1D4ED8] uppercase tracking-wider font-display truncate">
+                Energy Delta
+              </span>
+            </div>
+            <ChevronRight className="w-3 h-3 text-[#1D4ED8]/60 group-hover:text-[#1D4ED8] transition-colors shrink-0" />
           </div>
-          <span className="text-lg font-black font-mono-num text-[#24201D] mt-0.5 block">
-            {profile.currentWeight > 0 ? energyBalanceValue : '—'}
-          </span>
-          <span
-            className={`text-[9px] font-bold block truncate ${
-              profile.goal === 'lose'
-                ? 'text-[#2563EB]'
-                : profile.goal === 'gain'
-                ? 'text-[#D97706]'
-                : 'text-[#059669]'
-            }`}
-          >
-            {energyBalanceLabel}
-          </span>
+
+          <div>
+            <span className="text-lg sm:text-xl font-black font-mono-num text-[#24201D] leading-none block">
+              {profile.currentWeight > 0 ? energyBalanceValue : '—'}
+            </span>
+          </div>
+
+          <div className="pt-1 border-t border-[#1D4ED8]/20 flex items-center justify-between text-[9px] font-bold text-[#1E40AF]">
+            <span>{energyBalanceLabel}</span>
+          </div>
         </button>
 
         {/* 5. Daily Protein Target */}
@@ -244,22 +310,35 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
                 'Distribute protein evenly across 3–4 meals (approx. 25–40g per meal) to trigger the leucine threshold for maximum muscle repair.',
             });
           }}
-          className="p-2.5 bg-[#DDE8DE] hover:bg-[#C9DCCB] border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
+          className="p-3 bg-[#F3E8FF] hover:bg-[#E9D5FF] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] text-left cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#24201D] group flex flex-col justify-between space-y-2"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-[#2D503C] uppercase font-display">Protein Goal</span>
-            <HelpCircle className="w-3 h-3 text-[#2D503C]" />
+          <div className="flex items-center justify-between gap-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <div className="w-6 h-6 rounded-lg bg-white border border-[#24201D]/20 flex items-center justify-center text-[#7C3AED] shrink-0 shadow-2xs">
+                <Dumbbell className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-[10px] font-black text-[#6B21A8] uppercase tracking-wider font-display truncate">
+                Protein Goal
+              </span>
+            </div>
+            <ChevronRight className="w-3 h-3 text-[#6B21A8]/60 group-hover:text-[#6B21A8] transition-colors shrink-0" />
           </div>
-          <span className="text-lg font-black font-mono-num text-[#2D503C] mt-0.5 block">
-            {profile.currentWeight > 0 ? (
-              <>
-                {targetProteinGrams} <span className="text-xs">g</span>
-              </>
-            ) : (
-              '—'
-            )}
-          </span>
-          <span className="text-[9px] font-bold text-[#3D6B52] block truncate">Muscle synthesis</span>
+
+          <div>
+            <span className="text-lg sm:text-xl font-black font-mono-num text-[#24201D] leading-none block">
+              {profile.currentWeight > 0 ? (
+                <>
+                  {targetProteinGrams} <span className="text-[10px] font-bold text-[#6B635B] font-display uppercase">g</span>
+                </>
+              ) : (
+                '—'
+              )}
+            </span>
+          </div>
+
+          <div className="pt-1 border-t border-[#6B21A8]/20 flex items-center justify-between text-[9px] font-bold text-[#6B21A8]">
+            <span>Tissue Synthesis</span>
+          </div>
         </button>
 
         {/* 6. Hydration Target */}
@@ -283,22 +362,35 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
                 'Add 400–600 ml for every hour of moderate-to-high intensity athletic exercise or hot environmental exposure.',
             });
           }}
-          className="p-2.5 bg-[#DEE8EF] hover:bg-[#CADBE6] border border-[#24201D]/20 rounded-xl text-left cursor-pointer transition-all active:scale-95"
+          className="p-3 bg-[#E0F2FE] hover:bg-[#BAE6FD] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] text-left cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#24201D] group flex flex-col justify-between space-y-2"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-[#1E3A8A] uppercase font-display">Water Goal</span>
-            <HelpCircle className="w-3 h-3 text-[#1E3A8A]" />
+          <div className="flex items-center justify-between gap-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <div className="w-6 h-6 rounded-lg bg-white border border-[#24201D]/20 flex items-center justify-center text-[#0284C7] shrink-0 shadow-2xs">
+                <Droplets className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-[10px] font-black text-[#0369A1] uppercase tracking-wider font-display truncate">
+                Water Target
+              </span>
+            </div>
+            <ChevronRight className="w-3 h-3 text-[#0369A1]/60 group-hover:text-[#0369A1] transition-colors shrink-0" />
           </div>
-          <span className="text-lg font-black font-mono-num text-[#2A495E] mt-0.5 block">
-            {profile.currentWeight > 0 ? (
-              <>
-                {targetWaterMl} <span className="text-xs">ml</span>
-              </>
-            ) : (
-              '—'
-            )}
-          </span>
-          <span className="text-[9px] font-bold text-[#2563EB] block truncate">Intracellular water</span>
+
+          <div>
+            <span className="text-lg sm:text-xl font-black font-mono-num text-[#24201D] leading-none block">
+              {profile.currentWeight > 0 ? (
+                <>
+                  {targetWaterMl} <span className="text-[10px] font-bold text-[#6B635B] font-display uppercase">ml</span>
+                </>
+              ) : (
+                '—'
+              )}
+            </span>
+          </div>
+
+          <div className="pt-1 border-t border-[#0369A1]/20 flex items-center justify-between text-[9px] font-bold text-[#0369A1]">
+            <span>Cellular Hydration</span>
+          </div>
         </button>
       </div>
     </div>

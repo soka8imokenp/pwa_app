@@ -733,6 +733,7 @@ export function parseXiaomiScaleAdvertisement(
       const minute = dataView.getUint8(offset13 + 7);
       const second = dataView.getUint8(offset13 + 8);
       const timestamp = new Date(year, rawMonth - 1, day, hour, minute, second);
+      const packetAgeSec = Math.max(0, Math.round(Math.abs(Date.now() - timestamp.getTime()) / 1000));
 
       // Scale clocks are not NTP/internet synced. Stale means load is removed (stepped off).
       const isStale = loadRemoved;
@@ -847,6 +848,7 @@ export function parseXiaomiScaleAdvertisement(
       const minute = dataView.getUint8(offset10 + 8);
       const second = dataView.getUint8(offset10 + 9);
       const timestamp = new Date(year, rawMonth - 1, day, hour, minute, second);
+      const packetAgeSec = Math.max(0, Math.round(Math.abs(Date.now() - timestamp.getTime()) / 1000));
 
       const isStale = loadRemoved;
 

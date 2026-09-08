@@ -390,10 +390,10 @@ export function calculateXiaomiBiometrics(
     fatDeduct = 20.0;
   } else if (bodyFat < fatScale[0]) {
     fatDeduct = getMalus(bodyFat, 1.0, fatScale[0], 3, 10) + 3.0;
+  } else if (bodyFat < fatScale[3]) {
+    fatDeduct = getMalus(bodyFat, fatScale[3], fatScale[2], 20, 10) + 10.0;
   } else if (bodyFat <= fatScale[2]) {
     fatDeduct = getMalus(bodyFat, fatScale[2], fatBest, 3, 9) + 3.0;
-  } else {
-    fatDeduct = getMalus(bodyFat, fatScale[3], fatScale[2], 20, 10) + 10.0;
   }
   if (fatDeduct > 0) {
     deductions.push({ id: 'fat', label: 'Adipose tissue index', malus: Number(fatDeduct.toFixed(1)) });
@@ -426,14 +426,14 @@ export function calculateXiaomiBiometrics(
     deductions.push({ id: 'water', label: 'Hydration deficit', malus: Number(waterDeduct.toFixed(1)) });
   }
 
-  // E. Visceral Fat Deduct
+  // E. Visceral Fat Deduct (uses unrounded physiological visceral index as in body_score.py)
   let visceralDeduct = 0;
-  if (visceral < 10.0) {
+  if (rawVisceral < 10.0) {
     visceralDeduct = 0;
-  } else if (visceral >= 15.0) {
+  } else if (rawVisceral >= 15.0) {
     visceralDeduct = 15.0;
   } else {
-    visceralDeduct = getMalus(visceral, 15.0, 10.0, 15, 10) + 10.0;
+    visceralDeduct = getMalus(rawVisceral, 15.0, 10.0, 15, 10) + 10.0;
   }
   if (visceralDeduct > 0) {
     deductions.push({ id: 'visceral', label: 'Visceral fat elevation', malus: Number(visceralDeduct.toFixed(1)) });

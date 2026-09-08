@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   X,
-  Sparkles,
+  CheckCircle2,
   Microscope,
   Activity,
   Target,
@@ -290,7 +290,7 @@ export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({ info, onCl
           }}
           className="w-full py-3 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black shadow-[2px_2px_0px_#24201D] uppercase tracking-wider font-display cursor-pointer active:translate-y-0.5 transition-all flex items-center justify-center gap-2"
         >
-          <Sparkles className="w-3.5 h-3.5" />
+          <CheckCircle2 className="w-3.5 h-3.5" />
           <span>Understood</span>
         </button>
       </div>

@@ -12,7 +12,6 @@ import {
   ChevronDown,
   ChevronUp,
   ChevronRight,
-  Sparkles,
   Award,
   CheckCircle2,
   AlertTriangle,
@@ -20,11 +19,15 @@ import {
   TrendingDown,
   TrendingUp,
   Minus,
+  Check,
+  AlertCircle,
+  Activity,
+  Shield,
 } from 'lucide-react';
 import { playClickSound } from '../../../lib/sound';
 import type { HealthProfile, WeightLog } from '../../../types/health';
 import type { XiaomiBiometricMetrics, ZeppMetricItem } from '../../../lib/xiaomiScale';
-import { type MetricDetailModalInfo, getMetricGaugePercentage } from './MetricDetailModal';
+import type { MetricDetailModalInfo } from './MetricDetailModal';
 
 interface ZeppBodyCompositionCardProps {
   profile: HealthProfile;
@@ -83,14 +86,14 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-2xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center text-[#2D503C] shadow-2xs">
-              <Sparkles className="w-4 h-4" />
+              <Activity className="w-4 h-4" />
             </div>
             <div>
               <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display block leading-none">
                 Clinical Telemetry
               </span>
               <h3 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none">
-                Body Composition (Bio-Impedance)
+                Body Composition Analysis
               </h3>
             </div>
           </div>
@@ -159,131 +162,69 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
     }
   };
 
-  const renderBadge = (statusType: ZeppMetricItem['statusType'], label: string) => {
+  // Sculpted Status Capsule Tag with Icon
+  const renderStatusTag = (statusType: ZeppMetricItem['statusType'], label: string) => {
     if (statusType === 'alert') {
       return (
-        <span className="text-[10px] font-black text-[#991B1B] bg-[#FEE2E2] px-2.5 py-1 rounded-full border border-[#991B1B]/30 shadow-2xs font-display flex items-center gap-1.5 shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] shrink-0 animate-pulse" />
+        <span className="text-[10px] font-black text-[#991B1B] bg-[#FEE2E2] px-2.5 py-0.5 rounded-full border border-[#991B1B]/30 shadow-2xs font-display flex items-center gap-1.5 shrink-0">
+          <ArrowDownCircle className="w-2.5 h-2.5 stroke-[2.5] text-[#DC2626]" />
           <span>{label}</span>
         </span>
       );
     }
     if (statusType === 'attention') {
       return (
-        <span className="text-[10px] font-black text-[#854D0E] bg-[#FBECCF] px-2.5 py-1 rounded-full border border-[#854D0E]/30 shadow-2xs font-display flex items-center gap-1.5 shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] shrink-0" />
+        <span className="text-[10px] font-black text-[#854D0E] bg-[#FBECCF] px-2.5 py-0.5 rounded-full border border-[#854D0E]/30 shadow-2xs font-display flex items-center gap-1.5 shrink-0">
+          <AlertCircle className="w-2.5 h-2.5 stroke-[3] text-[#D97706]" />
           <span>{label}</span>
         </span>
       );
     }
     return (
-      <span className="text-[10px] font-black text-[#2D503C] bg-[#DDE8DE] px-2.5 py-1 rounded-full border border-[#2D503C]/30 shadow-2xs font-display flex items-center gap-1.5 shrink-0">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] shrink-0" />
+      <span className="text-[10px] font-black text-[#2D503C] bg-[#DDE8DE] px-2.5 py-0.5 rounded-full border border-[#2D503C]/30 shadow-2xs font-display flex items-center gap-1.5 shrink-0">
+        <Check className="w-2.5 h-2.5 stroke-[3] text-[#2D503C]" />
         <span>{label}</span>
       </span>
     );
   };
 
-  // Radial Gauge Calculations
   const score = metrics.bodyScore;
-  const radius = 38;
-  const circumference = 2 * Math.PI * radius; // ~238.76
-  const strokeDashoffset = circumference - (score / 100) * circumference;
+  const scorePercent = Math.min(100, Math.max(0, score));
 
-  const scoreColor =
-    score >= 85 ? '#3D6B52' : score >= 70 ? '#E09F3E' : '#C25E40';
-
-  const scoreEvaluation =
+  const scoreTierText =
     score >= 85
       ? 'Optimal Vitality'
       : score >= 70
       ? 'Solid Condition'
       : 'Needs Attention';
 
-  const renderMetricCard = (item: ZeppMetricItem) => {
-    const gaugePercent = getMetricGaugePercentage(item.id, item.value);
+  const scoreTierColor =
+    score >= 85
+      ? 'text-[#2D503C] bg-[#DDE8DE] border-[#2D503C]/30'
+      : score >= 70
+      ? 'text-[#854D0E] bg-[#FBECCF] border-[#854D0E]/30'
+      : 'text-[#991B1B] bg-[#FEE2E2] border-[#991B1B]/30';
 
-    return (
-      <button
-        key={item.id}
-        type="button"
-        onClick={() => handleItemClick(item)}
-        className="w-full p-3 sm:p-3.5 bg-white hover:bg-[#FAF8F5] border-[1.5px] border-[#24201D]/20 hover:border-[#24201D] rounded-2xl flex flex-col gap-2 transition-all active:scale-[0.99] cursor-pointer shadow-2xs group text-left"
-      >
-        {/* Top row: Icon, Title & Value + Badge */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-[#FAF8F5] group-hover:bg-white border border-[#24201D]/20 flex items-center justify-center shrink-0 shadow-2xs transition-colors">
-              {getMetricIcon(item.id)}
-            </div>
-            <div className="min-w-0">
-              <h4 className="text-xs font-black font-display text-[#24201D] leading-tight truncate">
-                {item.title}
-              </h4>
-              <span className="text-[10px] text-[#6B635B] font-medium block truncate">
-                Target: {item.normRange}
-              </span>
-            </div>
-          </div>
+  const scoreDotColor =
+    score >= 85 ? 'bg-[#10B981]' : score >= 70 ? 'bg-[#D97706]' : 'bg-[#EF4444]';
 
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="text-right">
-              <div className="flex items-baseline justify-end gap-1">
-                <span className="text-sm font-black font-mono-num text-[#24201D] leading-none">
-                  {item.valueFormatted}
-                </span>
-                {item.unit && (
-                  <span className="text-[10px] font-bold text-[#6B635B] leading-none">
-                    {item.unit}
-                  </span>
-                )}
-              </div>
-            </div>
-            {renderBadge(item.statusType, item.statusLabel)}
-            <ChevronRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-[#24201D] transition-colors shrink-0" />
-          </div>
-        </div>
-
-        {/* Mini 3-Zone Reference Spectrum */}
-        <div className="pt-1 space-y-1">
-          <div className="relative w-full h-1.5 rounded-full bg-stone-100 border border-[#24201D]/25 overflow-hidden flex shadow-2xs">
-            <div className="h-full bg-[#93C5FD]" style={{ width: '25%' }} title="Low" />
-            <div className="h-full bg-[#86EFAC]" style={{ width: '50%' }} title="Normal" />
-            <div className="h-full bg-[#FCA5A5]" style={{ width: '25%' }} title="High" />
-          </div>
-
-          <div className="relative w-full h-2">
-            <div
-              className="absolute top-0 -translate-x-1/2 flex flex-col items-center transition-all duration-300"
-              style={{ left: `${gaugePercent}%` }}
-            >
-              <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-b-[5px] border-b-[#24201D]" />
-            </div>
-          </div>
-        </div>
-      </button>
-    );
-  };
+  const scoreBarColor =
+    score >= 85 ? 'bg-[#3D6B52]' : score >= 70 ? 'bg-[#E09F3E]' : 'bg-[#C25E40]';
 
   return (
     <div className="bg-white border-[1.75px] border-[#24201D] rounded-3xl shadow-[3px_3px_0px_#24201D] overflow-hidden font-body select-none">
-      {/* Top Identity & Action Header */}
+      {/* Top Identity Strip */}
       <div className="p-3.5 sm:p-4 bg-[#FAF8F5] border-b-[1.75px] border-[#24201D]/15 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-8 h-8 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center font-black font-display text-xs text-[#2D503C] shadow-2xs shrink-0">
             {profile.name ? profile.name.slice(0, 1).toUpperCase() : 'B'}
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-black font-display text-[#24201D] truncate">
-                {profile.name || 'Bek Sama'}
-              </span>
-              <span className="px-1.5 py-0.2 rounded-md bg-white border border-[#24201D]/20 text-[9px] font-bold text-[#6B635B] uppercase font-mono-num shrink-0">
-                BIA
-              </span>
-            </div>
-            <span className="text-[10px] text-[#6B635B] font-medium block">
-              {latestLog?.date
+            <h3 className="text-xs font-black font-display text-[#24201D] truncate leading-none">
+              {profile.name || 'Bek Sama'}
+            </h3>
+            <span className="text-[10px] text-[#6B635B] font-medium block mt-0.5 leading-none">
+              Body Composition Telemetry • {latestLog?.date
                 ? new Date(latestLog.date).toLocaleDateString('en-US', {
                     day: 'numeric',
                     month: 'short',
@@ -293,160 +234,138 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="hidden sm:inline text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display">
-            8 Parameters
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              playClickSound();
-              setIsExpanded(!isExpanded);
-            }}
-            className="p-1.5 rounded-xl bg-white hover:bg-stone-100 border border-[#24201D] text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
-            title={isExpanded ? 'Collapse' : 'Expand'}
-          >
-            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => {
+            playClickSound();
+            setIsExpanded(!isExpanded);
+          }}
+          className="p-1.5 rounded-xl bg-white hover:bg-stone-100 border border-[#24201D] text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer shrink-0"
+          title={isExpanded ? 'Collapse' : 'Expand'}
+        >
+          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
       </div>
 
-      {/* Luxury Centerpiece: Radial Score Meter & Vitals */}
-      <div className="p-4 sm:p-5 bg-gradient-to-br from-[#FAF8F5] via-white to-[#F5EFE6] border-b-[1.75px] border-[#24201D]/15 space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
-          {/* Left: Circular Score Gauge (Radial Meter) */}
-          <div className="sm:col-span-5 flex flex-col items-center justify-center p-3 bg-white border border-[#24201D]/20 rounded-2xl shadow-2xs">
-            <div className="relative w-28 h-28 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 96 96">
-                {/* Background Ring */}
-                <circle
-                  cx="48"
-                  cy="48"
-                  r={radius}
-                  stroke="#E8E0D2"
-                  strokeWidth="7"
-                  fill="none"
-                />
-                {/* Active Score Ring */}
-                <circle
-                  cx="48"
-                  cy="48"
-                  r={radius}
-                  stroke={scoreColor}
-                  strokeWidth="7"
-                  fill="none"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="round"
-                  className="transition-all duration-700 ease-out"
-                />
-              </svg>
-
-              {/* Inside Score Typography */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-3xl font-black font-mono-num text-[#24201D] tracking-tight leading-none">
-                  {score}
-                </span>
-                <span className="text-[9px] font-black uppercase tracking-widest text-[#6B635B] font-display mt-1 leading-none">
-                  BODY SCORE
-                </span>
-              </div>
-            </div>
-
-            {/* Score Tier Badge */}
-            <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#DDE8DE] border border-[#2D503C]/25 text-[#2D503C] text-[10px] font-black font-display shadow-2xs">
-              <Sparkles className="w-3 h-3" />
-              <span>{scoreEvaluation}</span>
+      {/* Signature Bento Hero: Body Score Showcase & Vitals */}
+      <div className="p-4 sm:p-5 bg-[#FAF8F5] border-b-[1.75px] border-[#24201D]/15 space-y-3">
+        {/* Main Body Health Score Pod */}
+        <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#6B635B] font-display">
+              Body Health Score
+            </span>
+            <div className={`px-2.5 py-0.5 rounded-full border text-[10px] font-black font-display inline-flex items-center gap-1.5 shadow-2xs ${scoreTierColor}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${scoreDotColor} animate-pulse shrink-0`} />
+              <span>{scoreTierText}</span>
             </div>
           </div>
 
-          {/* Right: Somatotype & Scale Telemetry Micro-Cards */}
-          <div className="sm:col-span-7 grid grid-cols-2 gap-2.5">
-            {/* Physique Somatotype */}
-            <div className="p-3 bg-white border border-[#24201D]/20 rounded-2xl shadow-2xs space-y-1">
-              <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display">
-                <Award className="w-3.5 h-3.5 text-[#3D6B52]" />
-                <span>Physique</span>
-              </div>
-              <span className="text-base font-black font-display text-[#24201D] block truncate leading-tight mt-0.5">
-                {metrics.bodyType}
-              </span>
-              <span className="text-[9px] text-stone-400 font-bold block truncate">
-                9-Box Somatotype
-              </span>
-            </div>
+          <div className="flex items-baseline gap-1 pt-0.5">
+            <span className="text-5xl sm:text-6xl font-black font-mono-num text-[#24201D] tracking-tight leading-none">
+              {score}
+            </span>
+            <span className="text-xs font-black text-[#6B635B] font-display uppercase ml-1 leading-none">
+              / 100
+            </span>
+          </div>
 
-            {/* Current Weight & Delta */}
-            <div className="p-3 bg-white border border-[#24201D]/20 rounded-2xl shadow-2xs space-y-1">
-              <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display">
-                <Scale className="w-3.5 h-3.5 text-[#2D503C]" />
-                <span>Scale Weight</span>
-              </div>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-base font-black font-mono-num text-[#24201D] leading-tight">
-                  {currentWeight.toFixed(2)}
-                </span>
-                <span className="text-[10px] font-bold text-[#6B635B]">kg</span>
-              </div>
-              <div className="flex items-center gap-1">
-                {prevWeight !== undefined ? (
-                  deltaKg < 0 ? (
-                    <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-[#2D503C] font-mono-num">
-                      <TrendingDown className="w-3 h-3 text-[#2D503C]" />
-                      <span>{deltaSign} kg</span>
-                    </span>
-                  ) : deltaKg > 0 ? (
-                    <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-[#C25E40] font-mono-num">
-                      <TrendingUp className="w-3 h-3 text-[#C25E40]" />
-                      <span>{deltaSign} kg</span>
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-[#6B635B] font-mono-num">
-                      <Minus className="w-3 h-3" />
-                      <span>0.0 kg</span>
-                    </span>
-                  )
+          {/* Clean Metric Progress Gauge Track */}
+          <div className="space-y-1 pt-1">
+            <div className="w-full h-2 rounded-full bg-[#FAF8F5] border border-[#24201D]/25 overflow-hidden p-0.5 shadow-2xs">
+              <div
+                className={`h-full rounded-full transition-all duration-700 ease-out ${scoreBarColor}`}
+                style={{ width: `${scorePercent}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Twin Micro-Cards: Somatotype & Scale Weight */}
+        <div className="grid grid-cols-2 gap-2.5">
+          {/* Physique Somatotype Pod */}
+          <div className="p-3 bg-white border border-[#24201D]/20 rounded-2xl shadow-2xs space-y-1">
+            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display">
+              <Award className="w-3.5 h-3.5 text-[#3D6B52]" />
+              <span>Physique</span>
+            </div>
+            <span className="text-base font-black font-display text-[#24201D] block truncate leading-tight mt-0.5">
+              {metrics.bodyType}
+            </span>
+            <span className="text-[9px] text-stone-400 font-bold block truncate">
+              9-Box Somatotype
+            </span>
+          </div>
+
+          {/* Scale Weight Pod */}
+          <div className="p-3 bg-white border border-[#24201D]/20 rounded-2xl shadow-2xs space-y-1">
+            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display">
+              <Scale className="w-3.5 h-3.5 text-[#2D503C]" />
+              <span>Scale Weight</span>
+            </div>
+            <div className="flex items-baseline gap-1 mt-0.5">
+              <span className="text-base font-black font-mono-num text-[#24201D] leading-tight">
+                {currentWeight.toFixed(2)}
+              </span>
+              <span className="text-[10px] font-bold text-[#6B635B]">kg</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {prevWeight !== undefined ? (
+                deltaKg < 0 ? (
+                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-[#2D503C] font-mono-num">
+                    <TrendingDown className="w-3 h-3 text-[#2D503C]" />
+                    <span>{deltaSign} kg</span>
+                  </span>
+                ) : deltaKg > 0 ? (
+                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-[#C25E40] font-mono-num">
+                    <TrendingUp className="w-3 h-3 text-[#C25E40]" />
+                    <span>{deltaSign} kg</span>
+                  </span>
                 ) : (
-                  <span className="text-[9px] text-stone-400 font-bold">Baseline</span>
-                )}
-              </div>
+                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-[#6B635B] font-mono-num">
+                    <Minus className="w-3 h-3" />
+                    <span>0.0 kg</span>
+                  </span>
+                )
+              ) : (
+                <span className="text-[9px] text-stone-400 font-bold">Baseline</span>
+              )}
             </div>
+          </div>
+        </div>
 
-            {/* Goal Ratio Bar */}
-            <div className="col-span-2 p-3 bg-white border border-[#24201D]/20 rounded-2xl shadow-2xs space-y-1.5">
-              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider font-display">
-                <span className="text-[#24201D]">Biomarkers Health Distribution</span>
-                <span className="text-[#2D503C] font-mono-num">{achievedItems.length} of 8 Met</span>
-              </div>
+        {/* Minimal Health Balance Strip */}
+        <div className="p-2.5 bg-white border border-[#24201D]/20 rounded-xl shadow-2xs space-y-1.5">
+          <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider font-display">
+            <span className="text-[#24201D]">Biomarkers Balance</span>
+            <span className="text-[#2D503C] font-mono-num">{achievedItems.length} of 8 Targets Met</span>
+          </div>
 
-              {/* Segmented Distribution Bar */}
-              <div className="w-full h-2.5 rounded-full bg-stone-100 border border-[#24201D]/25 overflow-hidden flex shadow-2xs">
-                <div
-                  className="h-full bg-[#3D6B52] transition-all duration-500"
-                  style={{ width: `${(achievedItems.length / 8) * 100}%` }}
-                  title={`${achievedItems.length} Targets Achieved`}
-                />
-                <div
-                  className="h-full bg-[#E09F3E] transition-all duration-500"
-                  style={{ width: `${(attentionItems.length / 8) * 100}%` }}
-                  title={`${attentionItems.length} Need Attention`}
-                />
-                <div
-                  className="h-full bg-[#C25E40] transition-all duration-500"
-                  style={{ width: `${(notReachedItems.length / 8) * 100}%` }}
-                  title={`${notReachedItems.length} Below Target`}
-                />
-              </div>
-            </div>
+          <div className="w-full h-2 rounded-full bg-stone-100 border border-[#24201D]/20 overflow-hidden flex shadow-2xs">
+            <div
+              className="h-full bg-[#3D6B52] transition-all duration-500"
+              style={{ width: `${(achievedItems.length / 8) * 100}%` }}
+              title={`${achievedItems.length} Targets Achieved`}
+            />
+            <div
+              className="h-full bg-[#E09F3E] transition-all duration-500"
+              style={{ width: `${(attentionItems.length / 8) * 100}%` }}
+              title={`${attentionItems.length} Need Attention`}
+            />
+            <div
+              className="h-full bg-[#C25E40] transition-all duration-500"
+              style={{ width: `${(notReachedItems.length / 8) * 100}%` }}
+              title={`${notReachedItems.length} Below Target`}
+            />
           </div>
         </div>
       </div>
 
       {/* Expandable Accordion Body */}
       {isExpanded && (
-        <div className="p-4 sm:p-5 bg-[#FAF8F5] space-y-4">
-          {/* Segmented Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+        <div className="p-4 sm:p-5 bg-[#FAF8F5] space-y-3">
+          {/* Segmented Filter Pills (NO COUNTS) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
             <button
               type="button"
               onClick={() => {
@@ -459,7 +378,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                   : 'bg-white hover:bg-stone-100 text-[#6B635B] border border-[#24201D]/20'
               }`}
             >
-              All (8)
+              All
             </button>
 
             {achievedItems.length > 0 && (
@@ -469,14 +388,14 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                   playClickSound();
                   setActiveFilter('achieved');
                 }}
-                className={`py-1 px-3 rounded-xl text-xs font-black transition-all cursor-pointer font-display uppercase tracking-wider shrink-0 flex items-center gap-1 ${
+                className={`py-1 px-3 rounded-xl text-xs font-black transition-all cursor-pointer font-display uppercase tracking-wider shrink-0 flex items-center gap-1.5 ${
                   activeFilter === 'achieved'
                     ? 'bg-[#2D503C] text-white shadow-2xs'
                     : 'bg-white hover:bg-stone-100 text-[#2D503C] border border-[#24201D]/20'
                 }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Achieved ({achievedItems.length})</span>
+                <span>Achieved</span>
               </button>
             )}
 
@@ -487,14 +406,14 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                   playClickSound();
                   setActiveFilter('attention');
                 }}
-                className={`py-1 px-3 rounded-xl text-xs font-black transition-all cursor-pointer font-display uppercase tracking-wider shrink-0 flex items-center gap-1 ${
+                className={`py-1 px-3 rounded-xl text-xs font-black transition-all cursor-pointer font-display uppercase tracking-wider shrink-0 flex items-center gap-1.5 ${
                   activeFilter === 'attention'
                     ? 'bg-[#854D0E] text-white shadow-2xs'
                     : 'bg-white hover:bg-stone-100 text-[#854D0E] border border-[#24201D]/20'
                 }`}
               >
                 <AlertTriangle className="w-3.5 h-3.5" />
-                <span>Attention ({attentionItems.length})</span>
+                <span>Attention</span>
               </button>
             )}
 
@@ -505,39 +424,59 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                   playClickSound();
                   setActiveFilter('not_reached');
                 }}
-                className={`py-1 px-3 rounded-xl text-xs font-black transition-all cursor-pointer font-display uppercase tracking-wider shrink-0 flex items-center gap-1 ${
+                className={`py-1 px-3 rounded-xl text-xs font-black transition-all cursor-pointer font-display uppercase tracking-wider shrink-0 flex items-center gap-1.5 ${
                   activeFilter === 'not_reached'
                     ? 'bg-[#991B1B] text-white shadow-2xs'
                     : 'bg-white hover:bg-stone-100 text-[#991B1B] border border-[#24201D]/20'
                 }`}
               >
                 <ArrowDownCircle className="w-3.5 h-3.5" />
-                <span>Below ({notReachedItems.length})</span>
+                <span>Below Target</span>
               </button>
             )}
           </div>
 
-          {/* Cards List */}
-          <div className="space-y-2">
-            {displayItems.map(renderMetricCard)}
-          </div>
+          {/* Compact Single-Line Metric Rows (Space-Efficient & Sleek) */}
+          <div className="space-y-1.5">
+            {displayItems.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => handleItemClick(item)}
+                className="w-full p-2.5 sm:p-3 bg-white hover:bg-[#FAF8F5] border-[1.5px] border-[#24201D]/20 hover:border-[#24201D] rounded-2xl flex items-center justify-between transition-all active:scale-[0.99] cursor-pointer shadow-2xs group text-left"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-[#FAF8F5] group-hover:bg-white border border-[#24201D]/15 flex items-center justify-center shrink-0 shadow-2xs transition-colors">
+                    {getMetricIcon(item.id)}
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-xs font-black font-display text-[#24201D] leading-tight truncate group-hover:text-[#3D6B52] transition-colors">
+                      {item.title}
+                    </h4>
+                    <span className="text-[10px] text-[#6B635B] font-medium block truncate mt-0.5 leading-none">
+                      Target: {item.normRange}
+                    </span>
+                  </div>
+                </div>
 
-          {/* Footer Controls & Citations */}
-          <div className="pt-2 border-t border-[#24201D]/15 flex items-center justify-between text-[10px] text-[#6B635B]">
-            <span className="font-medium">
-              Clinical BIA Telemetry (openScale & Zepp)
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                playClickSound();
-                onOpenScaleModal();
-              }}
-              className="py-1 px-2.5 rounded-lg bg-white hover:bg-stone-100 border border-[#24201D]/30 text-[#3D6B52] font-black cursor-pointer inline-flex items-center gap-1.5 shadow-2xs active:translate-y-0.5 transition-all font-display uppercase tracking-wider"
-            >
-              <Scale className="w-3.5 h-3.5 text-[#3D6B52]" />
-              <span>New Weigh-In</span>
-            </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="text-right">
+                    <div className="flex items-baseline justify-end gap-1">
+                      <span className="text-xs sm:text-sm font-black font-mono-num text-[#24201D] leading-none">
+                        {item.valueFormatted}
+                      </span>
+                      {item.unit && (
+                        <span className="text-[9px] font-bold text-[#6B635B] leading-none">
+                          {item.unit}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {renderStatusTag(item.statusType, item.statusLabel)}
+                  <ChevronRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-[#24201D] transition-colors shrink-0" />
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       )}

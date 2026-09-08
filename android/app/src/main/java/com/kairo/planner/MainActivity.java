@@ -84,6 +84,8 @@ public class MainActivity extends BridgeActivity {
     private PowerManager.WakeLock wakeLock;
     private BluetoothScaleJsInterface bluetoothScaleInterface;
     private StepCounterJsInterface stepCounterInterface;
+    private HealthConnectManager healthConnectManager;
+    private androidx.activity.result.ActivityResultLauncher<java.util.Set<String>> healthConnectPermissionLauncher;
 
     private void acquireWakeLock() {
         try {
@@ -158,6 +160,7 @@ public class MainActivity extends BridgeActivity {
         requestAudioPermission();
         requestStorageAndCameraPermissions();
         requestActivityRecognitionPermission();
+        initHealthConnect();
 
         MediaPlaybackService.setStateListener((isPlaying, isBuffering) -> {
             MainActivity.this.isAudioPlaying = isPlaying;
@@ -290,6 +293,50 @@ public class MainActivity extends BridgeActivity {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION}, 105);
             }
         }
+    }
+
+    private void initHealthConnect() {
+        try {
+            healthConnectManager = new HealthConnectManager(this);
+            if (healthConnectManager.isAvailable()) {
+                healthConnectPermissionLauncher = registerForActivityResult(
+                    androidx.health.connect.client.PermissionController.createRequestPermissionResultContract(),
+                    granted -> {
+                        if (granted != null && !granted.isEmpty()) {
+                            fetchHealthConnectSteps();
+                        }
+                    }
+                );
+
+                healthConnectManager.checkAndRequestPermissions(healthConnectPermissionLauncher, () -> {
+                    fetchHealthConnectSteps();
+                });
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public void fetchHealthConnectSteps() {
+        try {
+            if (healthConnectManager != null && healthConnectManager.isAvailable()) {
+                healthConnectManager.readTodaySteps(new HealthConnectManager.StepCallback() {
+                    @Override
+                    public void onStepsFetched(long steps, double caloriesKcal) {
+                        if (steps > 0) {
+                            runOnUiThread(() -> {
+                                try {
+                                    if (getBridge() != null && getBridge().getWebView() != null) {
+                                        getBridge().getWebView().evaluateJavascript(
+                                            "window.__onNativeStepUpdate && window.__onNativeStepUpdate(" + steps + ");",
+                                            null
+                                        );
+                                    }
+                                } catch (Exception ignored) {}
+                            });
+                        }
+                    }
+                });
+            }
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -1140,6 +1187,8 @@ public class MainActivity extends BridgeActivity {
                             } catch (Exception ignored) {}
                         });
                     }
+                    // Also trigger Health Connect to auto-pull steps from Samsung Health & Zepp Life
+                    fetchHealthConnectSteps();
                 } catch (Exception ignored) {}
             });
         }
@@ -1148,6 +1197,9 @@ public class MainActivity extends BridgeActivity {
         public void resyncPhoneSteps() {
             runOnUiThread(() -> {
                 try {
+                    // Trigger live Health Connect pull from Samsung Health & Zepp Life
+                    fetchHealthConnectSteps();
+
                     SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
                     prefs.edit()
                             .remove(KEY_BASELINE_STEPS)
@@ -1168,6 +1220,11 @@ public class MainActivity extends BridgeActivity {
                     }
                 } catch (Exception ignored) {}
             });
+        }
+
+        @JavascriptInterface
+        public void syncHealthConnect() {
+            fetchHealthConnectSteps();
         }
 
         @JavascriptInterface

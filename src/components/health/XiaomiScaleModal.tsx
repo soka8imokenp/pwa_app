@@ -531,31 +531,36 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
               {reading.metrics && (
                 <div className="space-y-3">
                   {/* Hero Summary: Body Score & Body Type */}
-                  <div className="p-3.5 bg-gradient-to-br from-[#059669] to-[#047857] text-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-xs border border-white/30 flex flex-col items-center justify-center">
-                        <span className="text-xl font-black font-mono-num leading-none">
-                          {reading.metrics.bodyScore}
-                        </span>
-                        <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-100 mt-0.5">
-                          Score
-                        </span>
+                  <div className="p-4 bg-gradient-to-br from-[#FAF8F5] via-white to-[#F5EFE6] border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-14 h-14 rounded-2xl bg-white border-[1.75px] border-[#24201D] flex flex-col items-center justify-center shadow-2xs">
+                          <span className="text-2xl font-black font-mono-num text-[#24201D] leading-none">
+                            {reading.metrics.bodyScore}
+                          </span>
+                          <span className="text-[8px] font-black uppercase tracking-wider text-[#6B635B] font-display mt-0.5">
+                            SCORE
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
+                            Body Score
+                          </span>
+                          <h4 className="text-sm font-black font-display text-[#24201D] leading-tight">
+                            Physique: {reading.metrics.bodyType}
+                          </h4>
+                          <span className="text-[9px] text-[#2D503C] font-bold block mt-0.5">
+                            {reading.metrics.bodyScore >= 85 ? 'Optimal Composition' : 'Good Condition'}
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-100 font-display block">
-                          Body Score
-                        </span>
-                        <h4 className="text-sm font-black font-display text-white">
-                          Physique: {reading.metrics.bodyType}
-                        </h4>
-                      </div>
-                    </div>
 
-                    <div className="text-right">
-                      <span className="text-[10px] font-bold text-white/80 block">Ideal Weight</span>
-                      <span className="text-xs font-black font-mono-num text-white">
-                        ~{reading.metrics.idealWeightKg} kg
-                      </span>
+                      <div className="text-right p-2 bg-white/80 border border-[#24201D]/20 rounded-xl">
+                        <span className="text-[9px] font-bold text-[#6B635B] uppercase font-display block">Ideal Weight</span>
+                        <span className="text-xs font-black font-mono-num text-[#24201D]">
+                          ~{reading.metrics.idealWeightKg} kg
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -565,7 +570,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                       <span className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
                         Body Composition Telemetry
                       </span>
-                      <span className="text-[9px] font-bold text-[#059669] bg-[#ECFDF5] border border-[#059669]/30 px-2 py-0.5 rounded-full font-mono-num">
+                      <span className="text-[9px] font-bold text-[#2D503C] bg-[#DDE8DE] border border-[#2D503C]/30 px-2.5 py-0.5 rounded-full font-mono-num">
                         10 Parameters
                       </span>
                     </div>
@@ -574,14 +579,14 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                       {reading.metrics.items.map((item) => (
                         <div
                           key={item.id}
-                          className="p-2.5 bg-white border border-[#24201D]/25 rounded-xl flex items-center justify-between shadow-2xs text-xs"
+                          className="p-3 bg-white border border-[#24201D]/25 rounded-2xl flex items-center justify-between shadow-2xs text-xs"
                         >
                           <div>
                             <div className="flex items-baseline gap-1.5">
-                              <span className="font-bold text-[#24201D] font-display">
+                              <span className="font-black text-[#24201D] font-display text-xs">
                                 {item.title}
                               </span>
-                              <span className="font-black font-mono-num text-[#24201D]">
+                              <span className="font-black font-mono-num text-[#24201D] text-xs">
                                 {item.valueFormatted}
                               </span>
                               {item.unit && (
@@ -590,23 +595,26 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                                 </span>
                               )}
                             </div>
-                            <span className="text-[9px] text-[#6B635B] block">
+                            <span className="text-[9px] text-[#6B635B] font-medium block">
                               Target: {item.normRange}
                             </span>
                           </div>
 
                           <div>
                             {item.statusType === 'alert' ? (
-                              <span className="text-[9px] font-bold text-[#B91C1C] bg-[#FEE2E2] px-2 py-0.5 rounded-full border border-[#B91C1C]/30 font-display">
-                                {item.statusLabel}
+                              <span className="text-[10px] font-black text-[#991B1B] bg-[#FEE2E2] px-2.5 py-1 rounded-full border border-[#991B1B]/30 shadow-2xs font-display flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] animate-pulse shrink-0" />
+                                <span>{item.statusLabel}</span>
                               </span>
                             ) : item.statusType === 'attention' ? (
-                              <span className="text-[9px] font-bold text-[#B45309] bg-[#FEF3C7] px-2 py-0.5 rounded-full border border-[#B45309]/30 font-display">
-                                {item.statusLabel}
+                              <span className="text-[10px] font-black text-[#854D0E] bg-[#FBECCF] px-2.5 py-1 rounded-full border border-[#854D0E]/30 shadow-2xs font-display flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] shrink-0" />
+                                <span>{item.statusLabel}</span>
                               </span>
                             ) : (
-                              <span className="text-[9px] font-bold text-[#065F46] bg-[#D1FAE5] px-2 py-0.5 rounded-full border border-[#065F46]/30 font-display">
-                                {item.statusLabel}
+                              <span className="text-[10px] font-black text-[#2D503C] bg-[#DDE8DE] px-2.5 py-1 rounded-full border border-[#2D503C]/30 shadow-2xs font-display flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] shrink-0" />
+                                <span>{item.statusLabel}</span>
                               </span>
                             )}
                           </div>

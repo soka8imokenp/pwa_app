@@ -40,7 +40,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
       : 'Energy Balance';
 
   return (
-    <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3 font-body">
+    <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3 font-body select-none">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
@@ -62,6 +62,11 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
               title: 'Waist-to-Height Ratio (WHtR)',
               value: waistToHeightRatio ? String(waistToHeightRatio) : 'N/A',
               category: waistRiskCategory || 'Enter waist in Profile',
+              statusType: waistToHeightRatio && waistToHeightRatio < 0.5 ? 'optimal' : 'alert',
+              statusLabel: waistRiskCategory || 'Set in profile',
+              normRange: '< 0.50 Ratio',
+              numericValue: waistToHeightRatio,
+              metricId: 'whtr',
               description:
                 'The Waist-to-Height Ratio (WHtR) is recognized by the WHO and UK NICE as the most accurate clinical metric for assessing central visceral fat and cardiovascular health, outperforming BMI alone.',
               formula: 'Waist Circumference (cm) ÷ Height (cm)',
@@ -96,6 +101,11 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
               title: 'Total Daily Energy Expenditure (TDEE)',
               value: `${tdee} kcal`,
               category: `${profile.activityLevel.replace('_', ' ').toUpperCase()} Activity`,
+              statusType: 'optimal',
+              statusLabel: 'Maintenance Energy',
+              normRange: `~${tdee} kcal/day`,
+              numericValue: tdee,
+              metricId: 'bmr',
               description:
                 'The total energy you burn per 24-hour cycle, combining BMR + Non-Exercise Activity (NEAT) + Exercise (EAT) + Thermic Effect of Food (TEF).',
               formula: 'BMR × Physical Activity Factor (1.2 to 1.725)',
@@ -130,6 +140,11 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
               title: 'Prescribed Target Energy Intake',
               value: `${targetDailyCalories} kcal`,
               category: `Goal: ${profile.goal.toUpperCase()}`,
+              statusType: 'optimal',
+              statusLabel: profile.goal === 'lose' ? 'Cut (-400)' : profile.goal === 'gain' ? 'Bulk (+350)' : 'Maintenance',
+              normRange: `${targetDailyCalories} kcal/day`,
+              numericValue: targetDailyCalories,
+              metricId: 'bmr',
               description:
                 'Your calorie prescription tailored to your specific goal: calculated with an evidence-based deficit (fat loss), surplus (hypertrophy), or exact maintenance.',
               formula:
@@ -171,6 +186,10 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
               title: 'Prescribed Energy Balance Delta',
               value: energyBalanceValue,
               category: energyBalanceLabel,
+              statusType: 'optimal',
+              statusLabel: energyBalanceLabel,
+              normRange: energyBalanceValue,
+              numericValue: deficitSurplusKcal,
               description:
                 profile.goal === 'lose'
                   ? 'A moderate 400 kcal daily caloric deficit creates a negative energy balance of ~2,800 kcal per week, translating into approximately 0.4 kg of sustainable fat loss per week without provoking metabolic adaptation.'
@@ -213,6 +232,11 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
               title: 'Prescribed Daily Protein Target',
               value: `${targetProteinGrams} g`,
               category: `${profile.goal === 'maintain' ? '1.5g' : '1.8g'} per kg bodyweight`,
+              statusType: 'optimal',
+              statusLabel: 'Target Synthesis',
+              normRange: `≥ ${targetProteinGrams} g`,
+              numericValue: targetProteinGrams,
+              metricId: 'protein',
               description:
                 'Essential amino acid intake for myofibrillar protein synthesis (MPS), satiety modulation, and preserving lean muscle tissue during a caloric deficit.',
               formula: `${profile.goal === 'maintain' ? '1.5' : '1.8'}g × Body Weight (${profile.currentWeight}kg)`,
@@ -247,6 +271,11 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
               title: 'Prescribed Daily Hydration',
               value: `${targetWaterMl} ml`,
               category: '35 ml per kg bodyweight',
+              statusType: 'optimal',
+              statusLabel: 'Cellular Hydration',
+              normRange: `~${targetWaterMl} ml`,
+              numericValue: targetWaterMl,
+              metricId: 'water',
               description:
                 'Baseline water volume required for cellular hydration, joint lubrication, cognitive performance, and metabolic toxin filtration by the kidneys.',
               formula: `35 ml × Body Weight (${profile.currentWeight}kg)`,

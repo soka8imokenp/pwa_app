@@ -1,11 +1,12 @@
 {
-  "version": "1.8.105",
-  "buildNumber": 109,
+  "version": "1.8.106",
+  "buildNumber": 110,
   "releaseDate": "2026-09-08",
   "changelog": [
-    "Eliminated all duplicate metrics across Health Body panels (Weight & Milestones, Body Composition, and Daily Energy & Nutrition Targets)",
-    "Refactored biometrics grid into actionable Daily Energy & Nutrition Targets (WHtR Ratio, TDEE Total, Target Intake, Energy Balance Delta, Protein Goal, Water Goal)",
-    "Fully localized Body Composition, Scale Telemetry, Somatotypes, and clinical guidance to idiomatic English"
+    "Luxury redesign of Body Composition panel: SVG radial score meter (0-100), segmented distribution bars, and filter tabs",
+    "Polished status badges with glowing micro-dots: Normal Range, Optimal, Needs Attention, Below Target, and miniature 3-zone spectrum bars",
+    "Completely reimagined Clinical Science & Biometrics detail modal with interactive spectrum gauge, physiological mechanism card, and clinical guidance",
+    "Unified aesthetic across Body Health page, Smart Scale telemetry report, and biometrics inspection sheets"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.105/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.106/Daily-Sumire-app-debug.apk"
 }

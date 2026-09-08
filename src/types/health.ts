@@ -1,3 +1,5 @@
+import type { XiaomiBiometricMetrics } from '../lib/xiaomiScale';
+
 export type Gender = 'male' | 'female';
 
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'very_active';
@@ -31,6 +33,7 @@ export interface WeightLog {
   waistCm?: number;
   note?: string;
   createdAt: number;
+  metrics?: XiaomiBiometricMetrics;
 }
 
 export interface MealLog {

@@ -14,7 +14,7 @@ import { LogWeightModal } from './LogWeightModal';
 import { HealthProfileModal } from './HealthProfileModal';
 import { HealthOnboardingWizard } from './HealthOnboardingWizard';
 import { XiaomiScaleModal } from './XiaomiScaleModal';
-import type { XiaomiBiometricMetrics } from '../../lib/xiaomiScale';
+import { calculateXiaomiBiometrics, type XiaomiBiometricMetrics } from '../../lib/xiaomiScale';
 import { generateClinicalHealthSummaryAI } from '../../lib/aiHealthService';
 import {
   computeWeightMovingAverage,
@@ -23,6 +23,7 @@ import {
 } from '../../lib/healthFormulas';
 
 // Decomposed Modular Subcomponents
+import { ZeppBodyCompositionCard } from './body/ZeppBodyCompositionCard';
 import { BiometricsGrid } from './body/BiometricsGrid';
 import { WeightTrendChart } from './body/WeightTrendChart';
 import { WeightHistoryList } from './body/WeightHistoryList';
@@ -33,7 +34,14 @@ interface HealthBodyPageProps {
   metrics: CalculatedHealthMetrics;
   weightLogs: WeightLog[];
   selectedDate: string;
-  onSaveWeight: (weight: number, note?: string, date?: string, bodyFat?: number, waistCm?: number) => Promise<void>;
+  onSaveWeight: (
+    weight: number,
+    note?: string,
+    date?: string,
+    bodyFat?: number,
+    waistCm?: number,
+    scaleMetrics?: XiaomiBiometricMetrics
+  ) => Promise<void>;
   onDeleteWeightLog: (id: number) => Promise<void>;
   onUpdateProfile: (updates: Partial<HealthProfile>) => Promise<void>;
   autoOpenWizard?: boolean;
@@ -188,14 +196,42 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
     }
   }, [profile.currentWeight, profile.targetWeight, profile.goal, profile.height, profile.age]);
 
+  // Find latest log that has saved Zepp Life metrics
+  const latestLogWithMetrics = useMemo(() => {
+    for (let i = sortedAllLogs.length - 1; i >= 0; i--) {
+      if (sortedAllLogs[i].metrics) {
+        return sortedAllLogs[i];
+      }
+    }
+    return null;
+  }, [sortedAllLogs]);
+
+  // Compute active Zepp Life biometrics (using saved scale metrics or estimated from current profile)
+  const activeBiometrics = useMemo(() => {
+    if (latestLogWithMetrics?.metrics) {
+      return latestLogWithMetrics.metrics;
+    }
+    if (currentWeight > 0) {
+      return calculateXiaomiBiometrics(
+        currentWeight,
+        500, // standard clinical baseline resistance
+        profile.height || 178,
+        profile.age || 26,
+        profile.gender || 'male'
+      );
+    }
+    return undefined;
+  }, [latestLogWithMetrics, currentWeight, profile.height, profile.age, profile.gender]);
+
   const handleSaveWeightInternal = async (
     weight: number,
     note?: string,
     date?: string,
     bodyFat?: number,
-    waistCmVal?: number
+    waistCmVal?: number,
+    scaleMetrics?: XiaomiBiometricMetrics
   ) => {
-    await onSaveWeight(weight, note, date, bodyFat, waistCmVal);
+    await onSaveWeight(weight, note, date, bodyFat, waistCmVal, scaleMetrics);
     setTimeout(() => {
       handleGenerateSummary();
     }, 300);
@@ -204,14 +240,15 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
   const handleSaveScaleReading = async (
     weight: number,
     bodyFat?: number,
-    _scaleMetrics?: XiaomiBiometricMetrics
+    scaleMetrics?: XiaomiBiometricMetrics
   ) => {
     await handleSaveWeightInternal(
       weight,
-      'Smart Scale',
+      'Smart Scale (Bio-Impedance)',
       undefined,
       bodyFat,
-      profile.waistCm
+      profile.waistCm,
+      scaleMetrics
     );
 
     const profileUpdates: Partial<HealthProfile> = {
@@ -453,7 +490,17 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
         </div>
       </div>
 
-      {/* 2. Clinical Body Composition & Metabolic Grid (Decomposed Component) */}
+      {/* 2. Zepp Life Clinical Body Composition Breakdown */}
+      <ZeppBodyCompositionCard
+        profile={profile}
+        metrics={activeBiometrics}
+        latestLog={latestLogWithMetrics || sortedAllLogs[sortedAllLogs.length - 1]}
+        previousLog={previousLog}
+        onOpenScaleModal={() => setIsScaleModalOpen(true)}
+        onSelectMetric={(info) => setActiveMetricDetail(info)}
+      />
+
+      {/* 3. Clinical Body Composition & Metabolic Grid (Decomposed Component) */}
       <BiometricsGrid
         profile={profile}
         metrics={metrics}

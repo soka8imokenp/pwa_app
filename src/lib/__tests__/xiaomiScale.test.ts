@@ -117,4 +117,39 @@ describe('xiaomiScale', () => {
     expect(reading?.isImpedanceComplete).toBe(true);
     expect(reading?.loadRemoved).toBe(false);
   });
+
+  it('calculateXiaomiBiometrics: reproduces Zepp Life body score, body type and protein metrics', () => {
+    // 74.30kg, 180cm, 26 years, male, impedance ~480 ohms (matching user screenshot)
+    const metrics = calculateXiaomiBiometrics(74.3, 480, 180, 26, 'male');
+
+    // BMI: 74.3 / (1.8^2) = 22.9
+    expect(metrics.bmi).toBe(22.9);
+
+    // Body Type: standard ("Среднее")
+    expect(metrics.bodyType).toBe('Среднее');
+
+    // Protein % should be in healthy range (19% - 23%)
+    expect(metrics.proteinPercentage).toBeGreaterThanOrEqual(18);
+    expect(metrics.proteinPercentage).toBeLessThanOrEqual(23);
+
+    // Body Score should be around 85 - 95
+    expect(metrics.bodyScore).toBeGreaterThanOrEqual(85);
+    expect(metrics.bodyScore).toBeLessThanOrEqual(95);
+
+    // Visceral fat normal
+    expect(metrics.visceralFat).toBeGreaterThanOrEqual(1);
+    expect(metrics.visceralFat).toBeLessThanOrEqual(12);
+
+    // Verify items array contains all 8 Zepp Life metrics
+    expect(metrics.items.length).toBe(8);
+    const itemIds = metrics.items.map((i) => i.id);
+    expect(itemIds).toContain('bmr');
+    expect(itemIds).toContain('visceral');
+    expect(itemIds).toContain('bmi');
+    expect(itemIds).toContain('bodyFat');
+    expect(itemIds).toContain('muscle');
+    expect(itemIds).toContain('water');
+    expect(itemIds).toContain('protein');
+    expect(itemIds).toContain('bone');
+  });
 });

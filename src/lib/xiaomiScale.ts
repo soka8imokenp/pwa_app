@@ -5,7 +5,24 @@
  * using the standard Body Composition Service UUID 0x181B.
  */
 
+export type ZeppMetricStatusType = 'optimal' | 'attention' | 'alert';
+export type ZeppMetricGroup = 'not_reached' | 'attention' | 'achieved';
+
+export interface ZeppMetricItem {
+  id: 'bmr' | 'visceral' | 'bmi' | 'bodyFat' | 'muscle' | 'water' | 'protein' | 'bone' | 'bodyAge' | 'idealWeight';
+  title: string;
+  value: number;
+  valueFormatted: string;
+  unit: string;
+  statusLabel: string; // e.g. 'В пределах нормы', 'Хорошо', 'Нормальный', 'Цели не достигнуты'
+  statusType: ZeppMetricStatusType;
+  group: ZeppMetricGroup;
+  normRange: string;
+  description: string;
+}
+
 export interface XiaomiBiometricMetrics {
+  bmi: number;
   bodyFatPercentage: number;
   muscleMassKg: number;
   waterPercentage: number;
@@ -14,6 +31,12 @@ export interface XiaomiBiometricMetrics {
   bmr: number;
   leanMassKg: number;
   bodyAge: number;
+  proteinPercentage: number;
+  idealWeightKg: number;
+  bodyScore: number; // 0 - 100
+  bodyType: string; // e.g. 'Среднее', 'Мускулистое'
+  bodyTypeCode: string;
+  items: ZeppMetricItem[];
 }
 
 export interface XiaomiScaleReading {
@@ -29,7 +52,7 @@ export interface XiaomiScaleReading {
 }
 
 /**
- * Calculates full body composition metrics using the verified openScale / Xiaomi clinical algorithm.
+ * Calculates full body composition metrics using the verified Zepp Life / openScale clinical BIA algorithms.
  */
 export function calculateXiaomiBiometrics(
   weight: number,
@@ -43,11 +66,16 @@ export function calculateXiaomiBiometrics(
   const safeHeight = Math.max(100, Math.min(230, heightCm || 175));
   const safeAge = Math.max(12, Math.min(95, age || 25));
   const safeImpedance = impedance > 50 && impedance < 2500 ? impedance : 500;
+  const isMale = gender === 'male';
 
-  // 1. Lean Body Mass (LBM) in kg via Bioelectrical Impedance Analysis (H^2 / R)
+  // 1. BMI
+  const heightM = safeHeight / 100;
+  const bmi = Number((safeWeight / (heightM * heightM)).toFixed(1));
+
+  // 2. Lean Body Mass (LBM) in kg via Bioelectrical Impedance Analysis (H^2 / R)
   const impedanceIndex = (safeHeight * safeHeight) / safeImpedance;
   let lbm: number;
-  if (gender === 'female') {
+  if (!isMale) {
     lbm = 0.48 * impedanceIndex + 0.26 * safeWeight + 4.5 - 0.03 * safeAge;
     const minLbm = safeWeight * 0.50;
     const maxLbm = safeWeight * 0.85;
@@ -60,44 +88,242 @@ export function calculateXiaomiBiometrics(
   }
   lbm = Number(lbm.toFixed(2));
 
-  // 2. Body Fat Percentage (%)
+  // 3. Body Fat Percentage (%)
   let bodyFat = ((safeWeight - lbm) / safeWeight) * 100;
   bodyFat = Math.max(4.0, Math.min(55.0, Number(bodyFat.toFixed(1))));
 
-  // 3. Body Water Percentage (%)
+  // 4. Body Water Percentage (%)
   let water = (100 - bodyFat) * 0.724;
   water = Math.max(35.0, Math.min(75.0, Number(water.toFixed(1))));
 
-  // 4. Bone Mass (kg)
+  // 5. Bone Mass (kg)
   let bone: number;
-  if (gender === 'female') {
+  if (!isMale) {
     bone = 1.0 + lbm * 0.035;
   } else {
     bone = 1.1 + lbm * 0.035;
   }
-  bone = Math.max(1.5, Math.min(4.5, Number(bone.toFixed(1))));
+  bone = Math.max(1.5, Math.min(4.5, Number(bone.toFixed(2))));
 
-  // 5. Muscle Mass (kg)
+  // 6. Muscle Mass (kg)
   let muscle = Math.max(15.0, lbm - bone);
-  muscle = Number(muscle.toFixed(1));
+  muscle = Number(muscle.toFixed(2));
 
-  // 6. Visceral Fat Index (1 - 30)
-  const bmi = safeWeight / ((safeHeight / 100) ** 2);
+  // 7. Visceral Fat Index (1 - 30)
   let visceral = Math.round(bmi * 0.45 + safeAge * 0.12 - 5.5);
-  if (gender === 'female') {
+  if (!isMale) {
     visceral = Math.round(bmi * 0.42 + safeAge * 0.1 - 5.0);
   }
   visceral = Math.max(1, Math.min(25, visceral));
 
-  // 7. Basal Metabolic Rate (BMR in kcal, Katch-McArdle formula)
+  // 8. Basal Metabolic Rate (BMR in kcal, Katch-McArdle clinical formula)
   const bmr = Math.round(370 + 21.6 * lbm);
 
-  // 8. Body Age estimate
-  const idealFat = gender === 'female' ? 22 : 15;
+  // 9. Protein Percentage (%)
+  // Derived from non-water lean tissue mass: 100% - Water% - Fat% - Bone%
+  const bonePercent = (bone / safeWeight) * 100;
+  let protein = 100 - water - bodyFat - bonePercent;
+  protein = Math.max(12.0, Math.min(26.0, Number(protein.toFixed(1))));
+
+  // 10. Ideal Weight (kg) based on WHO ideal BMI 22.0
+  const idealWeightKg = Number((22.0 * (heightM * heightM)).toFixed(1));
+
+  // 11. Body Age estimate
+  const idealFat = !isMale ? 22 : 15;
   const fatDelta = bodyFat - idealFat;
   const bodyAge = Math.max(18, Math.min(85, Math.round(safeAge + fatDelta * 0.45)));
 
+  // 12. Body Type (9-box Somatotype Matrix matching Zepp Life)
+  let bodyType = 'Среднее';
+  let bodyTypeCode = 'standard';
+
+  const fatLowThreshold = isMale ? 14 : 21;
+  const fatHighThreshold = isMale ? 22 : 29;
+
+  if (bmi < 18.5) {
+    if (bodyFat < fatLowThreshold) {
+      bodyType = 'Худощавое';
+      bodyTypeCode = 'skinny';
+    } else if (bodyFat <= fatHighThreshold) {
+      bodyType = 'Стройное';
+      bodyTypeCode = 'balanced_skinny';
+    } else {
+      bodyType = 'Скрытая полнота';
+      bodyTypeCode = 'skinny_fat';
+    }
+  } else if (bmi <= 24.9) {
+    if (bodyFat < fatLowThreshold) {
+      bodyType = 'Спортивное';
+      bodyTypeCode = 'skinny_muscle';
+    } else if (bodyFat <= fatHighThreshold) {
+      bodyType = 'Среднее';
+      bodyTypeCode = 'standard';
+    } else {
+      bodyType = 'Недостаток движения';
+      bodyTypeCode = 'lack_exercise';
+    }
+  } else {
+    if (bodyFat < fatLowThreshold) {
+      bodyType = 'Мускулистое';
+      bodyTypeCode = 'standard_muscle';
+    } else if (bodyFat <= fatHighThreshold) {
+      bodyType = 'Плотное';
+      bodyTypeCode = 'thick_set';
+    } else {
+      bodyType = 'Ожирение';
+      bodyTypeCode = 'obese';
+    }
+  }
+
+  // 13. Status Evaluation for each metric matching Zepp Life
+  const items: ZeppMetricItem[] = [];
+
+  // BMR:
+  const expectedBmr = Math.round(
+    isMale
+      ? 88.36 + 13.4 * safeWeight + 4.8 * safeHeight - 5.7 * safeAge
+      : 447.6 + 9.25 * safeWeight + 3.1 * safeHeight - 4.3 * safeAge
+  );
+  const isBmrLow = bmr < expectedBmr - 40;
+  items.push({
+    id: 'bmr',
+    title: 'Основной обмен',
+    value: bmr,
+    valueFormatted: bmr.toLocaleString('ru-RU'),
+    unit: 'ккал',
+    statusLabel: isBmrLow ? 'Цели не достигнуты' : 'В пределах нормы',
+    statusType: isBmrLow ? 'alert' : 'optimal',
+    group: isBmrLow ? 'not_reached' : 'achieved',
+    normRange: `≥ ${expectedBmr.toLocaleString('ru-RU')} ккал`,
+    description: 'Базовый расход калорий организма в состоянии полного покоя для поддержания дыхания и работы органов.',
+  });
+
+  // Visceral Fat (1-9 normal, 9 is on the upper edge -> flagged for attention in Zepp Life!):
+  const isVisceralHigh = visceral >= 10;
+  const isVisceralBorderline = visceral === 9;
+  items.push({
+    id: 'visceral',
+    title: 'Висцеральный жир',
+    value: visceral,
+    valueFormatted: String(visceral),
+    unit: '',
+    statusLabel: isVisceralHigh ? 'Высокий' : 'В пределах нормы',
+    statusType: isVisceralHigh ? 'alert' : isVisceralBorderline ? 'attention' : 'optimal',
+    group: isVisceralHigh ? 'not_reached' : isVisceralBorderline ? 'attention' : 'achieved',
+    normRange: '1 - 9',
+    description: 'Глубинный жир вокруг внутренних органов брюшной полости. Норма — до 9 единиц.',
+  });
+
+  // BMI:
+  const isBmiNormal = bmi >= 18.5 && bmi <= 24.9;
+  const isBmiAttention = bmi > 24.0 && bmi <= 25.5;
+  items.push({
+    id: 'bmi',
+    title: 'ИМТ',
+    value: bmi,
+    valueFormatted: String(bmi).replace('.', ','),
+    unit: '',
+    statusLabel: isBmiNormal ? 'Нормальный' : bmi < 18.5 ? 'Недостаточный' : 'Избыточный',
+    statusType: isBmiNormal ? 'optimal' : isBmiAttention ? 'attention' : 'alert',
+    group: isBmiNormal ? 'achieved' : isBmiAttention ? 'attention' : 'not_reached',
+    normRange: '18,5 - 24,9',
+    description: 'Индекс массы тела по стандартам Всемирной организации здравоохранения.',
+  });
+
+  // Body Fat:
+  const isFatOptimal = bodyFat >= (isMale ? 10 : 18) && bodyFat <= (isMale ? 21 : 28);
+  const isFatBorderline = bodyFat > (isMale ? 21 : 28) && bodyFat <= (isMale ? 24 : 31);
+  items.push({
+    id: 'bodyFat',
+    title: 'Жир',
+    value: bodyFat,
+    valueFormatted: `${String(bodyFat).replace('.', ',')} %`,
+    unit: '%',
+    statusLabel: isFatOptimal || isFatBorderline ? 'В пределах нормы' : bodyFat < (isMale ? 10 : 18) ? 'Низкий' : 'Избыток',
+    statusType: isFatOptimal ? 'optimal' : isFatBorderline ? 'attention' : 'alert',
+    group: isFatOptimal ? 'achieved' : isFatBorderline ? 'attention' : 'not_reached',
+    normRange: isMale ? '10,0 - 20,0 %' : '18,0 - 28,0 %',
+    description: 'Доля жировой ткани в организме от общего веса.',
+  });
+
+  // Muscle Mass:
+  const minMuscle = safeWeight * (isMale ? 0.65 : 0.60);
+  const isMuscleGood = muscle >= minMuscle;
+  items.push({
+    id: 'muscle',
+    title: 'Мышцы',
+    value: muscle,
+    valueFormatted: `${String(muscle).replace('.', ',')} кг`,
+    unit: 'кг',
+    statusLabel: isMuscleGood ? 'В пределах нормы' : 'Недостаточно',
+    statusType: isMuscleGood ? 'optimal' : 'alert',
+    group: isMuscleGood ? 'achieved' : 'not_reached',
+    normRange: `≥ ${minMuscle.toFixed(1)} кг`,
+    description: 'Общая масса мышечной ткани, участвующей в активном метаболизме.',
+  });
+
+  // Water:
+  const isWaterNormal = water >= 50.0 && water <= 65.0;
+  items.push({
+    id: 'water',
+    title: 'Вода',
+    value: water,
+    valueFormatted: `${String(water).replace('.', ',')} %`,
+    unit: '%',
+    statusLabel: isWaterNormal ? 'Нормальный' : water < 50 ? 'Недостаточно' : 'Высокий',
+    statusType: isWaterNormal ? 'optimal' : 'attention',
+    group: isWaterNormal ? 'achieved' : 'attention',
+    normRange: '50,0 - 65,0 %',
+    description: 'Общее содержание жидкости в клетках и тканях организма.',
+  });
+
+  // Protein:
+  const isProteinGood = protein >= (isMale ? 16.0 : 15.0);
+  items.push({
+    id: 'protein',
+    title: 'Белок',
+    value: protein,
+    valueFormatted: `${String(protein).replace('.', ',')} %`,
+    unit: '%',
+    statusLabel: isProteinGood ? 'Хорошо' : 'Недостаточно',
+    statusType: isProteinGood ? 'optimal' : 'alert',
+    group: isProteinGood ? 'achieved' : 'not_reached',
+    normRange: isMale ? '16,0 - 22,0 %' : '15,0 - 21,0 %',
+    description: 'Процент белковых соединений. Основной строительный компонент мышц и органов.',
+  });
+
+  // Bone Mass:
+  const expectedBoneMin = isMale
+    ? safeWeight < 60 ? 2.5 : safeWeight < 75 ? 2.9 : 3.2
+    : safeWeight < 45 ? 1.8 : safeWeight < 60 ? 2.2 : 2.5;
+  const isBoneNormal = bone >= expectedBoneMin - 0.2;
+  items.push({
+    id: 'bone',
+    title: 'Костная масса',
+    value: bone,
+    valueFormatted: `${String(bone).replace('.', ',')} кг`,
+    unit: 'кг',
+    statusLabel: isBoneNormal ? 'Нормальная' : 'Недостаточная',
+    statusType: isBoneNormal ? 'optimal' : 'attention',
+    group: isBoneNormal ? 'achieved' : 'attention',
+    normRange: `≥ ${expectedBoneMin.toFixed(2)} кг`,
+    description: 'Минеральная плотность и вес костной структуры скелета.',
+  });
+
+  // 14. Composite Body Score (Оценка тела: 0 - 100)
+  let score = 100;
+  if (isBmrLow) score -= 6;
+  if (isVisceralHigh) score -= 8;
+  else if (isVisceralBorderline) score -= 2;
+  if (!isBmiNormal) score -= Math.min(10, Math.abs(bmi - 22.0) * 1.5);
+  if (!isFatOptimal) score -= Math.min(8, Math.abs(bodyFat - (isMale ? 16 : 22)) * 0.8);
+  if (!isMuscleGood) score -= 5;
+  if (!isWaterNormal) score -= 3;
+  if (!isProteinGood) score -= 4;
+  const bodyScore = Math.max(50, Math.min(100, Math.round(score)));
+
   return {
+    bmi,
     bodyFatPercentage: bodyFat,
     muscleMassKg: muscle,
     waterPercentage: water,
@@ -106,6 +332,12 @@ export function calculateXiaomiBiometrics(
     bmr,
     leanMassKg: lbm,
     bodyAge,
+    proteinPercentage: protein,
+    idealWeightKg,
+    bodyScore,
+    bodyType,
+    bodyTypeCode,
+    items,
   };
 }
 

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../lib/db';
 import type { HealthProfile, WeightLog, MealLog, WaterLog, WorkoutLog } from '../types/health';
+import type { XiaomiBiometricMetrics } from '../lib/xiaomiScale';
 import { DEFAULT_HEALTH_PROFILE, calculateComprehensiveMetrics, calculateBmi } from '../lib/healthFormulas';
 import { logActivity } from '../lib/activityLogger';
 
@@ -78,7 +79,8 @@ export function useHealthData(selectedDate: string) {
     note?: string,
     date = selectedDate,
     bodyFat?: number,
-    waistCm?: number
+    waistCm?: number,
+    metrics?: XiaomiBiometricMetrics
   ) => {
     const bmi = calculateBmi(weight, profile.height);
     await db.weightLogs.add({
@@ -89,6 +91,7 @@ export function useHealthData(selectedDate: string) {
       waistCm,
       note,
       createdAt: Date.now(),
+      metrics,
     });
 
     // Also update current weight and waist on profile
@@ -100,7 +103,7 @@ export function useHealthData(selectedDate: string) {
       action: 'weight',
       entity: 'scale',
       title: `${weight.toFixed(1)} kg`,
-      details: `Weight recorded${bodyFat ? ` • Body Fat ${bodyFat.toFixed(1)}%` : ''}${note ? ` • ${note}` : ''}`,
+      details: `Weight recorded${bodyFat ? ` • Body Fat ${bodyFat.toFixed(1)}%` : ''}${metrics?.bodyScore ? ` • Score ${metrics.bodyScore} (${metrics.bodyType})` : ''}${note ? ` • ${note}` : ''}`,
       date,
     });
   };

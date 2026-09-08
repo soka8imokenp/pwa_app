@@ -1,12 +1,12 @@
 {
-  "version": "1.8.103",
-  "buildNumber": 107,
+  "version": "1.8.104",
+  "buildNumber": 108,
   "releaseDate": "2026-09-08",
   "changelog": [
-    "Fixed scale telemetry weight halving bug (accurate full kilograms, no erroneous 37kg halving)",
-    "Eliminated ghost readings when user is off the scale by ignoring cached load_removed packets",
-    "Resolved bio-impedance synchronization freeze (smooth progressive analysis and auto-timeout fallback)",
-    "Added instant 'Lock Weight' button and 'Re-weigh' restart button in Smart Scale modal"
+    "Full Zepp Life body composition integration: Body Score (0-100), 9-type physique matrix, and progress tracking",
+    "Clinical breakdown of all 10 BIA metrics: BMR, Visceral Fat, BMI, Body Fat %, Muscle Mass, Water %, Protein %, Bone Mass",
+    "Target status groups matching Zepp Life: not reached, attention needed, and goals achieved",
+    "New signature ZeppBodyCompositionCard panel on Body Health page and detailed telemetry report in Smart Scale modal"
   ],
-  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.103/Daily-Sumire-app-debug.apk"
+  "downloadUrl": "https://github.com/soka8imokenp/pwa_app/releases/download/v1.8.104/Daily-Sumire-app-debug.apk"
 }

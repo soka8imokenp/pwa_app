@@ -527,83 +527,91 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                 </div>
               </div>
 
-              {/* 6 Biometrics Grid from Bio-Impedance Algorithm */}
+              {/* Zepp Life Clinical Biometrics Breakdown */}
               {reading.metrics && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                      Decoded Body Composition
-                    </span>
-                    <span className="text-[9px] font-bold text-[#4F46E5] bg-[#EEF2FF] border border-[#4F46E5]/30 px-1.5 py-0.2 rounded font-mono-num">
-                      Clinical Bio-Impedance
-                    </span>
+                <div className="space-y-3">
+                  {/* Hero Summary: Body Score & Body Type */}
+                  <div className="p-3.5 bg-gradient-to-br from-[#059669] to-[#047857] text-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-xs border border-white/30 flex flex-col items-center justify-center">
+                        <span className="text-xl font-black font-mono-num leading-none">
+                          {reading.metrics.bodyScore}
+                        </span>
+                        <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-100 mt-0.5">
+                          Баллов
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-100 font-display block">
+                          Оценка тела
+                        </span>
+                        <h4 className="text-sm font-black font-display text-white">
+                          Телосложение: {reading.metrics.bodyType}
+                        </h4>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-[10px] font-bold text-white/80 block">Идеальный вес</span>
+                      <span className="text-xs font-black font-mono-num text-white">
+                        ~{reading.metrics.idealWeightKg} кг
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2">
-                    {/* Body Fat % */}
-                    <div className="p-2.5 bg-white border border-[#24201D] rounded-xl shadow-2xs space-y-0.5">
-                      <span className="text-[9px] font-bold uppercase text-[#6B635B] block font-display">
-                        Body Fat
+                  {/* Grouped metrics as in Zepp Life */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
+                        Показатели состава тела
                       </span>
-                      <span className="text-base font-black font-mono-num text-[#24201D] block">
-                        {reading.metrics.bodyFatPercentage}%
+                      <span className="text-[9px] font-bold text-[#059669] bg-[#ECFDF5] border border-[#059669]/30 px-2 py-0.5 rounded-full font-mono-num">
+                        10 параметров
                       </span>
-                      <span className="text-[8px] text-stone-400 font-bold">Adipose ratio</span>
                     </div>
 
-                    {/* Muscle Mass */}
-                    <div className="p-2.5 bg-white border border-[#24201D] rounded-xl shadow-2xs space-y-0.5">
-                      <span className="text-[9px] font-bold uppercase text-[#6B635B] block font-display">
-                        Muscle
-                      </span>
-                      <span className="text-base font-black font-mono-num text-[#24201D] block">
-                        {reading.metrics.muscleMassKg} <span className="text-[9px]">kg</span>
-                      </span>
-                      <span className="text-[8px] text-stone-400 font-bold">Active tissue</span>
-                    </div>
+                    <div className="space-y-1.5 max-h-60 overflow-y-auto pr-0.5">
+                      {reading.metrics.items.map((item) => (
+                        <div
+                          key={item.id}
+                          className="p-2.5 bg-white border border-[#24201D]/25 rounded-xl flex items-center justify-between shadow-2xs text-xs"
+                        >
+                          <div>
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="font-bold text-[#24201D] font-display">
+                                {item.title}
+                              </span>
+                              <span className="font-black font-mono-num text-[#24201D]">
+                                {item.valueFormatted}
+                              </span>
+                              {item.unit && (
+                                <span className="text-[10px] font-bold text-[#6B635B]">
+                                  {item.unit}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[9px] text-[#6B635B] block">
+                              Норма: {item.normRange}
+                            </span>
+                          </div>
 
-                    {/* Hydration */}
-                    <div className="p-2.5 bg-white border border-[#24201D] rounded-xl shadow-2xs space-y-0.5">
-                      <span className="text-[9px] font-bold uppercase text-[#6B635B] block font-display">
-                        Water
-                      </span>
-                      <span className="text-base font-black font-mono-num text-[#24201D] block">
-                        {reading.metrics.waterPercentage}%
-                      </span>
-                      <span className="text-[8px] text-stone-400 font-bold">Hydration</span>
-                    </div>
-
-                    {/* Bone Mass */}
-                    <div className="p-2.5 bg-white border border-[#24201D] rounded-xl shadow-2xs space-y-0.5">
-                      <span className="text-[9px] font-bold uppercase text-[#6B635B] block font-display">
-                        Bone Mass
-                      </span>
-                      <span className="text-base font-black font-mono-num text-[#24201D] block">
-                        {reading.metrics.boneMassKg} <span className="text-[9px]">kg</span>
-                      </span>
-                      <span className="text-[8px] text-stone-400 font-bold">Mineral index</span>
-                    </div>
-
-                    {/* Visceral Fat */}
-                    <div className="p-2.5 bg-white border border-[#24201D] rounded-xl shadow-2xs space-y-0.5">
-                      <span className="text-[9px] font-bold uppercase text-[#6B635B] block font-display">
-                        Visceral
-                      </span>
-                      <span className="text-base font-black font-mono-num text-[#24201D] block">
-                        Level {reading.metrics.visceralFat}
-                      </span>
-                      <span className="text-[8px] text-stone-400 font-bold">Abdominal</span>
-                    </div>
-
-                    {/* BMR */}
-                    <div className="p-2.5 bg-white border border-[#24201D] rounded-xl shadow-2xs space-y-0.5">
-                      <span className="text-[9px] font-bold uppercase text-[#6B635B] block font-display">
-                        BMR
-                      </span>
-                      <span className="text-base font-black font-mono-num text-[#24201D] block">
-                        {reading.metrics.bmr} <span className="text-[9px]">kcal</span>
-                      </span>
-                      <span className="text-[8px] text-stone-400 font-bold">Basal burn</span>
+                          <div>
+                            {item.statusType === 'alert' ? (
+                              <span className="text-[9px] font-bold text-[#B91C1C] bg-[#FEE2E2] px-2 py-0.5 rounded-full border border-[#B91C1C]/30 font-display">
+                                {item.statusLabel}
+                              </span>
+                            ) : item.statusType === 'attention' ? (
+                              <span className="text-[9px] font-bold text-[#B45309] bg-[#FEF3C7] px-2 py-0.5 rounded-full border border-[#B45309]/30 font-display">
+                                {item.statusLabel}
+                              </span>
+                            ) : (
+                              <span className="text-[9px] font-bold text-[#065F46] bg-[#D1FAE5] px-2 py-0.5 rounded-full border border-[#065F46]/30 font-display">
+                                {item.statusLabel}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>

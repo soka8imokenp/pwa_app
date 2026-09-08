@@ -8,11 +8,15 @@ import {
   subMonths,
 } from 'date-fns';
 import {
-  Calendar as LucideCalendar,
-  ChevronLeft as LucideChevronLeft,
-  ChevronRight as LucideChevronRight,
-  Trophy as LucideTrophy,
-  Plus as LucidePlus,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Trophy,
+  Footprints,
+  Flame,
+  MapPin,
+  Sparkles,
+  TrendingUp,
 } from 'lucide-react';
 import type { DayStepItem } from '../../../hooks/useStepTracker';
 import { playClickSound } from '../../../lib/sound';
@@ -49,7 +53,6 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
   onSelectDate,
   weekStats,
   monthStats,
-  onAddStepsToDate,
 }) => {
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
   const [inspectedDateStr, setInspectedDateStr] = useState<string>(selectedDate);
@@ -57,6 +60,7 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
   const inspectedDayItem =
     monthStats.days.find((d) => d.dateStr === inspectedDateStr) ||
     weekStats.days.find((d) => d.dateStr === inspectedDateStr) ||
+    weekStats.days[0] ||
     monthStats.days[0];
 
   const handlePrev = () => {
@@ -92,28 +96,41 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
 
   const WEEK_DAYS_HEADER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+  // Current period subtitle for header
+  const weekRangeLabel =
+    weekStats.days.length >= 7
+      ? `${format(parseISO(weekStats.days[0].dateStr), 'MMM d')} – ${format(
+          parseISO(weekStats.days[6].dateStr),
+          'MMM d'
+        )}`
+      : 'Weekly Summary';
+
   return (
-    <div className="p-4 sm:p-5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3.5 font-body select-none">
-      
-      {/* 1. Header with View Toggle & Date Navigation */}
-      <div className="flex items-center justify-between gap-3 pb-2 border-b border-[#24201D]/15">
+    <div className="p-4 sm:p-5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-4 font-body select-none">
+      {/* 1. Header: Elegant Japanese Minimalist Control Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#24201D]/15">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-[#FEF3C7] border border-[#24201D] flex items-center justify-center shadow-2xs">
-            <LucideCalendar className="w-4 h-4 text-[#854D0E] stroke-[2.25]" />
+          <div className="w-8 h-8 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center shadow-2xs">
+            <Footprints className="w-4 h-4 text-[#2D503C] stroke-[2.25]" />
           </div>
           <div>
-            <span className="text-[10px] font-black text-[#6B635B] uppercase tracking-wider block font-display leading-none">
-              Movement History
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-black text-[#6B635B] uppercase tracking-wider block font-display leading-none">
+                Movement History
+              </span>
+              <span className="text-[10px] font-bold text-[#3D6B52] bg-[#DDE8DE] px-1.5 py-0.2 rounded-full leading-none">
+                {viewMode === 'week' ? weekRangeLabel : monthStats.monthName}
+              </span>
+            </div>
             <h2 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none">
-              Activity Calendar
+              Activity & Trends
             </h2>
           </div>
         </div>
 
-        {/* View Switcher & Date Controls */}
-        <div className="flex items-center gap-1.5">
-          {/* Week / Month Toggle */}
+        {/* View Toggle + Date Steppers */}
+        <div className="flex items-center justify-between sm:justify-end gap-2">
+          {/* Segmented Pill: Week / Month */}
           <div className="flex items-center p-0.5 bg-[#FAF8F5] border border-[#24201D]/25 rounded-xl shadow-2xs">
             <button
               type="button"
@@ -121,7 +138,7 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
                 playClickSound();
                 setViewMode('week');
               }}
-              className={`px-2.5 py-0.5 rounded-lg text-xs font-black transition-all cursor-pointer font-display ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer font-display ${
                 viewMode === 'week'
                   ? 'bg-[#24201D] text-white shadow-2xs'
                   : 'text-[#6B635B] hover:text-[#24201D]'
@@ -135,7 +152,7 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
                 playClickSound();
                 setViewMode('month');
               }}
-              className={`px-2.5 py-0.5 rounded-lg text-xs font-black transition-all cursor-pointer font-display ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer font-display ${
                 viewMode === 'month'
                   ? 'bg-[#24201D] text-white shadow-2xs'
                   : 'text-[#6B635B] hover:text-[#24201D]'
@@ -145,93 +162,107 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
             </button>
           </div>
 
-          {/* Steppers */}
+          {/* Stepper Navigation */}
           <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={handlePrev}
-              className="w-7 h-7 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/25 flex items-center justify-center text-[#24201D] shadow-2xs cursor-pointer"
+              title="Previous period"
+              className="w-7 h-7 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/25 flex items-center justify-center text-[#24201D] active:translate-y-0.5 shadow-2xs cursor-pointer transition-all"
             >
-              <LucideChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4 stroke-[2.25]" />
             </button>
             <button
               type="button"
               onClick={handleToday}
-              className="px-2 py-1 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/25 text-[11px] font-bold text-[#24201D] shadow-2xs cursor-pointer font-display"
+              title="Jump to today"
+              className="px-2 py-1 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/25 text-[11px] font-bold text-[#24201D] active:translate-y-0.5 shadow-2xs cursor-pointer font-display transition-all"
             >
               Today
             </button>
             <button
               type="button"
               onClick={handleNext}
-              className="w-7 h-7 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/25 flex items-center justify-center text-[#24201D] shadow-2xs cursor-pointer"
+              title="Next period"
+              className="w-7 h-7 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/25 flex items-center justify-center text-[#24201D] active:translate-y-0.5 shadow-2xs cursor-pointer transition-all"
             >
-              <LucideChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4 stroke-[2.25]" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* 2. WEEK VIEW */}
+      {/* 2. WEEK VIEW: Architectural 7-Day Interactive Visualizer */}
       {viewMode === 'week' && (
-        <div className="space-y-3">
+        <div className="space-y-3.5">
           {/* 7-Day Vertical Strip */}
-          <div className="grid grid-cols-7 gap-1.5 pt-0.5">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2 pt-0.5">
             {weekStats.days.map((day) => {
-              const isSelected = day.dateStr === selectedDate;
+              const isSelected = day.dateStr === inspectedDateStr;
               return (
                 <div
                   key={day.dateStr}
                   onClick={() => handleDayClick(day.dateStr)}
-                  className={`p-2 rounded-xl border flex flex-col items-center justify-between gap-1.5 transition-all cursor-pointer shadow-2xs ${
+                  className={`p-2 rounded-xl flex flex-col items-center justify-between gap-1.5 transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-[#FAF8F5] border-[#24201D] ring-2 ring-[#3D6B52] shadow-xs'
+                      ? 'bg-white border-[2px] border-[#24201D] shadow-[2px_2px_0px_#24201D] -translate-y-0.5 ring-2 ring-[#3D6B52]/20'
                       : day.isToday
-                      ? 'bg-[#FAF8F5] border-[#3D6B52]/50'
-                      : 'bg-[#FAF8F5]/60 hover:bg-[#FAF8F5] border-[#24201D]/15 hover:border-[#24201D]'
+                      ? 'bg-[#FAF8F5] border-[1.5px] border-[#3D6B52]/60 hover:border-[#24201D] shadow-2xs'
+                      : 'bg-[#FAF8F5]/80 hover:bg-[#FAF8F5] border border-[#24201D]/20 hover:border-[#24201D] shadow-2xs'
                   }`}
                 >
-                  <div className="text-center">
-                    <span className="text-[10px] font-black uppercase text-[#6B635B] block font-display">
+                  {/* Day Name & Date Number */}
+                  <div className="text-center leading-none space-y-0.5">
+                    <span className="text-[9px] font-bold uppercase text-[#6B635B] block font-display">
                       {day.dayName}
                     </span>
-                    <span
-                      className={`text-xs font-black font-mono-num block ${
-                        day.isToday ? 'text-[#3D6B52]' : 'text-[#24201D]'
-                      }`}
-                    >
-                      {day.dayNumber}
-                    </span>
+                    <div className="flex items-center justify-center gap-0.5">
+                      <span
+                        className={`text-xs font-black font-mono-num ${
+                          day.isToday ? 'text-[#3D6B52]' : 'text-[#24201D]'
+                        }`}
+                      >
+                        {day.dayNumber}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Vertical Progress Bar */}
-                  <div className="w-full max-w-[26px] h-20 bg-white border border-[#24201D]/20 rounded-lg p-0.5 flex flex-col justify-end overflow-hidden shadow-2xs">
+                  {/* Proportional Slim Progress Pill */}
+                  <div className="w-2.5 sm:w-3 h-14 bg-[#EAE5DC] rounded-full p-0.5 flex flex-col justify-end overflow-hidden border border-[#24201D]/15 shadow-inner">
                     <div
-                      className={`w-full rounded transition-all duration-500 ${
-                        day.isGoalMet ? 'bg-[#10B981]' : day.steps > 0 ? 'bg-[#3D6B52]' : 'bg-transparent'
+                      className={`w-full rounded-full transition-all duration-500 ease-out ${
+                        day.isGoalMet
+                          ? 'bg-[#10B981]'
+                          : day.steps > 0
+                          ? 'bg-[#3D6B52]'
+                          : 'bg-transparent'
                       }`}
-                      style={{ height: `${Math.min(100, Math.max(day.steps > 0 ? 8 : 0, day.percent))}%` }}
+                      style={{
+                        height: `${Math.min(
+                          100,
+                          Math.max(day.steps > 0 ? 10 : 0, day.percent)
+                        )}%`,
+                      }}
                     />
                   </div>
 
-                  {/* Steps & Burn */}
-                  <div className="text-center w-full">
-                    <span className="text-[10px] font-black font-mono-num text-[#24201D] block truncate">
-                      {day.steps >= 1000 ? `${(day.steps / 1000).toFixed(1)}k` : day.steps}
+                  {/* Clean Formatted Steps */}
+                  <div className="text-center w-full min-h-[16px]">
+                    <span className="text-[10px] font-black font-mono-num text-[#24201D] block leading-none truncate">
+                      {day.steps >= 1000
+                        ? `${(day.steps / 1000).toFixed(1)}k`
+                        : day.steps > 0
+                        ? day.steps
+                        : '—'}
                     </span>
-                    {day.caloriesBurned > 0 ? (
-                      <span className="text-[8px] font-bold font-mono-num text-[#DC2626] block">
-                        +{day.caloriesBurned}
-                      </span>
-                    ) : (
-                      <span className="text-[8px] text-stone-400 block">-</span>
-                    )}
                   </div>
 
-                  {/* Goal Met Icon */}
-                  <div className="h-3 flex items-center justify-center">
-                    {day.isGoalMet && (
-                      <LucideTrophy className="w-3 h-3 text-[#F59E0B] stroke-[2.5]" />
+                  {/* Goal Met Indicator */}
+                  <div className="h-2.5 flex items-center justify-center">
+                    {day.isGoalMet ? (
+                      <Sparkles className="w-2.5 h-2.5 text-[#F59E0B]" />
+                    ) : (
+                      <span className="w-1 h-1 rounded-full bg-transparent" />
                     )}
                   </div>
                 </div>
@@ -239,40 +270,40 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
             })}
           </div>
 
-          {/* Week Summary Stats Grid */}
-          <div className="grid grid-cols-4 gap-2 pt-0.5">
-            <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl text-center space-y-0.5">
+          {/* 4-Stat Period Summary Strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-0.5">
+            <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
                 Total Steps
               </span>
-              <span className="text-base font-black font-mono-num text-[#24201D] block">
+              <span className="text-base font-black font-mono-num text-[#24201D] block leading-tight">
                 {weekStats.totalSteps.toLocaleString()}
               </span>
             </div>
 
-            <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl text-center space-y-0.5">
+            <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
                 Daily Avg
               </span>
-              <span className="text-base font-black font-mono-num text-[#3D6B52] block">
+              <span className="text-base font-black font-mono-num text-[#3D6B52] block leading-tight">
                 {weekStats.averageSteps.toLocaleString()}
               </span>
             </div>
 
-            <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl text-center space-y-0.5">
+            <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
                 Total Burn
               </span>
-              <span className="text-base font-black font-mono-num text-[#DC2626] block">
+              <span className="text-base font-black font-mono-num text-[#DC2626] block leading-tight">
                 +{weekStats.totalCalories} kcal
               </span>
             </div>
 
-            <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl text-center space-y-0.5">
+            <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
                 Distance
               </span>
-              <span className="text-base font-black font-mono-num text-[#2563EB] block">
+              <span className="text-base font-black font-mono-num text-[#2563EB] block leading-tight">
                 {weekStats.totalDistanceKm} km
               </span>
             </div>
@@ -280,15 +311,15 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
         </div>
       )}
 
-      {/* 3. MONTH VIEW */}
+      {/* 3. MONTH VIEW: Clean Matrix Calendar */}
       {viewMode === 'month' && (
-        <div className="space-y-3">
+        <div className="space-y-3.5">
           {/* Month Header Banner */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between px-1">
             <span className="text-xs font-black font-display text-[#24201D]">
               {format(parseISO(selectedDate), 'MMMM yyyy')}
             </span>
-            <span className="text-[11px] font-bold text-[#6B635B] font-mono-num">
+            <span className="text-[11px] font-bold text-[#3D6B52] bg-[#DDE8DE] px-2 py-0.5 rounded-full font-mono-num">
               Goal hit {monthStats.goalStreakDays} of {monthStats.daysInMonthCount} days
             </span>
           </div>
@@ -296,7 +327,10 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
           {/* Weekday Titles */}
           <div className="grid grid-cols-7 gap-1 text-center">
             {WEEK_DAYS_HEADER.map((w) => (
-              <span key={w} className="text-[10px] font-black uppercase text-[#6B635B] font-display py-0.5">
+              <span
+                key={w}
+                className="text-[10px] font-black uppercase text-[#6B635B] font-display py-0.5"
+              >
                 {w}
               </span>
             ))}
@@ -305,7 +339,10 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
           {/* Month Matrix */}
           <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
             {Array.from({ length: monthStats.paddingDaysCount }).map((_, idx) => (
-              <div key={`pad-${idx}`} className="h-13 rounded-xl bg-[#FAF8F5]/30 border border-dashed border-[#24201D]/10" />
+              <div
+                key={`pad-${idx}`}
+                className="h-12 rounded-xl bg-stone-50/40 border border-dashed border-stone-200"
+              />
             ))}
 
             {monthStats.days.map((day) => {
@@ -314,17 +351,17 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
                 <div
                   key={day.dateStr}
                   onClick={() => handleDayClick(day.dateStr)}
-                  className={`h-13 p-1 rounded-xl border flex flex-col items-center justify-between transition-all cursor-pointer shadow-2xs ${
+                  className={`h-12 p-1 rounded-xl border flex flex-col items-center justify-between transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-[#FAF8F5] border-[#24201D] ring-2 ring-[#3D6B52]'
+                      ? 'bg-white border-[2px] border-[#24201D] shadow-[2px_2px_0px_#24201D] -translate-y-0.5'
                       : day.isToday
-                      ? 'bg-[#FAF8F5] border-[#3D6B52]/50'
-                      : 'bg-white hover:bg-[#FAF8F5] border-[#24201D]/15 hover:border-[#24201D]'
+                      ? 'bg-[#FAF8F5] border-[1.5px] border-[#3D6B52]/60 shadow-2xs'
+                      : 'bg-[#FAF8F5]/60 hover:bg-[#FAF8F5] border border-[#24201D]/15 hover:border-[#24201D] shadow-2xs'
                   }`}
                 >
-                  <div className="w-full flex items-center justify-between px-0.5">
+                  <div className="w-full flex items-center justify-between px-1">
                     <span
-                      className={`text-[11px] font-black font-mono-num ${
+                      className={`text-[10px] font-black font-mono-num leading-none ${
                         day.isToday ? 'text-[#3D6B52]' : 'text-[#24201D]'
                       }`}
                     >
@@ -336,19 +373,25 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
                   </div>
 
                   {day.steps > 0 ? (
-                    <div className="text-center">
-                      <span className="text-[9px] font-black font-mono-num text-[#24201D] block leading-none">
-                        {day.steps >= 1000 ? `${(day.steps / 1000).toFixed(1)}k` : day.steps}
+                    <div className="text-center w-full px-0.5">
+                      <span className="text-[9px] font-black font-mono-num text-[#24201D] block leading-none truncate">
+                        {day.steps >= 1000
+                          ? `${(day.steps / 1000).toFixed(1)}k`
+                          : day.steps}
                       </span>
-                      <div className="w-5 h-1 rounded-full bg-stone-200 overflow-hidden mx-auto mt-0.5">
+                      <div className="w-full h-1 rounded-full bg-[#EAE5DC] overflow-hidden mt-0.5">
                         <div
-                          className={`h-full ${day.isGoalMet ? 'bg-[#10B981]' : 'bg-[#3D6B52]'}`}
+                          className={`h-full rounded-full ${
+                            day.isGoalMet ? 'bg-[#10B981]' : 'bg-[#3D6B52]'
+                          }`}
                           style={{ width: `${Math.min(100, day.percent)}%` }}
                         />
                       </div>
                     </div>
                   ) : (
-                    <span className="text-[9px] text-stone-300 font-mono-num">-</span>
+                    <span className="text-[9px] text-stone-300 font-mono-num leading-none">
+                      —
+                    </span>
                   )}
                 </div>
               );
@@ -356,39 +399,39 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
           </div>
 
           {/* Month Summary Stats Grid */}
-          <div className="grid grid-cols-4 gap-2 pt-0.5">
-            <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl text-center space-y-0.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-0.5">
+            <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
                 Total Steps
               </span>
-              <span className="text-base font-black font-mono-num text-[#24201D] block">
+              <span className="text-base font-black font-mono-num text-[#24201D] block leading-tight">
                 {monthStats.totalSteps.toLocaleString()}
               </span>
             </div>
 
-            <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl text-center space-y-0.5">
+            <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
                 Daily Avg
               </span>
-              <span className="text-base font-black font-mono-num text-[#3D6B52] block">
+              <span className="text-base font-black font-mono-num text-[#3D6B52] block leading-tight">
                 {monthStats.averageSteps.toLocaleString()}
               </span>
             </div>
 
-            <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl text-center space-y-0.5">
+            <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
                 Total Burn
               </span>
-              <span className="text-base font-black font-mono-num text-[#DC2626] block">
+              <span className="text-base font-black font-mono-num text-[#DC2626] block leading-tight">
                 +{monthStats.totalCalories} kcal
               </span>
             </div>
 
-            <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl text-center space-y-0.5">
+            <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
                 Goal Hit
               </span>
-              <span className="text-base font-black font-mono-num text-[#10B981] block">
+              <span className="text-base font-black font-mono-num text-[#10B981] block leading-tight">
                 {monthStats.goalStreakDays} days
               </span>
             </div>
@@ -396,11 +439,11 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
         </div>
       )}
 
-      {/* 4. Sleek Day Inspector Strip */}
+      {/* 4. Selected Day Bento Spotlight (Clean, Noisy-Free) */}
       {inspectedDayItem && (
-        <div className="p-2.5 sm:p-3 bg-[#FAF8F5] border border-[#24201D]/25 rounded-xl flex items-center justify-between gap-2 shadow-2xs">
+        <div className="p-3 bg-[#FAF8F5] border border-[#24201D]/25 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xs">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-white border border-[#24201D] flex flex-col items-center justify-center shadow-2xs">
+            <div className="w-9 h-9 rounded-xl bg-white border border-[#24201D] flex flex-col items-center justify-center shadow-2xs shrink-0">
               <span className="text-[8px] font-black uppercase text-[#6B635B] font-display leading-none">
                 {inspectedDayItem.dayName}
               </span>
@@ -411,41 +454,48 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
 
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-black text-[#24201D]">
-                  {format(parseISO(inspectedDayItem.dateStr), 'EEEE, MMM d')}
+                <span className="text-xs font-black text-[#24201D] font-display">
+                  {format(parseISO(inspectedDayItem.dateStr), 'EEEE, MMMM d')}
                 </span>
+                {inspectedDayItem.isToday && (
+                  <span className="text-[9px] font-bold text-[#3D6B52] bg-[#DDE8DE] px-1.5 py-0.2 rounded-full font-display">
+                    Today
+                  </span>
+                )}
                 {inspectedDayItem.isGoalMet && (
-                  <span className="text-[9px] font-black uppercase text-[#10B981] bg-[#DDE8DE] px-1.5 py-0.5 rounded border border-[#10B981]/30 font-display">
+                  <span className="text-[9px] font-black uppercase text-[#10B981] bg-emerald-50 px-1.5 py-0.2 rounded border border-[#10B981]/30 flex items-center gap-0.5 font-display">
+                    <Trophy className="w-2.5 h-2.5" />
                     Goal Met
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center gap-2 text-[11px] font-bold font-mono-num text-[#6B635B]">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold font-mono-num text-[#6B635B] mt-0.5">
                 <span>
-                  <strong className="text-[#24201D]">{inspectedDayItem.steps.toLocaleString()}</strong> / {inspectedDayItem.goal.toLocaleString()} steps
+                  <strong className="text-[#24201D] font-black">
+                    {inspectedDayItem.steps.toLocaleString()}
+                  </strong>{' '}
+                  / {inspectedDayItem.goal.toLocaleString()} steps
                 </span>
-                <span>•</span>
-                <span className="text-[#DC2626] font-black">+{inspectedDayItem.caloriesBurned} kcal</span>
-                <span>•</span>
-                <span className="text-[#2563EB]">{inspectedDayItem.distanceKm} km</span>
+                <span>({inspectedDayItem.percent}%)</span>
               </div>
             </div>
           </div>
 
-          {onAddStepsToDate && (
-            <button
-              type="button"
-              onClick={() => onAddStepsToDate(1000, inspectedDayItem.dateStr)}
-              className="px-2.5 py-1 bg-white hover:bg-stone-50 active:translate-y-0.5 border border-[#24201D]/25 hover:border-[#24201D] rounded-lg text-xs font-black text-[#24201D] shadow-2xs transition-all cursor-pointer flex items-center gap-1 font-display"
-            >
-              <LucidePlus className="w-3 h-3 text-[#3D6B52]" />
-              <span>+1k</span>
-            </button>
-          )}
+          {/* Metrics Capsule */}
+          <div className="flex items-center gap-3 self-end sm:self-center border-t sm:border-t-0 pt-2 sm:pt-0 border-[#24201D]/10">
+            <div className="flex items-center gap-1 text-[11px] font-black font-mono-num text-[#DC2626]">
+              <Flame className="w-3.5 h-3.5 stroke-[2.25]" />
+              <span>+{inspectedDayItem.caloriesBurned} kcal</span>
+            </div>
+            <span className="text-stone-300">•</span>
+            <div className="flex items-center gap-1 text-[11px] font-black font-mono-num text-[#2563EB]">
+              <MapPin className="w-3.5 h-3.5 stroke-[2.25]" />
+              <span>{inspectedDayItem.distanceKm} km</span>
+            </div>
+          </div>
         </div>
       )}
-
     </div>
   );
 };

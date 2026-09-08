@@ -29,7 +29,6 @@ interface PedometerHeroCardProps {
   onSetSteps: (steps: number) => Promise<any>;
   onSetGoal: (goal: number) => Promise<any>;
   onResyncSensor?: () => void;
-  onOpenHealthConnectSettings?: () => void;
 }
 
 export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
@@ -46,7 +45,6 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
   onSetSteps,
   onSetGoal,
   onResyncSensor,
-  onOpenHealthConnectSettings,
 }) => {
   const [isEditingSteps, setIsEditingSteps] = useState(false);
   const [inputSteps, setInputSteps] = useState(String(currentSteps));
@@ -115,22 +113,6 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5">
-          {/* Health Connect Settings Button */}
-          {onOpenHealthConnectSettings && (
-            <button
-              type="button"
-              onClick={() => {
-                playClickSound();
-                onOpenHealthConnectSettings();
-              }}
-              title="Open Health Connect settings to sync Samsung Health, Zepp Life, etc."
-              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#DDE8DE] hover:bg-[#C5D5C8] border border-[#24201D]/25 active:translate-y-0.5 text-[10px] font-bold text-[#2D503C] shadow-2xs transition-all cursor-pointer font-display"
-            >
-              <Smartphone className="w-3 h-3" />
-              <span className="hidden sm:inline">Data Sources</span>
-            </button>
-          )}
-
           {/* Live Device Sync Button */}
           <button
             type="button"

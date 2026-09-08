@@ -297,7 +297,6 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
             (window as any).AndroidStepCounter.resyncPhoneSteps();
           }
         }}
-        onOpenHealthConnectSettings={openHealthConnectSettings}
       />
 
       {/* 2. Activity & Steps Calendar Card (Week & Month views) */}

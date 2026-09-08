@@ -659,27 +659,46 @@ export function parseXiaomiScaleAdvertisement(
   // 1. Xiaomi Mi Body Composition Scale 2 (Service UUID 0x181B, 13 bytes)
   if (dataView.byteLength >= 13) {
     let offset13 = -1;
-    for (let i = 0; i <= dataView.byteLength - 13; i++) {
-      const candidateYear = dataView.getUint16(i + 2, true);
-      const candidateMonth = dataView.getUint8(i + 4);
-      const candidateDay = dataView.getUint8(i + 5);
-      const candidateHour = dataView.getUint8(i + 6);
-      const candidateMin = dataView.getUint8(i + 7);
-      const candidateSec = dataView.getUint8(i + 8);
 
-      if (
-        candidateYear >= 2018 &&
-        candidateYear <= 2035 &&
-        candidateMonth >= 1 &&
-        candidateMonth <= 12 &&
-        candidateDay >= 1 &&
-        candidateDay <= 31 &&
-        candidateHour <= 23 &&
-        candidateMin <= 59 &&
-        candidateSec <= 59
-      ) {
-        offset13 = i;
-        break;
+    // Fast path: Exact 13-byte Service Data buffer from Bluetooth scanner
+    if (dataView.byteLength === 13) {
+      offset13 = 0;
+    } else {
+      // Sliding window over raw advertisement payload
+      for (let i = 0; i <= dataView.byteLength - 13; i++) {
+        // Match standard BLE 16-bit Service Data AD structure prefix [..., 0x16, 0x1B, 0x18, ...]
+        if (
+          i >= 3 &&
+          dataView.getUint8(i - 3) === 0x16 &&
+          dataView.getUint8(i - 2) === 0x1b &&
+          dataView.getUint8(i - 1) === 0x18
+        ) {
+          offset13 = i;
+          break;
+        }
+
+        // Candidate date verification (permissive year 1995-2060 so unsynced scale clocks never fail)
+        const candidateYear = dataView.getUint16(i + 2, true);
+        const candidateMonth = dataView.getUint8(i + 4);
+        const candidateDay = dataView.getUint8(i + 5);
+        const candidateHour = dataView.getUint8(i + 6);
+        const candidateMin = dataView.getUint8(i + 7);
+        const candidateSec = dataView.getUint8(i + 8);
+
+        if (
+          candidateYear >= 1995 &&
+          candidateYear <= 2060 &&
+          candidateMonth >= 1 &&
+          candidateMonth <= 12 &&
+          candidateDay >= 1 &&
+          candidateDay <= 31 &&
+          candidateHour <= 23 &&
+          candidateMin <= 59 &&
+          candidateSec <= 59
+        ) {
+          offset13 = i;
+          break;
+        }
       }
     }
 
@@ -715,8 +734,8 @@ export function parseXiaomiScaleAdvertisement(
       const second = dataView.getUint8(offset13 + 8);
       const timestamp = new Date(year, rawMonth - 1, day, hour, minute, second);
 
-      const packetAgeSec = Math.round(Math.abs(Date.now() - timestamp.getTime()) / 1000);
-      const isStale = loadRemoved || packetAgeSec > 60;
+      // Scale clocks are not NTP/internet synced. Stale means load is removed (stepped off).
+      const isStale = loadRemoved;
 
       // Impedance (bytes 9-10, Little-Endian in ohms)
       const impedance = dataView.getUint16(offset13 + 9, true);
@@ -783,27 +802,33 @@ export function parseXiaomiScaleAdvertisement(
   // 2. Xiaomi Mi Scale 1 (Service UUID 0x181D, 10 bytes)
   if (dataView.byteLength >= 10) {
     let offset10 = -1;
-    for (let i = 0; i <= dataView.byteLength - 10; i++) {
-      const candidateYear = dataView.getUint16(i + 3, true);
-      const candidateMonth = dataView.getUint8(i + 5);
-      const candidateDay = dataView.getUint8(i + 6);
-      const candidateHour = dataView.getUint8(i + 7);
-      const candidateMin = dataView.getUint8(i + 8);
-      const candidateSec = dataView.getUint8(i + 9);
 
-      if (
-        candidateYear >= 2018 &&
-        candidateYear <= 2035 &&
-        candidateMonth >= 1 &&
-        candidateMonth <= 12 &&
-        candidateDay >= 1 &&
-        candidateDay <= 31 &&
-        candidateHour <= 23 &&
-        candidateMin <= 59 &&
-        candidateSec <= 59
-      ) {
-        offset10 = i;
-        break;
+    // Fast path: Exact 10-byte Service Data buffer
+    if (dataView.byteLength === 10) {
+      offset10 = 0;
+    } else {
+      for (let i = 0; i <= dataView.byteLength - 10; i++) {
+        const candidateYear = dataView.getUint16(i + 3, true);
+        const candidateMonth = dataView.getUint8(i + 5);
+        const candidateDay = dataView.getUint8(i + 6);
+        const candidateHour = dataView.getUint8(i + 7);
+        const candidateMin = dataView.getUint8(i + 8);
+        const candidateSec = dataView.getUint8(i + 9);
+
+        if (
+          candidateYear >= 1995 &&
+          candidateYear <= 2060 &&
+          candidateMonth >= 1 &&
+          candidateMonth <= 12 &&
+          candidateDay >= 1 &&
+          candidateDay <= 31 &&
+          candidateHour <= 23 &&
+          candidateMin <= 59 &&
+          candidateSec <= 59
+        ) {
+          offset10 = i;
+          break;
+        }
       }
     }
 
@@ -823,8 +848,7 @@ export function parseXiaomiScaleAdvertisement(
       const second = dataView.getUint8(offset10 + 9);
       const timestamp = new Date(year, rawMonth - 1, day, hour, minute, second);
 
-      const packetAgeSec = Math.round(Math.abs(Date.now() - timestamp.getTime()) / 1000);
-      const isStale = loadRemoved || packetAgeSec > 60;
+      const isStale = loadRemoved;
 
       const rawWeight = dataView.getUint16(offset10 + 1, true);
       let weight: number;

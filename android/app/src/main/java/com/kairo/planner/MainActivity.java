@@ -869,9 +869,10 @@ public class MainActivity extends BridgeActivity {
                         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
                             neededPerms.add(Manifest.permission.BLUETOOTH_CONNECT);
                         }
-                    }
-                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        neededPerms.add(Manifest.permission.ACCESS_FINE_LOCATION);
+                    } else {
+                        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                            neededPerms.add(Manifest.permission.ACCESS_FINE_LOCATION);
+                        }
                     }
 
                     if (!neededPerms.isEmpty()) {
@@ -934,21 +935,8 @@ public class MainActivity extends BridgeActivity {
                             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                             .build();
 
-                    List<ScanFilter> filters = new ArrayList<>();
-                    // Filter 1: Xiaomi Mi Body Composition Scale 2 Service 0x181B
-                    filters.add(new ScanFilter.Builder()
-                            .setServiceData(ParcelUuid.fromString("0000181b-0000-1000-8000-00805f9b34fb"), null)
-                            .build());
-                    // Filter 2: Xiaomi Mi Scale 1 Service 0x181D
-                    filters.add(new ScanFilter.Builder()
-                            .setServiceData(ParcelUuid.fromString("0000181d-0000-1000-8000-00805f9b34fb"), null)
-                            .build());
-
-                    try {
-                        bleScanner.startScan(filters, settings, scanCallback);
-                    } catch (Exception filterEx) {
-                        bleScanner.startScan(null, settings, scanCallback);
-                    }
+                    // Unrestricted scan so hardware controller filters never drop 16-bit Service Data packets
+                    bleScanner.startScan(null, settings, scanCallback);
                     isScanning = true;
                     notifyJs("window.__onNativeScaleStatus && window.__onNativeScaleStatus('scanning');");
 
@@ -1001,11 +989,48 @@ public class MainActivity extends BridgeActivity {
                 }
             }
 
-            // 3. Fallback: transmit full raw advertisement buffer if present (JS sliding window parses it)
+            // 3. Search raw advertisement bytes for 16-bit Service Data AD structure (0x16 0x1B 0x18 or 0x16 0x1D 0x18)
             if (scaleData == null) {
-                byte[] rawBytes = record.getBytes();
-                if (rawBytes != null && rawBytes.length >= 10) {
-                    scaleData = rawBytes;
+                byte[] raw = record.getBytes();
+                if (raw != null && raw.length >= 13) {
+                    for (int i = 0; i <= raw.length - 3; i++) {
+                        if ((raw[i] & 0xFF) == 0x16 && (raw[i + 1] & 0xFF) == 0x1B && (raw[i + 2] & 0xFF) == 0x18) {
+                            int dataLen = Math.min(13, raw.length - (i + 3));
+                            if (dataLen >= 10) {
+                                byte[] extracted = new byte[dataLen];
+                                System.arraycopy(raw, i + 3, extracted, 0, dataLen);
+                                scaleData = extracted;
+                                break;
+                            }
+                        } else if ((raw[i] & 0xFF) == 0x16 && (raw[i + 1] & 0xFF) == 0x1D && (raw[i + 2] & 0xFF) == 0x18) {
+                            int dataLen = Math.min(10, raw.length - (i + 3));
+                            if (dataLen >= 10) {
+                                byte[] extracted = new byte[dataLen];
+                                System.arraycopy(raw, i + 3, extracted, 0, dataLen);
+                                scaleData = extracted;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 4. Check device name for Xiaomi Scale
+            if (scaleData == null) {
+                String devName = record.getDeviceName();
+                if (devName == null && result.getDevice() != null) {
+                    try {
+                        devName = result.getDevice().getName();
+                    } catch (SecurityException ignored) {}
+                }
+                if (devName != null) {
+                    String lower = devName.toLowerCase();
+                    if (lower.contains("mibfs") || lower.contains("scale") || lower.contains("mibody") || lower.contains("miscale")) {
+                        byte[] raw = record.getBytes();
+                        if (raw != null && raw.length >= 10) {
+                            scaleData = raw;
+                        }
+                    }
                 }
             }
 

@@ -97,10 +97,10 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
   const handleIncomingReading = (parsed: XiaomiScaleReading | null) => {
     if (!parsed) return;
 
-    // 1. Ghost & Stale Reading Filter:
-    // If the scale broadcasts an old cached packet (loadRemoved or >45s old)
-    // before the user has stepped onto the scale during this scan session, ignore it completely!
-    if ((parsed.loadRemoved || parsed.isStale) && !hasSeenLiveWeightRef.current) {
+    // 1. Ghost Reading Filter:
+    // If the scale broadcasts an old cached packet where the load was already removed (stepped off)
+    // before the user has stepped onto the scale during this scan session, ignore it!
+    if (parsed.loadRemoved && !hasSeenLiveWeightRef.current) {
       return;
     }
 

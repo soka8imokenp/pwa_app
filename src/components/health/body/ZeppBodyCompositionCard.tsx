@@ -85,7 +85,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-2xl bg-[#DDE8DE] border border-[#24201D] flex items-center justify-center text-[#2D503C] shadow-2xs">
-              <Activity className="w-4 h-4" />
+              <Activity className="w-4 h-4 stroke-[2.5]" />
             </div>
             <div>
               <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display block leading-none">
@@ -100,7 +100,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
 
         <div className="p-4 bg-[#FAF8F5] border border-[#24201D]/20 rounded-2xl text-center space-y-2.5">
           <p className="text-xs text-[#6B635B] font-medium leading-relaxed max-w-xs mx-auto">
-            Step onto your smart scale barefoot to unlock your full bio-impedance composition breakdown: body score, lean muscle mass, hydration, visceral fat, and somatic classification.
+            Step onto your smart scale barefoot to unlock your full body composition breakdown: body score, muscle mass, hydration, visceral fat, and physique classification.
           </p>
           <button
             type="button"
@@ -110,7 +110,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
             }}
             className="py-2.5 px-4 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-black shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 transition-all inline-flex items-center gap-2 cursor-pointer font-display uppercase tracking-wider"
           >
-            <Scale className="w-3.5 h-3.5" />
+            <Scale className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>Weigh In on Smart Scale</span>
           </button>
         </div>
@@ -171,7 +171,6 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
   const handleItemClick = (item: ZeppMetricItem) => {
     playClickSound();
     if (onSelectMetric) {
-      // Safe deduplication for modal
       const rawFormatted = item.valueFormatted || '';
       const cleanValue = item.unit
         ? rawFormatted.replace(new RegExp(`\\s*${item.unit}$`), '').trim()
@@ -194,41 +193,28 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
     }
   };
 
-  // Ultra-Compact, High-Precision Status Capsule (Never crowds the row)
-  const renderStatusTag = (statusType: ZeppMetricItem['statusType'], label: string) => {
-    let shortText = label;
-    if (/below target/i.test(label) || /underweight/i.test(label) || /deficit/i.test(label)) {
-      shortText = 'Low';
-    } else if (/needs attention/i.test(label) || /attention/i.test(label)) {
-      shortText = 'Check';
-    } else if (/normal/i.test(label)) {
-      shortText = 'Normal';
-    } else if (/optimal/i.test(label)) {
-      shortText = 'Optimal';
-    } else if (/high/i.test(label) || /overweight/i.test(label)) {
-      shortText = 'High';
-    }
-
+  // Distinctive, Compact Status Badge with Neo-Brutalist border & subtle icon
+  const renderStatusBadge = (statusType: ZeppMetricItem['statusType'], label: string) => {
     if (statusType === 'alert') {
       return (
-        <span className="text-[10px] font-black text-[#991B1B] bg-[#FEE2E2] px-2 py-0.5 rounded-full border border-[#991B1B]/35 shadow-2xs font-display inline-flex items-center gap-1 shrink-0">
+        <span className="text-[10px] font-black text-[#991B1B] bg-[#FEE2E2] px-2.5 py-0.5 rounded-md border border-[#991B1B]/35 shadow-2xs font-display inline-flex items-center gap-1 shrink-0">
           <ArrowDownCircle className="w-2.5 h-2.5 stroke-[2.5] text-[#DC2626]" />
-          <span>{shortText}</span>
+          <span>{label}</span>
         </span>
       );
     }
     if (statusType === 'attention') {
       return (
-        <span className="text-[10px] font-black text-[#854D0E] bg-[#FEF3C7] px-2 py-0.5 rounded-full border border-[#854D0E]/35 shadow-2xs font-display inline-flex items-center gap-1 shrink-0">
+        <span className="text-[10px] font-black text-[#854D0E] bg-[#FEF3C7] px-2.5 py-0.5 rounded-md border border-[#854D0E]/35 shadow-2xs font-display inline-flex items-center gap-1 shrink-0">
           <AlertCircle className="w-2.5 h-2.5 stroke-[2.5] text-[#D97706]" />
-          <span>{shortText}</span>
+          <span>{label}</span>
         </span>
       );
     }
     return (
-      <span className="text-[10px] font-black text-[#2D503C] bg-[#DDE8DE] px-2 py-0.5 rounded-full border border-[#2D503C]/35 shadow-2xs font-display inline-flex items-center gap-1 shrink-0">
+      <span className="text-[10px] font-black text-[#2D503C] bg-[#DDE8DE] px-2.5 py-0.5 rounded-md border border-[#2D503C]/35 shadow-2xs font-display inline-flex items-center gap-1 shrink-0">
         <Check className="w-2.5 h-2.5 stroke-[3] text-[#2D503C]" />
-        <span>{shortText}</span>
+        <span>{label}</span>
       </span>
     );
   };
@@ -245,10 +231,10 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
 
   const scoreTierColor =
     score >= 85
-      ? 'text-[#2D503C] bg-[#DDE8DE] border-[#2D503C]/30'
+      ? 'text-[#2D503C] bg-[#DDE8DE] border-[#2D503C]/35'
       : score >= 70
-      ? 'text-[#854D0E] bg-[#FBECCF] border-[#854D0E]/30'
-      : 'text-[#991B1B] bg-[#FEE2E2] border-[#991B1B]/30';
+      ? 'text-[#854D0E] bg-[#FBECCF] border-[#854D0E]/35'
+      : 'text-[#991B1B] bg-[#FEE2E2] border-[#991B1B]/35';
 
   const scoreDotColor =
     score >= 85 ? 'bg-[#10B981]' : score >= 70 ? 'bg-[#D97706]' : 'bg-[#EF4444]';
@@ -295,34 +281,40 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
       {/* Signature Bento Hero: Body Health Score Monument & Vitals */}
       <div className="p-4 sm:p-5 bg-gradient-to-br from-[#FFFDF9] via-[#FAF8F5] to-[#F5EFE6] border-b-[1.75px] border-[#24201D]/20 space-y-3">
         {/* Main Body Health Score Pod */}
-        <div className="p-4 bg-white border-2 border-[#24201D] rounded-2xl shadow-[3px_3px_0px_#24201D] space-y-2.5">
+        <div className="p-4 sm:p-5 bg-white border-2 border-[#24201D] rounded-2xl shadow-[3px_3px_0px_#24201D] space-y-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-[#3D6B52]" />
+              <Activity className="w-4 h-4 text-[#3D6B52] stroke-[2.5]" />
               <span className="text-[9px] font-black uppercase tracking-widest text-[#6B635B] font-display">
                 BODY HEALTH SCORE
               </span>
             </div>
-            <div className={`px-2.5 py-0.5 rounded-full border text-[10px] font-black font-display inline-flex items-center gap-1.5 shadow-2xs ${scoreTierColor}`}>
+            <div className={`px-2.5 py-0.5 rounded-md border text-[10px] font-black font-display inline-flex items-center gap-1.5 shadow-2xs ${scoreTierColor}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${scoreDotColor} animate-pulse shrink-0`} />
               <span>{scoreTierText}</span>
             </div>
           </div>
 
-          <div className="flex items-baseline gap-1.5 pt-0.5">
-            <span className="text-5xl sm:text-6xl font-black font-mono-num text-[#24201D] tracking-tight leading-none">
-              {score}
-            </span>
-            <span className="text-xs font-black text-[#6B635B] font-display uppercase leading-none">
-              / 100
-            </span>
-            <span className="ml-auto text-[9px] font-bold text-[#6B635B] font-display uppercase tracking-wider bg-[#FAF8F5] px-2 py-0.5 rounded-lg border border-[#24201D]/15">
-              Bio-Impedance
-            </span>
+          <div className="flex items-baseline justify-between pt-1">
+            <div className="flex items-baseline gap-2">
+              <span className="text-6xl sm:text-7xl font-black font-mono-num text-[#24201D] tracking-tight leading-none">
+                {score}
+              </span>
+              <span className="text-sm font-black text-[#6B635B] font-display uppercase leading-none">
+                / 100
+              </span>
+            </div>
+
+            <div className="text-right">
+              <span className="text-[10px] text-[#6B635B] font-medium block">Progress</span>
+              <span className="text-xs font-black font-mono-num text-[#24201D]">
+                {deltaSign !== '0' ? `${deltaSign} kg` : 'Maintained'}
+              </span>
+            </div>
           </div>
 
           {/* Stepped Tri-Zone Telemetry Gauge Track */}
-          <div className="space-y-1 pt-0.5">
+          <div className="space-y-1 pt-1">
             <div className="w-full h-2.5 rounded-full bg-stone-100 border border-[#24201D] overflow-hidden p-0.5 shadow-2xs">
               <div
                 className={`h-full rounded-full transition-all duration-700 ease-out ${scoreBarColor}`}
@@ -349,7 +341,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
               {metrics.bodyType}
             </span>
             <span className="text-[9px] text-[#6B635B] font-medium block truncate">
-              9-Box Matrix
+              Physique Profile
             </span>
           </div>
 
@@ -393,7 +385,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
         {/* Tactile 8-Pip Biomarkers Balance Strip */}
         <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2">
           <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider font-display">
-            <span className="text-[#24201D]">Biomarkers Resilience</span>
+            <span className="text-[#24201D]">Biomarkers Balance</span>
             <span className="text-[#2D503C] font-mono-num">{achievedItems.length} of 8 Targets Met</span>
           </div>
 
@@ -419,7 +411,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
       {/* Expandable Accordion Body */}
       {isExpanded && (
         <div className="p-4 sm:p-5 bg-[#FAF8F5] space-y-3">
-          {/* Segmented Filter Pills (NO COUNTS) */}
+          {/* Segmented Filter Pills (NO COUNTERS, NO NOISE) */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
             <button
               type="button"
@@ -449,7 +441,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                     : 'bg-white hover:bg-stone-100 text-[#2D503C] border border-[#24201D]/20'
                 }`}
               >
-                <CheckCircle2 className="w-3.5 h-3.5" />
+                <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Achieved</span>
               </button>
             )}
@@ -467,7 +459,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                     : 'bg-white hover:bg-stone-100 text-[#854D0E] border border-[#24201D]/20'
                 }`}
               >
-                <AlertTriangle className="w-3.5 h-3.5" />
+                <AlertTriangle className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Attention</span>
               </button>
             )}
@@ -485,17 +477,16 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                     : 'bg-white hover:bg-stone-100 text-[#991B1B] border border-[#24201D]/20'
                 }`}
               >
-                <ArrowDownCircle className="w-3.5 h-3.5" />
+                <ArrowDownCircle className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Below Target</span>
               </button>
             )}
           </div>
 
-          {/* Structured 2-Line Metric Cards: No Truncation, Clean Status Alignment */}
-          <div className="space-y-2">
+          {/* Spacious, Uncrowded Metric Rows: Full Titles, No Truncation, Distinct Badges */}
+          <div className="space-y-2.5">
             {displayItems.map((item) => {
               const visuals = getMetricVisuals(item.id);
-              // Clean value guarantee: strip duplicate trailing unit
               const rawFormatted = item.valueFormatted || '';
               const cleanValue = item.unit
                 ? rawFormatted.replace(new RegExp(`\\s*${item.unit}$`), '').trim()
@@ -506,21 +497,26 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                   key={item.id}
                   type="button"
                   onClick={() => handleItemClick(item)}
-                  className="w-full p-3 bg-white hover:bg-stone-50 border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#24201D] cursor-pointer text-left group space-y-2 select-none"
+                  className="w-full p-3.5 bg-white hover:bg-[#FFFDF9] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#24201D] cursor-pointer text-left group flex items-center justify-between gap-3 select-none"
                 >
-                  {/* Line 1: Title on left, Numeric Value on right */}
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 shadow-2xs transition-transform group-hover:scale-105 ${visuals.bg}`}>
-                        {visuals.icon}
-                      </div>
-                      <span className="font-display font-black text-xs sm:text-sm text-[#24201D] truncate group-hover:text-[#3D6B52] transition-colors">
+                  {/* Left Column: Icon + Full Metric Title + Target */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-9 h-9 rounded-xl border border-[#24201D] flex items-center justify-center shrink-0 shadow-2xs transition-transform group-hover:scale-105 ${visuals.bg}`}>
+                      {visuals.icon}
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="font-display font-black text-xs sm:text-sm text-[#24201D] truncate leading-tight group-hover:text-[#3D6B52] transition-colors">
                         {item.title}
+                      </h4>
+                      <span className="text-[10px] text-[#6B635B] font-medium block truncate mt-0.5 font-mono-num">
+                        Target: {item.normRange}
                       </span>
                     </div>
+                  </div>
 
-                    {/* Bold Numeric Value + Single Unit (NO DUPLICATES) */}
-                    <div className="flex items-baseline gap-1 shrink-0 font-mono-num font-black text-xs sm:text-sm text-[#24201D]">
+                  {/* Right Column: Prominent Value (Single Unit) + Compact Status Badge */}
+                  <div className="flex flex-col items-end shrink-0 gap-1">
+                    <div className="flex items-baseline gap-1 font-mono-num font-black text-sm sm:text-base text-[#24201D]">
                       <span>{cleanValue}</span>
                       {item.unit && (
                         <span className="text-[10px] font-bold text-[#6B635B] font-display uppercase">
@@ -528,18 +524,8 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                         </span>
                       )}
                     </div>
-                  </div>
-
-                  {/* Line 2: Target Range on left, Compact Status Capsule on right */}
-                  <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-[#24201D]/10">
-                    <div className="flex items-center gap-1.5 min-w-0 text-[10px] text-[#6B635B] font-medium truncate">
-                      <span className="text-[9px] font-black uppercase tracking-wider text-[#24201D]/40 font-display">Target:</span>
-                      <span className="font-mono-num font-bold text-[#24201D] truncate">{item.normRange}</span>
-                    </div>
-
-                    {/* Compact Sculpted Status Capsule Tag (Only ~50px!) */}
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {renderStatusTag(item.statusType, item.statusLabel)}
+                    <div className="flex items-center gap-1.5">
+                      {renderStatusBadge(item.statusType, item.statusLabel)}
                       <ChevronRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-[#24201D] transition-colors" />
                     </div>
                   </div>

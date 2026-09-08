@@ -979,18 +979,37 @@ public class MainActivity extends BridgeActivity {
 
             byte[] scaleData = null;
 
-            // 1. Check Body Composition Service UUID 0x181B (Xiaomi Scale 2)
+            // 1. Direct Service UUID lookup
             ParcelUuid bodyCompUuid = ParcelUuid.fromString("0000181b-0000-1000-8000-00805f9b34fb");
             scaleData = record.getServiceData(bodyCompUuid);
 
-            // 2. Check Weight Scale Service UUID 0x181D (Xiaomi Scale 1)
             if (scaleData == null) {
                 ParcelUuid weightScaleUuid = ParcelUuid.fromString("0000181d-0000-1000-8000-00805f9b34fb");
                 scaleData = record.getServiceData(weightScaleUuid);
             }
 
-            // Strictly accept ONLY valid 13-byte body composition or 10-byte weight packets
-            if (scaleData != null && (scaleData.length == 13 || scaleData.length == 10)) {
+            // 2. Iterative Map Lookup (handles variations in 16-bit vs 128-bit ParcelUuid)
+            if (scaleData == null && record.getServiceData() != null) {
+                for (java.util.Map.Entry<ParcelUuid, byte[]> entry : record.getServiceData().entrySet()) {
+                    if (entry.getKey() != null) {
+                        String uuidStr = entry.getKey().toString().toLowerCase();
+                        if (uuidStr.contains("181b") || uuidStr.contains("181d")) {
+                            scaleData = entry.getValue();
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 3. Fallback: transmit full raw advertisement buffer if present (JS sliding window parses it)
+            if (scaleData == null) {
+                byte[] rawBytes = record.getBytes();
+                if (rawBytes != null && rawBytes.length >= 10) {
+                    scaleData = rawBytes;
+                }
+            }
+
+            if (scaleData != null && scaleData.length >= 10) {
                 final String base64Payload = Base64.encodeToString(scaleData, Base64.NO_WRAP);
                 runOnUiThread(() -> {
                     notifyJs("window.__onNativeScaleData && window.__onNativeScaleData('" + base64Payload + "');");

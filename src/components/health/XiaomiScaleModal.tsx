@@ -49,8 +49,13 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
   const hasSeenLiveWeightRef = useRef<boolean>(false);
   const stabilizedAtRef = useRef<number | null>(null);
   const lastValidReadingRef = useRef<XiaomiScaleReading | null>(null);
+  const impedanceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const resetScanSession = () => {
+    if (impedanceTimeoutRef.current) {
+      clearTimeout(impedanceTimeoutRef.current);
+      impedanceTimeoutRef.current = null;
+    }
     hasSeenLiveWeightRef.current = false;
     stabilizedAtRef.current = null;
     lastValidReadingRef.current = null;
@@ -92,10 +97,10 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
   const handleIncomingReading = (parsed: XiaomiScaleReading | null) => {
     if (!parsed) return;
 
-    // 1. Ghost Reading Filter:
-    // If the scale broadcasts a cached packet with loadRemoved (e.g. from an old measurement or empty scale)
-    // before the user has actually stepped on the scale during this scan session, ignore it completely!
-    if (parsed.loadRemoved && !hasSeenLiveWeightRef.current) {
+    // 1. Ghost & Stale Reading Filter:
+    // If the scale broadcasts an old cached packet (loadRemoved or >45s old)
+    // before the user has stepped onto the scale during this scan session, ignore it completely!
+    if ((parsed.loadRemoved || parsed.isStale) && !hasSeenLiveWeightRef.current) {
       return;
     }
 
@@ -112,6 +117,10 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
     // 3. Scale weight is still settling/fluctuating
     if (!parsed.isStabilized) {
       setStatus('stabilizing');
+      if (impedanceTimeoutRef.current) {
+        clearTimeout(impedanceTimeoutRef.current);
+        impedanceTimeoutRef.current = null;
+      }
       stabilizedAtRef.current = null;
       setImpedanceProgress(15);
       return;
@@ -123,8 +132,27 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
         stabilizedAtRef.current = Date.now();
       }
 
+      // Active fallback timer (3.5 seconds)
+      // Guarantees that even if the scale halts BLE transmission after weight lock (e.g. user wearing socks),
+      // the interface smoothly auto-finalizes and never hangs at 2 bars!
+      if (!impedanceTimeoutRef.current) {
+        impedanceTimeoutRef.current = setTimeout(() => {
+          if (lastValidReadingRef.current) {
+            try {
+              (window as any).AndroidBluetoothScale?.stopScan?.();
+            } catch (e) {}
+            setImpedanceProgress(100);
+            completeMeasurement(lastValidReadingRef.current);
+          }
+        }, 3500);
+      }
+
       // Case A: Bio-impedance is fully completed by hardware!
       if (parsed.isImpedanceComplete) {
+        if (impedanceTimeoutRef.current) {
+          clearTimeout(impedanceTimeoutRef.current);
+          impedanceTimeoutRef.current = null;
+        }
         try {
           (window as any).AndroidBluetoothScale?.stopScan?.();
         } catch (e) {}
@@ -146,11 +174,12 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
         setImpedanceProgress(100);
       }
 
-      // Case C: Auto-fallback — NEVER freeze or get stuck!
-      // If user stepped off after stabilization (loadRemoved === true),
-      // or if stabilization has lasted >= 3.0 seconds (e.g. socks on, dry skin, or Scale 1),
-      // auto-finalize the stabilized weight immediately!
-      if (parsed.loadRemoved || elapsed >= 3000) {
+      // Case C: If user stepped off after stabilization, finalize immediately
+      if (parsed.loadRemoved) {
+        if (impedanceTimeoutRef.current) {
+          clearTimeout(impedanceTimeoutRef.current);
+          impedanceTimeoutRef.current = null;
+        }
         try {
           (window as any).AndroidBluetoothScale?.stopScan?.();
         } catch (e) {}
@@ -198,6 +227,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
             height: profile.height,
             age: profile.age,
             gender: profile.gender,
+            weight: profile.currentWeight,
           });
 
           handleIncomingReading(parsed);
@@ -271,6 +301,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                 height: profile.height,
                 age: profile.age,
                 gender: profile.gender,
+                weight: profile.currentWeight,
               });
 
               handleIncomingReading(parsed);

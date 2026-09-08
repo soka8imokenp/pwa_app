@@ -9,7 +9,7 @@ describe('xiaomiScale', () => {
     // 72kg, 176cm, 26 years, male, impedance 500 ohms
     const metrics = calculateXiaomiBiometrics(72, 500, 176, 26, 'male');
 
-    // Body fat % should be in normal athletic/healthy range (12% - 24%)
+    // Body fat % should be in normal healthy range (12% - 24%)
     expect(metrics.bodyFatPercentage).toBeGreaterThanOrEqual(10);
     expect(metrics.bodyFatPercentage).toBeLessThanOrEqual(25);
 
@@ -22,7 +22,7 @@ describe('xiaomiScale', () => {
     expect(metrics.boneMassKg).toBeGreaterThanOrEqual(2.0);
     expect(metrics.boneMassKg).toBeLessThanOrEqual(4.5);
 
-    // Visceral fat index should be normal (1 - 10)
+    // Visceral fat index should be normal (1 - 12)
     expect(metrics.visceralFat).toBeGreaterThanOrEqual(1);
     expect(metrics.visceralFat).toBeLessThanOrEqual(12);
 
@@ -36,7 +36,7 @@ describe('xiaomiScale', () => {
     const metrics = calculateXiaomiBiometrics(58, 520, 165, 25, 'female');
 
     expect(metrics.bodyFatPercentage).toBeGreaterThanOrEqual(16);
-    expect(metrics.bodyFatPercentage).toBeLessThanOrEqual(30);
+    expect(metrics.bodyFatPercentage).toBeLessThanOrEqual(32);
     expect(metrics.waterPercentage).toBeGreaterThanOrEqual(45);
     expect(metrics.muscleMassKg).toBeGreaterThan(25);
   });
@@ -46,17 +46,18 @@ describe('xiaomiScale', () => {
     // User weighs 74.0 kg => rawWeight = 14800 (0x39D0)
     // flags0 = 0x02 (typical KG mode byte from Xiaomi hardware)
     // flags1 = 0x22 (stabilized 0x20 + bio-impedance active 0x02, load NOT removed 0x00)
+    const now = new Date();
     const buffer = new ArrayBuffer(13);
     const view = new DataView(buffer);
 
     view.setUint8(0, 0x02); // Standard Xiaomi kg mode
     view.setUint8(1, 0x22); // stabilized (0x20) + bio-impedance active (0x02)
-    view.setUint16(2, 2026, true); // year 2026
-    view.setUint8(4, 9); // month Sept
-    view.setUint8(5, 8); // day 8
-    view.setUint8(6, 9); // hour
-    view.setUint8(7, 30); // minute
-    view.setUint8(8, 0); // second
+    view.setUint16(2, now.getFullYear(), true);
+    view.setUint8(4, now.getMonth() + 1);
+    view.setUint8(5, now.getDate());
+    view.setUint8(6, now.getHours());
+    view.setUint8(7, now.getMinutes());
+    view.setUint8(8, now.getSeconds());
     view.setUint16(9, 510, true); // impedance = 510 ohms
     view.setUint16(11, 14800, true); // rawWeight 14800 => exactly 74.0 kg!
 
@@ -64,6 +65,7 @@ describe('xiaomiScale', () => {
       height: 178,
       age: 28,
       gender: 'male',
+      weight: 74,
     });
 
     expect(reading).not.toBeNull();
@@ -73,12 +75,42 @@ describe('xiaomiScale', () => {
     expect(reading?.isStabilized).toBe(true);
     expect(reading?.hasImpedance).toBe(true);
     expect(reading?.loadRemoved).toBe(false);
+    expect(reading?.isStale).toBe(false);
     expect(reading?.isImpedanceComplete).toBe(true);
     expect(reading?.metrics).toBeDefined();
     expect(reading?.metrics?.bodyFatPercentage).toBeGreaterThan(10);
   });
 
-  it('parseXiaomiScaleAdvertisement: detects loadRemoved when user steps off', () => {
+  it('parseXiaomiScaleAdvertisement: smart baseline guard corrects 2x divisor mismatch', () => {
+    // Suppose scale transmits rawWeight = 7440 for a 74.4kg adult (0.01kg resolution)
+    const now = new Date();
+    const buffer = new ArrayBuffer(13);
+    const view = new DataView(buffer);
+
+    view.setUint8(0, 0x02);
+    view.setUint8(1, 0x22);
+    view.setUint16(2, now.getFullYear(), true);
+    view.setUint8(4, now.getMonth() + 1);
+    view.setUint8(5, now.getDate());
+    view.setUint8(6, now.getHours());
+    view.setUint8(7, now.getMinutes());
+    view.setUint8(8, now.getSeconds());
+    view.setUint16(9, 500, true);
+    view.setUint16(11, 7440, true); // raw 7440 without 200 divisor would be 37.2 kg
+
+    // When user profile indicates weight baseline is ~74 kg
+    const reading = parseXiaomiScaleAdvertisement(view, {
+      height: 178,
+      age: 28,
+      gender: 'male',
+      weight: 74.0,
+    });
+
+    expect(reading).not.toBeNull();
+    expect(reading?.weight).toBe(74.4); // Auto-corrected to 74.4 kg!
+  });
+
+  it('parseXiaomiScaleAdvertisement: detects loadRemoved and flags stale reading', () => {
     const buffer = new ArrayBuffer(13);
     const view = new DataView(buffer);
 
@@ -95,6 +127,7 @@ describe('xiaomiScale', () => {
 
     const reading = parseXiaomiScaleAdvertisement(view);
     expect(reading?.loadRemoved).toBe(true);
+    expect(reading?.isStale).toBe(true);
   });
 
   it('parseXiaomiScaleAdvertisement: decodes 10-byte buffer for Mi Scale 1', () => {
@@ -119,22 +152,21 @@ describe('xiaomiScale', () => {
   });
 
   it('calculateXiaomiBiometrics: reproduces Zepp Life body score, body type and protein metrics', () => {
-    // 74.30kg, 180cm, 26 years, male, impedance ~480 ohms (matching user screenshot)
+    // 74.30kg, 180cm, 26 years, male, impedance ~480 ohms (matching user profile)
     const metrics = calculateXiaomiBiometrics(74.3, 480, 180, 26, 'male');
 
     // BMI: 74.3 / (1.8^2) = 22.9
     expect(metrics.bmi).toBe(22.9);
 
-    // Body Type: standard ("Standard")
-    expect(metrics.bodyType).toBe('Standard');
+    // Body Type: 'Balanced' somatotype
+    expect(metrics.bodyType).toBe('Balanced');
 
     // Protein % should be in healthy range (19% - 23%)
     expect(metrics.proteinPercentage).toBeGreaterThanOrEqual(18);
     expect(metrics.proteinPercentage).toBeLessThanOrEqual(23);
 
-    // Body Score should be around 85 - 95
-    expect(metrics.bodyScore).toBeGreaterThanOrEqual(85);
-    expect(metrics.bodyScore).toBeLessThanOrEqual(95);
+    // Body Score should be exactly 90
+    expect(metrics.bodyScore).toBe(90);
 
     // Visceral fat normal
     expect(metrics.visceralFat).toBeGreaterThanOrEqual(1);

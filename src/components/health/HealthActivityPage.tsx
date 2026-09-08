@@ -282,6 +282,11 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
         onAddSteps={(delta) => stepTracker.addSteps(delta, selectedDate)}
         onSetSteps={(steps) => stepTracker.setSteps(steps, selectedDate)}
         onSetGoal={(goal) => stepTracker.setStepGoal(goal, selectedDate)}
+        onResyncSensor={() => {
+          if (typeof window !== 'undefined' && (window as any).AndroidStepCounter?.resyncPhoneSteps) {
+            (window as any).AndroidStepCounter.resyncPhoneSteps();
+          }
+        }}
       />
 
       {/* 2. Activity & Steps Calendar Card (Week & Month views) */}
@@ -335,8 +340,8 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
 
           {/* Sub-breakdown: Workouts vs Steps */}
           <div className="flex items-center justify-between text-[10px] font-bold font-mono-num text-[#6B635B] pt-0.5">
-            <span>🏋️ Тренировки: +{todaysWorkouts.reduce((acc, w) => acc + (w.caloriesBurned || 0), 0)} ккал</span>
-            <span>🚶 Шаги: +{stepTracker.currentCalories} ккал</span>
+            <span>🏋️ Workouts: +{todaysWorkouts.reduce((acc, w) => acc + (w.caloriesBurned || 0), 0)} kcal</span>
+            <span>🚶 Steps: +{stepTracker.currentCalories} kcal</span>
           </div>
         </div>
 
@@ -352,9 +357,6 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
               </span>
               <span className="text-xs font-bold text-[#6B635B]">kcal</span>
             </div>
-            <span className="text-[9px] text-[#3D6B52] font-bold block">
-              + Added to intake budget
-            </span>
           </div>
 
           <div className="p-3 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
@@ -367,9 +369,6 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
               </span>
               <span className="text-xs font-bold text-[#6B635B]">mins</span>
             </div>
-            <span className="text-[9px] text-stone-400 font-bold block">
-              {todaysWorkouts.length} logged sessions
-            </span>
           </div>
 
           <div className="col-span-2 sm:col-span-1 p-3 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
@@ -382,9 +381,6 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
               </span>
               <span className="text-xs font-bold text-[#6B635B]">kcal/hr</span>
             </div>
-            <span className="text-[9px] text-stone-400 font-bold block">
-              Average metabolic rate
-            </span>
           </div>
         </div>
       </div>

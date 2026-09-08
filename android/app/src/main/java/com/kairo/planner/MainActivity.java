@@ -1114,6 +1114,11 @@ public class MainActivity extends BridgeActivity {
         }
 
         @JavascriptInterface
+        public void resyncPhoneSteps() {
+            startStepTracking();
+        }
+
+        @JavascriptInterface
         public void stopStepTracking() {
             runOnUiThread(() -> {
                 try {
@@ -1138,13 +1143,54 @@ public class MainActivity extends BridgeActivity {
                 String savedDate = prefs.getString(KEY_BASELINE_DATE, "");
                 float savedBaseline = prefs.getFloat(KEY_BASELINE_STEPS, -1f);
 
-                if (!todayStr.equals(savedDate) || savedBaseline < 0 || rawValue < savedBaseline) {
+                long uptimeMillis = android.os.SystemClock.elapsedRealtime();
+                long nowMillis = System.currentTimeMillis();
+                long bootTime = nowMillis - uptimeMillis;
+
+                java.util.Calendar cal = java.util.Calendar.getInstance();
+                cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                cal.set(java.util.Calendar.MINUTE, 0);
+                cal.set(java.util.Calendar.SECOND, 0);
+                cal.set(java.util.Calendar.MILLISECOND, 0);
+                long midnight = cal.getTimeInMillis();
+
+                if (savedBaseline < 0) {
+                    // First launch on device:
+                    // If device booted today, all steps since boot are from today!
+                    if (bootTime >= midnight) {
+                        savedBaseline = 0f;
+                    } else {
+                        // Phone has been on for multiple days: calculate today's proportion of uptime
+                        float totalHoursUptime = Math.max(1f, uptimeMillis / (1000f * 60f * 60f));
+                        float hoursToday = Math.max(1f, (nowMillis - midnight) / (1000f * 60f * 60f));
+                        int estimatedStepsToday = Math.min((int) rawValue, Math.round((rawValue / totalHoursUptime) * hoursToday));
+                        savedBaseline = Math.max(0f, rawValue - estimatedStepsToday);
+                    }
                     prefs.edit()
                             .putString(KEY_BASELINE_DATE, todayStr)
-                            .putFloat(KEY_BASELINE_STEPS, rawValue)
+                            .putFloat(KEY_BASELINE_STEPS, savedBaseline)
+                            .putFloat("last_raw_steps", rawValue)
+                            .apply();
+                    stepsToday = (int) (rawValue - savedBaseline);
+                } else if (!todayStr.equals(savedDate)) {
+                    // Midnight turnover to a new day:
+                    savedBaseline = rawValue;
+                    prefs.edit()
+                            .putString(KEY_BASELINE_DATE, todayStr)
+                            .putFloat(KEY_BASELINE_STEPS, savedBaseline)
+                            .putFloat("last_raw_steps", rawValue)
                             .apply();
                     stepsToday = 0;
+                } else if (rawValue < savedBaseline) {
+                    // Device rebooted during the day:
+                    savedBaseline = 0f;
+                    prefs.edit()
+                            .putFloat(KEY_BASELINE_STEPS, savedBaseline)
+                            .putFloat("last_raw_steps", rawValue)
+                            .apply();
+                    stepsToday = (int) rawValue;
                 } else {
+                    prefs.edit().putFloat("last_raw_steps", rawValue).apply();
                     stepsToday = (int) (rawValue - savedBaseline);
                 }
 

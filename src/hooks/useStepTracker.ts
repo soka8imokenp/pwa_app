@@ -313,6 +313,16 @@ export function useStepTracker({ selectedDate, profile, onGoalReached }: UseStep
     };
   }, [selectedDate, allStepLogs, currentGoal, userWeight, userHeight]);
 
+  const resyncSensor = useCallback(() => {
+    if (typeof window !== 'undefined' && (window as any).AndroidStepCounter?.resyncPhoneSteps) {
+      try {
+        (window as any).AndroidStepCounter.resyncPhoneSteps();
+      } catch (e) {
+        console.warn('Failed to trigger native sensor resync:', e);
+      }
+    }
+  }, []);
+
   return {
     stepLog,
     currentSteps,
@@ -327,6 +337,7 @@ export function useStepTracker({ selectedDate, profile, onGoalReached }: UseStep
     addSteps,
     setSteps,
     setStepGoal,
+    resyncSensor,
     weekStats,
     monthStats,
   };

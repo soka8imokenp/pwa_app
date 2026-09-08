@@ -20,7 +20,9 @@ export interface XiaomiScaleReading {
   weight: number; // in kg
   impedance: number; // in ohms
   isStabilized: boolean;
+  hasImpedance: boolean;
   isImpedanceComplete: boolean;
+  loadRemoved: boolean;
   timestamp: Date;
   unit: 'kg' | 'lbs' | 'jin';
   metrics?: XiaomiBiometricMetrics;
@@ -108,109 +110,193 @@ export function calculateXiaomiBiometrics(
 }
 
 /**
- * Decodes raw bytes broadcast by Xiaomi Mi Body Composition Scale 2 (Service 0x181B).
+ * Decodes raw bytes broadcast by Xiaomi Mi Body Composition Scale 2 (Service 0x181B)
+ * and Xiaomi Mi Scale 1 (Service 0x181D).
  */
 export function parseXiaomiScaleAdvertisement(
   dataView: DataView,
   userProfile?: { height?: number; age?: number; gender?: 'male' | 'female' }
 ): XiaomiScaleReading | null {
-  if (dataView.byteLength < 13) {
+  if (dataView.byteLength < 10) {
     return null;
   }
 
-  let offset = 0;
-  if (dataView.byteLength > 13) {
-    let found = false;
+  // Check for 13-byte Body Composition packet (Service 0x181B)
+  if (dataView.byteLength >= 13) {
+    let offset13 = -1;
     for (let i = 0; i <= dataView.byteLength - 13; i++) {
       const candidateYear = dataView.getUint16(i + 2, true);
       const candidateMonth = dataView.getUint8(i + 4);
       const candidateDay = dataView.getUint8(i + 5);
+      const candidateHour = dataView.getUint8(i + 6);
+      const candidateMin = dataView.getUint8(i + 7);
+      const candidateSec = dataView.getUint8(i + 8);
+
       if (
-        candidateYear >= 2020 &&
+        candidateYear >= 2018 &&
         candidateYear <= 2035 &&
         candidateMonth >= 1 &&
         candidateMonth <= 12 &&
         candidateDay >= 1 &&
-        candidateDay <= 31
+        candidateDay <= 31 &&
+        candidateHour <= 23 &&
+        candidateMin <= 59 &&
+        candidateSec <= 59
       ) {
-        offset = i;
-        found = true;
+        offset13 = i;
         break;
       }
     }
-    if (!found) return null;
+
+    if (offset13 !== -1) {
+      const flags0 = dataView.getUint8(offset13 + 0);
+      const flags1 = dataView.getUint8(offset13 + 1);
+
+      // Unit detection:
+      // Byte 0 bit 0 (0x01): LBS
+      // Byte 0 bit 4 (0x10) or Byte 1 bit 6 (0x40): Jin (Chinese Catty)
+      // Otherwise: KG (byte 0 frequently has bit 1 (0x02) set in standard kg mode)
+      let unit: 'kg' | 'lbs' | 'jin' = 'kg';
+      if ((flags0 & 0x01) !== 0) {
+        unit = 'lbs';
+      } else if ((flags0 & 0x10) !== 0 || (flags1 & 0x40) !== 0) {
+        unit = 'jin';
+      }
+
+      // Status flags in Byte 1:
+      // Bit 1 (0x02): has_impedance (bio-impedance measurement circuit active)
+      // Bit 5 (0x20): is_stabilized (weight has locked and stabilized)
+      // Bit 7 (0x80): load_removed (weight removed from scale)
+      const isStabilized = (flags1 & 0x20) !== 0;
+      const hasImpedance = (flags1 & 0x02) !== 0;
+      const loadRemoved = (flags1 & 0x80) !== 0;
+
+      // Timestamp
+      const year = dataView.getUint16(offset13 + 2, true);
+      const rawMonth = dataView.getUint8(offset13 + 4);
+      const day = dataView.getUint8(offset13 + 5);
+      const hour = dataView.getUint8(offset13 + 6);
+      const minute = dataView.getUint8(offset13 + 7);
+      const second = dataView.getUint8(offset13 + 8);
+      const timestamp = new Date(year, rawMonth - 1, day, hour, minute, second);
+
+      // Impedance (bytes 9-10, Little-Endian in ohms)
+      const impedance = dataView.getUint16(offset13 + 9, true);
+
+      // Weight (bytes 11-12, Little-Endian)
+      // Xiaomi scale resolution is rawWeight / 200.0 (factor 0.005) for both KG and Jin (1 jin = 0.5 kg).
+      // For LBS mode: rawWeight / 100.0 is lbs => converted by 0.45359237 to kg.
+      const rawWeight = dataView.getUint16(offset13 + 11, true);
+      let weight: number;
+      if (unit === 'lbs') {
+        weight = Number(((rawWeight / 100.0) * 0.45359237).toFixed(2));
+      } else {
+        weight = Number((rawWeight / 200.0).toFixed(2));
+      }
+
+      // Sanity check: Human body weight must be within realistic physical range
+      if (weight < 5.0 || weight > 250.0) {
+        return null;
+      }
+
+      // Bio-impedance is valid when in realistic human physiological range (50 - 2500 ohms)
+      const hasValidImpedance = impedance >= 50 && impedance <= 2500;
+      const isImpedanceComplete = isStabilized && (hasValidImpedance || (hasImpedance && impedance > 0));
+
+      let metrics: XiaomiBiometricMetrics | undefined;
+      if (isImpedanceComplete && hasValidImpedance && userProfile) {
+        metrics = calculateXiaomiBiometrics(
+          weight,
+          impedance,
+          userProfile.height || 175,
+          userProfile.age || 25,
+          userProfile.gender || 'male'
+        );
+      }
+
+      return {
+        weight,
+        impedance,
+        isStabilized,
+        hasImpedance,
+        isImpedanceComplete,
+        loadRemoved,
+        timestamp,
+        unit: 'kg',
+        metrics,
+      };
+    }
   }
 
-  const flags0 = dataView.getUint8(offset + 0);
-  const flags1 = dataView.getUint8(offset + 1);
+  // Check for 10-byte Weight Scale packet (Mi Scale 1, Service 0x181D)
+  if (dataView.byteLength >= 10) {
+    let offset10 = -1;
+    for (let i = 0; i <= dataView.byteLength - 10; i++) {
+      const candidateYear = dataView.getUint16(i + 3, true);
+      const candidateMonth = dataView.getUint8(i + 5);
+      const candidateDay = dataView.getUint8(i + 6);
+      const candidateHour = dataView.getUint8(i + 7);
+      const candidateMin = dataView.getUint8(i + 8);
+      const candidateSec = dataView.getUint8(i + 9);
 
-  // Unit detection
-  let unit: 'kg' | 'lbs' | 'jin' = 'kg';
-  if ((flags0 & 0x01) !== 0) {
-    unit = 'lbs';
-  } else if ((flags0 & 0x02) !== 0) {
-    unit = 'jin';
+      if (
+        candidateYear >= 2018 &&
+        candidateYear <= 2035 &&
+        candidateMonth >= 1 &&
+        candidateMonth <= 12 &&
+        candidateDay >= 1 &&
+        candidateDay <= 31 &&
+        candidateHour <= 23 &&
+        candidateMin <= 59 &&
+        candidateSec <= 59
+      ) {
+        offset10 = i;
+        break;
+      }
+    }
+
+    if (offset10 !== -1) {
+      const flags = dataView.getUint8(offset10 + 0);
+      const unit: 'kg' | 'lbs' | 'jin' =
+        (flags & 0x01) !== 0 ? 'lbs' : (flags & 0x10) !== 0 ? 'jin' : 'kg';
+
+      const isStabilized = (flags & 0x20) !== 0;
+      const loadRemoved = (flags & 0x80) !== 0;
+
+      const year = dataView.getUint16(offset10 + 3, true);
+      const rawMonth = dataView.getUint8(offset10 + 5);
+      const day = dataView.getUint8(offset10 + 6);
+      const hour = dataView.getUint8(offset10 + 7);
+      const minute = dataView.getUint8(offset10 + 8);
+      const second = dataView.getUint8(offset10 + 9);
+      const timestamp = new Date(year, rawMonth - 1, day, hour, minute, second);
+
+      const rawWeight = dataView.getUint16(offset10 + 1, true);
+      let weight: number;
+      if (unit === 'lbs') {
+        weight = Number(((rawWeight / 100.0) * 0.45359237).toFixed(2));
+      } else {
+        weight = Number((rawWeight / 200.0).toFixed(2));
+      }
+
+      if (weight < 5.0 || weight > 250.0) {
+        return null;
+      }
+
+      return {
+        weight,
+        impedance: 0,
+        isStabilized,
+        hasImpedance: false,
+        isImpedanceComplete: isStabilized,
+        loadRemoved,
+        timestamp,
+        unit: 'kg',
+      };
+    }
   }
 
-  // Stabilization and Impedance status
-  const isStabilized = (flags1 & 0x20) !== 0;
-  const isImpedanceComplete = (flags1 & 0x80) !== 0;
-
-  // Timestamp
-  const year = dataView.getUint16(offset + 2, true);
-  const rawMonth = dataView.getUint8(offset + 4);
-  const day = dataView.getUint8(offset + 5);
-  const hour = dataView.getUint8(offset + 6);
-  const minute = dataView.getUint8(offset + 7);
-  const second = dataView.getUint8(offset + 8);
-
-  // Strict sanity checks to reject noise or non-scale packets
-  if (year < 2018 || year > 2035) return null;
-  if (rawMonth < 1 || rawMonth > 12) return null;
-  if (day < 1 || day > 31) return null;
-  if (hour > 23 || minute > 59 || second > 59) return null;
-
-  const timestamp = new Date(year, rawMonth - 1, day, hour, minute, second);
-
-  // Impedance (bytes 9-10, Little-Endian)
-  const impedance = dataView.getUint16(offset + 9, true);
-
-  // Weight (bytes 11-12, Little-Endian, factor 0.005)
-  const rawWeight = dataView.getUint16(offset + 11, true);
-  let weight = Number((rawWeight * 0.005).toFixed(2));
-
-  // Convert unit to kg if needed
-  if (unit === 'lbs') {
-    weight = Number((weight * 0.45359237).toFixed(2));
-  } else if (unit === 'jin') {
-    weight = Number((weight * 0.5).toFixed(2));
-  }
-
-  // Sanity check: Human body weight must be within realistic physical range
-  if (weight < 5.0 || weight > 250.0) {
-    return null;
-  }
-
-  let metrics: XiaomiBiometricMetrics | undefined;
-  if (isImpedanceComplete && impedance > 50 && impedance < 2500 && userProfile) {
-    metrics = calculateXiaomiBiometrics(
-      weight,
-      impedance,
-      userProfile.height || 175,
-      userProfile.age || 25,
-      userProfile.gender || 'male'
-    );
-  }
-
-  return {
-    weight,
-    impedance,
-    isStabilized,
-    isImpedanceComplete,
-    timestamp,
-    unit: 'kg',
-    metrics,
-  };
+  return null;
 }
 
 /**

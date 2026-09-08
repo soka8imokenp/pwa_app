@@ -46,10 +46,20 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
   const [isSaving, setIsSaving] = useState(false);
 
   const scanAbortController = useRef<AbortController | null>(null);
+  const hasSeenLiveWeightRef = useRef<boolean>(false);
+  const stabilizedAtRef = useRef<number | null>(null);
+  const lastValidReadingRef = useRef<XiaomiScaleReading | null>(null);
+
+  const resetScanSession = () => {
+    hasSeenLiveWeightRef.current = false;
+    stabilizedAtRef.current = null;
+    lastValidReadingRef.current = null;
+  };
 
   // Reset state on open/close
   useEffect(() => {
     if (isOpen) {
+      resetScanSession();
       setStatus('idle');
       setErrorMessage('');
       setLiveWeight(0);
@@ -61,6 +71,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
   }, [isOpen]);
 
   const stopScanning = () => {
+    resetScanSession();
     if (typeof window !== 'undefined' && (window as any).AndroidBluetoothScale) {
       try {
         (window as any).AndroidBluetoothScale.stopScan();
@@ -76,12 +87,88 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
   };
 
   /**
+   * Unified telemetry packet handler for both Native Android and Web Bluetooth
+   */
+  const handleIncomingReading = (parsed: XiaomiScaleReading | null) => {
+    if (!parsed) return;
+
+    // 1. Ghost Reading Filter:
+    // If the scale broadcasts a cached packet with loadRemoved (e.g. from an old measurement or empty scale)
+    // before the user has actually stepped on the scale during this scan session, ignore it completely!
+    if (parsed.loadRemoved && !hasSeenLiveWeightRef.current) {
+      return;
+    }
+
+    // 2. Ignore noise under 10 kg
+    if (parsed.weight < 10.0) {
+      return;
+    }
+
+    // Mark that a live person is standing on the scale
+    hasSeenLiveWeightRef.current = true;
+    lastValidReadingRef.current = parsed;
+    setLiveWeight(parsed.weight);
+
+    // 3. Scale weight is still settling/fluctuating
+    if (!parsed.isStabilized) {
+      setStatus('stabilizing');
+      stabilizedAtRef.current = null;
+      setImpedanceProgress(15);
+      return;
+    }
+
+    // 4. Scale weight is stabilized
+    if (parsed.isStabilized) {
+      if (!stabilizedAtRef.current) {
+        stabilizedAtRef.current = Date.now();
+      }
+
+      // Case A: Bio-impedance is fully completed by hardware!
+      if (parsed.isImpedanceComplete) {
+        try {
+          (window as any).AndroidBluetoothScale?.stopScan?.();
+        } catch (e) {}
+        setImpedanceProgress(100);
+        completeMeasurement(parsed);
+        return;
+      }
+
+      // Case B: Analyzing impedance (calculating resistance across feet)
+      setStatus('analyzing');
+      const elapsed = Date.now() - (stabilizedAtRef.current || Date.now());
+      if (elapsed < 800) {
+        setImpedanceProgress(35);
+      } else if (elapsed < 1600) {
+        setImpedanceProgress(60);
+      } else if (elapsed < 2400) {
+        setImpedanceProgress(85);
+      } else {
+        setImpedanceProgress(100);
+      }
+
+      // Case C: Auto-fallback — NEVER freeze or get stuck!
+      // If user stepped off after stabilization (loadRemoved === true),
+      // or if stabilization has lasted >= 3.0 seconds (e.g. socks on, dry skin, or Scale 1),
+      // auto-finalize the stabilized weight immediately!
+      if (parsed.loadRemoved || elapsed >= 3000) {
+        try {
+          (window as any).AndroidBluetoothScale?.stopScan?.();
+        } catch (e) {}
+        completeMeasurement(parsed);
+      }
+    }
+  };
+
+  /**
    * Start Bluetooth Scan & scale measurement
    */
   const handleStartScan = async () => {
     playClickSound();
+    resetScanSession();
     setErrorMessage('');
     setLiveWeight(0);
+    setReading(null);
+    setImpedanceProgress(0);
     setStatus('scanning');
 
     const isNativeBt =
@@ -113,20 +200,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
             gender: profile.gender,
           });
 
-          if (parsed && parsed.weight >= 10.0) {
-            setLiveWeight(parsed.weight);
-            if (!parsed.isStabilized) {
-              setStatus('stabilizing');
-            } else if (parsed.isStabilized && !parsed.isImpedanceComplete) {
-              setStatus('analyzing');
-              setImpedanceProgress(65);
-            } else if (parsed.isStabilized && parsed.isImpedanceComplete) {
-              try {
-                (window as any).AndroidBluetoothScale?.stopScan?.();
-              } catch (e) {}
-              completeMeasurement(parsed);
-            }
-          }
+          handleIncomingReading(parsed);
         } catch (err) {
           console.error('Failed to parse native scale packet:', err);
         }
@@ -199,17 +273,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                 gender: profile.gender,
               });
 
-              if (parsed && parsed.weight >= 10.0) {
-                setLiveWeight(parsed.weight);
-                if (!parsed.isStabilized) {
-                  setStatus('stabilizing');
-                } else if (parsed.isStabilized && !parsed.isImpedanceComplete) {
-                  setStatus('analyzing');
-                  setImpedanceProgress(65);
-                } else if (parsed.isStabilized && parsed.isImpedanceComplete) {
-                  completeMeasurement(parsed);
-                }
-              }
+              handleIncomingReading(parsed);
             }
           );
         } catch (subErr) {
@@ -397,6 +461,23 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                 </div>
               </div>
 
+              {/* Quick Manual Lock Button if user wants to finalize instantly */}
+              {liveWeight >= 10 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (lastValidReadingRef.current) {
+                      stopScanning();
+                      completeMeasurement(lastValidReadingRef.current);
+                    }
+                  }}
+                  className="w-full py-2.5 px-4 bg-[#2D503C] hover:bg-[#233F2F] text-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-black shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer font-display uppercase tracking-wider"
+                >
+                  <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                  <span>Зафиксировать {liveWeight} кг</span>
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => {
@@ -434,9 +515,15 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                     <CheckCircle2 className="w-3 h-3" />
                     <span>Locked</span>
                   </div>
-                  <span className="text-[10px] font-bold text-[#6B635B] block mt-1 font-mono-num">
-                    Impedance: {reading.impedance} Ω
-                  </span>
+                  {reading.impedance > 0 ? (
+                    <span className="text-[10px] font-bold text-[#6B635B] block mt-1 font-mono-num">
+                      Impedance: {reading.impedance} Ω
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold text-[#92400E] bg-[#FEF3C7] px-1.5 py-0.5 rounded border border-[#F59E0B]/30 block mt-1">
+                      Вес зафиксирован (босиком для жира %)
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -536,11 +623,18 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
 
                 <button
                   type="button"
-                  onClick={() => setStatus('idle')}
-                  className="p-3 bg-white hover:bg-stone-100 border border-[#24201D] rounded-2xl text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
-                  title="Re-scan"
+                  onClick={() => {
+                    resetScanSession();
+                    setReading(null);
+                    setLiveWeight(0);
+                    setImpedanceProgress(0);
+                    handleStartScan();
+                  }}
+                  className="py-3 px-3.5 bg-white hover:bg-stone-100 border border-[#24201D] rounded-2xl text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold font-display uppercase tracking-wider"
+                  title="Взвеситься заново"
                 >
                   <RefreshCw className="w-4 h-4" />
+                  <span className="hidden sm:inline">Взвеситься снова</span>
                 </button>
               </div>
             </div>

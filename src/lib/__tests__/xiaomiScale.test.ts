@@ -41,37 +41,80 @@ describe('xiaomiScale', () => {
     expect(metrics.muscleMassKg).toBeGreaterThan(25);
   });
 
-  it('parseXiaomiScaleAdvertisement: correctly decodes 13-byte broadcast buffer', () => {
+  it('parseXiaomiScaleAdvertisement: correctly decodes 13-byte broadcast buffer and never halves weight', () => {
     // Construct sample 13-byte buffer from Mi Body Composition Scale 2
-    // 70.0 kg => rawWeight = 14000 (0x36B0)
-    // impedance = 490 (0x01EA)
-    // flags1 = 0xA0 (stabilized + impedance complete)
+    // User weighs 74.0 kg => rawWeight = 14800 (0x39D0)
+    // flags0 = 0x02 (typical KG mode byte from Xiaomi hardware)
+    // flags1 = 0x22 (stabilized 0x20 + bio-impedance active 0x02, load NOT removed 0x00)
     const buffer = new ArrayBuffer(13);
     const view = new DataView(buffer);
 
-    view.setUint8(0, 0x00); // kg unit
-    view.setUint8(1, 0xA0); // stabilized (0x20) + impedance complete (0x80)
+    view.setUint8(0, 0x02); // Standard Xiaomi kg mode
+    view.setUint8(1, 0x22); // stabilized (0x20) + bio-impedance active (0x02)
     view.setUint16(2, 2026, true); // year 2026
     view.setUint8(4, 9); // month Sept
-    view.setUint8(5, 7); // day 7
-    view.setUint8(6, 15); // hour
+    view.setUint8(5, 8); // day 8
+    view.setUint8(6, 9); // hour
     view.setUint8(7, 30); // minute
     view.setUint8(8, 0); // second
-    view.setUint16(9, 490, true); // impedance = 490
-    view.setUint16(11, 14000, true); // weight = 14000 => 70.0 kg
+    view.setUint16(9, 510, true); // impedance = 510 ohms
+    view.setUint16(11, 14800, true); // rawWeight 14800 => exactly 74.0 kg!
 
     const reading = parseXiaomiScaleAdvertisement(view, {
-      height: 175,
-      age: 26,
+      height: 178,
+      age: 28,
       gender: 'male',
     });
 
     expect(reading).not.toBeNull();
-    expect(reading?.weight).toBe(70.0);
-    expect(reading?.impedance).toBe(490);
+    // Must be 74.0 kg, NOT halved to 37.0 kg!
+    expect(reading?.weight).toBe(74.0);
+    expect(reading?.impedance).toBe(510);
     expect(reading?.isStabilized).toBe(true);
+    expect(reading?.hasImpedance).toBe(true);
+    expect(reading?.loadRemoved).toBe(false);
     expect(reading?.isImpedanceComplete).toBe(true);
     expect(reading?.metrics).toBeDefined();
     expect(reading?.metrics?.bodyFatPercentage).toBeGreaterThan(10);
+  });
+
+  it('parseXiaomiScaleAdvertisement: detects loadRemoved when user steps off', () => {
+    const buffer = new ArrayBuffer(13);
+    const view = new DataView(buffer);
+
+    view.setUint8(0, 0x02);
+    view.setUint8(1, 0xA2); // stabilized (0x20) + hasImpedance (0x02) + loadRemoved (0x80)
+    view.setUint16(2, 2026, true);
+    view.setUint8(4, 9);
+    view.setUint8(5, 8);
+    view.setUint8(6, 9);
+    view.setUint8(7, 30);
+    view.setUint8(8, 0);
+    view.setUint16(9, 510, true);
+    view.setUint16(11, 14800, true);
+
+    const reading = parseXiaomiScaleAdvertisement(view);
+    expect(reading?.loadRemoved).toBe(true);
+  });
+
+  it('parseXiaomiScaleAdvertisement: decodes 10-byte buffer for Mi Scale 1', () => {
+    const buffer = new ArrayBuffer(10);
+    const view = new DataView(buffer);
+
+    view.setUint8(0, 0x20); // stabilized, kg unit
+    view.setUint16(1, 14800, true); // 74.0 kg
+    view.setUint16(3, 2026, true);
+    view.setUint8(5, 9);
+    view.setUint8(6, 8);
+    view.setUint8(7, 9);
+    view.setUint8(8, 30);
+    view.setUint8(9, 0);
+
+    const reading = parseXiaomiScaleAdvertisement(view);
+    expect(reading).not.toBeNull();
+    expect(reading?.weight).toBe(74.0);
+    expect(reading?.isStabilized).toBe(true);
+    expect(reading?.isImpedanceComplete).toBe(true);
+    expect(reading?.loadRemoved).toBe(false);
   });
 });

@@ -2,6 +2,7 @@ import { getStoredGeminiApiKey } from './aiService';
 import { translateFoodNameSync } from './mealTranslator';
 import { aiMealEstimateSchema } from './validationSchemas';
 import type { HealthProfile, CalculatedHealthMetrics, MealType, WeightLog, MealLog, WorkoutLog } from '../types/health';
+import type { XiaomiBiometricMetrics } from './xiaomiScale';
 
 export interface EstimatedMealResult {
   name: string;
@@ -153,6 +154,8 @@ export interface HealthTelemetryContext {
   todaysCarbsGrams?: number;
   todaysFatGrams?: number;
   weightLogs?: WeightLog[];
+  scaleMetrics?: XiaomiBiometricMetrics;
+  movingAvg?: number;
 }
 
 /**
@@ -193,12 +196,18 @@ export async function getHealthCoachAdviceWithAI(
     ? `- Waist: ${profile.waistCm} cm (WHtR: ${(profile.waistCm / profile.height).toFixed(2)})`
     : '';
 
+  const scaleTelemetry = context?.scaleMetrics
+    ? `\n- Zepp Life BIA Telemetry: Body Score: ${context.scaleMetrics.bodyScore}/100, Somatotype: "${context.scaleMetrics.bodyType}", Visceral Fat: Level ${context.scaleMetrics.visceralFat}, Skeletal Muscle: ${context.scaleMetrics.muscleMassKg}kg, Bone Mass: ${context.scaleMetrics.boneMassKg}kg, Water: ${context.scaleMetrics.waterPercentage}%, Protein: ${context.scaleMetrics.proteinPercentage}%, BMR: ${context.scaleMetrics.bmr} kcal, Metabolic Age: ${context.scaleMetrics.bodyAge} y.o.`
+    : '';
+
+  const maInfo = context?.movingAvg ? ` (7-Day Moving Avg: ${context.movingAvg} kg)` : '';
+
   const systemInstructionText = `You are Sumire Health AI — an elite, knowledgeable, empathetic, evidence-based personal health, nutrition, and metabolic coach.
 
 USER'S LIVE BIOMETRICS & METABOLIC TELEMETRY:
 - Demographics: Biological Sex: ${profile.gender}, Age: ${profile.age} y.o., Height: ${profile.height} cm
-- Weight Progress: Current ${profile.currentWeight} kg -> Target: ${profile.targetWeight} kg (Goal: ${profile.goal}, Delta: ${deltaKg > 0 ? `${deltaKg} kg to lose` : `${Math.abs(deltaKg)} kg to gain`})
-  ${waistInfo}
+- Weight Progress: Current ${profile.currentWeight} kg${maInfo} -> Target: ${profile.targetWeight} kg (Goal: ${profile.goal}, Delta: ${deltaKg > 0 ? `${deltaKg} kg to lose` : `${Math.abs(deltaKg)} kg to gain`})
+  ${waistInfo}${scaleTelemetry}
 - Body Mass Index (BMI): ${metrics.bmi} (${metrics.bmiCategoryLabel}) | Healthy WHO Range for ${profile.height}cm: ${metrics.idealWeightMin}–${metrics.idealWeightMax} kg
 - Body Composition: ~${metrics.bodyFatPercentage}% Body Fat, ${metrics.muscleMassKg} kg Lean Tissue
 - Energy Expenditure: Basal BMR: ${metrics.bmr} kcal, Total Daily TDEE: ${metrics.tdee} kcal

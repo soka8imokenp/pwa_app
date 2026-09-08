@@ -15,6 +15,9 @@ import {
   Calendar,
   Clock,
   AlertTriangle,
+  Flame,
+  Activity,
+  TrendingUp,
 } from 'lucide-react';
 import {
   askSumireAI,
@@ -773,6 +776,47 @@ export const HealthCoachPage: React.FC<HealthCoachPageProps> = ({
               >
                 <X className="w-3 h-3 stroke-[3]" />
               </button>
+            </div>
+          )}
+
+          {/* Quick Body Composition & Telemetry Prompt Chips */}
+          {!isLoading && (
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2 pt-0.5">
+              {[
+                {
+                  icon: <Activity className="w-3 h-3 text-[#2D503C]" />,
+                  label: 'Analyze Composition',
+                  prompt: 'Проанализируй подробный состав моего тела с умных весов (Body Score, соматотип, висцеральный жир, мышцы, воду, BMR). На что обратить внимание?',
+                },
+                {
+                  icon: <Flame className="w-3 h-3 text-[#C25E40]" />,
+                  label: 'Improve Body Score',
+                  prompt: 'Как мне улучшить мой Body Score и устранить текущие штрафные баллы в составе тела?',
+                },
+                {
+                  icon: <TrendingUp className="w-3 h-3 text-[#2D503C]" />,
+                  label: '7-Day Trend',
+                  prompt: 'Объясни динамику моего веса и 7-дневное скользящее среднее (Moving Average). Какой у меня недельный темп?',
+                },
+                {
+                  icon: <Dumbbell className="w-3 h-3 text-[#7B4D9B]" />,
+                  label: 'Raise Metabolism (BMR)',
+                  prompt: 'Как мне поднять уровень основного обмена веществ (BMR) с точки зрения тренировок и питания?',
+                },
+              ].map((chip, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    playClickSound();
+                    handleSendMessage(chip.prompt);
+                  }}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FAF8F5] hover:bg-[#DDE8DE] border border-[#24201D]/20 text-[10px] font-bold text-[#2D503C] whitespace-nowrap shadow-2xs active:scale-95 transition-all cursor-pointer shrink-0"
+                >
+                  {chip.icon}
+                  <span>{chip.label}</span>
+                </button>
+              ))}
             </div>
           )}
 

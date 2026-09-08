@@ -47,13 +47,33 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
   const [selectedPointIndex, setSelectedPointIndex] = useState<number | null>(null);
   const [showInfo, setShowInfo] = useState(false);
 
-  // Time-range filtered logs
+  // Time-range filtered logs with calendar-day awareness and outlier protection
   const filteredLogs = useMemo(() => {
-    if (timeRange === '7d') return logsWithMovingAvg.slice(-7);
-    if (timeRange === '30d') return logsWithMovingAvg.slice(-30);
-    if (timeRange === '90d') return logsWithMovingAvg.slice(-90);
-    return logsWithMovingAvg;
-  }, [logsWithMovingAvg, timeRange]);
+    // 1. Sanitize against rogue outliers (e.g. halved readings)
+    const sanitized = logsWithMovingAvg.filter((l) => {
+      if (!l.weight || isNaN(l.weight) || l.weight < 25) return false;
+      if (currentWeight > 30) {
+        if (l.weight < currentWeight * 0.58) return false;
+        if (l.weight > currentWeight * 1.65) return false;
+      }
+      return true;
+    });
+
+    if (sanitized.length === 0) return [];
+    if (timeRange === 'all') return sanitized;
+
+    const daysMap = { '7d': 7, '30d': 30, '90d': 90 };
+    const cutoffMs = Date.now() - daysMap[timeRange] * 24 * 60 * 60 * 1000;
+
+    const timeFiltered = sanitized.filter((l) => {
+      const t = new Date(l.date).getTime();
+      return t >= cutoffMs;
+    });
+
+    // If timeFiltered has at least 1 record, return it; otherwise fallback to recent records
+    if (timeFiltered.length > 0) return timeFiltered;
+    return sanitized.slice(-daysMap[timeRange]);
+  }, [logsWithMovingAvg, timeRange, currentWeight]);
 
   // Dynamic statistics summary for the active period
   const stats = useMemo(() => {
@@ -82,10 +102,10 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
     // Filter valid positive weights
     const weights = filteredLogs
       .map((l) => l.weight)
-      .filter((w) => typeof w === 'number' && w > 20 && !isNaN(w));
+      .filter((w) => typeof w === 'number' && w > 25 && !isNaN(w));
     const movingAvgs = filteredLogs
       .map((l) => l.movingAvg)
-      .filter((w) => typeof w === 'number' && w > 20 && !isNaN(w));
+      .filter((w) => typeof w === 'number' && w > 25 && !isNaN(w));
 
     const activeVals = [...weights, ...movingAvgs];
     if (activeVals.length === 0) return null;
@@ -94,7 +114,6 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
     let maxVal = Math.max(...activeVals);
 
     // Only include targetWeight in Y domain if it's within a reasonable visual delta (<= 6kg from data)
-    // This prevents a distant goal (e.g. 60kg vs 95kg) from squashing all daily variations into an imperceptible flat line!
     const hasValidTarget = typeof targetWeight === 'number' && targetWeight > 30 && !isNaN(targetWeight);
     const isTargetNear = hasValidTarget && targetWeight >= minVal - 6 && targetWeight <= maxVal + 6;
     if (isTargetNear) {
@@ -102,17 +121,17 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
       maxVal = Math.max(maxVal, targetWeight);
     }
 
-    const paddingVal = Math.max(1.2, (maxVal - minVal) * 0.18);
+    const paddingVal = Math.max(1.0, (maxVal - minVal) * 0.18);
     const chartMin = Number((minVal - paddingVal).toFixed(1));
     const chartMax = Number((maxVal + paddingVal).toFixed(1));
     const chartRange = Math.max(1.5, chartMax - chartMin);
 
     const svgWidth = 360;
-    const svgHeight = 160;
-    const paddingLeft = 38; // 38px ensures 5-char numbers like 102.5 never clip
+    const svgHeight = 165;
+    const paddingLeft = 38; // ensures 5-char numbers like 102.5 never clip
     const paddingRight = 16;
     const paddingTop = 16;
-    const paddingBottom = 24;
+    const paddingBottom = 26; // Room for X-axis date labels
 
     const plotHeight = svgHeight - paddingTop - paddingBottom;
     const plotWidth = svgWidth - paddingLeft - paddingRight;
@@ -166,6 +185,33 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
       { val: chartMin, y: paddingTop + plotHeight },
     ];
 
+    // X-Axis Date Ticks
+    const formatDateLabel = (dStr: string) => {
+      try {
+        const parts = dStr.split('-');
+        if (parts.length === 3) {
+          const mNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const mIdx = parseInt(parts[1], 10) - 1;
+          const day = parseInt(parts[2], 10);
+          return `${mNames[mIdx] || ''} ${day}`;
+        }
+      } catch (e) {}
+      return dStr;
+    };
+
+    const dateTicks: Array<{ x: number; label: string; anchor: 'start' | 'middle' | 'end' }> = [];
+    if (pts.length === 1) {
+      dateTicks.push({ x: pts[0].x, label: formatDateLabel(pts[0].date), anchor: 'middle' });
+    } else if (pts.length === 2) {
+      dateTicks.push({ x: pts[0].x, label: formatDateLabel(pts[0].date), anchor: 'start' });
+      dateTicks.push({ x: pts[1].x, label: formatDateLabel(pts[1].date), anchor: 'end' });
+    } else if (pts.length >= 3) {
+      const midIdx = Math.floor(pts.length / 2);
+      dateTicks.push({ x: pts[0].x, label: formatDateLabel(pts[0].date), anchor: 'start' });
+      dateTicks.push({ x: pts[midIdx].x, label: formatDateLabel(pts[midIdx].date), anchor: 'middle' });
+      dateTicks.push({ x: pts[pts.length - 1].x, label: formatDateLabel(pts[pts.length - 1].date), anchor: 'end' });
+    }
+
     return {
       points: pts,
       rawLinePath,
@@ -175,6 +221,7 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
       hasValidTarget,
       isTargetNear,
       gridYVals,
+      dateTicks,
       chartMin,
       chartMax,
       svgWidth,
@@ -468,6 +515,22 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
                 </g>
               );
             })}
+
+            {/* X-Axis Date Ticks */}
+            {chartData.dateTicks.map((tick, idx) => (
+              <text
+                key={idx}
+                x={tick.x}
+                y={chartData.svgHeight - 6}
+                textAnchor={tick.anchor}
+                fontSize="8"
+                fontWeight="bold"
+                fill="#8C827A"
+                className="font-mono-num"
+              >
+                {tick.label}
+              </text>
+            ))}
           </svg>
 
           {/* Single entry baseline hint */}

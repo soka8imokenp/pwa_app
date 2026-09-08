@@ -160,14 +160,92 @@ export function calculateComprehensiveMetrics(profile: HealthProfile): Calculate
 }
 
 /**
- * Computes 7-day rolling moving average for weight trend smoothing
+ * Filters out physically impossible outliers or scale divisor artifacts
+ * (e.g. halved 37kg packets from previous BLE scale divisor bug when baseline is ~74kg).
  */
-export function computeWeightMovingAverage(logs: WeightLog[], windowDays = 7): Array<WeightLog & { movingAvg: number }> {
-  const sorted = [...logs].sort((a, b) => a.date.localeCompare(b.date));
-  return sorted.map((log, index) => {
-    const windowStart = Math.max(0, index - windowDays + 1);
-    const slice = sorted.slice(windowStart, index + 1);
-    const avg = slice.reduce((sum, item) => sum + item.weight, 0) / slice.length;
+export function filterWeightOutliers(logs: WeightLog[], baselineWeight?: number): WeightLog[] {
+  if (!logs || logs.length === 0) return [];
+
+  // 1. Remove non-positive or absurd weights
+  const validLogs = logs.filter(
+    (l) => typeof l.weight === 'number' && !isNaN(l.weight) && l.weight >= 25 && l.weight <= 350
+  );
+  if (validLogs.length <= 1) return validLogs;
+
+  // 2. Establish reference weight (from baseline or median)
+  let refWeight = baselineWeight && baselineWeight > 30 ? baselineWeight : 0;
+  if (!refWeight) {
+    const sortedWeights = validLogs.map((l) => l.weight).sort((a, b) => a - b);
+    refWeight = sortedWeights[Math.floor(sortedWeights.length / 2)];
+  }
+
+  // 3. Filter out items deviating by > 40% from reference (e.g. halved 37kg when ref is 74kg)
+  return validLogs.filter((l) => {
+    if (l.weight < refWeight * 0.58) return false;
+    if (l.weight > refWeight * 1.65) return false;
+    return true;
+  });
+}
+
+/**
+ * Consolidates multiple weigh-ins on the same calendar day into one representative entry.
+ * Prioritizes readings with full BIA metrics or the latest recorded reading of the day.
+ */
+export function consolidateWeightLogsByDate(logs: WeightLog[]): WeightLog[] {
+  if (!logs || logs.length === 0) return [];
+
+  const map = new Map<string, WeightLog>();
+  const sorted = [...logs].sort(
+    (a, b) => a.date.localeCompare(b.date) || (a.createdAt || 0) - (b.createdAt || 0)
+  );
+
+  for (const log of sorted) {
+    const existing = map.get(log.date);
+    if (!existing) {
+      map.set(log.date, log);
+    } else {
+      // Prioritize entry with BIA metrics
+      if (log.metrics && !existing.metrics) {
+        map.set(log.date, log);
+      } else if (log.metrics && existing.metrics) {
+        map.set(log.date, log);
+      } else if (!existing.metrics) {
+        map.set(log.date, log);
+      }
+    }
+  }
+
+  return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
+ * Computes calendar-day rolling moving average for weight trend smoothing.
+ * Automatically filters rogue scale artifacts and groups multiple same-day weigh-ins.
+ */
+export function computeWeightMovingAverage(
+  logs: WeightLog[],
+  windowDays = 7,
+  baselineWeight?: number
+): Array<WeightLog & { movingAvg: number }> {
+  const sanitized = filterWeightOutliers(logs, baselineWeight);
+  const consolidated = consolidateWeightLogsByDate(sanitized);
+
+  if (consolidated.length === 0) return [];
+
+  return consolidated.map((log) => {
+    const logDate = new Date(log.date);
+    const windowStartMs = logDate.getTime() - (windowDays - 1) * 24 * 60 * 60 * 1000;
+
+    // Filter logs that fall within [windowStart, logDate]
+    const windowLogs = consolidated.filter((item) => {
+      const itemDate = new Date(item.date);
+      return itemDate.getTime() >= windowStartMs && itemDate.getTime() <= logDate.getTime();
+    });
+
+    const activeList = windowLogs.length > 0 ? windowLogs : [log];
+    const sum = activeList.reduce((acc, item) => acc + item.weight, 0);
+    const avg = sum / activeList.length;
+
     return {
       ...log,
       movingAvg: Number(avg.toFixed(1)),
@@ -178,24 +256,39 @@ export function computeWeightMovingAverage(logs: WeightLog[], windowDays = 7): A
 /**
  * Computes the weekly rate of change (kg/week) from recent logs
  */
-export function computeWeeklyPace(logs: WeightLog[]): { paceKgPerWeek: number; paceLabel: string; isOptimal: boolean } {
-  if (logs.length < 2) {
+export function computeWeeklyPace(
+  logs: WeightLog[],
+  baselineWeight?: number
+): { paceKgPerWeek: number; paceLabel: string; isOptimal: boolean } {
+  const sanitized = filterWeightOutliers(logs, baselineWeight);
+  const consolidated = consolidateWeightLogsByDate(sanitized);
+
+  if (consolidated.length < 2) {
     return { paceKgPerWeek: 0, paceLabel: 'Baseline Establishing', isOptimal: true };
   }
 
-  const sorted = [...logs].sort((a, b) => a.date.localeCompare(b.date));
-  const latest = sorted[sorted.length - 1];
+  const latest = consolidated[consolidated.length - 1];
 
-  let baselineLog = sorted[0];
-  for (let i = sorted.length - 2; i >= 0; i--) {
-    const dDiff = (new Date(latest.date).getTime() - new Date(sorted[i].date).getTime()) / (1000 * 3600 * 24);
-    if (dDiff >= 5 && dDiff <= 14) {
-      baselineLog = sorted[i];
+  let baselineLog = consolidated[0];
+  for (let i = consolidated.length - 2; i >= 0; i--) {
+    const dDiff =
+      (new Date(latest.date).getTime() - new Date(consolidated[i].date).getTime()) /
+      (1000 * 3600 * 24);
+    if (dDiff >= 5 && dDiff <= 28) {
+      baselineLog = consolidated[i];
       break;
     }
   }
 
-  const daysElapsed = Math.max(1, (new Date(latest.date).getTime() - new Date(baselineLog.date).getTime()) / (1000 * 3600 * 24));
+  const daysElapsed = Math.max(
+    1,
+    (new Date(latest.date).getTime() - new Date(baselineLog.date).getTime()) / (1000 * 3600 * 24)
+  );
+
+  if (daysElapsed < 2) {
+    return { paceKgPerWeek: 0, paceLabel: 'Baseline Establishing', isOptimal: true };
+  }
+
   const deltaWeight = latest.weight - baselineLog.weight;
   const paceKgPerWeek = Number(((deltaWeight / daysElapsed) * 7).toFixed(2));
 

@@ -20,7 +20,10 @@ import {
   computeWeightMovingAverage,
   computeWeeklyPace,
   computeProjectedGoalDate,
+  filterWeightOutliers,
+  calculateBmi,
 } from '../../lib/healthFormulas';
+import { db } from '../../lib/db';
 
 // Decomposed Modular Subcomponents
 import { ZeppBodyCompositionCard } from './body/ZeppBodyCompositionCard';
@@ -126,13 +129,18 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
     return [...weightLogs].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
   }, [weightLogs]);
 
-  // Smoothed Moving Average Logs
-  const logsWithMovingAvg = useMemo(() => {
-    return computeWeightMovingAverage(sortedAllLogs, 7);
-  }, [sortedAllLogs]);
+  // Outlier-sanitized weight logs (filters out legacy halved readings)
+  const sanitizedLogs = useMemo(() => {
+    return filterWeightOutliers(sortedAllLogs, currentWeight);
+  }, [sortedAllLogs, currentWeight]);
 
-  // Real initial starting weight from the earliest recorded log
-  const startingWeight = sortedAllLogs.length > 0 ? sortedAllLogs[0].weight : currentWeight;
+  // Smoothed Moving Average Logs (using consolidated, sanitized daily data)
+  const logsWithMovingAvg = useMemo(() => {
+    return computeWeightMovingAverage(sanitizedLogs, 7, currentWeight);
+  }, [sanitizedLogs, currentWeight]);
+
+  // Real initial starting weight from earliest valid log
+  const startingWeight = sanitizedLogs.length > 0 ? sanitizedLogs[0].weight : currentWeight;
 
   // Real, non-hardcoded goal progress calculation
   const progressPercent = useMemo(() => {
@@ -156,16 +164,51 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
 
   // Weekly Pace & Projected Milestone
   const weeklyPaceInfo = useMemo(() => {
-    return computeWeeklyPace(sortedAllLogs);
-  }, [sortedAllLogs]);
+    return computeWeeklyPace(sanitizedLogs, currentWeight);
+  }, [sanitizedLogs, currentWeight]);
 
   const projectedGoal = useMemo(() => {
     return computeProjectedGoalDate(currentWeight, targetWeight, profile.goal, weeklyPaceInfo.paceKgPerWeek);
   }, [currentWeight, targetWeight, profile.goal, weeklyPaceInfo]);
 
   // Delta vs previous weigh-in log
-  const previousLog = sortedAllLogs.length > 1 ? sortedAllLogs[sortedAllLogs.length - 2] : null;
+  const previousLog = sanitizedLogs.length > 1 ? sanitizedLogs[sanitizedLogs.length - 2] : null;
   const deltaFromPrev = previousLog ? Number((currentWeight - previousLog.weight).toFixed(1)) : null;
+
+  // One-time self-healing check on mount to heal/clean corrupt halved logs in Dexie db
+  useEffect(() => {
+    const healCorruptLogs = async () => {
+      try {
+        if (currentWeight > 55) {
+          const corrupt = await db.weightLogs
+            .filter((l) => typeof l.weight === 'number' && l.weight < 45 && l.weight > 20)
+            .toArray();
+          if (corrupt.length > 0) {
+            for (const item of corrupt) {
+              if (item.id) {
+                const sameDayValid = await db.weightLogs
+                  .where('date')
+                  .equals(item.date)
+                  .filter((l) => l.weight > 50)
+                  .first();
+                if (sameDayValid) {
+                  await db.weightLogs.delete(item.id);
+                } else {
+                  await db.weightLogs.update(item.id, {
+                    weight: Number((item.weight * 2).toFixed(1)),
+                    bmi: calculateBmi(item.weight * 2, profile.height),
+                  });
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Healing legacy logs:', e);
+      }
+    };
+    healCorruptLogs();
+  }, [currentWeight, profile.height]);
 
   // BMI Gauge indicator position (15 to 35 range mapped to 0% - 100%)
   const gaugePercent = Math.min(100, Math.max(0, ((bmi - 15) / 20) * 100));
@@ -512,7 +555,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
         logsWithMovingAvg={logsWithMovingAvg}
         targetWeight={targetWeight}
         currentWeight={currentWeight}
-        allWeightLogs={sortedAllLogs}
+        allWeightLogs={sanitizedLogs}
       />
 
       {/* 4. AI-Powered Scientific Health Facts & Insights */}

@@ -8,6 +8,8 @@ import {
   computeWeightMovingAverage,
   computeWeeklyPace,
   computeProjectedGoalDate,
+  filterWeightOutliers,
+  consolidateWeightLogsByDate,
 } from '../healthFormulas';
 import type { HealthProfile, WeightLog } from '../../types/health';
 
@@ -99,5 +101,37 @@ describe('healthFormulas', () => {
     const projected = computeProjectedGoalDate(80, 76, 'lose', 0.5);
     expect(projected.weeksRemaining).toBe(8);
     expect(projected.dateString).toBeDefined();
+  });
+
+  it('filterWeightOutliers: filters halved rogue scale packets', () => {
+    const dirtyLogs: WeightLog[] = [
+      { date: '2026-09-07', weight: 37.2, bmi: 12, createdAt: 1 },
+      { date: '2026-09-08', weight: 74.4, bmi: 24, createdAt: 2 },
+    ];
+    const cleaned = filterWeightOutliers(dirtyLogs, 74.4);
+    expect(cleaned).toHaveLength(1);
+    expect(cleaned[0].weight).toBe(74.4);
+  });
+
+  it('consolidateWeightLogsByDate: collapses same-day weigh-ins and prioritizes BIA', () => {
+    const multiLogs: WeightLog[] = [
+      { date: '2026-09-08', weight: 74.2, bmi: 24, createdAt: 1 },
+      { date: '2026-09-08', weight: 74.4, bmi: 24, createdAt: 2, metrics: { bodyScore: 81 } as any },
+    ];
+    const consolidated = consolidateWeightLogsByDate(multiLogs);
+    expect(consolidated).toHaveLength(1);
+    expect(consolidated[0].weight).toBe(74.4);
+    expect(consolidated[0].metrics?.bodyScore).toBe(81);
+  });
+
+  it('computeWeightMovingAverage: immune to halved scale outliers', () => {
+    const dirtyLogs: WeightLog[] = [
+      { date: '2026-09-07', weight: 37.2, bmi: 12, createdAt: 1 },
+      { date: '2026-09-08', weight: 74.4, bmi: 24, createdAt: 2 },
+    ];
+    const result = computeWeightMovingAverage(dirtyLogs, 7, 74.4);
+    expect(result).toHaveLength(1);
+    expect(result[0].weight).toBe(74.4);
+    expect(result[0].movingAvg).toBe(74.4);
   });
 });

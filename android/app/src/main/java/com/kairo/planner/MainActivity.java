@@ -61,6 +61,13 @@ import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.os.ParcelUuid;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.content.SharedPreferences;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class MainActivity extends BridgeActivity {
     private static final String CHANNEL_ID = "daily_sumire_music_channel";
@@ -76,6 +83,7 @@ public class MainActivity extends BridgeActivity {
     private boolean isAudioPlaying = false;
     private PowerManager.WakeLock wakeLock;
     private BluetoothScaleJsInterface bluetoothScaleInterface;
+    private StepCounterJsInterface stepCounterInterface;
 
     private void acquireWakeLock() {
         try {
@@ -300,6 +308,12 @@ public class MainActivity extends BridgeActivity {
                     } catch (Exception ignored) {}
                 });
             }
+        } else if (requestCode == 105) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (stepCounterInterface != null) {
+                    stepCounterInterface.startStepTracking();
+                }
+            }
         }
     }
 
@@ -378,6 +392,8 @@ public class MainActivity extends BridgeActivity {
                 webView.addJavascriptInterface(new SpeechRecognizerJsInterface(), "AndroidSpeechRecognizer");
                 bluetoothScaleInterface = new BluetoothScaleJsInterface();
                 webView.addJavascriptInterface(bluetoothScaleInterface, "AndroidBluetoothScale");
+                stepCounterInterface = new StepCounterJsInterface();
+                webView.addJavascriptInterface(stepCounterInterface, "AndroidStepCounter");
 
                 // Inject visibility spoofing so background audio (like YouTube Radio) continues when minimized
                 webView.evaluateJavascript(
@@ -1051,6 +1067,103 @@ public class MainActivity extends BridgeActivity {
                 } catch (Exception ignored) {}
             });
         }
+    }
+
+    public class StepCounterJsInterface implements SensorEventListener {
+        private SensorManager sensorManager;
+        private Sensor stepSensor;
+        private boolean isListening = false;
+        private static final String PREFS_NAME = "kairo_step_prefs";
+        private static final String KEY_BASELINE_DATE = "baseline_date";
+        private static final String KEY_BASELINE_STEPS = "baseline_steps";
+
+        public StepCounterJsInterface() {
+            try {
+                sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+                if (sensorManager != null) {
+                    stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+                    if (stepSensor == null) {
+                        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+
+        @JavascriptInterface
+        public boolean isSensorAvailable() {
+            return stepSensor != null;
+        }
+
+        @JavascriptInterface
+        public void startStepTracking() {
+            runOnUiThread(() -> {
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION}, 105);
+                            return;
+                        }
+                    }
+
+                    if (sensorManager != null && stepSensor != null && !isListening) {
+                        sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_UI);
+                        isListening = true;
+                    }
+                } catch (Exception ignored) {}
+            });
+        }
+
+        @JavascriptInterface
+        public void stopStepTracking() {
+            runOnUiThread(() -> {
+                try {
+                    if (sensorManager != null && isListening) {
+                        sensorManager.unregisterListener(this);
+                        isListening = false;
+                    }
+                } catch (Exception ignored) {}
+            });
+        }
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            if (event == null || event.values == null || event.values.length == 0) return;
+
+            try {
+                float rawValue = event.values[0];
+                int stepsToday = 0;
+                String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                String savedDate = prefs.getString(KEY_BASELINE_DATE, "");
+                float savedBaseline = prefs.getFloat(KEY_BASELINE_STEPS, -1f);
+
+                if (!todayStr.equals(savedDate) || savedBaseline < 0 || rawValue < savedBaseline) {
+                    prefs.edit()
+                            .putString(KEY_BASELINE_DATE, todayStr)
+                            .putFloat(KEY_BASELINE_STEPS, rawValue)
+                            .apply();
+                    stepsToday = 0;
+                } else {
+                    stepsToday = (int) (rawValue - savedBaseline);
+                }
+
+                final int finalSteps = Math.max(0, stepsToday);
+                runOnUiThread(() -> {
+                    try {
+                        if (getBridge() != null && getBridge().getWebView() != null) {
+                            getBridge().getWebView().evaluateJavascript(
+                                "window.__onNativeStepUpdate && window.__onNativeStepUpdate(" + finalSteps + ");",
+                                null
+                            );
+                        }
+                    } catch (Exception ignored) {}
+                });
+            } catch (Exception ignored) {}
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {}
     }
 
     private void launchPackageInstaller(File apkFile) {

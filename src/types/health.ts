@@ -68,6 +68,19 @@ export interface WorkoutLog {
   createdAt: number;
 }
 
+export interface StepLog {
+  id?: number;
+  date: string; // YYYY-MM-DD
+  steps: number;
+  goal: number; // e.g. 10000
+  caloriesBurned: number; // kcal
+  distanceMeters: number; // meters
+  durationMinutes: number; // minutes of active walking
+  source?: 'sensor' | 'manual' | 'pedometer';
+  updatedAt: number;
+  createdAt?: number;
+}
+
 export interface CalculatedHealthMetrics {
   bmi: number;
   bmiCategory: BmiCategory;

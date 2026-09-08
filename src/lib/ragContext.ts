@@ -178,7 +178,20 @@ export async function buildPlannerRAGContext(targetDate: string = getTodayString
       const totalCarbs = todaysMeals.reduce((acc, m) => acc + (m.carbsGrams || 0), 0);
       const totalFat = todaysMeals.reduce((acc, m) => acc + (m.fatGrams || 0), 0);
       const totalWaterMl = todaysWater.reduce((acc, w) => acc + (w.amountMl || 0), 0);
-      const totalBurned = todaysWorkouts.reduce((acc, w) => acc + (w.caloriesBurned || 0), 0);
+
+      // Steps telemetry
+      const todaysStep = await db.stepLogs.where('date').equals(targetDate).first();
+      const recentSteps = await db.stepLogs.orderBy('date').reverse().limit(7).toArray();
+      const todaysStepCount = todaysStep?.steps || 0;
+      const todaysStepGoal = todaysStep?.goal || 10000;
+      const todaysStepKcal = todaysStep?.caloriesBurned || 0;
+      const todaysDistanceKm = (todaysStep?.distanceMeters || 0) / 1000;
+      const weeklyAvgSteps = recentSteps.length > 0
+        ? Math.round(recentSteps.reduce((acc, s) => acc + s.steps, 0) / recentSteps.length)
+        : 0;
+
+      const workoutBurned = todaysWorkouts.reduce((acc, w) => acc + (w.caloriesBurned || 0), 0);
+      const totalActiveBurn = workoutBurned + todaysStepKcal;
 
       const remainingKcal = metrics.targetDailyCalories - totalKcal;
       const remainingProtein = metrics.targetProteinGrams - totalProtein;
@@ -202,7 +215,13 @@ export async function buildPlannerRAGContext(targetDate: string = getTodayString
       lines.push(`- Consumed Today: ${totalKcal} / ${metrics.targetDailyCalories} kcal (Remaining: ${remainingKcal} kcal)`);
       lines.push(`- Macronutrients Today: Protein: ${totalProtein}/${metrics.targetProteinGrams}g (Remaining: ${remainingProtein}g), Carbs: ${totalCarbs}/${metrics.targetCarbsGrams}g, Fat: ${totalFat}/${metrics.targetFatGrams}g`);
       lines.push(`- Hydration Today: ${totalWaterMl} / ${metrics.targetWaterMl} ml`);
-      lines.push(`- Physical Activity: +${totalBurned} kcal active burn (${todaysWorkouts.length} workouts logged)`);
+      lines.push(`- Pedometer & Steps:`);
+      lines.push(`  * Today's Steps: ${todaysStepCount} / ${todaysStepGoal} steps (${Math.round((todaysStepCount / Math.max(1, todaysStepGoal)) * 100)}% of goal)`);
+      lines.push(`  * Walking Burn: +${todaysStepKcal} kcal | Distance: ${todaysDistanceKm.toFixed(2)} km`);
+      if (recentSteps.length > 0) {
+        lines.push(`  * 7-Day Average Steps: ${weeklyAvgSteps} steps/day`);
+      }
+      lines.push(`- Physical Activity: +${totalActiveBurn} kcal active burn (Workouts: +${workoutBurned} kcal across ${todaysWorkouts.length} sessions, Steps: +${todaysStepKcal} kcal)`);
       lines.push(`- Itemized Meals Logged Today:\n${mealsBreakdown}`);
 
       if (latestBiometrics) {

@@ -19,6 +19,9 @@ import {
 import confetti from 'canvas-confetti';
 import { playClickSound, playSuccessChime, playTaskCheckSound } from '../../lib/sound';
 import type { WorkoutLog, HealthProfile, CalculatedHealthMetrics } from '../../types/health';
+import { PedometerHeroCard } from './activity/PedometerHeroCard';
+import { ActivityCalendarCard } from './activity/ActivityCalendarCard';
+import { useStepTracker } from '../../hooks/useStepTracker';
 
 interface HealthActivityPageProps {
   profile?: HealthProfile;
@@ -28,6 +31,7 @@ interface HealthActivityPageProps {
   selectedDate: string;
   onLogWorkout: (workout: Omit<WorkoutLog, 'id' | 'createdAt'>) => Promise<void>;
   onDeleteWorkout: (id: number) => Promise<void>;
+  onSelectDate?: (date: string) => void;
 }
 
 type WorkoutCategory = WorkoutLog['category'];
@@ -72,7 +76,19 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
   selectedDate,
   onLogWorkout,
   onDeleteWorkout,
+  onSelectDate,
 }) => {
+  const stepTracker = useStepTracker({
+    selectedDate,
+    profile,
+  });
+
+  const handleDateSelect = (dateStr: string) => {
+    if (onSelectDate) {
+      onSelectDate(dateStr);
+    }
+  };
+
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<WorkoutCategory>('gym');
   const [durationMinutes, setDurationMinutes] = useState<number>(45);
@@ -252,7 +268,32 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
   return (
     <div className="w-full space-y-3.5 pb-3 font-body select-none">
       
-      {/* 1. Activity Summary Hero Card */}
+      {/* 1. Daily Pedometer Hero Card */}
+      <PedometerHeroCard
+        currentSteps={stepTracker.currentSteps}
+        goal={stepTracker.currentGoal}
+        caloriesBurned={stepTracker.currentCalories}
+        distanceKm={stepTracker.currentDistanceKm}
+        durationMinutes={stepTracker.currentDurationMinutes}
+        progressPercent={stepTracker.progressPercent}
+        isGoalMet={stepTracker.isGoalMet}
+        hasNativeSensor={stepTracker.hasNativeSensor}
+        isSensorActive={stepTracker.isSensorActive}
+        onAddSteps={(delta) => stepTracker.addSteps(delta, selectedDate)}
+        onSetSteps={(steps) => stepTracker.setSteps(steps, selectedDate)}
+        onSetGoal={(goal) => stepTracker.setStepGoal(goal, selectedDate)}
+      />
+
+      {/* 2. Activity & Steps Calendar Card (Week & Month views) */}
+      <ActivityCalendarCard
+        selectedDate={selectedDate}
+        onSelectDate={handleDateSelect}
+        weekStats={stepTracker.weekStats}
+        monthStats={stepTracker.monthStats}
+        onAddStepsToDate={(delta, dateStr) => stepTracker.addSteps(delta, dateStr)}
+      />
+
+      {/* 3. Activity Summary Hero Card */}
       <div className="p-4 sm:p-5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3.5">
         
         {/* Header */}
@@ -290,6 +331,12 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
               className="h-full bg-[#DC2626] rounded-full transition-all duration-500"
               style={{ width: `${goalPercent}%` }}
             />
+          </div>
+
+          {/* Sub-breakdown: Workouts vs Steps */}
+          <div className="flex items-center justify-between text-[10px] font-bold font-mono-num text-[#6B635B] pt-0.5">
+            <span>🏋️ Тренировки: +{todaysWorkouts.reduce((acc, w) => acc + (w.caloriesBurned || 0), 0)} ккал</span>
+            <span>🚶 Шаги: +{stepTracker.currentCalories} ккал</span>
           </div>
         </div>
 

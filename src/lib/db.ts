@@ -1,7 +1,7 @@
 import Dexie, { type Table } from 'dexie';
 import { format } from 'date-fns';
 import type { Task, Habit, HabitLog, FocusSession, LinkItem } from '../types';
-import type { HealthProfile, WeightLog, MealLog, WaterLog, WorkoutLog } from '../types/health';
+import type { HealthProfile, WeightLog, MealLog, WaterLog, WorkoutLog, StepLog } from '../types/health';
 import { DEFAULT_HEALTH_PROFILE, calculateBmi } from './healthFormulas';
 
 export interface UserSettingRecord {
@@ -33,6 +33,7 @@ export class PlannerDatabase extends Dexie {
   mealLogs!: Table<MealLog>;
   waterLogs!: Table<WaterLog>;
   workoutLogs!: Table<WorkoutLog>;
+  stepLogs!: Table<StepLog>;
   activityLogs!: Table<ActivityLog>;
 
   constructor() {
@@ -62,6 +63,9 @@ export class PlannerDatabase extends Dexie {
     });
     this.version(6).stores({
       activityLogs: '++id, timestamp, date, action, entity',
+    });
+    this.version(7).stores({
+      stepLogs: '++id, &date, steps, caloriesBurned, distanceMeters, durationMinutes, createdAt',
     });
   }
 }
@@ -188,4 +192,70 @@ export async function seedDemoDataIfEmpty() {
     ]);
   }
 
+}
+
+// ==========================================
+// Step Tracking Helpers & Formulas
+// ==========================================
+
+export function calculateStepCalories(steps: number, weightKg = 70): number {
+  return Math.round(steps * (0.04 * (Math.max(35, weightKg) / 70)));
+}
+
+export function calculateStepDistanceMeters(steps: number, heightCm = 175): number {
+  const strideMeters = (Math.max(120, heightCm) * 0.415) / 100;
+  return Math.round(steps * strideMeters);
+}
+
+export function calculateStepDurationMinutes(steps: number): number {
+  return Math.round(steps / 100);
+}
+
+export async function getStepLogForDate(date: string): Promise<StepLog | undefined> {
+  return db.stepLogs.where('date').equals(date).first();
+}
+
+export async function upsertStepLog(
+  date: string,
+  steps: number,
+  options?: {
+    goal?: number;
+    weightKg?: number;
+    heightCm?: number;
+    source?: 'sensor' | 'manual' | 'pedometer';
+  }
+): Promise<StepLog> {
+  const existing = await getStepLogForDate(date);
+  const goal = options?.goal ?? (existing?.goal || 10000);
+  const weightKg = options?.weightKg ?? 70;
+  const heightCm = options?.heightCm ?? 175;
+  const safeSteps = Math.max(0, Math.round(steps));
+
+  const caloriesBurned = calculateStepCalories(safeSteps, weightKg);
+  const distanceMeters = calculateStepDistanceMeters(safeSteps, heightCm);
+  const durationMinutes = calculateStepDurationMinutes(safeSteps);
+  const now = Date.now();
+
+  const record: StepLog = {
+    ...(existing || {}),
+    date,
+    steps: safeSteps,
+    goal,
+    caloriesBurned,
+    distanceMeters,
+    durationMinutes,
+    source: options?.source || existing?.source || 'manual',
+    updatedAt: now,
+    createdAt: existing?.createdAt || now,
+  };
+
+  if (existing?.id) {
+    record.id = existing.id;
+    await db.stepLogs.put(record);
+  } else {
+    const id = await db.stepLogs.add(record);
+    record.id = Number(id);
+  }
+
+  return record;
 }

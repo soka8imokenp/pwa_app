@@ -348,6 +348,7 @@ export function App() {
                   selectedDate={selectedDate}
                   onLogWorkout={logWorkout}
                   onDeleteWorkout={deleteWorkout}
+                  onSelectDate={setSelectedDate}
                 />
               )}
 

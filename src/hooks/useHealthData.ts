@@ -28,6 +28,11 @@ export function useHealthData(selectedDate: string) {
     [selectedDate]
   ) || [];
 
+  const todaysStepLog = useLiveQuery(
+    () => db.stepLogs.where('date').equals(selectedDate).first(),
+    [selectedDate]
+  );
+
   // 2. Computed Metrics
   const metrics = useMemo(() => {
     return calculateComprehensiveMetrics(profile);
@@ -58,9 +63,17 @@ export function useHealthData(selectedDate: string) {
     return todaysWaterLogs.reduce((acc, w) => acc + (w.amountMl || 0), 0);
   }, [todaysWaterLogs]);
 
-  const todaysActiveCaloriesBurned = useMemo(() => {
+  const todaysWorkoutCaloriesBurned = useMemo(() => {
     return todaysWorkouts.reduce((acc, w) => acc + (w.caloriesBurned || 0), 0);
   }, [todaysWorkouts]);
+
+  const todaysStepCaloriesBurned = useMemo(() => {
+    return todaysStepLog?.caloriesBurned || 0;
+  }, [todaysStepLog]);
+
+  const todaysActiveCaloriesBurned = useMemo(() => {
+    return todaysWorkoutCaloriesBurned + todaysStepCaloriesBurned;
+  }, [todaysWorkoutCaloriesBurned, todaysStepCaloriesBurned]);
 
   // 4. Action Handlers
   const updateProfile = async (updates: Partial<HealthProfile>) => {
@@ -176,6 +189,9 @@ export function useHealthData(selectedDate: string) {
     todaysCarbsGrams,
     todaysFatGrams,
     todaysWaterTotalMl,
+    todaysStepLog,
+    todaysStepCaloriesBurned,
+    todaysWorkoutCaloriesBurned,
     todaysActiveCaloriesBurned,
     updateProfile,
     logWeight,

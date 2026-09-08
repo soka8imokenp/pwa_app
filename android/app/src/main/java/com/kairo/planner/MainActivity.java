@@ -1151,13 +1151,6 @@ public class MainActivity extends BridgeActivity {
         public void resyncPhoneSteps() {
             runOnUiThread(() -> {
                 try {
-                    SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-                    prefs.edit()
-                            .remove(KEY_BASELINE_STEPS)
-                            .remove(KEY_BASELINE_DATE)
-                            .remove("last_today_steps")
-                            .apply();
-
                     if (sensorManager != null && stepSensor != null) {
                         if (isListening) {
                             sensorManager.unregisterListener(this);

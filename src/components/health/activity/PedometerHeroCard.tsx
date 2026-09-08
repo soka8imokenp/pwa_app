@@ -257,7 +257,7 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
                   <span className="text-3xl sm:text-4xl font-black font-mono-num text-[#24201D] group-hover:text-[#3D6B52] transition-colors leading-none tracking-tight text-center">
                     {currentSteps.toLocaleString()}
                   </span>
-                  <Edit2 className="w-3 h-3 text-stone-400 group-hover:text-[#24201D] opacity-0 group-hover:opacity-100 transition-opacity absolute -right-4.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Edit2 className="w-3.5 h-3.5 text-stone-400 group-hover:text-[#24201D] opacity-70 group-hover:opacity-100 transition-opacity absolute -right-5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
                 <span className="text-[11px] font-bold font-mono-num text-[#6B635B] mt-1">
                   of {goal.toLocaleString()} steps

@@ -86,6 +86,7 @@ public class MainActivity extends BridgeActivity {
     private StepCounterJsInterface stepCounterInterface;
     private HealthConnectManager healthConnectManager;
     private androidx.activity.result.ActivityResultLauncher<java.util.Set<String>> healthConnectPermissionLauncher;
+    public static final String PREFS_NAME = "kairo_step_prefs";
 
     private void acquireWakeLock() {
         try {
@@ -1142,7 +1143,6 @@ public class MainActivity extends BridgeActivity {
         private SensorManager sensorManager;
         private Sensor stepSensor;
         private boolean isListening = false;
-        private static final String PREFS_NAME = "kairo_step_prefs";
         private static final String KEY_BASELINE_DATE = "baseline_date";
         private static final String KEY_BASELINE_STEPS = "baseline_steps";
 

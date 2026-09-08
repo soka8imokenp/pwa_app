@@ -1,5 +1,11 @@
 import { format } from 'date-fns';
-import { db } from './db';
+import {
+  db,
+  calculateStepCalories,
+  calculateStepDistanceMeters,
+  calculateStepDurationMinutes,
+  upsertStepLog,
+} from './db';
 import { getTodayString } from './dateUtils';
 import type { Task, Habit, HabitLog, FocusSession } from '../types';
 import {
@@ -138,122 +144,208 @@ export async function buildPlannerRAGContext(targetDate: string = getTodayString
     lines.push(`"""\n${scratchpadNotes.trim().slice(0, 600)}\n"""`);
   }
 
-  // 5. Health & Nutrition Telemetry with Full Zepp Life BIA Telemetry
+  // 5. Health, Steps & Activity Telemetry with Full BIA Body Composition
   try {
     const profileList = await db.healthProfile.toArray();
-    if (profileList.length > 0) {
-      const profile = profileList[0];
-      const metrics = calculateComprehensiveMetrics(profile);
-      const todaysMeals = await db.mealLogs.where('date').equals(targetDate).toArray();
-      const todaysWater = await db.waterLogs.where('date').equals(targetDate).toArray();
-      const todaysWorkouts = await db.workoutLogs.where('date').equals(targetDate).toArray();
-      const allWeightLogs = await db.weightLogs.orderBy('date').toArray();
+    const hasCustomProfile = profileList.length > 0;
+    const profile = hasCustomProfile
+      ? profileList[0]
+      : {
+          currentWeight: 70,
+          targetWeight: 68,
+          height: 175,
+          age: 26,
+          gender: 'male' as const,
+          goal: 'maintain' as const,
+          activityLevel: 'moderate' as const,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
 
-      // Filter rogue halved artifacts
-      const validWeights = filterWeightOutliers(allWeightLogs, profile.currentWeight);
-      const movingAvgLogs = computeWeightMovingAverage(validWeights, 7, profile.currentWeight);
-      const currentMA = movingAvgLogs.length > 0 ? movingAvgLogs[movingAvgLogs.length - 1].movingAvg : profile.currentWeight;
-      const paceInfo = computeWeeklyPace(validWeights, profile.currentWeight);
+    const metrics = calculateComprehensiveMetrics(profile);
+    const todaysMeals = await db.mealLogs.where('date').equals(targetDate).toArray();
+    const todaysWater = await db.waterLogs.where('date').equals(targetDate).toArray();
+    const todaysWorkouts = await db.workoutLogs.where('date').equals(targetDate).toArray();
+    const allWeightLogs = await db.weightLogs.orderBy('date').toArray();
 
-      // Find latest Zepp scale biometrics
-      let latestBiometrics = null;
-      for (let i = validWeights.length - 1; i >= 0; i--) {
-        if (validWeights[i].metrics) {
-          latestBiometrics = validWeights[i].metrics;
-          break;
+    // Filter rogue halved artifacts
+    const validWeights = filterWeightOutliers(allWeightLogs, profile.currentWeight);
+    const movingAvgLogs = computeWeightMovingAverage(validWeights, 7, profile.currentWeight);
+    const currentMA = movingAvgLogs.length > 0 ? movingAvgLogs[movingAvgLogs.length - 1].movingAvg : profile.currentWeight;
+    const paceInfo = computeWeeklyPace(validWeights, profile.currentWeight);
+
+    // Find latest smart scale biometrics
+    let latestBiometrics = null;
+    for (let i = validWeights.length - 1; i >= 0; i--) {
+      if (validWeights[i].metrics) {
+        latestBiometrics = validWeights[i].metrics;
+        break;
+      }
+    }
+    if (!latestBiometrics && profile.currentWeight > 0) {
+      latestBiometrics = calculateXiaomiBiometrics(
+        profile.currentWeight,
+        500,
+        profile.height || 178,
+        profile.age || 26,
+        profile.gender || 'male'
+      );
+    }
+
+    const totalKcal = todaysMeals.reduce((acc, m) => acc + (m.kcal || 0), 0);
+    const totalProtein = todaysMeals.reduce((acc, m) => acc + (m.proteinGrams || 0), 0);
+    const totalCarbs = todaysMeals.reduce((acc, m) => acc + (m.carbsGrams || 0), 0);
+    const totalFat = todaysMeals.reduce((acc, m) => acc + (m.fatGrams || 0), 0);
+    const totalWaterMl = todaysWater.reduce((acc, w) => acc + (w.amountMl || 0), 0);
+
+    // -----------------------------------------------------------------
+    // STEPS & PEDOMETER TELEMETRY (LIVE SYNC & DEXIE DB)
+    // -----------------------------------------------------------------
+    let liveSensorSteps: number | null = null;
+    if (typeof window !== 'undefined' && (window as any).AndroidStepCounter?.getLiveSteps) {
+      try {
+        const s = (window as any).AndroidStepCounter.getLiveSteps();
+        if (typeof s === 'number' && s >= 0) {
+          liveSensorSteps = s;
+        }
+      } catch (e) {
+        console.warn('Could not read native live steps:', e);
+      }
+    }
+
+    let todaysStep = await db.stepLogs.where('date').equals(targetDate).first();
+    if (liveSensorSteps !== null && liveSensorSteps > 0 && (!todaysStep || liveSensorSteps > todaysStep.steps)) {
+      try {
+        todaysStep = await upsertStepLog(targetDate, liveSensorSteps, {
+          weightKg: profile.currentWeight,
+          heightCm: profile.height,
+          source: 'sensor',
+        });
+      } catch (e) {
+        if (todaysStep) {
+          todaysStep = { ...todaysStep, steps: Math.max(todaysStep.steps, liveSensorSteps) };
         }
       }
-      if (!latestBiometrics && profile.currentWeight > 0) {
-        latestBiometrics = calculateXiaomiBiometrics(
-          profile.currentWeight,
-          500,
-          profile.height || 178,
-          profile.age || 26,
-          profile.gender || 'male'
-        );
+    }
+
+    const todaysStepCount = todaysStep?.steps || (liveSensorSteps !== null ? liveSensorSteps : 0);
+    const todaysStepGoal = todaysStep?.goal || 10000;
+    const todaysStepKcal = todaysStep?.caloriesBurned || calculateStepCalories(todaysStepCount, profile.currentWeight);
+    const todaysDistanceKm = Number(((todaysStep?.distanceMeters || calculateStepDistanceMeters(todaysStepCount, profile.height)) / 1000).toFixed(2));
+    const todaysDurationMinutes = todaysStep?.durationMinutes || calculateStepDurationMinutes(todaysStepCount);
+    const stepPercent = Math.round((todaysStepCount / Math.max(1, todaysStepGoal)) * 100);
+    const isStepGoalMet = todaysStepCount >= todaysStepGoal && todaysStepGoal > 0;
+    const stepsRemaining = Math.max(0, todaysStepGoal - todaysStepCount);
+
+    const workoutBurned = todaysWorkouts.reduce((acc, w) => acc + (w.caloriesBurned || 0), 0);
+    const totalActiveBurn = workoutBurned + todaysStepKcal;
+
+    const remainingKcal = metrics.targetDailyCalories - totalKcal;
+    const remainingProtein = metrics.targetProteinGrams - totalProtein;
+
+    const mealsBreakdown = todaysMeals.length > 0
+      ? todaysMeals
+          .map((m) => `  * [${m.mealType.toUpperCase()}] "${m.name}" - ${m.kcal} kcal (Protein: ${m.proteinGrams}g, Carbs: ${m.carbsGrams}g, Fat: ${m.fatGrams}g${m.time ? `, at ${m.time}` : ''})`)
+          .join('\n')
+      : '  * No meals recorded yet today.';
+
+    lines.push(`\n### User's Live Health & Nutrition Telemetry:`);
+    lines.push(`- Profile: Age ${profile.age}, ${profile.gender}, Height: ${profile.height} cm, Current Weight: ${profile.currentWeight} kg -> Target: ${profile.targetWeight} kg (Goal: ${profile.goal})${!hasCustomProfile ? ' [Baseline default profile]' : ''}`);
+    lines.push(`- Weight Dynamics & Trend:`);
+    lines.push(`  * 7-Day Moving Average: ${currentMA} kg (Filters day-to-day water/food noise)`);
+    lines.push(`  * Weekly Rate of Change: ${paceInfo.paceLabel} (${paceInfo.paceKgPerWeek} kg/week)`);
+    if (validWeights.length > 0) {
+      lines.push(`  * Recent Weigh-in History: ${validWeights.slice(-5).map((w) => `${w.date}: ${w.weight}kg`).join(', ')}`);
+    }
+    lines.push(`- BMI: ${metrics.bmi} (${metrics.bmiCategoryLabel}) | Basal BMR: ${metrics.bmr} kcal | TDEE: ${metrics.tdee} kcal`);
+    lines.push(`- Prescribed Targets: ${metrics.targetDailyCalories} kcal/day (${metrics.targetProteinGrams}g Protein, ${metrics.targetCarbsGrams}g Carbs, ${metrics.targetFatGrams}g Fat, ${metrics.targetWaterMl}ml Water)`);
+    lines.push(`- Consumed Today: ${totalKcal} / ${metrics.targetDailyCalories} kcal (Remaining: ${remainingKcal} kcal)`);
+    lines.push(`- Macronutrients Today: Protein: ${totalProtein}/${metrics.targetProteinGrams}g (Remaining: ${remainingProtein}g), Carbs: ${totalCarbs}/${metrics.targetCarbsGrams}g, Fat: ${totalFat}/${metrics.targetFatGrams}g`);
+    lines.push(`- Hydration Today: ${totalWaterMl} / ${metrics.targetWaterMl} ml`);
+    lines.push(`- Itemized Meals Logged Today:\n${mealsBreakdown}`);
+
+    // -----------------------------------------------------------------
+    // DAILY MOVEMENT & PEDOMETER TELEMETRY
+    // -----------------------------------------------------------------
+    lines.push(`\n### Daily Movement & Pedometer Telemetry (Today: ${targetDate}):`);
+    lines.push(`- Real-time Steps Today: ${todaysStepCount.toLocaleString()} / ${todaysStepGoal.toLocaleString()} steps (${stepPercent}% of daily goal)`);
+    lines.push(`- Step Goal Status: ${isStepGoalMet ? '✅ Daily Goal ACHIEVED!' : `⏳ In Progress (${stepsRemaining.toLocaleString()} steps remaining to target)`}`);
+    lines.push(`- Walking Distance: ${todaysDistanceKm} km | Active Walking Duration: ~${todaysDurationMinutes} minutes`);
+    lines.push(`- Walking Energy Burn: +${todaysStepKcal} kcal (estimated for ${profile.currentWeight} kg body weight)`);
+    lines.push(`- Step Engine: Daily Sumire Pedometer (Integrated with Android Health Connect & hardware sensor)`);
+
+    // Past 7 Days Steps Summary
+    const recentSteps = await db.stepLogs.orderBy('date').reverse().limit(7).toArray();
+    if (recentSteps.length > 0) {
+      const avgSteps = Math.round(recentSteps.reduce((acc, s) => acc + s.steps, 0) / recentSteps.length);
+      const bestDay = recentSteps.reduce((prev, curr) => (curr.steps > prev.steps ? curr : prev), recentSteps[0]);
+      lines.push(`- 7-Day Steps Summary:`);
+      lines.push(`  * Daily Average: ${avgSteps.toLocaleString()} steps/day | Best Day: ${bestDay.steps.toLocaleString()} steps (${bestDay.date})`);
+      lines.push(`  * Day-by-Day Steps:`);
+      recentSteps.forEach((s) => {
+        const goalHit = s.steps >= (s.goal || 10000) ? ' [Goal Met]' : '';
+        const pct = Math.round((s.steps / Math.max(1, s.goal || 10000)) * 100);
+        lines.push(`    • ${s.date}: ${s.steps.toLocaleString()} steps (${pct}%)${goalHit}`);
+      });
+    }
+
+    // -----------------------------------------------------------------
+    // PHYSICAL WORKOUTS & ACTIVE EXERCISE
+    // -----------------------------------------------------------------
+    lines.push(`\n### Physical Workouts & Active Exercise:`);
+    lines.push(`- Total Active Burn Today: +${totalActiveBurn} kcal (Workouts: +${workoutBurned} kcal, Walking: +${todaysStepKcal} kcal)`);
+    if (todaysWorkouts.length > 0) {
+      lines.push(`- Today's Logged Workouts (${todaysWorkouts.length} session${todaysWorkouts.length > 1 ? 's' : ''}):`);
+      todaysWorkouts.forEach((w) => {
+        const noteStr = w.notes ? ` (Note: "${w.notes}")` : '';
+        lines.push(`  * [${w.category.toUpperCase()}] "${w.title}" - ${w.durationMinutes} min, +${w.caloriesBurned || 0} kcal${noteStr}`);
+      });
+    } else {
+      lines.push(`- Today's Logged Workouts: None recorded yet today.`);
+    }
+
+    // Recent workouts from earlier this week
+    const allRecentWorkouts = await db.workoutLogs.orderBy('date').reverse().limit(10).toArray();
+    const pastWorkouts = allRecentWorkouts.filter((w) => w.date !== targetDate).slice(0, 5);
+    if (pastWorkouts.length > 0) {
+      lines.push(`- Earlier Workouts This Week:`);
+      pastWorkouts.forEach((w) => {
+        lines.push(`  * ${w.date}: [${w.category.toUpperCase()}] "${w.title}" (${w.durationMinutes} min, +${w.caloriesBurned || 0} kcal)`);
+      });
+    }
+
+    // -----------------------------------------------------------------
+    // BIA BODY COMPOSITION TELEMETRY (SMART SCALE)
+    // -----------------------------------------------------------------
+    if (latestBiometrics) {
+      lines.push(`\n### Bioelectrical Impedance (BIA) Body Composition Telemetry (Smart Scale):`);
+      lines.push(`- Overall Body Score: ${latestBiometrics.bodyScore} / 100 (${latestBiometrics.bodyScore >= 80 ? 'Optimal / Solid Condition' : latestBiometrics.bodyScore >= 70 ? 'Moderate' : 'Needs Attention'})`);
+      lines.push(`- 9-Box Somatotype (Body Type): "${latestBiometrics.bodyType}" (Classification Code: ${latestBiometrics.bodyTypeCode})`);
+      lines.push(`- Clinical Biometrics Breakdown:`);
+      lines.push(`  * Visceral Fat: Level ${latestBiometrics.visceralFat} (Standard: 1–9 optimal abdominal fat, 10–14 high risk, 15+ dangerous)`);
+      lines.push(`  * Body Fat: ${latestBiometrics.bodyFatPercentage}%`);
+      lines.push(`  * Skeletal Muscle Mass: ${latestBiometrics.muscleMassKg} kg (Lean Body Mass: ${latestBiometrics.leanMassKg} kg)`);
+      lines.push(`  * Total Body Water: ${latestBiometrics.waterPercentage}% (Normal hydration: 50.0–65.0%)`);
+      lines.push(`  * Bone Mineral Mass: ${latestBiometrics.boneMassKg} kg`);
+      lines.push(`  * Protein: ${latestBiometrics.proteinPercentage}% (Optimal: 16.0–22.0%)`);
+      lines.push(`  * Basal Metabolic Rate (BMR): ${latestBiometrics.bmr} kcal/day`);
+      lines.push(`  * Metabolic Body Age: ${latestBiometrics.bodyAge} years (User chronological age: ${profile.age})`);
+      lines.push(`  * Recommended Ideal Weight: ${latestBiometrics.idealWeightKg} kg`);
+
+      if (latestBiometrics.items && latestBiometrics.items.length > 0) {
+        const itemStatuses = latestBiometrics.items
+          .map((it) => `${it.title}: ${it.valueFormatted}${it.unit} [${it.statusLabel}]`)
+          .join('; ');
+        lines.push(`- Biomarkers Status: ${itemStatuses}`);
       }
 
-      const totalKcal = todaysMeals.reduce((acc, m) => acc + (m.kcal || 0), 0);
-      const totalProtein = todaysMeals.reduce((acc, m) => acc + (m.proteinGrams || 0), 0);
-      const totalCarbs = todaysMeals.reduce((acc, m) => acc + (m.carbsGrams || 0), 0);
-      const totalFat = todaysMeals.reduce((acc, m) => acc + (m.fatGrams || 0), 0);
-      const totalWaterMl = todaysWater.reduce((acc, w) => acc + (w.amountMl || 0), 0);
-
-      // Steps telemetry
-      const todaysStep = await db.stepLogs.where('date').equals(targetDate).first();
-      const recentSteps = await db.stepLogs.orderBy('date').reverse().limit(7).toArray();
-      const todaysStepCount = todaysStep?.steps || 0;
-      const todaysStepGoal = todaysStep?.goal || 10000;
-      const todaysStepKcal = todaysStep?.caloriesBurned || 0;
-      const todaysDistanceKm = (todaysStep?.distanceMeters || 0) / 1000;
-      const weeklyAvgSteps = recentSteps.length > 0
-        ? Math.round(recentSteps.reduce((acc, s) => acc + s.steps, 0) / recentSteps.length)
-        : 0;
-
-      const workoutBurned = todaysWorkouts.reduce((acc, w) => acc + (w.caloriesBurned || 0), 0);
-      const totalActiveBurn = workoutBurned + todaysStepKcal;
-
-      const remainingKcal = metrics.targetDailyCalories - totalKcal;
-      const remainingProtein = metrics.targetProteinGrams - totalProtein;
-
-      const mealsBreakdown = todaysMeals.length > 0
-        ? todaysMeals
-            .map((m) => `  * [${m.mealType.toUpperCase()}] "${m.name}" - ${m.kcal} kcal (Protein: ${m.proteinGrams}g, Carbs: ${m.carbsGrams}g, Fat: ${m.fatGrams}g${m.time ? `, at ${m.time}` : ''})`)
-            .join('\n')
-        : '  * No meals recorded yet today.';
-
-      lines.push(`\n### User's Live Health & Nutrition Telemetry:`);
-      lines.push(`- Profile: Age ${profile.age}, ${profile.gender}, Height: ${profile.height} cm, Current Weight: ${profile.currentWeight} kg -> Target: ${profile.targetWeight} kg (Goal: ${profile.goal})`);
-      lines.push(`- Weight Dynamics & Trend:`);
-      lines.push(`  * 7-Day Moving Average: ${currentMA} kg (Filters day-to-day water/food noise)`);
-      lines.push(`  * Weekly Rate of Change: ${paceInfo.paceLabel} (${paceInfo.paceKgPerWeek} kg/week)`);
-      if (validWeights.length > 0) {
-        lines.push(`  * Recent Weigh-in History: ${validWeights.slice(-5).map((w) => `${w.date}: ${w.weight}kg`).join(', ')}`);
-      }
-      lines.push(`- BMI: ${metrics.bmi} (${metrics.bmiCategoryLabel}) | Basal BMR: ${metrics.bmr} kcal | TDEE: ${metrics.tdee} kcal`);
-      lines.push(`- Prescribed Targets: ${metrics.targetDailyCalories} kcal/day (${metrics.targetProteinGrams}g Protein, ${metrics.targetCarbsGrams}g Carbs, ${metrics.targetFatGrams}g Fat, ${metrics.targetWaterMl}ml Water)`);
-      lines.push(`- Consumed Today: ${totalKcal} / ${metrics.targetDailyCalories} kcal (Remaining: ${remainingKcal} kcal)`);
-      lines.push(`- Macronutrients Today: Protein: ${totalProtein}/${metrics.targetProteinGrams}g (Remaining: ${remainingProtein}g), Carbs: ${totalCarbs}/${metrics.targetCarbsGrams}g, Fat: ${totalFat}/${metrics.targetFatGrams}g`);
-      lines.push(`- Hydration Today: ${totalWaterMl} / ${metrics.targetWaterMl} ml`);
-      lines.push(`- Pedometer & Steps:`);
-      lines.push(`  * Today's Steps: ${todaysStepCount} / ${todaysStepGoal} steps (${Math.round((todaysStepCount / Math.max(1, todaysStepGoal)) * 100)}% of goal)`);
-      lines.push(`  * Walking Burn: +${todaysStepKcal} kcal | Distance: ${todaysDistanceKm.toFixed(2)} km`);
-      if (recentSteps.length > 0) {
-        lines.push(`  * 7-Day Average Steps: ${weeklyAvgSteps} steps/day`);
-      }
-      lines.push(`- Physical Activity: +${totalActiveBurn} kcal active burn (Workouts: +${workoutBurned} kcal across ${todaysWorkouts.length} sessions, Steps: +${todaysStepKcal} kcal)`);
-      lines.push(`- Itemized Meals Logged Today:\n${mealsBreakdown}`);
-
-      if (latestBiometrics) {
-        lines.push(`\n### Official Zepp Life Bioelectrical Impedance (BIA) Body Composition Telemetry:`);
-        lines.push(`- Overall Body Score: ${latestBiometrics.bodyScore} / 100 (${latestBiometrics.bodyScore >= 80 ? 'Optimal / Solid Condition' : latestBiometrics.bodyScore >= 70 ? 'Moderate' : 'Needs Attention'})`);
-        lines.push(`- 9-Box Somatotype (Body Type): "${latestBiometrics.bodyType}" (Classification Code: ${latestBiometrics.bodyTypeCode})`);
-        lines.push(`- Clinical Biometrics Breakdown:`);
-        lines.push(`  * Visceral Fat: Level ${latestBiometrics.visceralFat} (Standard: 1–9 optimal abdominal fat, 10–14 high risk, 15+ dangerous)`);
-        lines.push(`  * Body Fat: ${latestBiometrics.bodyFatPercentage}%`);
-        lines.push(`  * Skeletal Muscle Mass: ${latestBiometrics.muscleMassKg} kg (Lean Body Mass: ${latestBiometrics.leanMassKg} kg)`);
-        lines.push(`  * Total Body Water: ${latestBiometrics.waterPercentage}% (Normal hydration: 50.0–65.0%)`);
-        lines.push(`  * Bone Mineral Mass: ${latestBiometrics.boneMassKg} kg`);
-        lines.push(`  * Protein: ${latestBiometrics.proteinPercentage}% (Optimal: 16.0–22.0%)`);
-        lines.push(`  * Basal Metabolic Rate (BMR): ${latestBiometrics.bmr} kcal/day`);
-        lines.push(`  * Metabolic Body Age: ${latestBiometrics.bodyAge} years (User chronological age: ${profile.age})`);
-        lines.push(`  * Recommended Ideal Weight: ${latestBiometrics.idealWeightKg} kg`);
-
-        if (latestBiometrics.items && latestBiometrics.items.length > 0) {
-          const itemStatuses = latestBiometrics.items
-            .map((it) => `${it.title}: ${it.valueFormatted}${it.unit} [${it.statusLabel}]`)
-            .join('; ');
-          lines.push(`- Biomarkers Status: ${itemStatuses}`);
-        }
-
-        if (latestBiometrics.deductions && latestBiometrics.deductions.length > 0) {
-          const dedList = latestBiometrics.deductions
-            .map((d) => `"${d.label}" (-${d.malus} pts)`)
-            .join(', ');
-          lines.push(`- Body Score Maluses (Deductions): ${dedList}`);
-        } else {
-          lines.push(`- Body Score Maluses (Deductions): None (Full 100-point condition)`);
-        }
+      if (latestBiometrics.deductions && latestBiometrics.deductions.length > 0) {
+        const dedList = latestBiometrics.deductions
+          .map((d) => `"${d.label}" (-${d.malus} pts)`)
+          .join(', ');
+        lines.push(`- Body Score Maluses (Deductions): ${dedList}`);
+      } else {
+        lines.push(`- Body Score Maluses (Deductions): None (Full 100-point condition)`);
       }
     }
   } catch (err) {

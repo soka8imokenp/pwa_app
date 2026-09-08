@@ -149,6 +149,10 @@ export interface HealthTelemetryContext {
   todaysWaterTotalMl?: number;
   todaysWorkouts?: WorkoutLog[];
   todaysActiveCaloriesBurned?: number;
+  todaysSteps?: number;
+  todaysStepGoal?: number;
+  todaysStepCalories?: number;
+  todaysDistanceKm?: number;
   todaysTotalKcal?: number;
   todaysProteinGrams?: number;
   todaysCarbsGrams?: number;
@@ -197,12 +201,17 @@ export async function getHealthCoachAdviceWithAI(
     : '';
 
   const scaleTelemetry = context?.scaleMetrics
-    ? `\n- Zepp Life BIA Telemetry: Body Score: ${context.scaleMetrics.bodyScore}/100, Somatotype: "${context.scaleMetrics.bodyType}", Visceral Fat: Level ${context.scaleMetrics.visceralFat}, Skeletal Muscle: ${context.scaleMetrics.muscleMassKg}kg, Bone Mass: ${context.scaleMetrics.boneMassKg}kg, Water: ${context.scaleMetrics.waterPercentage}%, Protein: ${context.scaleMetrics.proteinPercentage}%, BMR: ${context.scaleMetrics.bmr} kcal, Metabolic Age: ${context.scaleMetrics.bodyAge} y.o.`
+    ? `\n- Body Composition (BIA) Telemetry: Body Score: ${context.scaleMetrics.bodyScore}/100, Somatotype: "${context.scaleMetrics.bodyType}", Visceral Fat: Level ${context.scaleMetrics.visceralFat}, Skeletal Muscle: ${context.scaleMetrics.muscleMassKg}kg, Bone Mass: ${context.scaleMetrics.boneMassKg}kg, Water: ${context.scaleMetrics.waterPercentage}%, Protein: ${context.scaleMetrics.proteinPercentage}%, BMR: ${context.scaleMetrics.bmr} kcal, Metabolic Age: ${context.scaleMetrics.bodyAge} y.o.`
     : '';
 
   const maInfo = context?.movingAvg ? ` (7-Day Moving Avg: ${context.movingAvg} kg)` : '';
 
-  const systemInstructionText = `You are Sumire Health AI — an elite, knowledgeable, empathetic, evidence-based personal health, nutrition, and metabolic coach.
+  const systemInstructionText = `You are Sumire Health AI — an elite, knowledgeable, empathetic, evidence-based personal health, nutrition, and metabolic coach in the Daily Sumire application.
+
+CRITICAL APP IDENTITY RULE:
+- The application name is **Daily Sumire**. NEVER say the app is "Zepp Life" or that you get data from "Zepp Life".
+- Step tracking comes from Daily Sumire's integrated step counter and Android Health Connect.
+- Body composition analysis comes from Daily Sumire's integrated smart scale BIA analyzer.
 
 USER'S LIVE BIOMETRICS & METABOLIC TELEMETRY:
 - Demographics: Biological Sex: ${profile.gender}, Age: ${profile.age} y.o., Height: ${profile.height} cm
@@ -215,6 +224,7 @@ USER'S LIVE BIOMETRICS & METABOLIC TELEMETRY:
 - Today's Consumed Intake: ${context?.todaysTotalKcal || 0} / ${metrics.targetDailyCalories} kcal (Protein: ${context?.todaysProteinGrams || 0}g, Carbs: ${context?.todaysCarbsGrams || 0}g, Fat: ${context?.todaysFatGrams || 0}g)
   - Meals logged today: ${mealsList}
 - Today's Hydration: ${context?.todaysWaterTotalMl || 0} / ${metrics.targetWaterMl} ml
+- Pedometer & Steps Today: ${context?.todaysSteps || 0} / ${context?.todaysStepGoal || 10000} steps (${context?.todaysDistanceKm || 0} km, +${context?.todaysStepCalories || 0} kcal)
 - Today's Workouts: ${workoutsList} (Active Burn: +${context?.todaysActiveCaloriesBurned || 0} kcal)
 - Recent Weigh-in History: ${recentWeights}
 

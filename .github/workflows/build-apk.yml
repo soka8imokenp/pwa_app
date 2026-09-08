@@ -92,6 +92,18 @@ jobs:
           name: gradle-failure-log
           path: android/gradle.log
 
+      - name: Publish Failure Log to Release
+        if: failure()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "build-failure"
+          name: "Gradle Build Failure Log"
+          draft: false
+          prerelease: true
+          files: android/gradle.log
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Prepare APK Files for Distribution
         run: |
           cp android/app/build/outputs/apk/debug/app-debug.apk Daily-Sumire-app-debug.apk

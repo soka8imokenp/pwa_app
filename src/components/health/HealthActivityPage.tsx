@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   Activity,
   Dumbbell,
@@ -82,6 +82,16 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
     selectedDate,
     profile,
   });
+
+  const openHealthConnectSettings = useCallback(() => {
+    if (typeof window !== 'undefined' && (window as any).AndroidStepCounter?.openHealthConnectSettings) {
+      try {
+        (window as any).AndroidStepCounter.openHealthConnectSettings();
+      } catch (e) {
+        console.warn('Failed to open Health Connect settings:', e);
+      }
+    }
+  }, []);
 
   const handleDateSelect = (dateStr: string) => {
     if (onSelectDate) {
@@ -287,6 +297,7 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
             (window as any).AndroidStepCounter.resyncPhoneSteps();
           }
         }}
+        onOpenHealthConnectSettings={openHealthConnectSettings}
       />
 
       {/* 2. Activity & Steps Calendar Card (Week & Month views) */}

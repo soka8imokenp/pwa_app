@@ -300,7 +300,7 @@ public class MainActivity extends BridgeActivity {
             healthConnectManager = new HealthConnectManager(this);
             if (healthConnectManager.isAvailable()) {
                 healthConnectPermissionLauncher = registerForActivityResult(
-                    androidx.health.connect.client.PermissionController.createRequestPermissionResultContract(),
+                    healthConnectManager.createPermissionContract(),
                     granted -> {
                         if (granted != null && !granted.isEmpty()) {
                             fetchHealthConnectSteps();

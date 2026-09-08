@@ -40,10 +40,18 @@ class HealthConnectManager(private val context: Context) {
     }
 
     val permissions: Set<String> by lazy {
-        setOf(
-            HealthPermission.getReadPermission(StepsRecord::class),
-            HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)
-        )
+        try {
+            setOf(
+                HealthPermission.getReadPermission(StepsRecord::class),
+                HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)
+            )
+        } catch (e: Throwable) {
+            emptySet()
+        }
+    }
+
+    fun createPermissionContract(): androidx.activity.result.contract.ActivityResultContract<Set<String>, Set<String>> {
+        return PermissionController.createRequestPermissionResultContract()
     }
 
     interface StepCallback {

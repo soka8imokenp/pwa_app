@@ -84,8 +84,6 @@ public class MainActivity extends BridgeActivity {
     private PowerManager.WakeLock wakeLock;
     private BluetoothScaleJsInterface bluetoothScaleInterface;
     private StepCounterJsInterface stepCounterInterface;
-    private HealthConnectManager healthConnectManager;
-    private androidx.activity.result.ActivityResultLauncher<java.util.Set<String>> healthConnectPermissionLauncher;
 
     private void acquireWakeLock() {
         try {
@@ -160,7 +158,9 @@ public class MainActivity extends BridgeActivity {
         requestAudioPermission();
         requestStorageAndCameraPermissions();
         requestActivityRecognitionPermission();
-        initHealthConnect();
+        if (stepCounterInterface != null) {
+            stepCounterInterface.startStepTracking();
+        }
 
         MediaPlaybackService.setStateListener((isPlaying, isBuffering) -> {
             MainActivity.this.isAudioPlaying = isPlaying;
@@ -293,50 +293,6 @@ public class MainActivity extends BridgeActivity {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION}, 105);
             }
         }
-    }
-
-    private void initHealthConnect() {
-        try {
-            healthConnectManager = new HealthConnectManager(this);
-            if (healthConnectManager.isAvailable()) {
-                healthConnectPermissionLauncher = registerForActivityResult(
-                    healthConnectManager.createPermissionContract(),
-                    granted -> {
-                        if (granted != null && !granted.isEmpty()) {
-                            fetchHealthConnectSteps();
-                        }
-                    }
-                );
-
-                healthConnectManager.checkAndRequestPermissions(healthConnectPermissionLauncher, () -> {
-                    fetchHealthConnectSteps();
-                });
-            }
-        } catch (Exception ignored) {}
-    }
-
-    public void fetchHealthConnectSteps() {
-        try {
-            if (healthConnectManager != null && healthConnectManager.isAvailable()) {
-                healthConnectManager.readTodaySteps(new HealthConnectManager.StepCallback() {
-                    @Override
-                    public void onStepsFetched(long steps, double caloriesKcal) {
-                        if (steps > 0) {
-                            runOnUiThread(() -> {
-                                try {
-                                    if (getBridge() != null && getBridge().getWebView() != null) {
-                                        getBridge().getWebView().evaluateJavascript(
-                                            "window.__onNativeStepUpdate && window.__onNativeStepUpdate(" + steps + ");",
-                                            null
-                                        );
-                                    }
-                                } catch (Exception ignored) {}
-                            });
-                        }
-                    }
-                });
-            }
-        } catch (Exception ignored) {}
     }
 
     @Override
@@ -1187,8 +1143,6 @@ public class MainActivity extends BridgeActivity {
                             } catch (Exception ignored) {}
                         });
                     }
-                    // Also trigger Health Connect to auto-pull steps from Samsung Health & Zepp Life
-                    fetchHealthConnectSteps();
                 } catch (Exception ignored) {}
             });
         }
@@ -1197,9 +1151,6 @@ public class MainActivity extends BridgeActivity {
         public void resyncPhoneSteps() {
             runOnUiThread(() -> {
                 try {
-                    // Trigger live Health Connect pull from Samsung Health & Zepp Life
-                    fetchHealthConnectSteps();
-
                     SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
                     prefs.edit()
                             .remove(KEY_BASELINE_STEPS)
@@ -1223,8 +1174,13 @@ public class MainActivity extends BridgeActivity {
         }
 
         @JavascriptInterface
-        public void syncHealthConnect() {
-            fetchHealthConnectSteps();
+        public int getLiveSteps() {
+            try {
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                return (int) prefs.getFloat("last_today_steps", 0f);
+            } catch (Exception e) {
+                return 0;
+            }
         }
 
         @JavascriptInterface
@@ -1273,11 +1229,11 @@ public class MainActivity extends BridgeActivity {
                 SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
                 
                 // Clear any stale zeroed-out baseline from previous versions
-                int calVersion = prefs.getInt("calibration_version_v6", 0);
-                if (calVersion < 6) {
+                int calVersion = prefs.getInt("calibration_version_v7", 0);
+                if (calVersion < 7) {
                     prefs.edit()
                             .clear()
-                            .putInt("calibration_version_v6", 6)
+                            .putInt("calibration_version_v7", 7)
                             .apply();
                 }
 
@@ -1302,10 +1258,11 @@ public class MainActivity extends BridgeActivity {
                         savedBaseline = 0f;
                         stepsToday = (int) rawValue;
                     } else {
-                        // Phone booted earlier: calculate today's proportion of uptime
+                        // Phone booted before today:
                         float totalHoursUptime = Math.max(1f, uptimeMillis / (1000f * 60f * 60f));
                         float hoursToday = Math.max(1f, (nowMillis - midnight) / (1000f * 60f * 60f));
-                        if (rawValue < 15000 && totalHoursUptime <= 48) {
+                        if (rawValue <= 25000 && totalHoursUptime <= 72) {
+                            // User steps from today are within rawValue
                             stepsToday = (int) rawValue;
                             savedBaseline = 0f;
                         } else {

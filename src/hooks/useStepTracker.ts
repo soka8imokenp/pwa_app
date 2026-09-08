@@ -77,6 +77,17 @@ export function useStepTracker({ selectedDate, profile, onGoalReached }: UseStep
           (window as any).AndroidStepCounter.startStepTracking();
           setIsSensorActive(true);
         }
+        if ((window as any).AndroidStepCounter?.getLiveSteps) {
+          const liveSteps = (window as any).AndroidStepCounter.getLiveSteps();
+          if (typeof liveSteps === 'number' && liveSteps > 0) {
+            const today = format(new Date(), 'yyyy-MM-dd');
+            upsertStepLog(today, liveSteps, {
+              weightKg: userWeight,
+              heightCm: userHeight,
+              source: 'sensor',
+            }).catch((err) => console.error('Failed to upsert live steps:', err));
+          }
+        }
       } catch (err) {
         console.warn('Could not auto-start Android step counter:', err);
       }

@@ -89,6 +89,7 @@ public class MainActivity extends BridgeActivity {
     public static final String PREFS_NAME = "kairo_step_prefs";
     public static final String KEY_BASELINE_DATE = "baseline_date";
     public static final String KEY_BASELINE_STEPS = "baseline_steps";
+    private volatile boolean hasHealthConnectData = false;
 
     private void acquireWakeLock() {
         try {
@@ -334,6 +335,7 @@ public class MainActivity extends BridgeActivity {
                     @Override
                     public void onStepsFetched(long steps, double caloriesKcal) {
                         if (steps > 0) {
+                            hasHealthConnectData = true;
                             runOnUiThread(() -> {
                                 try {
                                     SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -1345,6 +1347,13 @@ public class MainActivity extends BridgeActivity {
                             .clear()
                             .putInt("calibration_version_v8", 8)
                             .apply();
+                }
+
+                // If Health Connect is actively providing steps (e.g. from Samsung Health / Zepp Life),
+                // do NOT let raw accelerometer noise overwrite the official health app count!
+                if (hasHealthConnectData) {
+                    prefs.edit().putFloat("last_raw_steps", rawValue).apply();
+                    return;
                 }
 
                 String savedDate = prefs.getString(KEY_BASELINE_DATE, "");

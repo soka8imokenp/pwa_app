@@ -5,6 +5,15 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.DistanceRecord
+import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.WeightRecord
+import androidx.health.connect.client.records.HeightRecord
+import androidx.health.connect.client.records.BodyFatRecord
+import androidx.health.connect.client.records.SleepSessionRecord
+import androidx.health.connect.client.records.HydrationRecord
+import androidx.health.connect.client.records.NutritionRecord
+import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.request.ReadRecordsRequest
@@ -43,7 +52,27 @@ class HealthConnectManager(private val context: Context) {
         try {
             setOf(
                 HealthPermission.getReadPermission(StepsRecord::class),
-                HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)
+                HealthPermission.getWritePermission(StepsRecord::class),
+                HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
+                HealthPermission.getWritePermission(TotalCaloriesBurnedRecord::class),
+                HealthPermission.getReadPermission(DistanceRecord::class),
+                HealthPermission.getWritePermission(DistanceRecord::class),
+                HealthPermission.getReadPermission(ExerciseSessionRecord::class),
+                HealthPermission.getWritePermission(ExerciseSessionRecord::class),
+                HealthPermission.getReadPermission(WeightRecord::class),
+                HealthPermission.getWritePermission(WeightRecord::class),
+                HealthPermission.getReadPermission(HeightRecord::class),
+                HealthPermission.getWritePermission(HeightRecord::class),
+                HealthPermission.getReadPermission(BodyFatRecord::class),
+                HealthPermission.getWritePermission(BodyFatRecord::class),
+                HealthPermission.getReadPermission(SleepSessionRecord::class),
+                HealthPermission.getWritePermission(SleepSessionRecord::class),
+                HealthPermission.getReadPermission(HydrationRecord::class),
+                HealthPermission.getWritePermission(HydrationRecord::class),
+                HealthPermission.getReadPermission(NutritionRecord::class),
+                HealthPermission.getWritePermission(NutritionRecord::class),
+                HealthPermission.getReadPermission(HeartRateRecord::class),
+                HealthPermission.getWritePermission(HeartRateRecord::class)
             )
         } catch (e: Throwable) {
             emptySet()
@@ -82,27 +111,50 @@ class HealthConnectManager(private val context: Context) {
                 val todayStart = LocalDate.now(zoneId).atStartOfDay(zoneId).toInstant()
                 val now = Instant.now()
 
-                var totalSteps = 0L
-                try {
-                    val aggResponse = client.aggregate(
-                        androidx.health.connect.client.request.AggregateRequest(
-                            metrics = setOf(StepsRecord.COUNT_TOTAL),
-                            timeRangeFilter = TimeRangeFilter.between(todayStart, now)
-                        )
+                val stepsResponse = client.readRecords(
+                    ReadRecordsRequest(
+                        recordType = StepsRecord::class,
+                        timeRangeFilter = TimeRangeFilter.between(todayStart, now)
                     )
-                    totalSteps = aggResponse[StepsRecord.COUNT_TOTAL] ?: 0L
-                } catch (e: Throwable) {
-                    totalSteps = 0L
+                )
+
+                var shealthSteps = 0L
+                var zeppSteps = 0L
+                var allRecordsSum = 0L
+
+                for (record in stepsResponse.records) {
+                    allRecordsSum += record.count
+                    val pkg = record.metadata.dataOrigin.packageName.lowercase()
+                    if (pkg.contains("shealth") || pkg.contains("samsung")) {
+                        shealthSteps += record.count
+                    } else if (pkg.contains("health") || pkg.contains("huami") || pkg.contains("xiaomi") || pkg.contains("zepp")) {
+                        zeppSteps += record.count
+                    }
                 }
 
-                if (totalSteps == 0L) {
-                    val stepsResponse = client.readRecords(
-                        ReadRecordsRequest(
-                            recordType = StepsRecord::class,
-                            timeRangeFilter = TimeRangeFilter.between(todayStart, now)
+                var totalSteps = 0L
+                if (shealthSteps > 0) {
+                    // Exact 100% match with Samsung Health!
+                    totalSteps = shealthSteps
+                } else if (zeppSteps > 0) {
+                    // Match with Zepp Life!
+                    totalSteps = zeppSteps
+                } else {
+                    try {
+                        val aggResponse = client.aggregate(
+                            androidx.health.connect.client.request.AggregateRequest(
+                                metrics = setOf(StepsRecord.COUNT_TOTAL),
+                                timeRangeFilter = TimeRangeFilter.between(todayStart, now)
+                            )
                         )
-                    )
-                    totalSteps = stepsResponse.records.sumOf { it.count }
+                        totalSteps = aggResponse[StepsRecord.COUNT_TOTAL] ?: 0L
+                    } catch (e: Throwable) {
+                        totalSteps = 0L
+                    }
+
+                    if (totalSteps == 0L) {
+                        totalSteps = allRecordsSum
+                    }
                 }
 
                 var totalKcal = 0.0

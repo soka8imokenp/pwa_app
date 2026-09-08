@@ -124,7 +124,7 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
             <span className="hidden sm:inline">Sync</span>
           </button>
 
-          {/* Goal Setting Pill */}
+          {/* Goal Setting Button */}
           <button
             type="button"
             onClick={() => {
@@ -132,10 +132,10 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
               setInputGoal(String(goal));
               setIsEditingGoal(!isEditingGoal);
             }}
-            className="flex items-center gap-1 text-xs font-black font-mono-num text-[#24201D] px-2 py-1 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/25 shadow-2xs transition-all cursor-pointer"
+            title="Edit daily step goal"
+            className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/25 active:translate-y-0.5 shadow-2xs transition-all cursor-pointer"
           >
-            <span>{progressPercent}%</span>
-            <Edit2 className="w-2.5 h-2.5 text-[#6B635B]" />
+            <Edit2 className="w-3.5 h-3.5 text-[#24201D] stroke-[2.25]" />
           </button>
         </div>
       </div>
@@ -253,11 +253,11 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
                 className="group cursor-pointer flex flex-col items-center"
                 title="Click to edit steps manually"
               >
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl sm:text-4xl font-black font-mono-num text-[#24201D] group-hover:text-[#3D6B52] transition-colors leading-none tracking-tight">
+                <div className="relative inline-flex items-center justify-center">
+                  <span className="text-3xl sm:text-4xl font-black font-mono-num text-[#24201D] group-hover:text-[#3D6B52] transition-colors leading-none tracking-tight text-center">
                     {currentSteps.toLocaleString()}
                   </span>
-                  <Edit2 className="w-3 h-3 text-stone-400 group-hover:text-[#24201D] opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <Edit2 className="w-3 h-3 text-stone-400 group-hover:text-[#24201D] opacity-0 group-hover:opacity-100 transition-opacity absolute -right-4.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
                 <span className="text-[11px] font-bold font-mono-num text-[#6B635B] mt-1">
                   of {goal.toLocaleString()} steps

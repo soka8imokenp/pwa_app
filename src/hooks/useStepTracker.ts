@@ -83,16 +83,19 @@ export function useStepTracker({ selectedDate, profile, onGoalReached }: UseStep
     }
 
     // Window callback invoked by MainActivity.java
-    (window as any).__onNativeStepUpdate = (sensorSteps: number) => {
+    (window as any).__onNativeStepUpdate = async (sensorSteps: number, rawSteps?: number) => {
       const today = format(new Date(), 'yyyy-MM-dd');
       if (typeof sensorSteps === 'number' && sensorSteps >= 0) {
         setIsSensorActive(true);
-        // Only update today's date from live hardware sensor
-        upsertStepLog(today, sensorSteps, {
-          weightKg: userWeight,
-          heightCm: userHeight,
-          source: 'sensor',
-        }).catch((err) => console.error('Failed to upsert sensor step log:', err));
+        // Protect existing steps from being wiped to 0 if hardware sensor reports 0
+        const existing = await db.stepLogs.where('date').equals(today).first();
+        if (sensorSteps > 0 || !existing || existing.steps === 0) {
+          upsertStepLog(today, sensorSteps, {
+            weightKg: userWeight,
+            heightCm: userHeight,
+            source: 'sensor',
+          }).catch((err) => console.error('Failed to upsert sensor step log:', err));
+        }
       }
     };
 
@@ -116,6 +119,15 @@ export function useStepTracker({ selectedDate, profile, onGoalReached }: UseStep
         heightCm: userHeight,
         source: 'manual',
       });
+
+      // Calibrate native sensor baseline so future hardware steps build upon this total
+      if (typeof window !== 'undefined' && (window as any).AndroidStepCounter?.calibrateStepOffset) {
+        try {
+          (window as any).AndroidStepCounter.calibrateStepOffset(newSteps);
+        } catch (e) {
+          console.warn('Could not calibrate native step counter:', e);
+        }
+      }
 
       // Goal reached celebration
       if (prevSteps < goal && newSteps >= goal) {
@@ -147,6 +159,15 @@ export function useStepTracker({ selectedDate, profile, onGoalReached }: UseStep
         heightCm: userHeight,
         source: 'manual',
       });
+
+      // Calibrate native sensor baseline so future hardware steps build upon this total
+      if (typeof window !== 'undefined' && (window as any).AndroidStepCounter?.calibrateStepOffset) {
+        try {
+          (window as any).AndroidStepCounter.calibrateStepOffset(safeSteps);
+        } catch (e) {
+          console.warn('Could not calibrate native step counter:', e);
+        }
+      }
 
       if (prevSteps < goal && safeSteps >= goal) {
         playSuccessChime();

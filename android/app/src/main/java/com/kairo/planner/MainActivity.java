@@ -157,6 +157,7 @@ public class MainActivity extends BridgeActivity {
         requestNotificationPermission();
         requestAudioPermission();
         requestStorageAndCameraPermissions();
+        requestActivityRecognitionPermission();
 
         MediaPlaybackService.setStateListener((isPlaying, isBuffering) -> {
             MainActivity.this.isAudioPlaying = isPlaying;
@@ -280,6 +281,14 @@ public class MainActivity extends BridgeActivity {
         }
         if (!perms.isEmpty()) {
             ActivityCompat.requestPermissions(this, perms.toArray(new String[0]), 103);
+        }
+    }
+
+    private void requestActivityRecognitionPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION}, 105);
+            }
         }
     }
 
@@ -1105,9 +1114,31 @@ public class MainActivity extends BridgeActivity {
                         }
                     }
 
-                    if (sensorManager != null && stepSensor != null && !isListening) {
-                        sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_UI);
-                        isListening = true;
+                    if (sensorManager != null && stepSensor != null) {
+                        if (!isListening) {
+                            sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_UI);
+                            isListening = true;
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                            sensorManager.flush(this);
+                        }
+                    }
+
+                    // Immediately broadcast last known steps if available in prefs
+                    SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                    float lastKnown = prefs.getFloat("last_today_steps", -1f);
+                    float lastRaw = prefs.getFloat("last_raw_steps", 0f);
+                    if (lastKnown > 0) {
+                        runOnUiThread(() -> {
+                            try {
+                                if (getBridge() != null && getBridge().getWebView() != null) {
+                                    getBridge().getWebView().evaluateJavascript(
+                                        "window.__onNativeStepUpdate && window.__onNativeStepUpdate(" + (int)lastKnown + ", " + (int)lastRaw + ");",
+                                        null
+                                    );
+                                }
+                            } catch (Exception ignored) {}
+                        });
                     }
                 } catch (Exception ignored) {}
             });
@@ -1115,7 +1146,50 @@ public class MainActivity extends BridgeActivity {
 
         @JavascriptInterface
         public void resyncPhoneSteps() {
-            startStepTracking();
+            runOnUiThread(() -> {
+                try {
+                    SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                    prefs.edit()
+                            .remove(KEY_BASELINE_STEPS)
+                            .remove(KEY_BASELINE_DATE)
+                            .remove("last_today_steps")
+                            .apply();
+
+                    if (sensorManager != null && stepSensor != null) {
+                        if (isListening) {
+                            sensorManager.unregisterListener(this);
+                            isListening = false;
+                        }
+                        sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_FASTEST);
+                        isListening = true;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                            sensorManager.flush(this);
+                        }
+                    }
+                } catch (Exception ignored) {}
+            });
+        }
+
+        @JavascriptInterface
+        public void calibrateStepOffset(int currentStepsToday) {
+            try {
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                float lastRaw = prefs.getFloat("last_raw_steps", 0f);
+                String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+                if (lastRaw > 0) {
+                    float newBaseline = Math.max(0f, lastRaw - currentStepsToday);
+                    prefs.edit()
+                            .putString(KEY_BASELINE_DATE, todayStr)
+                            .putFloat(KEY_BASELINE_STEPS, newBaseline)
+                            .putFloat("last_today_steps", currentStepsToday)
+                            .apply();
+                } else {
+                    prefs.edit()
+                            .putString(KEY_BASELINE_DATE, todayStr)
+                            .putFloat("last_today_steps", currentStepsToday)
+                            .apply();
+                }
+            } catch (Exception ignored) {}
         }
 
         @JavascriptInterface
@@ -1140,6 +1214,16 @@ public class MainActivity extends BridgeActivity {
                 String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
 
                 SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                
+                // Clear any stale zeroed-out baseline from previous versions
+                int calVersion = prefs.getInt("calibration_version_v6", 0);
+                if (calVersion < 6) {
+                    prefs.edit()
+                            .clear()
+                            .putInt("calibration_version_v6", 6)
+                            .apply();
+                }
+
                 String savedDate = prefs.getString(KEY_BASELINE_DATE, "");
                 float savedBaseline = prefs.getFloat(KEY_BASELINE_STEPS, -1f);
 
@@ -1156,42 +1240,53 @@ public class MainActivity extends BridgeActivity {
 
                 if (savedBaseline < 0) {
                     // First launch on device:
-                    // If device booted today, all steps since boot are from today!
                     if (bootTime >= midnight) {
+                        // If device booted today, all steps since boot are from today!
                         savedBaseline = 0f;
+                        stepsToday = (int) rawValue;
                     } else {
-                        // Phone has been on for multiple days: calculate today's proportion of uptime
+                        // Phone booted earlier: calculate today's proportion of uptime
                         float totalHoursUptime = Math.max(1f, uptimeMillis / (1000f * 60f * 60f));
                         float hoursToday = Math.max(1f, (nowMillis - midnight) / (1000f * 60f * 60f));
-                        int estimatedStepsToday = Math.min((int) rawValue, Math.round((rawValue / totalHoursUptime) * hoursToday));
-                        savedBaseline = Math.max(0f, rawValue - estimatedStepsToday);
+                        if (rawValue < 15000 && totalHoursUptime <= 48) {
+                            stepsToday = (int) rawValue;
+                            savedBaseline = 0f;
+                        } else {
+                            stepsToday = Math.min((int) rawValue, Math.round((rawValue / totalHoursUptime) * hoursToday));
+                            savedBaseline = Math.max(0f, rawValue - stepsToday);
+                        }
                     }
                     prefs.edit()
                             .putString(KEY_BASELINE_DATE, todayStr)
                             .putFloat(KEY_BASELINE_STEPS, savedBaseline)
                             .putFloat("last_raw_steps", rawValue)
+                            .putFloat("last_today_steps", stepsToday)
                             .apply();
-                    stepsToday = (int) (rawValue - savedBaseline);
                 } else if (!todayStr.equals(savedDate)) {
                     // Midnight turnover to a new day:
                     savedBaseline = rawValue;
+                    stepsToday = 0;
                     prefs.edit()
                             .putString(KEY_BASELINE_DATE, todayStr)
                             .putFloat(KEY_BASELINE_STEPS, savedBaseline)
                             .putFloat("last_raw_steps", rawValue)
+                            .putFloat("last_today_steps", 0)
                             .apply();
-                    stepsToday = 0;
                 } else if (rawValue < savedBaseline) {
                     // Device rebooted during the day:
                     savedBaseline = 0f;
+                    stepsToday = (int) rawValue;
                     prefs.edit()
                             .putFloat(KEY_BASELINE_STEPS, savedBaseline)
                             .putFloat("last_raw_steps", rawValue)
+                            .putFloat("last_today_steps", stepsToday)
                             .apply();
-                    stepsToday = (int) rawValue;
                 } else {
-                    prefs.edit().putFloat("last_raw_steps", rawValue).apply();
                     stepsToday = (int) (rawValue - savedBaseline);
+                    prefs.edit()
+                            .putFloat("last_raw_steps", rawValue)
+                            .putFloat("last_today_steps", stepsToday)
+                            .apply();
                 }
 
                 final int finalSteps = Math.max(0, stepsToday);
@@ -1199,7 +1294,7 @@ public class MainActivity extends BridgeActivity {
                     try {
                         if (getBridge() != null && getBridge().getWebView() != null) {
                             getBridge().getWebView().evaluateJavascript(
-                                "window.__onNativeStepUpdate && window.__onNativeStepUpdate(" + finalSteps + ");",
+                                "window.__onNativeStepUpdate && window.__onNativeStepUpdate(" + finalSteps + ", " + (int)rawValue + ");",
                                 null
                             );
                         }

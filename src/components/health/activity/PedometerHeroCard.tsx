@@ -90,10 +90,6 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
     if (onResyncSensor) {
       onResyncSensor();
     }
-    // Also trigger Health Connect settings for manual data source selection
-    if (onOpenHealthConnectSettings) {
-      onOpenHealthConnectSettings();
-    }
     setTimeout(() => {
       setIsSyncing(false);
     }, 800);

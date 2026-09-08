@@ -8,6 +8,7 @@ import {
 } from './db';
 import { getTodayString } from './dateUtils';
 import type { Task, Habit, HabitLog, FocusSession } from '../types';
+import type { HealthProfile } from '../types/health';
 import {
   calculateComprehensiveMetrics,
   computeWeightMovingAverage,
@@ -148,17 +149,17 @@ export async function buildPlannerRAGContext(targetDate: string = getTodayString
   try {
     const profileList = await db.healthProfile.toArray();
     const hasCustomProfile = profileList.length > 0;
-    const profile = hasCustomProfile
+    const profile: HealthProfile = hasCustomProfile
       ? profileList[0]
       : {
+          id: 'user',
           currentWeight: 70,
           targetWeight: 68,
           height: 175,
           age: 26,
-          gender: 'male' as const,
-          goal: 'maintain' as const,
-          activityLevel: 'moderate' as const,
-          createdAt: Date.now(),
+          gender: 'male',
+          goal: 'maintain',
+          activityLevel: 'moderate',
           updatedAt: Date.now(),
         };
 

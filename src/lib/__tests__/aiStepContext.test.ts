@@ -32,9 +32,9 @@ describe('AI Context & Step/Activity Visibility', () => {
     const setGoalTool = toolDeclarations.find((d) => d.name === 'set_step_goal');
 
     expect(logStepsTool).toBeDefined();
-    expect(logStepsTool?.parameters.required).toContain('steps');
+    expect((logStepsTool as any)?.parameters?.required).toContain('steps');
 
     expect(setGoalTool).toBeDefined();
-    expect(setGoalTool?.parameters.required).toContain('goal');
+    expect((setGoalTool as any)?.parameters?.required).toContain('goal');
   });
 });

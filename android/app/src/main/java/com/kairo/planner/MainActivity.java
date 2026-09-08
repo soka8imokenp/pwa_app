@@ -84,6 +84,8 @@ public class MainActivity extends BridgeActivity {
     private PowerManager.WakeLock wakeLock;
     private BluetoothScaleJsInterface bluetoothScaleInterface;
     private StepCounterJsInterface stepCounterInterface;
+    private HealthConnectManager healthConnectManager;
+    private androidx.activity.result.ActivityResultLauncher<java.util.Set<String>> healthConnectPermissionLauncher;
 
     private void acquireWakeLock() {
         try {
@@ -158,6 +160,7 @@ public class MainActivity extends BridgeActivity {
         requestAudioPermission();
         requestStorageAndCameraPermissions();
         requestActivityRecognitionPermission();
+        initHealthConnect();
         if (stepCounterInterface != null) {
             stepCounterInterface.startStepTracking();
         }
@@ -289,10 +292,64 @@ public class MainActivity extends BridgeActivity {
 
     private void requestActivityRecognitionPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION}, 105);
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                        this,
+                        new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
+                        105
+                );
             }
         }
+    }
+
+    private void initHealthConnect() {
+        try {
+            healthConnectManager = new HealthConnectManager(this);
+            if (healthConnectManager.isAvailable()) {
+                healthConnectPermissionLauncher = registerForActivityResult(
+                    healthConnectManager.createPermissionContract(),
+                    granted -> {
+                        if (granted != null && !granted.isEmpty()) {
+                            fetchHealthConnectSteps();
+                        }
+                    }
+                );
+
+                healthConnectManager.checkAndRequestPermissions(healthConnectPermissionLauncher, () -> {
+                    fetchHealthConnectSteps();
+                });
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public void fetchHealthConnectSteps() {
+        try {
+            if (healthConnectManager != null && healthConnectManager.isAvailable()) {
+                healthConnectManager.readTodaySteps(new HealthConnectManager.StepCallback() {
+                    @Override
+                    public void onStepsFetched(long steps, double caloriesKcal) {
+                        if (steps > 0) {
+                            runOnUiThread(() -> {
+                                try {
+                                    SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                                    prefs.edit()
+                                            .putFloat("last_today_steps", (float) steps)
+                                            .apply();
+
+                                    if (getBridge() != null && getBridge().getWebView() != null) {
+                                        getBridge().getWebView().evaluateJavascript(
+                                            "window.__onNativeStepUpdate && window.__onNativeStepUpdate(" + steps + ");",
+                                            null
+                                        );
+                                    }
+                                } catch (Exception ignored) {}
+                            });
+                        }
+                    }
+                });
+            }
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -1143,6 +1200,8 @@ public class MainActivity extends BridgeActivity {
                             } catch (Exception ignored) {}
                         });
                     }
+                    // Also trigger Health Connect to auto-pull steps from Samsung Health & Zepp Life
+                    fetchHealthConnectSteps();
                 } catch (Exception ignored) {}
             });
         }
@@ -1151,6 +1210,9 @@ public class MainActivity extends BridgeActivity {
         public void resyncPhoneSteps() {
             runOnUiThread(() -> {
                 try {
+                    // Trigger live Health Connect pull from Samsung Health & Zepp Life
+                    fetchHealthConnectSteps();
+
                     if (sensorManager != null && stepSensor != null) {
                         if (isListening) {
                             sensorManager.unregisterListener(this);
@@ -1164,6 +1226,11 @@ public class MainActivity extends BridgeActivity {
                     }
                 } catch (Exception ignored) {}
             });
+        }
+
+        @JavascriptInterface
+        public void syncHealthConnect() {
+            fetchHealthConnectSteps();
         }
 
         @JavascriptInterface

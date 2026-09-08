@@ -77,6 +77,9 @@ export function useStepTracker({ selectedDate, profile, onGoalReached }: UseStep
           (window as any).AndroidStepCounter.startStepTracking();
           setIsSensorActive(true);
         }
+        if ((window as any).AndroidStepCounter?.syncHealthConnect) {
+          (window as any).AndroidStepCounter.syncHealthConnect();
+        }
         if ((window as any).AndroidStepCounter?.getLiveSteps) {
           const liveSteps = (window as any).AndroidStepCounter.getLiveSteps();
           if (typeof liveSteps === 'number' && liveSteps > 0) {

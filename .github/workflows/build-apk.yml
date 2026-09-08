@@ -77,35 +77,20 @@ jobs:
 
       - name: Build Android APK via Gradle
         working-directory: ./android
-        shell: bash
         run: |
-          set -o pipefail
-          ./gradlew clean assembleDebug --stacktrace --no-daemon -Dorg.gradle.classloaderscope.cacheable=false 2>&1 | tee /tmp/gradle.log
+          ./gradlew clean assembleDebug --stacktrace --no-daemon -Dorg.gradle.classloaderscope.cacheable=false > gradle.log 2>&1 || {
+            echo "================ GRADLE BUILD FAILED ================"
+            tail -n 120 gradle.log
+            echo "====================================================="
+            exit 1
+          }
 
-      - name: Report Build Error on Failure
+      - name: Upload Gradle Build Log on Failure
         if: failure()
-        run: |
-          echo "### ❌ Gradle Build Failure Log" >> $GITHUB_STEP_SUMMARY
-          echo '```text' >> $GITHUB_STEP_SUMMARY
-          tail -n 100 /tmp/gradle.log >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          
-          python3 -c "
-import urllib.request, json, os
-log = open('/tmp/gradle.log', 'r', errors='ignore').readlines()[-100:]
-body = '### Gradle Build Failure\n\`\`\`text\n' + ''.join(log) + '\n\`\`\`'
-req = urllib.request.Request(
-    'https://api.github.com/repos/' + os.environ['GITHUB_REPOSITORY'] + '/commits/' + os.environ['GITHUB_SHA'] + '/comments',
-    data=json.dumps({'body': body}).encode('utf-8'),
-    headers={'Authorization': 'token ' + os.environ['GITHUB_TOKEN'], 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json', 'User-Agent': 'Actions'}
-)
-try:
-    urllib.request.urlopen(req)
-except Exception as e:
-    print('Failed to post error comment:', e)
-" || true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-failure-log
+          path: android/gradle.log
 
       - name: Prepare APK Files for Distribution
         run: |

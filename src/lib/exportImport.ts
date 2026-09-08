@@ -110,6 +110,11 @@ export async function resetAndSeedDatabase() {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('kairo_health_onboarded');
     localStorage.removeItem('kairo_clinical_health_summary');
+    if ((window as any).AndroidStepCounter?.resetStepCalibration) {
+      try {
+        (window as any).AndroidStepCounter.resetStepCalibration();
+      } catch (ignored) {}
+    }
   }
   await db.transaction(
     'rw',
@@ -123,6 +128,7 @@ export async function resetAndSeedDatabase() {
       db.mealLogs,
       db.waterLogs,
       db.workoutLogs,
+      db.stepLogs,
     ],
     async () => {
       await db.tasks.clear();
@@ -134,6 +140,7 @@ export async function resetAndSeedDatabase() {
       await db.mealLogs.clear();
       await db.waterLogs.clear();
       await db.workoutLogs.clear();
+      await db.stepLogs.clear();
     }
   );
   await seedDemoDataIfEmpty();

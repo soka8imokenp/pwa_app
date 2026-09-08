@@ -82,13 +82,28 @@ class HealthConnectManager(private val context: Context) {
                 val todayStart = LocalDate.now(zoneId).atStartOfDay(zoneId).toInstant()
                 val now = Instant.now()
 
-                val stepsResponse = client.readRecords(
-                    ReadRecordsRequest(
-                        recordType = StepsRecord::class,
-                        timeRangeFilter = TimeRangeFilter.between(todayStart, now)
+                var totalSteps = 0L
+                try {
+                    val aggResponse = client.aggregate(
+                        androidx.health.connect.client.request.AggregateRequest(
+                            metrics = setOf(StepsRecord.COUNT_TOTAL),
+                            timeRangeFilter = TimeRangeFilter.between(todayStart, now)
+                        )
                     )
-                )
-                val totalSteps = stepsResponse.records.sumOf { it.count }
+                    totalSteps = aggResponse[StepsRecord.COUNT_TOTAL] ?: 0L
+                } catch (e: Throwable) {
+                    totalSteps = 0L
+                }
+
+                if (totalSteps == 0L) {
+                    val stepsResponse = client.readRecords(
+                        ReadRecordsRequest(
+                            recordType = StepsRecord::class,
+                            timeRangeFilter = TimeRangeFilter.between(todayStart, now)
+                        )
+                    )
+                    totalSteps = stepsResponse.records.sumOf { it.count }
+                }
 
                 var totalKcal = 0.0
                 try {
@@ -106,6 +121,22 @@ class HealthConnectManager(private val context: Context) {
                 }
             } catch (e: Throwable) {
                 e.printStackTrace()
+            }
+        }
+    }
+
+    fun openHealthConnectSettings() {
+        try {
+            val intent = android.content.Intent(HealthConnectClient.ACTION_HEALTH_CONNECT_SETTINGS)
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+        } catch (e: Throwable) {
+            try {
+                val intent = android.content.Intent("android.health.connect.action.HEALTH_HOME_SETTINGS")
+                intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+            } catch (e2: Throwable) {
+                e2.printStackTrace()
             }
         }
     }

@@ -87,6 +87,8 @@ public class MainActivity extends BridgeActivity {
     private HealthConnectManager healthConnectManager;
     private androidx.activity.result.ActivityResultLauncher<java.util.Set<String>> healthConnectPermissionLauncher;
     public static final String PREFS_NAME = "kairo_step_prefs";
+    public static final String KEY_BASELINE_DATE = "baseline_date";
+    public static final String KEY_BASELINE_STEPS = "baseline_steps";
 
     private void acquireWakeLock() {
         try {
@@ -204,6 +206,7 @@ public class MainActivity extends BridgeActivity {
         if (getBridge() != null && getBridge().getWebView() != null) {
             getBridge().getWebView().resumeTimers();
         }
+        fetchHealthConnectSteps();
     }
 
     @Override
@@ -334,9 +337,22 @@ public class MainActivity extends BridgeActivity {
                             runOnUiThread(() -> {
                                 try {
                                     SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-                                    prefs.edit()
-                                            .putFloat("last_today_steps", (float) steps)
-                                            .apply();
+                                    float lastRaw = prefs.getFloat("last_raw_steps", 0f);
+                                    String todayStr = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(new java.util.Date());
+
+                                    if (lastRaw > 0) {
+                                        float newBaseline = Math.max(0f, lastRaw - steps);
+                                        prefs.edit()
+                                                .putString(KEY_BASELINE_DATE, todayStr)
+                                                .putFloat(KEY_BASELINE_STEPS, newBaseline)
+                                                .putFloat("last_today_steps", (float) steps)
+                                                .apply();
+                                    } else {
+                                        prefs.edit()
+                                                .putString(KEY_BASELINE_DATE, todayStr)
+                                                .putFloat("last_today_steps", (float) steps)
+                                                .apply();
+                                    }
 
                                     if (getBridge() != null && getBridge().getWebView() != null) {
                                         getBridge().getWebView().evaluateJavascript(
@@ -1266,6 +1282,40 @@ public class MainActivity extends BridgeActivity {
         }
 
         @JavascriptInterface
+        public void resetStepCalibration() {
+            try {
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                float lastRaw = prefs.getFloat("last_raw_steps", 0f);
+                String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+                prefs.edit()
+                        .putString(KEY_BASELINE_DATE, todayStr)
+                        .putFloat(KEY_BASELINE_STEPS, lastRaw)
+                        .putFloat("last_today_steps", 0f)
+                        .apply();
+                runOnUiThread(() -> {
+                    try {
+                        if (getBridge() != null && getBridge().getWebView() != null) {
+                            getBridge().getWebView().evaluateJavascript(
+                                "window.__onNativeStepUpdate && window.__onNativeStepUpdate(0, " + (int)lastRaw + ");",
+                                null
+                            );
+                        }
+                    } catch (Exception ignored) {}
+                    fetchHealthConnectSteps();
+                });
+            } catch (Exception ignored) {}
+        }
+
+        @JavascriptInterface
+        public void openHealthConnectSettings() {
+            runOnUiThread(() -> {
+                if (healthConnectManager != null) {
+                    healthConnectManager.openHealthConnectSettings();
+                }
+            });
+        }
+
+        @JavascriptInterface
         public void stopStepTracking() {
             runOnUiThread(() -> {
                 try {
@@ -1288,12 +1338,12 @@ public class MainActivity extends BridgeActivity {
 
                 SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
                 
-                // Clear any stale zeroed-out baseline from previous versions
-                int calVersion = prefs.getInt("calibration_version_v7", 0);
-                if (calVersion < 7) {
+                // Clear any stale fake uptime or zeroed-out baseline from previous versions
+                int calVersion = prefs.getInt("calibration_version_v8", 0);
+                if (calVersion < 8) {
                     prefs.edit()
                             .clear()
-                            .putInt("calibration_version_v7", 7)
+                            .putInt("calibration_version_v8", 8)
                             .apply();
                 }
 
@@ -1312,23 +1362,17 @@ public class MainActivity extends BridgeActivity {
                 long midnight = cal.getTimeInMillis();
 
                 if (savedBaseline < 0) {
-                    // First launch on device:
+                    // First launch on device or after v8 wipe:
                     if (bootTime >= midnight) {
-                        // If device booted today, all steps since boot are from today!
+                        // Phone booted today: all steps since boot are from today
                         savedBaseline = 0f;
                         stepsToday = (int) rawValue;
                     } else {
                         // Phone booted before today:
-                        float totalHoursUptime = Math.max(1f, uptimeMillis / (1000f * 60f * 60f));
-                        float hoursToday = Math.max(1f, (nowMillis - midnight) / (1000f * 60f * 60f));
-                        if (rawValue <= 25000 && totalHoursUptime <= 72) {
-                            // User steps from today are within rawValue
-                            stepsToday = (int) rawValue;
-                            savedBaseline = 0f;
-                        } else {
-                            stepsToday = Math.min((int) rawValue, Math.round((rawValue / totalHoursUptime) * hoursToday));
-                            savedBaseline = Math.max(0f, rawValue - stepsToday);
-                        }
+                        // NEVER guess or invent steps with an uptime formula.
+                        // Baseline starts at rawValue (0 delta), and Health Connect immediately supplies actual steps!
+                        savedBaseline = rawValue;
+                        stepsToday = 0;
                     }
                     prefs.edit()
                             .putString(KEY_BASELINE_DATE, todayStr)
@@ -1336,6 +1380,8 @@ public class MainActivity extends BridgeActivity {
                             .putFloat("last_raw_steps", rawValue)
                             .putFloat("last_today_steps", stepsToday)
                             .apply();
+
+                    fetchHealthConnectSteps();
                 } else if (!todayStr.equals(savedDate)) {
                     // Midnight turnover to a new day:
                     savedBaseline = rawValue;
@@ -1346,6 +1392,7 @@ public class MainActivity extends BridgeActivity {
                             .putFloat("last_raw_steps", rawValue)
                             .putFloat("last_today_steps", 0)
                             .apply();
+                    fetchHealthConnectSteps();
                 } else if (rawValue < savedBaseline) {
                     // Device rebooted during the day:
                     savedBaseline = 0f;

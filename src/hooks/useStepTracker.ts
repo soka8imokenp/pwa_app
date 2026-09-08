@@ -101,15 +101,11 @@ export function useStepTracker({ selectedDate, profile, onGoalReached }: UseStep
       const today = format(new Date(), 'yyyy-MM-dd');
       if (typeof sensorSteps === 'number' && sensorSteps >= 0) {
         setIsSensorActive(true);
-        // Protect existing steps from being wiped to 0 if hardware sensor reports 0
-        const existing = await db.stepLogs.where('date').equals(today).first();
-        if (sensorSteps > 0 || !existing || existing.steps === 0) {
-          upsertStepLog(today, sensorSteps, {
-            weightKg: userWeight,
-            heightCm: userHeight,
-            source: 'sensor',
-          }).catch((err) => console.error('Failed to upsert sensor step log:', err));
-        }
+        upsertStepLog(today, sensorSteps, {
+          weightKg: userWeight,
+          heightCm: userHeight,
+          source: 'sensor',
+        }).catch((err) => console.error('Failed to upsert sensor step log:', err));
       }
     };
 

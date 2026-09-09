@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import type { Task, SubTask } from '../../types';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
+import { useTranslation } from '../../i18n/LanguageContext';
 import {
   startVoiceDictation,
   stopVoiceDictation,
@@ -36,15 +37,6 @@ interface AddTaskModalProps {
   canAddPriority: boolean;
 }
 
-const CATEGORIES: { id: Task['category']; label: string; bg: string; color: string; icon: React.ReactNode }[] = [
-  { id: 'code', label: 'Dev & Code', bg: '#DDE8DE', color: '#2D503C', icon: <Code className="w-3.5 h-3.5 stroke-[2.25]" /> },
-  { id: 'design', label: 'UI & Design', bg: '#F7E3DC', color: '#C25E40', icon: <Palette className="w-3.5 h-3.5 stroke-[2.25]" /> },
-  { id: 'learn', label: 'Learning', bg: '#FBECCF', color: '#854D0E', icon: <BookOpen className="w-3.5 h-3.5 stroke-[2.25]" /> },
-  { id: 'health', label: 'Health', bg: '#DDE8DE', color: '#2D503C', icon: <Activity className="w-3.5 h-3.5 stroke-[2.25]" /> },
-  { id: 'admin', label: 'Admin & Ops', bg: '#F4F0EA', color: '#574B3E', icon: <FileText className="w-3.5 h-3.5 stroke-[2.25]" /> },
-  { id: 'general', label: 'General', bg: '#FAF8F5', color: '#24201D', icon: <Layers className="w-3.5 h-3.5 stroke-[2.25]" /> },
-];
-
 const ESTIMATE_OPTIONS = [
   { value: 15, label: '15m' },
   { value: 25, label: '25m (Pomo)' },
@@ -52,14 +44,6 @@ const ESTIMATE_OPTIONS = [
   { value: 45, label: '45m' },
   { value: 60, label: '60m (1h)' },
   { value: 90, label: '90m' },
-];
-
-const SMART_TEMPLATES = [
-  { label: 'Deep Focus Work', category: 'code' as const, minutes: 45 },
-  { label: 'UI Polish & Review', category: 'design' as const, minutes: 30 },
-  { label: 'Read 20 Pages', category: 'learn' as const, minutes: 25 },
-  { label: 'Gym & Stretch', category: 'health' as const, minutes: 45 },
-  { label: 'Inbox & Planning', category: 'admin' as const, minutes: 15 },
 ];
 
 export const AddTaskModal: React.FC<AddTaskModalProps> = ({
@@ -70,9 +54,47 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   defaultPriority = false,
   canAddPriority,
 }) => {
+  const { t, language } = useTranslation();
   const [title, setTitle] = useState('');
   const [isPriority, setIsPriority] = useState(defaultPriority);
   const [category, setCategory] = useState<Task['category']>('code');
+
+  const categories = [
+    { id: 'code' as const, label: t.priorities.categories.code, bg: '#DDE8DE', color: '#2D503C', icon: <Code className="w-3.5 h-3.5 stroke-[2.25]" /> },
+    { id: 'design' as const, label: t.priorities.categories.design, bg: '#F7E3DC', color: '#C25E40', icon: <Palette className="w-3.5 h-3.5 stroke-[2.25]" /> },
+    { id: 'learn' as const, label: t.priorities.categories.learn, bg: '#FBECCF', color: '#854D0E', icon: <BookOpen className="w-3.5 h-3.5 stroke-[2.25]" /> },
+    { id: 'health' as const, label: t.priorities.categories.health, bg: '#DDE8DE', color: '#2D503C', icon: <Activity className="w-3.5 h-3.5 stroke-[2.25]" /> },
+    { id: 'admin' as const, label: t.priorities.categories.admin, bg: '#F4F0EA', color: '#574B3E', icon: <FileText className="w-3.5 h-3.5 stroke-[2.25]" /> },
+    { id: 'general' as const, label: t.priorities.categories.general, bg: '#FAF8F5', color: '#24201D', icon: <Layers className="w-3.5 h-3.5 stroke-[2.25]" /> },
+  ];
+
+  const smartTemplates = [
+    {
+      label: language === 'uz' ? 'Chuqur fokus ishi' : language === 'ru' ? 'Глубокая концентрация' : 'Deep Focus Work',
+      category: 'code' as const,
+      minutes: 45,
+    },
+    {
+      label: language === 'uz' ? 'UI sayqallash va tahlil' : language === 'ru' ? 'Полировка интерфейса' : 'UI Polish & Review',
+      category: 'design' as const,
+      minutes: 30,
+    },
+    {
+      label: language === 'uz' ? '20 sahifa kitob oʻqish' : language === 'ru' ? 'Прочесть 20 страниц' : 'Read 20 Pages',
+      category: 'learn' as const,
+      minutes: 25,
+    },
+    {
+      label: language === 'uz' ? 'Sport zali va choʻzilish' : language === 'ru' ? 'Тренировка и растяжка' : 'Gym & Stretch',
+      category: 'health' as const,
+      minutes: 45,
+    },
+    {
+      label: language === 'uz' ? 'Pochta va rejalashtirish' : language === 'ru' ? 'Почта и планирование' : 'Inbox & Planning',
+      category: 'admin' as const,
+      minutes: 15,
+    },
+  ];
   const [estimatedMinutes, setEstimatedMinutes] = useState<number>(30);
   const [isRecurring, setIsRecurring] = useState(false);
   const [subtasks, setSubtasks] = useState<SubTask[]>([]);
@@ -93,7 +115,13 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
   const handleToggleVoice = () => {
     if (!isSpeechRecognitionSupported()) {
-      alert('Voice dictation is supported in Chrome/Edge/Android.');
+      alert(
+        language === 'uz'
+          ? 'Ovozli kiritish Chrome/Edge/Android brauzerlarida qoʻllab-quvvatlanadi.'
+          : language === 'ru'
+          ? 'Голосовой ввод поддерживается в Chrome/Edge/Android.'
+          : 'Voice dictation is supported in Chrome/Edge/Android.'
+      );
       return;
     }
 
@@ -139,7 +167,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
     setSubtasks(subtasks.filter((s) => s.id !== id));
   };
 
-  const handleApplyTemplate = (tmpl: typeof SMART_TEMPLATES[0]) => {
+  const handleApplyTemplate = (tmpl: typeof smartTemplates[0]) => {
     playClickSound();
     setTitle(tmpl.label);
     setCategory(tmpl.category);
@@ -184,10 +212,10 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D]">
-                Create New Task
+                {t.modals.addTaskTitle}
               </h3>
               <p className="text-[10px] font-semibold text-[#6B635B] font-mono-num">
-                Target date: {defaultDate}
+                {t.modals.targetDateLabel}: {defaultDate}
               </p>
             </div>
           </div>
@@ -207,10 +235,10 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         {/* Quick Smart Templates */}
         <div className="space-y-1">
           <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block">
-            Quick Templates
+            {t.modals.quickTemplates}
           </span>
           <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none">
-            {SMART_TEMPLATES.map((tmpl) => (
+            {smartTemplates.map((tmpl) => (
               <button
                 key={tmpl.label}
                 type="button"
@@ -227,7 +255,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
           {/* Title Input with Embedded Voice Mic */}
           <div>
             <label className="block text-xs font-black uppercase tracking-wider text-[#24201D] mb-1">
-              Task Title
+              {t.modals.addTaskTitle}
             </label>
             <div className="relative">
               <input
@@ -235,7 +263,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="What outcome will you achieve?"
+                placeholder={t.modals.whatOutcomePlaceholder}
                 className="w-full pl-3.5 pr-10 py-2.5 bg-[#FAF8F5] text-xs font-bold text-[#24201D] rounded-2xl border-[1.75px] border-[#24201D] outline-none placeholder:text-stone-400 shadow-2xs focus:bg-white"
               />
               <button
@@ -256,10 +284,10 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
           {/* Category Chips with Aesthetic Colors */}
           <div>
             <label className="block text-xs font-black uppercase tracking-wider text-[#24201D] mb-1">
-              Category
+              {t.modals.categoryLabel}
             </label>
             <div className="grid grid-cols-3 gap-1.5">
-              {CATEGORIES.map((c) => {
+              {categories.map((c) => {
                 const isSelected = category === c.id;
                 return (
                   <button
@@ -289,7 +317,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
             <div className="flex items-center justify-between mb-1">
               <label className="text-xs font-black uppercase tracking-wider text-[#24201D] flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5 text-[#3D6B52]" />
-                <span>Estimated Time</span>
+                <span>{t.modals.estimatedMinutes}</span>
               </label>
               <span className="text-[10px] font-mono-num font-black text-[#6B635B]">
                 {estimatedMinutes} min
@@ -324,11 +352,11 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-black uppercase tracking-wider text-[#24201D]">
-                Checklist Steps ({subtasks.length})
+                {t.modals.checklistSteps} ({subtasks.length})
               </label>
               {subtasks.length > 0 && (
                 <span className="text-[9px] font-mono-num text-[#6B635B] font-bold">
-                  {subtasks.filter((s) => s.isCompleted).length}/{subtasks.length} done
+                  {subtasks.filter((s) => s.isCompleted).length}/{subtasks.length} {t.common.done}
                 </span>
               )}
             </div>
@@ -370,7 +398,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                     handleAddSubtask();
                   }
                 }}
-                placeholder="Add checklist step (press Enter)..."
+                placeholder={t.modals.addStepPlaceholder}
                 className="flex-1 px-3 py-2 bg-[#FAF8F5] text-xs font-bold text-[#24201D] rounded-xl border border-[#24201D]/30 outline-none placeholder:text-stone-400 shadow-2xs focus:bg-white"
               />
               <button
@@ -402,8 +430,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 <div className="flex items-center gap-2 min-w-0">
                   <Star className={`w-4 h-4 shrink-0 ${isPriority ? 'text-[#854D0E] fill-[#F0BB58]' : 'text-stone-400'}`} />
                   <div className="min-w-0">
-                    <h4 className="text-xs font-black text-[#24201D] leading-tight">Top Priority</h4>
-                    <p className="text-[9px] text-[#6B635B] font-bold truncate">Top 3 outcomes</p>
+                    <h4 className="text-xs font-black text-[#24201D] leading-tight">{t.modals.topPriority}</h4>
+                    <p className="text-[9px] text-[#6B635B] font-bold truncate">{t.modals.topPriorityDesc}</p>
                   </div>
                 </div>
 
@@ -432,8 +460,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               <div className="flex items-center gap-2 min-w-0">
                 <Repeat className={`w-4 h-4 shrink-0 ${isRecurring ? 'text-[#2D503C]' : 'text-stone-400'}`} />
                 <div className="min-w-0">
-                  <h4 className="text-xs font-black text-[#24201D] leading-tight">Daily Routine</h4>
-                  <p className="text-[9px] text-[#6B635B] font-bold truncate">{isRecurring ? 'Repeats every day' : 'One-time quest'}</p>
+                  <h4 className="text-xs font-black text-[#24201D] leading-tight">{t.modals.dailyRoutine}</h4>
+                  <p className="text-[9px] text-[#6B635B] font-bold truncate">{isRecurring ? t.modals.routineRepeatsDaily : t.modals.routineOneTime}</p>
                 </div>
               </div>
 
@@ -454,7 +482,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               disabled={!title.trim()}
               className="w-full py-3 bg-[#3D6B52] hover:bg-[#345B45] disabled:opacity-40 border-[2px] border-[#24201D] rounded-2xl font-black font-display uppercase tracking-wider text-xs text-white shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer transition-all flex items-center justify-center gap-2"
             >
-              <span>Create Task</span>
+              <span>{t.modals.createTaskBtn}</span>
               <ArrowRight className="w-4 h-4 stroke-[3]" />
             </button>
           </div>

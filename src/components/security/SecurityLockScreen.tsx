@@ -8,6 +8,7 @@ import {
 } from '../../lib/securityService';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import { getAvatarById } from '../../data/avatars';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface SecurityLockScreenProps {
   onUnlock: () => void;
@@ -27,6 +28,7 @@ const KEYPAD_DIGITS = [
 ];
 
 export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock, userName }) => {
+  const { language } = useLanguage();
   const [pin, setPin] = useState<string>('');
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -89,7 +91,7 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
           onUnlock();
         } else {
           setIsError(true);
-          setErrorMessage('Incorrect PIN code');
+          setErrorMessage(language === 'uz' ? 'PIN kod notoʻgʻri' : language === 'ru' ? 'Неверный PIN-код' : 'Incorrect PIN code');
           if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
           setTimeout(() => {
             setPin('');
@@ -98,7 +100,7 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
         }
       }
     },
-    [pin, onUnlock]
+    [pin, onUnlock, language]
   );
 
   const handleDelete = useCallback(() => {
@@ -148,14 +150,16 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
         {/* User Greeting & Error Status */}
         <div className="space-y-0.5">
           <h2 className="text-lg font-black font-display text-[#24201D] tracking-tight">
-            {userName ? `Welcome back, ${userName}` : 'Unlock Vault'}
+            {userName
+              ? (language === 'uz' ? `Xush kelibsiz, ${userName}` : language === 'ru' ? `С возвращением, ${userName}` : `Welcome back, ${userName}`)
+              : (language === 'uz' ? 'Omborni ochish' : language === 'ru' ? 'Разблокировать' : 'Unlock Vault')}
           </h2>
           <p
             className={`text-xs font-bold transition-colors ${
               errorMessage ? 'text-rose-600 animate-shake' : 'text-[#6B635B]'
             }`}
           >
-            {errorMessage || 'Enter 4-digit PIN or Touch ID'}
+            {errorMessage || (language === 'uz' ? '4 xonali PIN kod yoki Touch ID kiriting' : language === 'ru' ? 'Введите 4-значный PIN или Touch ID' : 'Enter 4-digit PIN or Touch ID')}
           </p>
         </div>
 
@@ -210,7 +214,7 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
             onClick={handleBiometricUnlock}
             disabled={isAuthenticatingBio}
             className="h-13 sm:h-14 rounded-2xl bg-[#DDE8DE] hover:bg-[#C9DCCB] active:bg-[#3D6B52] active:text-white border-[1.75px] border-[#24201D] text-[#2D503C] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex flex-col items-center justify-center transition-all group"
-            title="Biometric Fingerprint / Touch ID"
+            title="Touch ID"
           >
             <Fingerprint className="w-5 h-5 stroke-[2.25] group-hover:scale-110 transition-transform" />
             <span className="text-[8px] font-extrabold tracking-wider uppercase mt-0.5">
@@ -232,7 +236,7 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
             type="button"
             onClick={handleDelete}
             className="h-13 sm:h-14 rounded-2xl bg-white hover:bg-rose-50 active:bg-rose-100 border-[1.75px] border-[#24201D] text-[#6B635B] hover:text-rose-700 shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex items-center justify-center transition-all"
-            title="Delete digit"
+            title={language === 'uz' ? 'Raqamni oʻchirish' : language === 'ru' ? 'Удалить цифру' : 'Delete digit'}
           >
             <Delete className="w-5 h-5 stroke-[2.25]" />
           </button>

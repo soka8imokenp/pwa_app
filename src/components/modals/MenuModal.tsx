@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 import { getAvatarById } from '../../data/avatars';
+import { useTranslation } from '../../i18n/LanguageContext';
 import type { TabView } from '../layout/BottomNav';
 
 interface MenuModalProps {
@@ -45,6 +46,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
   onOpenActivityLogs,
   onLockApp,
 }) => {
+  const { t, language } = useTranslation();
   const [avatarId, setAvatarId] = useState<string>('sumire-scout');
   const [userName, setUserName] = useState<string>('');
 
@@ -85,10 +87,10 @@ export const MenuModal: React.FC<MenuModalProps> = ({
             </div>
             <div>
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                Features & Archive
+                {t.modals.menuFeatures}
               </h3>
               <p className="text-[10px] font-bold text-[#6B635B]">
-                Tools, Analytics & Integrations
+                {t.modals.menuFeaturesDesc}
               </p>
             </div>
           </div>
@@ -121,12 +123,12 @@ export const MenuModal: React.FC<MenuModalProps> = ({
               <div>
                 <div className="flex items-center gap-1.5">
                   <h4 className="text-xs font-black text-[#2D503C] font-display uppercase tracking-wide">
-                    Sumire Companion
+                    {t.modals.sumireAiTitle}
                   </h4>
                   <span className="w-1.5 h-1.5 rounded-full bg-[#3D6B52]" />
                 </div>
                 <p className="text-[10px] text-[#2D503C]/80 font-medium">
-                  Goal breakdown, reflections & mindful coaching
+                  {t.modals.sumireAiDesc}
                 </p>
               </div>
             </div>
@@ -153,10 +155,10 @@ export const MenuModal: React.FC<MenuModalProps> = ({
               </div>
               <div className="min-w-0">
                 <h4 className="text-xs font-black text-[#382B5C] font-display uppercase tracking-wide truncate">
-                  User Profile
+                  {t.modals.profileAccount}
                 </h4>
                 <p className="text-[10px] text-[#55437E] font-medium truncate">
-                  {userName || 'Identity, mascot avatar & account data'}
+                  {userName || (language === 'uz' ? 'Profil, qahramon avatari va hisob maʼlumotlari' : language === 'ru' ? 'Личность, аватар маскота и данные аккаунта' : 'Identity, mascot avatar & account data')}
                 </p>
               </div>
             </div>
@@ -169,7 +171,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
         {/* Section 1: Views & Hubs */}
         <div className="space-y-1.5">
           <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block px-1">
-            Views & Workload
+            {language === 'uz' ? 'Boʻlimlar va ish yuki' : language === 'ru' ? 'Разделы и нагрузка' : 'Views & Workload'}
           </span>
 
           {/* Activity Log */}
@@ -186,8 +188,8 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                 <History className="w-4 h-4 text-[#3D6B52] stroke-[2.25]" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-[#24201D]">Activity Log</h4>
-                <p className="text-[10px] text-[#6B635B] font-medium">Recent actions, edits & audit trail</p>
+                <h4 className="text-xs font-bold text-[#24201D]">{t.modals.activityLogsTitle}</h4>
+                <p className="text-[10px] text-[#6B635B] font-medium">{t.modals.activityLogsSubtitle}</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-stone-400 group-hover:translate-x-0.5 transition-transform" />
@@ -207,8 +209,10 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                 <BarChart3 className="w-4 h-4 text-[#2A495E] stroke-[2.25]" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-[#24201D]">Productivity Stats</h4>
-                <p className="text-[10px] text-[#6B635B] font-medium">Heatmaps & focus distribution</p>
+                <h4 className="text-xs font-bold text-[#24201D]">{t.nav.stats}</h4>
+                <p className="text-[10px] text-[#6B635B] font-medium">
+                  {language === 'uz' ? 'Issiqlik xaritasi va fokus taqsimoti' : language === 'ru' ? 'Тепловые карты и распределение фокуса' : 'Heatmaps & focus distribution'}
+                </p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-stone-400" />
@@ -228,8 +232,10 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                 <Compass className="w-4 h-4 text-[#C25E40] stroke-[2.25]" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-[#24201D]">Ecosystem Hub</h4>
-                <p className="text-[10px] text-[#6B635B] font-medium">TV, Manga, Anime & Tools</p>
+                <h4 className="text-xs font-bold text-[#24201D]">{t.nav.links}</h4>
+                <p className="text-[10px] text-[#6B635B] font-medium">
+                  {language === 'uz' ? 'TV, Manga, Anime va foydali vositalar' : language === 'ru' ? 'ТВ, манга, аниме и инструменты' : 'TV, Manga, Anime & Tools'}
+                </p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-stone-400" />
@@ -240,7 +246,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
         <div className="space-y-2 pt-1">
           <div className="px-1">
             <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B]">
-              Tools & Export
+              {language === 'uz' ? 'Asboblar va eksport' : language === 'ru' ? 'Инструменты и экспорт' : 'Tools & Export'}
             </span>
           </div>
 
@@ -260,10 +266,10 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-[#2D503C] font-display uppercase tracking-wide">
-                    Weekly Card
+                    {t.modals.weeklyCardTitle}
                   </h4>
                   <p className="text-[10px] text-[#2D503C]/80 font-medium leading-tight mt-0.5">
-                    Infographic digest & XP stats
+                    {language === 'uz' ? 'Infografik dayjest va XP natijalari' : language === 'ru' ? 'Инфографический дайджест и XP статистика' : 'Infographic digest & XP stats'}
                   </p>
                 </div>
               </button>
@@ -284,10 +290,10 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-[#854D0E] font-display uppercase tracking-wide">
-                    Calendar Export
+                    {t.modals.calendarExportTitle}
                   </h4>
                   <p className="text-[10px] text-[#854D0E]/80 font-medium leading-tight mt-0.5">
-                    Sync schedule to external apps
+                    {t.modals.calendarExportDesc}
                   </p>
                 </div>
               </button>
@@ -305,9 +311,11 @@ export const MenuModal: React.FC<MenuModalProps> = ({
               </div>
               <div>
                 <h4 className="text-xs font-black text-[#24201D] font-display uppercase tracking-wide">
-                  Settings
+                  {t.settings.title}
                 </h4>
-                <p className="text-[10px] text-[#6B635B] font-medium">Sound, Security, AI & Backup</p>
+                <p className="text-[10px] text-[#6B635B] font-medium">
+                  {language === 'uz' ? 'Ovoz, xavfsizlik, AI va zaxira nusxa' : language === 'ru' ? 'Звук, безопасность, AI и бэкап' : 'Sound, Security, AI & Backup'}
+                </p>
               </div>
             </div>
             <div className="w-6 h-6 rounded-lg bg-white border border-[#24201D]/20 flex items-center justify-center text-[#24201D] shadow-2xs group-hover:translate-x-0.5 transition-transform shrink-0">

@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { BrutalButton } from './BrutalButton';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export interface ConfirmModalProps {
   isOpen: boolean;
@@ -17,13 +18,33 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   isOpen,
   title,
   message,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
+  confirmText,
+  cancelText,
   isDanger = true,
   onConfirm,
   onClose,
 }) => {
+  const { language } = useLanguage();
+
   if (!isOpen) return null;
+
+  const resolvedConfirm =
+    confirmText !== undefined && confirmText !== 'Confirm'
+      ? confirmText
+      : language === 'uz'
+      ? 'Tasdiqlash'
+      : language === 'ru'
+      ? 'Подтвердить'
+      : 'Confirm';
+
+  const resolvedCancel =
+    cancelText !== undefined && cancelText !== 'Cancel'
+      ? cancelText
+      : language === 'uz'
+      ? 'Bekor qilish'
+      : language === 'ru'
+      ? 'Отмена'
+      : 'Cancel';
 
   return (
     <div
@@ -62,7 +83,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
         {/* Action Buttons */}
         <div className="p-4 bg-white border-t-2 border-[#24201D] flex gap-2.5 justify-end">
           <BrutalButton variant="secondary" size="sm" onClick={onClose}>
-            {cancelText}
+            {resolvedCancel}
           </BrutalButton>
           <BrutalButton
             variant={isDanger ? 'danger' : 'primary'}
@@ -72,7 +93,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               onClose();
             }}
           >
-            {confirmText}
+            {resolvedConfirm}
           </BrutalButton>
         </div>
       </div>

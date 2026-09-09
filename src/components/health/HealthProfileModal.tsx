@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, User, Target, Activity, Info, Check } from 'lucide-react';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
+import { useTranslation } from '../../i18n/LanguageContext';
 import type { HealthProfile, ActivityLevel, HealthGoal, Gender } from '../../types/health';
 
 interface HealthProfileModalProps {
@@ -16,6 +17,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
   profile,
   onSaveProfile,
 }) => {
+  const { t } = useTranslation();
   const [age, setAge] = useState<number>(profile.age || 25);
   const [gender, setGender] = useState<Gender>(profile.gender || 'male');
   const [height, setHeight] = useState<number>(profile.height || 175);
@@ -81,7 +83,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
             </div>
             <div>
               <h2 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D]">
-                Health Profile Setup
+                {t.modals.profileSetupTitle}
               </h2>
             </div>
           </div>
@@ -104,7 +106,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
           {/* Biological Sex */}
           <div>
             <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block mb-1 font-display">
-              Biological Sex
+              {t.modals.biologicalSex}
             </label>
             <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs">
               {(['male', 'female'] as const).map((g) => (
@@ -121,7 +123,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
                       : 'text-[#6B635B] hover:text-[#24201D]'
                   }`}
                 >
-                  <span>{g === 'male' ? '♂ Male' : '♀ Female'}</span>
+                  <span>{g === 'male' ? t.modals.maleSex : t.modals.femaleSex}</span>
                 </button>
               ))}
             </div>
@@ -132,7 +134,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
             {/* Age */}
             <div className="p-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1">
               <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block font-display">
-                Age (years)
+                {t.modals.ageLabel}
               </label>
               <div className="flex items-center justify-between">
                 <button
@@ -156,7 +158,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
             {/* Height */}
             <div className="p-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1">
               <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block font-display">
-                Height (cm)
+                {t.modals.heightLabel}
               </label>
               <div className="flex items-center justify-between">
                 <button
@@ -181,9 +183,9 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
             <div className="p-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1 col-span-2">
               <div className="flex items-center justify-between">
                 <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block font-display">
-                  Waist Circumference (cm)
+                  {t.modals.waistCircumference}
                 </label>
-                <span className="text-[9px] font-bold text-stone-400">At navel level</span>
+                <span className="text-[9px] font-bold text-stone-400">{t.modals.atNavelLevel}</span>
               </div>
               <div className="flex items-center justify-between">
                 <button
@@ -196,7 +198,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
                 <div className="text-center">
                   <span className="text-base font-black font-mono-num text-[#24201D]">{waistCm} cm</span>
                   <span className="text-[9px] text-[#3D6B52] font-bold block">
-                    WHtR: {(waistCm / height).toFixed(2)} {waistCm / height < 0.5 ? '(Healthy)' : '(Elevated)'}
+                    WHtR: {(waistCm / height).toFixed(2)} {waistCm / height < 0.5 ? t.modals.healthyWhtr : t.modals.elevatedWhtr}
                   </span>
                 </div>
                 <button
@@ -213,7 +215,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
           {/* Healthy WHO Range Card */}
           <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center justify-between shadow-2xs">
             <span className="text-[10px] font-bold text-[#6B635B] flex items-center gap-1">
-              <Info className="w-3 h-3 text-[#3D6B52]" /> Healthy WHO range:
+              <Info className="w-3 h-3 text-[#3D6B52]" /> {t.modals.whoHealthyRange}
             </span>
             <span className="text-xs font-black font-mono-num text-[#24201D]">
               {idealMin} – {idealMax} kg
@@ -224,10 +226,10 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
           <div className="p-3 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] flex items-center gap-1 font-display">
-                <Target className="w-3 h-3 text-[#3D6B52]" /> Target Goal Weight
+                <Target className="w-3 h-3 text-[#3D6B52]" /> {t.modals.targetGoalWeight}
               </label>
               <span className="text-xs font-bold text-[#6B635B]">
-                {weightDeltaToTarget > 0 ? `${weightDeltaToTarget} kg to lose` : `${Math.abs(weightDeltaToTarget)} kg to gain`}
+                {weightDeltaToTarget > 0 ? `${weightDeltaToTarget} ${t.modals.kgToLose}` : `${Math.abs(weightDeltaToTarget)} ${t.modals.kgToGain}`}
               </span>
             </div>
 
@@ -271,14 +273,14 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
           {/* Primary Goal Selector */}
           <div>
             <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block mb-1 font-display">
-              Primary Metabolic Goal
+              {t.modals.primaryMetabolicGoal}
             </label>
             <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs">
               {(
                 [
-                  { id: 'lose', label: 'Fat Loss', sub: '-400 kcal' },
-                  { id: 'maintain', label: 'Maintain', sub: 'TDEE' },
-                  { id: 'gain', label: 'Muscle', sub: '+350 kcal' },
+                  { id: 'lose', label: t.modals.fatLoss, sub: '-400 kcal' },
+                  { id: 'maintain', label: t.modals.maintain, sub: 'TDEE' },
+                  { id: 'gain', label: t.modals.muscleGain, sub: '+350 kcal' },
                 ] as const
               ).map((item) => (
                 <button
@@ -294,7 +296,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
                       : 'text-[#6B635B] hover:text-[#24201D]'
                   }`}
                 >
-                  <span className="text-[11px] font-black leading-tight">{item.label}</span>
+                  <span className="text-[11px] font-black leading-tight text-center">{item.label}</span>
                   <span className="text-[9px] opacity-70 font-mono-num">{item.sub}</span>
                 </button>
               ))}
@@ -304,15 +306,15 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
           {/* Activity Level Selector */}
           <div>
             <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block mb-1 flex items-center gap-1 font-display">
-              <Activity className="w-3 h-3 text-[#3D6B52]" /> Daily Activity Level
+              <Activity className="w-3 h-3 text-[#3D6B52]" /> {t.modals.dailyActivityLevel}
             </label>
             <div className="space-y-1.5">
               {(
                 [
-                  { id: 'sedentary', label: 'Sedentary', desc: 'Desk job, light walking (x1.20)' },
-                  { id: 'light', label: 'Light Active', desc: '1–3 light workouts / week (x1.375)' },
-                  { id: 'moderate', label: 'Moderately Active', desc: '3–5 workouts / week (x1.55)' },
-                  { id: 'very_active', label: 'Very Active', desc: '6–7 hard workouts / week (x1.725)' },
+                  { id: 'sedentary', label: t.modals.activitySedentary },
+                  { id: 'light', label: t.modals.activityLight },
+                  { id: 'moderate', label: t.modals.activityModerate },
+                  { id: 'very_active', label: t.modals.activityVeryActive },
                 ] as const
               ).map((act) => (
                 <button
@@ -330,7 +332,6 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
                 >
                   <div>
                     <span className="text-xs block font-bold text-[#24201D]">{act.label}</span>
-                    <span className="text-[10px] text-[#6B635B]">{act.desc}</span>
                   </div>
                   {activityLevel === act.id && (
                     <div className="w-4 h-4 rounded-full bg-[#24201D] flex items-center justify-center text-white">
@@ -348,7 +349,7 @@ export const HealthProfileModal: React.FC<HealthProfileModalProps> = ({
               type="submit"
               className="w-full py-3 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black shadow-[2px_2px_0px_#24201D] cursor-pointer active:translate-y-0.5 transition-all font-display uppercase tracking-wider flex items-center justify-center gap-2"
             >
-              <span>Save Health Profile</span>
+              <span>{t.modals.saveHealthProfile}</span>
             </button>
           </div>
         </form>

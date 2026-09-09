@@ -13,6 +13,7 @@ import type { AppUpdateInfo } from '../../lib/appUpdater';
 import { CURRENT_APP_VERSION } from '../../lib/appUpdater';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import confetti from 'canvas-confetti';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface AppUpdateModalProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
   onClose,
   updateInfo,
 }) => {
+  const { language } = useLanguage();
   const [downloadStatus, setDownloadStatus] = useState<'idle' | 'downloading' | 'completed' | 'error'>('idle');
   const [progressPercent, setProgressPercent] = useState<number>(0);
   const [downloadedMb, setDownloadedMb] = useState<string>('0.0');
@@ -172,10 +174,10 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
             </div>
             <div>
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                New Update Available
+                {language === 'uz' ? 'Yangi yangilanish mavjud' : language === 'ru' ? 'Доступно обновление' : 'New Update Available'}
               </h3>
               <p className="text-[10px] font-bold text-[#6B635B]">
-                Official GitHub Release
+                {language === 'uz' ? 'Rasmiy GitHub relizi' : language === 'ru' ? 'Официальный релиз GitHub' : 'Official GitHub Release'}
               </p>
             </div>
           </div>
@@ -195,7 +197,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
         <div className="grid grid-cols-2 gap-2">
           <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-2xl text-center">
             <span className="text-[9px] font-extrabold uppercase text-[#6B635B] block">
-              Installed
+              {language === 'uz' ? 'Oʻrnatilgan' : language === 'ru' ? 'Установлено' : 'Installed'}
             </span>
             <span className="text-xs font-black font-mono-num text-[#24201D]">
               {CURRENT_APP_VERSION}
@@ -204,7 +206,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
 
           <div className="p-2.5 bg-[#DDE8DE] border-[1.5px] border-[#24201D] rounded-2xl text-center shadow-2xs">
             <span className="text-[9px] font-extrabold uppercase text-[#2D503C] block">
-              New Version
+              {language === 'uz' ? 'Yangi versiya' : language === 'ru' ? 'Новая версия' : 'New Version'}
             </span>
             <span className="text-xs font-black font-mono-num text-[#2D503C]">
               {updateInfo.version}
@@ -227,7 +229,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
           {/* Release Notes */}
           <div className="pt-2 border-t border-[#24201D]/10">
             <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] block mb-1">
-              Release Notes
+              {language === 'uz' ? 'Reliz tafsilotlari' : language === 'ru' ? 'Список изменений' : 'Release Notes'}
             </span>
             <div className="text-[11px] font-medium text-stone-700 leading-snug space-y-1.5 max-h-28 overflow-y-auto pr-1">
               {updateInfo.releaseNotes
@@ -255,12 +257,12 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
                 {downloadStatus === 'downloading' ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-[#854D0E]" />
-                    <span>Downloading APK...</span>
+                    <span>{language === 'uz' ? 'APK yuklab olinmoqda...' : language === 'ru' ? 'Загрузка APK...' : 'Downloading APK...'}</span>
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#3D6B52] stroke-[2.5]" />
-                    <span className="text-[#2D503C]">Ready to Install</span>
+                    <span className="text-[#2D503C]">{language === 'uz' ? 'Oʻrnatishga tayyor' : language === 'ru' ? 'Готово к установке' : 'Ready to Install'}</span>
                   </>
                 )}
               </span>
@@ -282,8 +284,8 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
             </div>
 
             <div className="flex justify-between text-[10px] font-bold text-[#6B635B] font-mono-num">
-              <span>{downloadedMb} MB downloaded</span>
-              <span>Total: {totalMb}</span>
+              <span>{downloadedMb} {language === 'uz' ? 'MB yuklandi' : language === 'ru' ? 'МБ загружено' : 'MB downloaded'}</span>
+              <span>{language === 'uz' ? 'Jami' : language === 'ru' ? 'Всего' : 'Total'}: {totalMb}</span>
             </div>
           </div>
         )}
@@ -293,10 +295,10 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
           <div className="p-3 bg-[#F7E3DC] border-[1.5px] border-[#C25E40] rounded-2xl text-left space-y-1 text-[10px] text-[#C25E40] animate-in fade-in duration-150">
             <div className="flex items-center gap-1 font-black">
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-              <span>Download Interrupted</span>
+              <span>{language === 'uz' ? 'Yuklab olish toʻxtatildi' : language === 'ru' ? 'Загрузка прервана' : 'Download Interrupted'}</span>
             </div>
             <p className="leading-tight text-stone-700">
-              {errorMsg || 'Connection error. Tap Retry Download below.'}
+              {errorMsg || (language === 'uz' ? 'Ulanish xatosi. Qaytadan urinib koʻring.' : language === 'ru' ? 'Ошибка соединения. Повторите попытку.' : 'Connection error. Tap Retry Download below.')}
             </p>
           </div>
         )}
@@ -309,7 +311,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
               className="w-full py-3.5 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[2px] border-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <Download className="w-4 h-4 stroke-[2.5]" />
-              <span>Download & Install APK</span>
+              <span>{language === 'uz' ? 'APK yuklab olish va oʻrnatish' : language === 'ru' ? 'Скачать и установить APK' : 'Download & Install APK'}</span>
             </button>
           )}
 
@@ -320,7 +322,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
               className="w-full py-3.5 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[2px] border-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex items-center justify-center gap-2"
             >
               <PackageCheck className="w-4 h-4 stroke-[2.5]" />
-              <span>Install</span>
+              <span>{language === 'uz' ? 'Oʻrnatish' : language === 'ru' ? 'Установить' : 'Install'}</span>
             </button>
           )}
 
@@ -330,7 +332,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
               className="w-full py-3.5 px-4 rounded-2xl bg-[#F0BB58] hover:bg-[#E09F3E] text-[#24201D] border-[2px] border-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <RotateCcw className="w-4 h-4 stroke-[2.5]" />
-              <span>Retry Download</span>
+              <span>{language === 'uz' ? 'Qaytadan urinish' : language === 'ru' ? 'Повторить попытку' : 'Retry Download'}</span>
             </button>
           )}
         </div>

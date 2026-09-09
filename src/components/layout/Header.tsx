@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Flame, Settings, CheckSquare, Apple } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
 import { getAvatarById } from '../../data/avatars';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface HeaderProps {
   streakCount: number;
@@ -22,6 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenProfile,
   onOpenStreak,
 }) => {
+  const { t } = useTranslation();
   const [avatarId, setAvatarId] = useState<string>('sumire-scout');
 
   useEffect(() => {
@@ -55,17 +57,17 @@ export const Header: React.FC<HeaderProps> = ({
             }}
             className="w-10 h-10 rounded-2xl border-[1.75px] border-[#24201D] flex items-center justify-center shadow-[2px_2px_0px_#24201D] shrink-0 cursor-pointer active:translate-y-0.5 active:shadow-none transition-all p-0.5 group hover:scale-105"
             style={{ backgroundColor: activeAvatar.bg }}
-            title="User Profile & Identity"
+            title={t('header.profileTooltip')}
           >
             {activeAvatar.renderSvg('w-full h-full')}
           </button>
 
           <div>
             <span className="text-[10px] font-bold text-[#6B635B] uppercase tracking-wider block leading-none font-display">
-              {appMode === 'health' ? 'Health & Body OS' : 'Daily Planner'}
+              {appMode === 'health' ? t('header.healthTitle') : t('header.plannerTitle')}
             </span>
             <h1 className="text-sm font-bold font-display text-[#24201D] tracking-tight leading-tight mt-0.5">
-              Hey, {firstName}
+              {t('header.greeting', { name: firstName })}
             </h1>
           </div>
         </div>
@@ -78,7 +80,7 @@ export const Header: React.FC<HeaderProps> = ({
               playClickSound();
               if (onOpenStreak) onOpenStreak();
             }}
-            title={streakCount > 0 ? `${streakCount} Day Streak!` : 'Start your streak today'}
+            title={streakCount > 0 ? t('header.streakTitle', { count: streakCount }) : t('header.streakStart')}
             className={`flex items-center gap-1.5 px-3 py-1.5 border-[1.75px] border-[#24201D] rounded-full shadow-[1.5px_1.5px_0px_#24201D] cursor-pointer active:translate-y-0.5 transition-all ${
               streakCount > 0
                 ? 'bg-[#F0BB58] hover:bg-[#E5A943]'
@@ -103,7 +105,7 @@ export const Header: React.FC<HeaderProps> = ({
               playClickSound();
               onOpenSettings();
             }}
-            title="Settings"
+            title={t('header.settingsTooltip')}
             className="w-8.5 h-8.5 rounded-xl bg-[#F8F5EE] hover:bg-[#F2ECE0] border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer group"
           >
             <Settings className="w-4 h-4 text-[#24201D] stroke-[2.25] group-hover:rotate-45 transition-transform duration-300" />
@@ -128,7 +130,7 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               <CheckSquare className="w-3.5 h-3.5" />
-              <span>Planner</span>
+              <span>{t('header.plannerMode')}</span>
             </button>
 
             <button
@@ -144,7 +146,7 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               <Apple className="w-3.5 h-3.5" />
-              <span>Health & Body</span>
+              <span>{t('header.healthMode')}</span>
             </button>
           </div>
         </div>

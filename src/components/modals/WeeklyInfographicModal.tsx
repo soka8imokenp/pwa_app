@@ -25,6 +25,7 @@ import { format, subDays, startOfDay, parseISO } from 'date-fns';
 import confetti from 'canvas-confetti';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../lib/db';
+import { useTranslation } from '../../i18n/LanguageContext';
 import { DEFAULT_HEALTH_PROFILE, calculateComprehensiveMetrics } from '../../lib/healthFormulas';
 
 interface WeeklyInfographicModalProps {
@@ -44,6 +45,7 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
   focusSessions,
   userName = 'Sam Smith',
 }) => {
+  const { t, language } = useTranslation();
   const [isExporting, setIsExporting] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -234,10 +236,10 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
             </div>
             <div>
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                Weekly Infographic
+                {t.modals.weeklyCardTitle}
               </h3>
               <p className="text-[10px] text-[#6B635B] font-bold">
-                Mind, Body & Productivity Digest
+                {language === 'uz' ? 'Aql, tana va unumdorlik dayjesti' : language === 'ru' ? 'Дайджест разума, тела и продуктивности' : 'Mind, Body & Productivity Digest'}
               </p>
             </div>
           </div>
@@ -287,7 +289,7 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
 
             <div className="flex items-center gap-1.5">
               <span className="px-2.5 py-1 bg-[#DDE8DE] border border-[#24201D] rounded-full text-[9px] font-black text-[#2D503C] shadow-2xs uppercase">
-                Level {level}
+                {language === 'uz' ? `${level}-daraja` : language === 'ru' ? `Уровень ${level}` : `Level ${level}`}
               </span>
             </div>
           </div>
@@ -295,13 +297,13 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
           {/* Title & User Hero */}
           <div className="relative z-10 space-y-1">
             <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#FBECCF] border border-[#24201D] text-[10px] font-black uppercase tracking-wider text-[#854D0E]">
-              Weekly Digest
+              {language === 'uz' ? 'Haftalik dayjest' : language === 'ru' ? 'Недельный дайджест' : 'Weekly Digest'}
             </div>
             <h2 className="text-lg font-black font-display uppercase tracking-tight text-[#24201D]">
               {userName}
             </h2>
             <p className="text-[11px] font-bold text-[#6B635B]">
-              Consistency Score: <span className="font-mono-num text-[#24201D] font-black">{averageScore}%</span> average
+              {language === 'uz' ? 'Barqarorlik koʻrsatkichi:' : language === 'ru' ? 'Индекс регулярности:' : 'Consistency Score:'} <span className="font-mono-num text-[#24201D] font-black">{averageScore}%</span> {language === 'uz' ? 'oʻrtacha' : language === 'ru' ? 'в среднем' : 'average'}
             </p>
           </div>
 
@@ -310,10 +312,10 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
             <div className="flex items-center justify-between px-1">
               <span className="text-[10px] font-black font-display uppercase tracking-wider text-[#24201D] flex items-center gap-1.5">
                 <Target className="w-3.5 h-3.5 text-[#3D6B52] stroke-[2.25]" />
-                Execution & Deep Flow
+                {language === 'uz' ? 'Bajarish va chuqur fokus' : language === 'ru' ? 'Выполнение и глубокий фокус' : 'Execution & Deep Flow'}
               </span>
               <span className="text-[9px] font-bold text-[#3D6B52] font-mono-num">
-                {completedTasks}/{totalTasks} tasks
+                {completedTasks}/{totalTasks} {language === 'uz' ? 'ta vazifa' : language === 'ru' ? 'задач' : 'tasks'}
               </span>
             </div>
 
@@ -324,13 +326,13 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
                   <div className="w-6 h-6 rounded-lg bg-[#DDE8DE] border border-[#24201D]/40 flex items-center justify-center">
                     <Target className="w-3.5 h-3.5 text-[#3D6B52]" />
                   </div>
-                  <span className="text-[8px] font-black text-[#6B635B] uppercase">Tasks</span>
+                  <span className="text-[8px] font-black text-[#6B635B] uppercase">{t.priorities.title}</span>
                 </div>
                 <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
                   {completedTasks}/{totalTasks}
                 </p>
                 <p className="text-[9px] font-bold text-[#6B635B] truncate">
-                  Completed this week
+                  {language === 'uz' ? 'Bu hafta bajarildi' : language === 'ru' ? 'Завершено за неделю' : 'Completed this week'}
                 </p>
               </div>
 
@@ -340,13 +342,13 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
                   <div className="w-6 h-6 rounded-lg bg-[#DEE8EF] border border-[#24201D]/40 flex items-center justify-center">
                     <Clock className="w-3.5 h-3.5 text-[#476C85]" />
                   </div>
-                  <span className="text-[8px] font-black text-[#6B635B] uppercase">Deep Flow</span>
+                  <span className="text-[8px] font-black text-[#6B635B] uppercase">{t.focus.title}</span>
                 </div>
                 <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
                   {totalFocusHours}h
                 </p>
                 <p className="text-[9px] font-bold text-[#6B635B] truncate">
-                  Focused time logged
+                  {language === 'uz' ? 'Fokus vaqti' : language === 'ru' ? 'Время в фокусе' : 'Focused time logged'}
                 </p>
               </div>
 
@@ -356,13 +358,13 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
                   <div className="w-6 h-6 rounded-lg bg-[#FBECCF] border border-[#24201D]/40 flex items-center justify-center">
                     <Flame className="w-3.5 h-3.5 text-[#854D0E] fill-[#F0BB58]" />
                   </div>
-                  <span className="text-[8px] font-black text-[#6B635B] uppercase">Habits</span>
+                  <span className="text-[8px] font-black text-[#6B635B] uppercase">{t.habits.title}</span>
                 </div>
                 <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
                   {totalHabitChecks}
                 </p>
                 <p className="text-[9px] font-bold text-[#6B635B] truncate">
-                  Rituals maintained
+                  {language === 'uz' ? 'Odatlar bajarildi' : language === 'ru' ? 'Привычек выполнено' : 'Rituals maintained'}
                 </p>
               </div>
 
@@ -372,27 +374,33 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
                   <div className="w-6 h-6 rounded-lg bg-[#FAF0EC] border border-[#24201D]/40 flex items-center justify-center">
                     <Zap className="w-3.5 h-3.5 text-[#C25E40]" />
                   </div>
-                  <span className="text-[8px] font-black text-[#6B635B] uppercase">Mastery</span>
+                  <span className="text-[8px] font-black text-[#6B635B] uppercase">
+                    {language === 'uz' ? 'Mahorat' : language === 'ru' ? 'Мастерство' : 'Mastery'}
+                  </span>
                 </div>
                 <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
                   +{totalXP} XP
                 </p>
                 <p className="text-[9px] font-bold text-[#6B635B] truncate">
-                  Productivity points
+                  {language === 'uz' ? 'Unumdorlik ballari' : language === 'ru' ? 'Очки продуктивности' : 'Productivity points'}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* SECTION 2: HEALTH & BODY VITALITY (NEW!) */}
+          {/* SECTION 2: HEALTH & BODY VITALITY */}
           <div className="relative z-10 space-y-1.5 text-left">
             <div className="flex items-center justify-between px-1">
               <span className="text-[10px] font-black font-display uppercase tracking-wider text-[#24201D] flex items-center gap-1.5">
                 <Heart className="w-3.5 h-3.5 text-[#C25E40] fill-[#F7E3DC] stroke-[2.25]" />
-                Health & Body Vitality
+                {language === 'uz' ? 'Salomatlik va tana quvvati' : language === 'ru' ? 'Здоровье и энергия тела' : 'Health & Body Vitality'}
               </span>
               <span className="text-[9px] font-bold text-[#854D0E] bg-[#FBECCF] px-2 py-0.5 rounded-full border border-[#24201D]/30 uppercase">
-                {healthProfile.goal === 'lose' ? 'Weight Loss' : healthProfile.goal === 'gain' ? 'Muscle Gain' : 'Maintain'}
+                {healthProfile.goal === 'lose'
+                  ? (language === 'uz' ? 'Vazn yoʻqotish' : language === 'ru' ? 'Снижение веса' : 'Weight Loss')
+                  : healthProfile.goal === 'gain'
+                  ? (language === 'uz' ? 'Mushak toʻplash' : language === 'ru' ? 'Набор массы' : 'Muscle Gain')
+                  : (language === 'uz' ? 'Vaznni saqlash' : language === 'ru' ? 'Поддержание' : 'Maintain')}
               </span>
             </div>
 
@@ -428,13 +436,15 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
                   <div className="w-6 h-6 rounded-lg bg-[#FBECCF] border border-[#24201D]/40 flex items-center justify-center">
                     <Utensils className="w-3.5 h-3.5 text-[#854D0E]" />
                   </div>
-                  <span className="text-[8px] font-black text-[#854D0E] uppercase">Nutrition</span>
+                  <span className="text-[8px] font-black text-[#854D0E] uppercase">{t.health.nutrition}</span>
                 </div>
                 <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
                   {avgDailyKcal > 0 ? `${avgDailyKcal} kcal` : `${healthMetrics.targetDailyCalories || 2000} kcal`}
                 </p>
                 <p className="text-[9px] font-bold text-[#6B635B] truncate">
-                  {uniqueMealDays > 0 ? `${uniqueMealDays}d logged • avg/day` : 'Target energy'}
+                  {uniqueMealDays > 0
+                    ? (language === 'uz' ? `${uniqueMealDays} kun yozildi • kuniga oʻrtacha` : language === 'ru' ? `${uniqueMealDays} дн. внесено • ср/день` : `${uniqueMealDays}d logged • avg/day`)
+                    : (language === 'uz' ? 'Maqsad kaloriya' : language === 'ru' ? 'Целевая норма' : 'Target energy')}
                 </p>
               </div>
 
@@ -444,13 +454,15 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
                   <div className="w-6 h-6 rounded-lg bg-[#DEE8EF] border border-[#24201D]/40 flex items-center justify-center">
                     <Droplets className="w-3.5 h-3.5 text-[#2A495E]" />
                   </div>
-                  <span className="text-[8px] font-black text-[#2A495E] uppercase">Hydration</span>
+                  <span className="text-[8px] font-black text-[#2A495E] uppercase">{t.health.water}</span>
                 </div>
                 <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
                   {Number(avgDailyWaterL) > 0 ? `${avgDailyWaterL}L` : `${((healthProfile.currentWeight * 35) / 1000).toFixed(1)}L`}
                 </p>
                 <p className="text-[9px] font-bold text-[#6B635B] truncate">
-                  {uniqueWaterDays > 0 ? `${uniqueWaterDays}d logged • avg/day` : 'Recommended/day'}
+                  {uniqueWaterDays > 0
+                    ? (language === 'uz' ? `${uniqueWaterDays} kun yozildi • kuniga oʻrtacha` : language === 'ru' ? `${uniqueWaterDays} дн. внесено • ср/день` : `${uniqueWaterDays}d logged • avg/day`)
+                    : (language === 'uz' ? 'Tavsiya meʼyori' : language === 'ru' ? 'Рекомендация/день' : 'Recommended/day')}
                 </p>
               </div>
 
@@ -460,13 +472,19 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
                   <div className="w-6 h-6 rounded-lg bg-[#F7E3DC] border border-[#24201D]/40 flex items-center justify-center">
                     <Dumbbell className="w-3.5 h-3.5 text-[#C25E40]" />
                   </div>
-                  <span className="text-[8px] font-black text-[#C25E40] uppercase">Active</span>
+                  <span className="text-[8px] font-black text-[#C25E40] uppercase">
+                    {language === 'uz' ? 'Faollik' : language === 'ru' ? 'Активность' : 'Active'}
+                  </span>
                 </div>
                 <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
-                  {totalWorkoutCount > 0 ? `${totalWorkoutCount} sessions` : 'Active living'}
+                  {totalWorkoutCount > 0
+                    ? `${totalWorkoutCount} ${language === 'uz' ? 'ta mashgʻulot' : language === 'ru' ? 'тренировок' : 'sessions'}`
+                    : (language === 'uz' ? 'Faol hayot' : language === 'ru' ? 'Активный образ' : 'Active living')}
                 </p>
                 <p className="text-[9px] font-bold text-[#6B635B] truncate">
-                  {totalWorkoutMins > 0 ? `${totalWorkoutMins}m • ${totalWorkoutBurned} kcal` : 'Daily workouts'}
+                  {totalWorkoutMins > 0
+                    ? `${totalWorkoutMins}m • ${totalWorkoutBurned} ${language === 'uz' ? 'kkal' : language === 'ru' ? 'ккал' : 'kcal'}`
+                    : (language === 'uz' ? 'Kunlik mashqlar' : language === 'ru' ? 'Ежедневные тренировки' : 'Daily workouts')}
                 </p>
               </div>
             </div>
@@ -475,10 +493,10 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
           {/* SECTION 3: 7-DAY HARMONY MATRIX */}
           <div className="relative z-10 p-2.5 bg-white border-[1.5px] border-[#24201D] rounded-2xl shadow-2xs space-y-1.5">
             <div className="flex items-center justify-between text-[9px] font-black uppercase text-stone-500 px-1">
-              <span>7-Day Mind & Body Rhythm</span>
+              <span>{language === 'uz' ? '7 kunlik aql va tana ritmi' : language === 'ru' ? '7-дневный ритм разума и тела' : '7-Day Mind & Body Rhythm'}</span>
               <div className="flex items-center gap-2">
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#3D6B52]" /> Focus</span>
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#E09F3E]" /> Body</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#3D6B52]" /> {t.focus.title}</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#E09F3E]" /> {t.health.title}</span>
               </div>
             </div>
 
@@ -501,13 +519,13 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
                       className={`w-1.5 h-1.5 rounded-full ${
                         day.focusCompleted ? 'bg-[#3D6B52]' : 'bg-stone-200'
                       }`}
-                      title="Focus activity"
+                      title={language === 'uz' ? 'Fokus faolligi' : language === 'ru' ? 'Активность фокуса' : 'Focus activity'}
                     />
                     <span
                       className={`w-1.5 h-1.5 rounded-full ${
                         day.healthCompleted ? 'bg-[#E09F3E]' : 'bg-stone-200'
                       }`}
-                      title="Health & Body log"
+                      title={language === 'uz' ? 'Salomatlik va tana jurnali' : language === 'ru' ? 'Журнал здоровья и тела' : 'Health & Body log'}
                     />
                   </div>
                 </div>
@@ -517,8 +535,10 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
 
           {/* Brand Footer */}
           <div className="relative z-10 pt-1 flex items-center justify-between border-t border-[#24201D]/15 text-[8px] font-bold text-[#6B635B]">
-            <span>Daily Sumire • Mind, Body & Focus</span>
-            <span className="font-mono-num">Weekly Certified Card</span>
+            <span>{language === 'uz' ? 'Daily Sumire • Aql, Tana va Fokus' : language === 'ru' ? 'Daily Sumire • Разум, Тело и Фокус' : 'Daily Sumire • Mind, Body & Focus'}</span>
+            <span className="font-mono-num">
+              {language === 'uz' ? 'Haftalik sertifikatlangan hisobot' : language === 'ru' ? 'Сертифицированная карта недели' : 'Weekly Certified Card'}
+            </span>
           </div>
         </div>
 
@@ -530,7 +550,7 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
             className="flex-1 py-3 px-4 bg-[#FAF8F5] hover:bg-stone-100 border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black text-[#24201D] shadow-2xs flex items-center justify-center gap-2 cursor-pointer active:translate-y-0.5 transition-all disabled:opacity-50"
           >
             <Download className="w-4 h-4 stroke-[2.25]" />
-            <span>Download PNG</span>
+            <span>{t.modals.downloadImage || (language === 'uz' ? 'Rasmni yuklab olish' : language === 'ru' ? 'Скачать PNG' : 'Download PNG')}</span>
           </button>
 
           <button
@@ -541,12 +561,12 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
             {isCopied ? (
               <>
                 <Check className="w-4 h-4 stroke-[3]" />
-                <span>Copied Image!</span>
+                <span>{language === 'uz' ? 'Rasm nusxalandi!' : language === 'ru' ? 'Изображение скопировано!' : 'Copied Image!'}</span>
               </>
             ) : (
               <>
                 <Share2 className="w-4 h-4 stroke-[2.25]" />
-                <span>Share Card</span>
+                <span>{language === 'uz' ? 'Kartani ulashish' : language === 'ru' ? 'Поделиться карточкой' : 'Share Card'}</span>
               </>
             )}
           </button>

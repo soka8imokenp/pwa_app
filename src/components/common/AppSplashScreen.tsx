@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Shield } from 'lucide-react';
 import { LottiePlayer } from './LottiePlayer';
 import rabbitAnimation from '../../assets/rabbit-hi.json';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface AppSplashScreenProps {
   onFinish?: () => void;
@@ -12,9 +13,16 @@ export const AppSplashScreen: React.FC<AppSplashScreenProps> = ({
   onFinish,
   minDurationMs = 1500,
 }) => {
+  const { language } = useLanguage();
   const [progress, setProgress] = useState(0);
   const [isFadingOut, setIsFadingOut] = useState(false);
-  const [statusText, setStatusText] = useState('Initializing sanctuary...');
+  const [statusText, setStatusText] = useState(() =>
+    language === 'uz'
+      ? 'Muqaddas makon ishga tushirilmoqda...'
+      : language === 'ru'
+      ? 'Инициализация пространства...'
+      : 'Initializing sanctuary...'
+  );
 
   useEffect(() => {
     const startTime = Date.now();
@@ -25,11 +33,29 @@ export const AppSplashScreen: React.FC<AppSplashScreenProps> = ({
       setProgress(pct);
 
       if (pct < 35) {
-        setStatusText('Calibrating daily rhythm...');
+        setStatusText(
+          language === 'uz'
+            ? 'Kunlik ritm sozlanmoqda...'
+            : language === 'ru'
+            ? 'Калибровка дневного ритма...'
+            : 'Calibrating daily rhythm...'
+        );
       } else if (pct < 75) {
-        setStatusText('Harmonizing habits & focus...');
+        setStatusText(
+          language === 'uz'
+            ? 'Odatlar va diqqat uygʻunlashtirilmoqda...'
+            : language === 'ru'
+            ? 'Гармонизация привычек и фокуса...'
+            : 'Harmonizing habits & focus...'
+        );
       } else {
-        setStatusText('Welcome back');
+        setStatusText(
+          language === 'uz'
+            ? 'Xush kelibsiz'
+            : language === 'ru'
+            ? 'С возвращением'
+            : 'Welcome back'
+        );
       }
 
       if (pct >= 100) {
@@ -46,7 +72,7 @@ export const AppSplashScreen: React.FC<AppSplashScreenProps> = ({
     }, 25);
 
     return () => clearInterval(interval);
-  }, [minDurationMs, onFinish]);
+  }, [minDurationMs, onFinish, language]);
 
   return (
     <div
@@ -93,7 +119,11 @@ export const AppSplashScreen: React.FC<AppSplashScreenProps> = ({
             Daily Planner
           </h1>
           <p className="text-xs font-bold text-[#6B635B] tracking-wide">
-            Mindful Rhythm • Focus • Habits
+            {language === 'uz'
+              ? 'Ongli ritm • Diqqat • Odatlar'
+              : language === 'ru'
+              ? 'Осознанный ритм • Фокус • Привычки'
+              : 'Mindful Rhythm • Focus • Habits'}
           </p>
         </div>
 
@@ -117,7 +147,13 @@ export const AppSplashScreen: React.FC<AppSplashScreenProps> = ({
       <div className="relative z-10 pb-2 text-center animate-in fade-in duration-700">
         <div className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#6B635B]">
           <Shield className="w-3.5 h-3.5 text-[#3D6B52]" />
-          <span>Local Encrypted Vault • 100% Private</span>
+          <span>
+            {language === 'uz'
+              ? 'Mahalliy shifrlangan ombor • 100% Maxfiy'
+              : language === 'ru'
+              ? 'Локальное зашифрованное хранилище • 100% Конфиденциально'
+              : 'Local Encrypted Vault • 100% Private'}
+          </span>
         </div>
       </div>
     </div>

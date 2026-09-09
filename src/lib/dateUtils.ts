@@ -14,34 +14,28 @@ import {
   isSameMonth,
   isSameDay,
 } from 'date-fns';
+import {
+  formatDateDirect,
+  formatMonthYearDirect,
+  getRelativeDayDirect,
+  getStoredLanguage,
+} from '../i18n/LanguageContext';
+import { translations } from '../i18n/translations';
 
 export function getTodayString(): string {
   return format(new Date(), 'yyyy-MM-dd');
 }
 
 export function formatDisplayDate(dateStr: string): string {
-  try {
-    const date = parseISO(dateStr);
-    return format(date, 'EEEE, MMM d');
-  } catch {
-    return dateStr;
-  }
+  return formatDateDirect(dateStr);
 }
 
 export function formatMonthYear(date: Date): string {
-  return format(date, 'MMMM yyyy');
+  return formatMonthYearDirect(date);
 }
 
 export function getRelativeDayLabel(dateStr: string): string {
-  try {
-    const date = parseISO(dateStr);
-    if (isToday(date)) return 'Today';
-    if (isYesterday(date)) return 'Yesterday';
-    if (isTomorrow(date)) return 'Tomorrow';
-    return format(date, 'MMM d');
-  } catch {
-    return dateStr;
-  }
+  return getRelativeDayDirect(dateStr);
 }
 
 export function shiftDate(dateStr: string, deltaDays: number): string {
@@ -64,13 +58,17 @@ export function getWeekDaysForDate(dateStr: string): {
   try {
     const targetDate = parseISO(dateStr);
     const weekStart = startOfWeek(targetDate, { weekStartsOn: 1 }); // Monday start
+    const lang = getStoredLanguage();
+    const dict = translations[lang] || translations.uz;
 
     return Array.from({ length: 7 }).map((_, index) => {
       const current = addDays(weekStart, index);
       const iso = format(current, 'yyyy-MM-dd');
+      const weekdayIndex = index; // 0 to 6 Monday to Sunday
+
       return {
         dateStr: iso,
-        dayShort: format(current, 'EEE'), // Mon, Tue...
+        dayShort: dict.date.weekdaysShort[weekdayIndex] || format(current, 'EEE'),
         dayNumber: format(current, 'd'),
         isToday: isToday(current),
         isSelected: iso === dateStr,

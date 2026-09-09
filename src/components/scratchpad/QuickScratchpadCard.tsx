@@ -27,6 +27,7 @@ import {
 } from '../../lib/speechRecognition';
 import confetti from 'canvas-confetti';
 import type { Task } from '../../types';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 export type ChecklistTag = 'general' | 'urgent' | 'idea' | 'routine';
 
@@ -44,23 +45,11 @@ interface QuickChecklistCardProps {
   onQuickCreateTask?: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<any>;
 }
 
-const TAG_CONFIG: Record<ChecklistTag, { label: string; bg: string; color: string; icon: React.ReactNode }> = {
-  general: { label: 'General', bg: '#F4F0EA', color: '#24201D', icon: <Layers className="w-2.5 h-2.5" /> },
-  urgent: { label: 'Urgent', bg: '#F7E3DC', color: '#9A3412', icon: <Flame className="w-2.5 h-2.5" /> },
-  idea: { label: 'Idea', bg: '#FBECCF', color: '#854D0E', icon: <Lightbulb className="w-2.5 h-2.5" /> },
-  routine: { label: 'Routine', bg: '#DDE8DE', color: '#2D503C', icon: <Repeat className="w-2.5 h-2.5" /> },
-};
-
-const SLIDE_TABS = [
-  { id: 0, label: 'Create' },
-  { id: 1, label: 'Active' },
-  { id: 2, label: 'Completed' },
-];
-
 export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
   selectedDate,
   onQuickCreateTask,
 }) => {
+  const { t } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [selectedTag, setSelectedTag] = useState<ChecklistTag>('general');
   const [inputText, setInputText] = useState('');
@@ -69,11 +58,24 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
   const [actionNotice, setActionNotice] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const TAG_CONFIG: Record<ChecklistTag, { label: string; bg: string; color: string; icon: React.ReactNode }> = {
+    general: { label: t('scratchpad.tags.general'), bg: '#F4F0EA', color: '#24201D', icon: <Layers className="w-2.5 h-2.5" /> },
+    urgent: { label: t('scratchpad.tags.urgent'), bg: '#F7E3DC', color: '#9A3412', icon: <Flame className="w-2.5 h-2.5" /> },
+    idea: { label: t('scratchpad.tags.idea'), bg: '#FBECCF', color: '#854D0E', icon: <Lightbulb className="w-2.5 h-2.5" /> },
+    routine: { label: t('scratchpad.tags.routine'), bg: '#DDE8DE', color: '#2D503C', icon: <Repeat className="w-2.5 h-2.5" /> },
+  };
+
+  const slideTabs = [
+    { id: 0, label: t('scratchpad.createTab') },
+    { id: 1, label: t('scratchpad.activeTab') },
+    { id: 2, label: t('scratchpad.completedTab') },
+  ];
+
   const cycleVoiceLang = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     playClickSound();
-    const order: VoiceLanguage[] = ['auto', 'ru-RU', 'en-US', 'ja-JP'];
+    const order: VoiceLanguage[] = ['auto', 'uz-UZ', 'ru-RU', 'en-US', 'ja-JP'];
     const nextIdx = (order.indexOf(voiceLang) + 1) % order.length;
     const nextLang = order[nextIdx];
     setVoiceLang(nextLang);
@@ -166,7 +168,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
         createdAt: Date.now() + idx,
       }));
       setItems((prev) => [...newItems, ...prev]);
-      setActionNotice(`Added ${parsedTasks.length} items!`);
+      setActionNotice(t('scratchpad.addedNotice', { count: parsedTasks.length }));
     } else {
       const newItem: QuickChecklistItem = {
         id: Date.now().toString(),
@@ -177,7 +179,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
         createdAt: Date.now(),
       };
       setItems((prev) => [newItem, ...prev]);
-      setActionNotice('Item saved to Active!');
+      setActionNotice(t('scratchpad.savedNotice'));
     }
 
     setInputText('');
@@ -229,7 +231,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
   const handleClearCompleted = () => {
     playClickSound();
     setItems((prev) => prev.filter((item) => !item.isCompleted));
-    setActionNotice('Completed items cleared');
+    setActionNotice(t('scratchpad.clearedNotice'));
     setTimeout(() => setActionNotice(null), 1800);
   };
 
@@ -253,7 +255,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
 
     handleDeleteItem(item.id);
     confetti({ particleCount: 30, spread: 45, origin: { y: 0.7 } });
-    setActionNotice('Converted to Today Task!');
+    setActionNotice(t('scratchpad.convertedNotice'));
     setTimeout(() => setActionNotice(null), 2000);
   };
 
@@ -275,14 +277,14 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
     }
     setItems((prev) => prev.filter((i) => i.isCompleted));
     confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
-    setActionNotice(`Imported ${activeItems.length} tasks!`);
+    setActionNotice(t('scratchpad.importedNotice', { count: activeItems.length }));
     setTimeout(() => setActionNotice(null), 2000);
   };
 
   // Voice Dictation
   const handleToggleVoice = () => {
     if (!isSpeechRecognitionSupported()) {
-      alert('Voice dictation is supported in Chrome/Edge/Android.');
+      alert(t('scratchpad.voiceUnsupported'));
       return;
     }
 
@@ -316,14 +318,14 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
           </div>
           <div>
             <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-              Quick Scratchpad
+              {t('scratchpad.title')}
             </h3>
           </div>
         </div>
 
         {/* 3 Top Category Pills (Create, Active, Completed) */}
         <div className="flex items-center gap-1 p-0.5 bg-[#F4F0EA] border border-[#24201D]/30 rounded-xl">
-          {SLIDE_TABS.map((tab) => {
+          {slideTabs.map((tab) => {
             const isActive = currentSlide === tab.id;
             const count = tab.id === 1 ? activeItems.length : tab.id === 2 ? completedCount : null;
             return (
@@ -378,7 +380,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                     type="text"
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
-                    placeholder="Type idea, task, or quick memo..."
+                    placeholder={t('scratchpad.inputPlaceholder')}
                     className="w-full pl-3 pr-9 py-2.5 bg-[#F4F0EA] border border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-[#A89F91] outline-none shadow-2xs"
                   />
                   
@@ -386,7 +388,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                   <button
                     type="button"
                     onClick={handleToggleVoice}
-                    title={isVoiceRecording ? 'Stop recording' : 'Voice input'}
+                    title={isVoiceRecording ? t('scratchpad.stopRecording') : t('scratchpad.voiceInput')}
                     className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-lg border text-stone-700 active:scale-90 transition-all cursor-pointer ${
                       isVoiceRecording
                         ? 'bg-rose-500 text-white border-rose-600 animate-pulse'
@@ -403,14 +405,14 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                   className="px-4 py-2.5 bg-[#3D6B52] hover:bg-[#345B45] text-white disabled:opacity-40 border border-[#24201D] rounded-xl text-xs font-black flex items-center gap-1 shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer shrink-0"
                 >
                   <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                  <span>Add</span>
+                  <span>{t('common.add')}</span>
                 </button>
               </div>
 
               {/* Tag Selector */}
               <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 scrollbar-none select-none">
                 <span className="text-[10px] font-bold text-[#6B635B] pr-1 shrink-0">
-                  Tag:
+                  {t('scratchpad.tagLabel')}
                 </span>
                 {(Object.keys(TAG_CONFIG) as ChecklistTag[]).map((tagKey) => {
                   const cfg = TAG_CONFIG[tagKey];
@@ -443,7 +445,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
           <div className="w-full shrink-0 px-0.5 space-y-2">
             {activeItems.length === 0 ? (
               <div className="py-8 text-center border border-dashed border-[#24201D]/20 rounded-xl bg-[#F4F0EA]">
-                <p className="text-xs font-bold text-[#24201D]">All clear! No active items.</p>
+                <p className="text-xs font-bold text-[#24201D]">{t('scratchpad.allClear')}</p>
               </div>
             ) : (
               <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
@@ -497,11 +499,11 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                           <button
                             type="button"
                             onClick={(e) => handlePromoteToTask(item, e)}
-                            title="Convert to Today Task"
+                            title={t('scratchpad.convertToTask')}
                             className="px-2 py-0.5 bg-[#F0BB58] hover:bg-[#E09F3E] border border-[#24201D] rounded-lg text-[9px] font-black text-[#24201D] flex items-center gap-0.5 shadow-2xs active:scale-95 cursor-pointer"
                           >
                             <Send className="w-2.5 h-2.5" />
-                            <span>Task</span>
+                            <span>{t('scratchpad.taskBadge')}</span>
                           </button>
                         )}
 
@@ -528,7 +530,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                   className="px-3 py-1.5 bg-[#DDE8DE] hover:bg-[#CADBCF] border border-[#24201D] rounded-xl text-[10px] font-black text-[#2D503C] flex items-center gap-1 shadow-2xs active:translate-y-0.5 cursor-pointer"
                 >
                   <Send className="w-3 h-3" />
-                  <span>Import All to Today Tasks</span>
+                  <span>{t('scratchpad.importAllToToday')}</span>
                 </button>
               </div>
             )}
@@ -538,8 +540,8 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
           <div className="w-full shrink-0 pl-1 space-y-2">
             {completedItems.length === 0 ? (
               <div className="py-8 text-center border border-dashed border-[#24201D]/20 rounded-xl bg-[#F4F0EA] space-y-1">
-                <p className="text-xs font-bold text-[#6B635B]">No completed items yet.</p>
-                <p className="text-[10px] text-stone-400">Check off items in the Active tab to see them here.</p>
+                <p className="text-xs font-bold text-[#6B635B]">{t('scratchpad.noCompletedYet')}</p>
+                <p className="text-[10px] text-stone-400">{t('scratchpad.checkOffHint')}</p>
               </div>
             ) : (
               <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
@@ -575,7 +577,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
             {completedItems.length > 0 && (
               <div className="pt-1 flex justify-between items-center">
                 <span className="text-[10px] font-bold text-[#6B635B]">
-                  {completedCount} items completed
+                  {t('scratchpad.completedCount', { count: completedCount })}
                 </span>
                 <button
                   type="button"
@@ -583,7 +585,7 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
                   className="px-2.5 py-1 text-[10px] font-bold text-stone-500 hover:text-rose-600 flex items-center gap-1 cursor-pointer"
                 >
                   <RotateCcw className="w-2.5 h-2.5" />
-                  <span>Clear completed</span>
+                  <span>{t('scratchpad.clearCompleted')}</span>
                 </button>
               </div>
             )}
@@ -594,14 +596,14 @@ export const QuickScratchpadCard: React.FC<QuickChecklistCardProps> = ({
 
       {/* Bottom 3 Dots Pagination */}
       <div className="pt-2 border-t border-[#24201D]/15 flex items-center justify-center gap-2">
-        {SLIDE_TABS.map((tab) => {
+        {slideTabs.map((tab) => {
           const isSelected = currentSlide === tab.id;
           return (
             <button
               key={tab.id}
               type="button"
               onClick={() => goToSlide(tab.id)}
-              title={`Go to ${tab.label}`}
+              title={tab.label}
               className={`transition-all duration-300 rounded-full cursor-pointer ${
                 isSelected
                   ? 'w-6 h-2 bg-[#3D6B52] shadow-2xs'

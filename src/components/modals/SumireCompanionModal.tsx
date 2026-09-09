@@ -31,6 +31,7 @@ import {
   VoiceLanguage,
 } from '../../lib/speechRecognition';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
+import { useTranslation } from '../../i18n/LanguageContext';
 import confetti from 'canvas-confetti';
 
 interface SumireCompanionModalProps {
@@ -38,21 +39,6 @@ interface SumireCompanionModalProps {
   onClose: () => void;
   onDataChanged?: () => void;
 }
-
-const getMealCategoryLabel = (mealType?: string): string => {
-  switch (mealType) {
-    case 'breakfast':
-      return 'Завтрак';
-    case 'lunch':
-      return 'Обед';
-    case 'dinner':
-      return 'Ужин';
-    case 'snack':
-      return 'Перекус';
-    default:
-      return 'Рацион';
-  }
-};
 
 const FormattedMessageText: React.FC<{ content: string }> = ({ content }) => {
   const lines = content.split('\n');
@@ -108,11 +94,35 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
   onClose,
   onDataChanged,
 }) => {
+  const { t, language } = useTranslation();
+
+  const getMealCategoryLabel = (mealType?: string): string => {
+    switch (mealType) {
+      case 'breakfast':
+        return language === 'uz' ? 'Nonushta' : language === 'ru' ? 'Завтрак' : 'Breakfast';
+      case 'lunch':
+        return language === 'uz' ? 'Tushlik' : language === 'ru' ? 'Обед' : 'Lunch';
+      case 'dinner':
+        return language === 'uz' ? 'Kechki ovqat' : language === 'ru' ? 'Ужин' : 'Dinner';
+      case 'snack':
+        return language === 'uz' ? 'Tamaddi' : language === 'ru' ? 'Перекус' : 'Snack';
+      default:
+        return language === 'uz' ? 'Taom' : language === 'ru' ? 'Рацион' : 'Meal';
+    }
+  };
+
+  const defaultWelcome = 
+    language === 'uz'
+      ? "Salom! Men Sumireman — vazifalarni taqsimlash, taom fotosuratlarini tahlil qilish yoki ovqatlanish kundaligingiz va trekerlaringizga yozuv kiritishda yordam beraman."
+      : language === 'ru'
+      ? "Привет! Я Сумирэ — помогу распределить задачи, проанализировать еду по фото или внести любые записи в твой дневник питания и трекеры."
+      : "Hi! I'm Sumire — I'll help you organize tasks, analyze meals from photos, or log entries into your nutrition and wellness trackers.";
+
   const [messages, setMessages] = useState<AIChatMessage[]>([
     {
       id: 'welcome',
       role: 'assistant',
-      content: "Привет! Я Сумирэ — помогу распределить задачи, проанализировать еду по фото или внести любые записи в твой дневник питания и трекеры.",
+      content: defaultWelcome,
       timestamp: Date.now(),
     },
   ]);
@@ -125,7 +135,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
     e.preventDefault();
     e.stopPropagation();
     playClickSound();
-    const order: VoiceLanguage[] = ['auto', 'ru-RU', 'en-US', 'ja-JP'];
+    const order: VoiceLanguage[] = ['auto', 'uz-UZ', 'ru-RU', 'en-US', 'ja-JP'];
     const nextIdx = (order.indexOf(voiceLang) + 1) % order.length;
     const nextLang = order[nextIdx];
     setVoiceLang(nextLang);
@@ -146,11 +156,17 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
 
   const handleClearHistory = () => {
     playClickSound();
+    const resetText =
+      language === 'uz'
+        ? "Tarix tozalandi. Sizga qanday yordam bera olaman?"
+        : language === 'ru'
+        ? "История очищена. Чем могу помочь?"
+        : "History cleared. How can I help you?";
     setMessages([
       {
         id: 'welcome_reset',
         role: 'assistant',
-        content: "История очищена. Чем могу помочь?",
+        content: resetText,
         timestamp: Date.now(),
       },
     ]);
@@ -187,7 +203,16 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
       prev.map((m) => {
         if (m.id === msgId) {
           const catLabel = getMealCategoryLabel(meal.mealType);
-          const actionDesc = `Внесено в ${catLabel}: ${meal.name} (${meal.kcal} ккал, Б:${meal.proteinGrams}г, Ж:${meal.fatGrams}г, У:${meal.carbsGrams}г)`;
+          const kcalUnit = language === 'uz' ? 'kkal' : language === 'ru' ? 'ккал' : 'kcal';
+          const pLabel = language === 'uz' ? 'O' : language === 'ru' ? 'Б' : 'P';
+          const fLabel = language === 'uz' ? 'Y' : language === 'ru' ? 'Ж' : 'F';
+          const cLabel = language === 'uz' ? 'U' : language === 'ru' ? 'У' : 'C';
+          const actionDesc =
+            language === 'uz'
+              ? `${catLabel}ga kiritildi: ${meal.name} (${meal.kcal} ${kcalUnit}, ${pLabel}:${meal.proteinGrams}g, ${fLabel}:${meal.fatGrams}g, ${cLabel}:${meal.carbsGrams}g)`
+              : language === 'ru'
+              ? `Внесено в ${catLabel}: ${meal.name} (${meal.kcal} ${kcalUnit}, ${pLabel}:${meal.proteinGrams}г, ${fLabel}:${meal.fatGrams}г, ${cLabel}:${meal.carbsGrams}г)`
+              : `Logged to ${catLabel}: ${meal.name} (${meal.kcal} ${kcalUnit}, ${pLabel}:${meal.proteinGrams}g, ${fLabel}:${meal.fatGrams}g, ${cLabel}:${meal.carbsGrams}g)`;
           const existingActions = m.executedActions || [];
           return {
             ...m,
@@ -217,7 +242,13 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
     const userMsg: AIChatMessage = {
       id: `user_${Date.now()}`,
       role: 'user',
-      content: text || 'Оцени это фото/блюдо:',
+      content:
+        text ||
+        (language === 'uz'
+          ? 'Ushbu foto/taomni baholang:'
+          : language === 'ru'
+          ? 'Оцени это фото/блюдо:'
+          : 'Analyze this meal/photo:'),
       imagePreview: currentAttachment?.previewUrl,
       timestamp: Date.now(),
     };
@@ -263,7 +294,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
         {
           id: `err_${Date.now()}`,
           role: 'assistant',
-          content: `${err.message || 'Не удалось связаться с сервисом.'}`,
+          content: `${err.message || (language === 'uz' ? 'Xizmat bilan bogʻlanib boʻlmadi.' : language === 'ru' ? 'Не удалось связаться с сервисом.' : 'Failed to reach AI service.')}`,
           timestamp: Date.now(),
         },
       ]);
@@ -274,7 +305,13 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
 
   const handleToggleVoice = () => {
     if (!isSpeechRecognitionSupported()) {
-      alert('Голосовой ввод не поддерживается данным браузером или устройством.');
+      alert(
+        language === 'uz'
+          ? 'Ovozli kiritish ushbu brauzer yoki qurilmada qoʻllab-quvvatlanmaydi.'
+          : language === 'ru'
+          ? 'Голосовой ввод не поддерживается данным браузером или устройством.'
+          : 'Speech recognition is not supported by this browser or device.'
+      );
       return;
     }
 
@@ -336,7 +373,11 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
                 Sumire Companion
               </h3>
               <p className="text-[10px] font-bold text-[#6B635B]">
-                Scout-Archivist • Управление планами и здоровьем
+                {language === 'uz'
+                  ? 'Scout-Archivist • Rejalar va salomatlik boshqaruvi'
+                  : language === 'ru'
+                  ? 'Scout-Archivist • Управление планами и здоровьем'
+                  : 'Scout-Archivist • Tasks & Wellness Guide'}
               </p>
             </div>
           </div>
@@ -344,7 +385,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
           <div className="flex items-center gap-1.5">
             <button
               onClick={handleClearHistory}
-              title="Очистить чат"
+              title={language === 'uz' ? 'Chatni tozalash' : language === 'ru' ? 'Очистить чат' : 'Clear chat'}
               className="w-8 h-8 rounded-xl bg-[#FAF8F5] hover:bg-rose-50 border border-[#24201D] flex items-center justify-center text-stone-600 hover:text-rose-700 shadow-2xs active:scale-95 transition-all cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -401,7 +442,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
                             {getMealCategoryLabel(msg.suggestedMeal.mealType)}
                           </span>
                           <span className="text-[10px] font-bold text-[#6B635B]">
-                            Оценка блюда
+                            {language === 'uz' ? 'Taom tahlili' : language === 'ru' ? 'Оценка блюда' : 'Meal Analysis'}
                           </span>
                         </div>
                         <h4 className="text-xs font-black text-[#24201D] leading-snug break-words">
@@ -414,24 +455,24 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
                           {msg.suggestedMeal.kcal}
                         </span>
                         <span className="text-[8px] font-black uppercase text-stone-500 font-display block mt-0.5">
-                          ккал
+                          {language === 'uz' ? 'kkal' : language === 'ru' ? 'ккал' : 'kcal'}
                         </span>
                       </div>
                     </div>
 
-                    {/* Macronutrient Pills Grid (3 equal cards, no overlap) */}
+                    {/* Macronutrient Pills Grid */}
                     <div className="grid grid-cols-3 gap-1.5 text-center">
                       <div className="p-1.5 rounded-xl bg-emerald-50 border border-emerald-300/60 shadow-2xs">
-                        <span className="text-[9px] font-bold text-emerald-700 block uppercase font-display">Белки</span>
-                        <span className="text-xs font-black font-mono-num text-emerald-900 block leading-tight">{msg.suggestedMeal.proteinGrams}г</span>
+                        <span className="text-[9px] font-bold text-emerald-700 block uppercase font-display">{t.health.protein}</span>
+                        <span className="text-xs font-black font-mono-num text-emerald-900 block leading-tight">{msg.suggestedMeal.proteinGrams}g</span>
                       </div>
                       <div className="p-1.5 rounded-xl bg-amber-50 border border-amber-300/60 shadow-2xs">
-                        <span className="text-[9px] font-bold text-amber-700 block uppercase font-display">Жиры</span>
-                        <span className="text-xs font-black font-mono-num text-amber-900 block leading-tight">{msg.suggestedMeal.fatGrams}г</span>
+                        <span className="text-[9px] font-bold text-amber-700 block uppercase font-display">{t.health.fat}</span>
+                        <span className="text-xs font-black font-mono-num text-amber-900 block leading-tight">{msg.suggestedMeal.fatGrams}g</span>
                       </div>
                       <div className="p-1.5 rounded-xl bg-sky-50 border border-sky-300/60 shadow-2xs">
-                        <span className="text-[9px] font-bold text-sky-700 block uppercase font-display">Углеводы</span>
-                        <span className="text-xs font-black font-mono-num text-sky-900 block leading-tight">{msg.suggestedMeal.carbsGrams}г</span>
+                        <span className="text-[9px] font-bold text-sky-700 block uppercase font-display">{t.health.carbs}</span>
+                        <span className="text-xs font-black font-mono-num text-sky-900 block leading-tight">{msg.suggestedMeal.carbsGrams}g</span>
                       </div>
                     </div>
 
@@ -442,7 +483,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
                       className="w-full py-2.5 px-3 rounded-xl bg-[#24201D] hover:bg-stone-800 active:translate-y-0.5 text-white text-xs font-black tracking-wide flex items-center justify-center gap-1.5 shadow-[1.5px_1.5px_0px_#24201D] cursor-pointer transition-all"
                     >
                       <Plus className="w-4 h-4 stroke-[3]" />
-                      <span>Записать в дневник питания</span>
+                      <span>{language === 'uz' ? 'Ovqatlanish kundaligiga yozish' : language === 'ru' ? 'Записать в дневник питания' : 'Log to Nutrition Diary'}</span>
                     </button>
                   </div>
                 )}
@@ -461,7 +502,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5 mb-1">
                                   <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 border border-emerald-300 text-emerald-900 font-display tracking-wider">
-                                    ✓ Внесено в {getMealCategoryLabel(action.details.mealType)}
+                                    ✓ {language === 'uz' ? `${getMealCategoryLabel(action.details.mealType)}ga kiritildi` : language === 'ru' ? `Внесено в ${getMealCategoryLabel(action.details.mealType)}` : `Logged to ${getMealCategoryLabel(action.details.mealType)}`}
                                   </span>
                                   {action.details.time && (
                                     <span className="text-[9px] font-bold text-stone-400 font-mono-num">
@@ -477,22 +518,24 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
                                 <span className="text-xs font-black font-mono-num text-[#C25E40] block leading-none">
                                   +{action.details.kcal}
                                 </span>
-                                <span className="text-[8px] font-bold text-stone-400 font-display block mt-0.5">ккал</span>
+                                <span className="text-[8px] font-bold text-stone-400 font-display block mt-0.5">
+                                  {language === 'uz' ? 'kkal' : language === 'ru' ? 'ккал' : 'kcal'}
+                                </span>
                               </div>
                             </div>
 
                             <div className="grid grid-cols-3 gap-1.5 text-center">
                               <div className="py-1 px-1.5 rounded-lg bg-[#FAF8F5] border border-stone-200">
-                                <span className="text-[8px] font-bold text-stone-500 block uppercase">Белки</span>
-                                <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.proteinGrams}г</span>
+                                <span className="text-[8px] font-bold text-stone-500 block uppercase">{t.health.protein}</span>
+                                <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.proteinGrams}g</span>
                               </div>
                               <div className="py-1 px-1.5 rounded-lg bg-[#FAF8F5] border border-stone-200">
-                                <span className="text-[8px] font-bold text-stone-500 block uppercase">Жиры</span>
-                                <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.fatGrams}г</span>
+                                <span className="text-[8px] font-bold text-stone-500 block uppercase">{t.health.fat}</span>
+                                <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.fatGrams}g</span>
                               </div>
                               <div className="py-1 px-1.5 rounded-lg bg-[#FAF8F5] border border-stone-200">
-                                <span className="text-[8px] font-bold text-stone-500 block uppercase">Углеводы</span>
-                                <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.carbsGrams}г</span>
+                                <span className="text-[8px] font-bold text-stone-500 block uppercase">{t.health.carbs}</span>
+                                <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.carbsGrams}g</span>
                               </div>
                             </div>
                           </div>
@@ -568,7 +611,9 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
               <div className="w-2 h-2 rounded-full bg-[#3D6B52] animate-bounce" />
               <div className="w-2 h-2 rounded-full bg-[#3D6B52] animate-bounce" style={{ animationDelay: '0.2s' }} />
               <div className="w-2 h-2 rounded-full bg-[#3D6B52] animate-bounce" style={{ animationDelay: '0.4s' }} />
-              <span className="text-[10px] font-bold text-stone-400 ml-1">Думаю...</span>
+              <span className="text-[10px] font-bold text-stone-400 ml-1">
+                {language === 'uz' ? 'Oʻylamoqda...' : language === 'ru' ? 'Думаю...' : 'Thinking...'}
+              </span>
             </div>
           )}
 
@@ -582,7 +627,9 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
               <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#24201D] shrink-0">
                 <img src={attachedImage.previewUrl} alt="Preview" className="w-full h-full object-cover" />
               </div>
-              <span className="text-[11px] font-bold text-[#24201D] truncate">Фото прикреплено для анализа</span>
+              <span className="text-[11px] font-bold text-[#24201D] truncate">
+                {language === 'uz' ? 'Tahlil qilish uchun surat biriktirildi' : language === 'ru' ? 'Фото прикреплено для анализа' : 'Photo attached for analysis'}
+              </span>
             </div>
             <button
               type="button"
@@ -605,7 +652,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
           >
             {/* Image Attachment Button */}
             <label
-              title="Прикрепить фото еды или заметки"
+              title={language === 'uz' ? 'Taom yoki qayd suratini biriktirish' : language === 'ru' ? 'Прикрепить фото еды или заметки' : 'Attach meal photo or note'}
               className="w-10 h-10 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border-[1.5px] border-[#24201D] flex items-center justify-center text-stone-700 shrink-0 shadow-2xs cursor-pointer active:translate-y-0.5 transition-all"
             >
               <input
@@ -623,7 +670,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
               <button
                 type="button"
                 onClick={handleToggleVoice}
-                title={isRecording ? 'Остановить запись' : 'Голосовой ввод'}
+                title={isRecording ? (language === 'uz' ? 'Yozishni toʻxtatish' : language === 'ru' ? 'Остановить запись' : 'Stop recording') : (language === 'uz' ? 'Ovozli kiritish' : language === 'ru' ? 'Голосовой ввод' : 'Voice input')}
                 className={`w-10 h-10 rounded-xl border-[1.5px] border-[#24201D] flex items-center justify-center shrink-0 transition-all cursor-pointer ${
                   isRecording
                     ? 'bg-rose-500 text-white animate-pulse shadow-2xs'
@@ -636,7 +683,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
               <button
                 type="button"
                 onClick={cycleVoiceLang}
-                title={`Язык распознавания речи: ${voiceLang.toUpperCase()}. Нажмите для переключения.`}
+                title={language === 'uz' ? `Ovozni aniqlash tili: ${voiceLang.toUpperCase()}. Oʻzgartirish uchun bosing.` : language === 'ru' ? `Язык распознавания речи: ${voiceLang.toUpperCase()}. Нажмите для переключения.` : `Speech recognition language: ${voiceLang.toUpperCase()}. Click to switch.`}
                 className="absolute -top-2 -right-1 px-1 py-0.2 rounded bg-white hover:bg-stone-100 border border-[#24201D] text-[8px] font-black font-mono-num text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
               >
                 {getVoiceLanguageBadge(voiceLang)}
@@ -647,7 +694,7 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder={isRecording ? 'Слушаю...' : 'Спросить или дать команду...'}
+              placeholder={isRecording ? (language === 'uz' ? 'Tinglamoqda...' : language === 'ru' ? 'Слушаю...' : 'Listening...') : (language === 'uz' ? 'Savol bering yoki buyruq bering...' : language === 'ru' ? 'Спросить или дать команду...' : 'Ask or give a command...')}
               className="flex-1 px-3 py-2 bg-[#FAF8F5] text-xs font-bold text-[#24201D] rounded-xl border-[1.5px] border-[#24201D] outline-none placeholder:text-stone-400 shadow-2xs"
             />
 

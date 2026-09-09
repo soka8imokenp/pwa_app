@@ -20,6 +20,7 @@ import {
 import type { Task } from '../../types';
 import { playTaskCheckSound, playClickSound, playSuccessChime } from '../../lib/sound';
 import confetti from 'canvas-confetti';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface BacklogPageProps {
   backlogTasks: Task[];
@@ -30,15 +31,6 @@ interface BacklogPageProps {
   onQuickAddTask: (title: string, category?: string, minutes?: number) => void;
 }
 
-const CATEGORIES = [
-  { id: 'all', label: 'All', icon: <Layers className="w-3 h-3" /> },
-  { id: 'code', label: 'Code', icon: <Code className="w-3 h-3 text-[#2D503C]" />, color: '#DDE8DE' },
-  { id: 'design', label: 'Design', icon: <Palette className="w-3 h-3 text-[#C25E40]" />, color: '#F7E3DC' },
-  { id: 'learn', label: 'Learn', icon: <BookOpen className="w-3 h-3 text-[#854D0E]" />, color: '#FBECCF' },
-  { id: 'health', label: 'Health', icon: <Activity className="w-3 h-3 text-[#2D503C]" />, color: '#DDE8DE' },
-  { id: 'general', label: 'General', icon: <Layers className="w-3 h-3 text-[#6B635B]" />, color: '#FAF8F5' },
-];
-
 export const BacklogPage: React.FC<BacklogPageProps> = ({
   backlogTasks,
   canPromoteToPriority,
@@ -47,6 +39,17 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
   onDeleteTask,
   onQuickAddTask,
 }) => {
+  const { t } = useTranslation();
+
+  const CATEGORIES = [
+    { id: 'all', label: t('priorities.categories.all'), icon: <Layers className="w-3 h-3" /> },
+    { id: 'code', label: t('priorities.categories.code'), icon: <Code className="w-3 h-3 text-[#2D503C]" />, color: '#DDE8DE' },
+    { id: 'design', label: t('priorities.categories.design'), icon: <Palette className="w-3 h-3 text-[#C25E40]" />, color: '#F7E3DC' },
+    { id: 'learn', label: t('priorities.categories.learn'), icon: <BookOpen className="w-3 h-3 text-[#854D0E]" />, color: '#FBECCF' },
+    { id: 'health', label: t('priorities.categories.health'), icon: <Activity className="w-3 h-3 text-[#2D503C]" />, color: '#DDE8DE' },
+    { id: 'general', label: t('priorities.categories.general'), icon: <Layers className="w-3 h-3 text-[#6B635B]" />, color: '#FAF8F5' },
+  ];
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'done'>('active');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -121,10 +124,10 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
             </div>
             <div>
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                Task Backlog
+                {t('backlog.title')}
               </h3>
               <p className="text-[10px] font-bold text-[#6B635B]">
-                {activeCount} pending • {doneCount} completed
+                {t('backlog.pendingCompletedSummary', { active: activeCount, done: doneCount })}
               </p>
             </div>
           </div>
@@ -132,7 +135,7 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
           <div className="flex items-center gap-1.5">
             {canPromoteToPriority && (
               <span className="hidden sm:inline-flex text-[9px] font-black uppercase text-[#2D503C] bg-[#DDE8DE] border border-[#24201D] px-2 py-0.5 rounded-full shadow-2xs">
-                Slots Available
+                {t('backlog.slotsAvailable')}
               </span>
             )}
 
@@ -145,7 +148,7 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
               className="px-3 py-1 bg-[#24201D] text-[#FAF8F5] rounded-xl text-[10px] font-black shadow-2xs active:scale-95 transition-all cursor-pointer flex items-center gap-1"
             >
               <Plus className="w-3 h-3 stroke-[3]" />
-              <span>Add</span>
+              <span>{t('common.add')}</span>
             </button>
           </div>
         </div>
@@ -158,14 +161,14 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
           >
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase text-[#6B635B]">
-                New Backlog Task
+                {t('backlog.newBacklogTask')}
               </span>
               <button
                 type="button"
                 onClick={() => setIsAdding(false)}
                 className="text-[10px] font-bold text-stone-400 hover:text-[#24201D] cursor-pointer"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
 
@@ -176,7 +179,7 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
                 required
                 value={quickTitle}
                 onChange={(e) => setQuickTitle(e.target.value)}
-                placeholder="What needs to get done later?"
+                placeholder={t('backlog.whatNeedsDoneLater')}
                 className="flex-1 px-3 py-2 bg-white border border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-stone-400 outline-none shadow-2xs"
               />
               <button
@@ -184,7 +187,7 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
                 disabled={!quickTitle.trim()}
                 className="px-3.5 py-2 bg-[#3D6B52] hover:bg-[#345B45] text-white disabled:opacity-40 border border-[#24201D] rounded-xl text-xs font-black shadow-2xs active:scale-95 cursor-pointer"
               >
-                Save
+                {t('common.save')}
               </button>
             </div>
           </form>
@@ -198,7 +201,7 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search tasks..."
+              placeholder={t('backlog.searchPlaceholder')}
               className="w-full pl-8 pr-8 py-1.5 bg-[#FAF8F5] focus:bg-white border border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-stone-400 outline-none transition-all"
             />
             {searchQuery && (
@@ -224,6 +227,8 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
                     ? doneCount
                     : backlogTasks.length;
 
+                const label = s === 'active' ? t('common.active') : s === 'done' ? t('common.done') : t('common.all');
+
                 return (
                   <button
                     key={s}
@@ -238,7 +243,7 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
                         : 'bg-[#F4F0EA] text-[#6B635B] hover:text-[#24201D] border border-[#24201D]/15'
                     }`}
                   >
-                    {s} ({count})
+                    {label} ({count})
                   </button>
                 );
               })}
@@ -278,10 +283,10 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
           <div className="p-8 text-center bg-white border-[1.75px] border-dashed border-[#18181B]/30 rounded-2xl space-y-2">
             <Archive className="w-6 h-6 text-slate-300 mx-auto" />
             <h4 className="text-xs font-black font-display uppercase tracking-wider text-slate-400">
-              {searchQuery ? 'No matching tasks found' : 'Backlog is empty'}
+              {searchQuery ? t('backlog.noMatchingTasks') : t('backlog.emptyTitle')}
             </h4>
             <p className="text-[10px] text-slate-400 font-bold">
-              {searchQuery ? 'Try clearing search filters' : 'Add low-priority tasks here to keep your today clear!'}
+              {searchQuery ? t('backlog.clearSearchFilters') : t('backlog.emptyDesc')}
             </p>
           </div>
         ) : (
@@ -331,14 +336,17 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
                         style={{ backgroundColor: catConfig.color || '#FAF8F5' }}
                       >
                         {catConfig.icon}
-                        <span className="capitalize">{task.category || 'general'}</span>
+                        <span className="capitalize">{catConfig.label}</span>
                       </span>
 
                       {task.subtasks && task.subtasks.length > 0 && (
                         <>
                           <span className="text-stone-300">•</span>
                           <span>
-                            {task.subtasks.filter((s) => s.isCompleted).length}/{task.subtasks.length} steps
+                            {t('backlog.stepsCount', {
+                              done: task.subtasks.filter((s) => s.isCompleted).length,
+                              total: task.subtasks.length,
+                            })}
                           </span>
                         </>
                       )}
@@ -355,11 +363,11 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
                     <button
                       type="button"
                       onClick={() => handlePromote(task)}
-                      title="Promote to Today Top 3"
+                      title={t('backlog.moveToPriority')}
                       className="px-2.5 py-1 bg-[#F0BB58] hover:bg-[#E5A943] text-[#24201D] border border-[#24201D] rounded-lg text-[9px] font-black flex items-center gap-0.5 cursor-pointer shadow-2xs active:scale-95 transition-all"
                     >
                       <ArrowUp className="w-3 h-3 stroke-[2.5]" />
-                      <span>Top 3</span>
+                      <span>{t('priorities.promoteToToday')}</span>
                     </button>
                   )}
 
@@ -370,7 +378,7 @@ export const BacklogPage: React.FC<BacklogPageProps> = ({
                         playClickSound();
                         onDeleteTask(task.id!);
                       }}
-                      title="Delete task"
+                      title={t('common.delete')}
                       className="w-6 h-6 rounded-lg bg-[#FAF8F5] hover:bg-rose-50 border border-[#24201D]/20 hover:border-rose-400 flex items-center justify-center text-stone-400 hover:text-rose-600 cursor-pointer shadow-2xs active:scale-95 transition-colors"
                     >
                       <Trash2 className="w-3 h-3" />

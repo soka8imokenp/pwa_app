@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TrendingUp, Flame, Target, Clock } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 export interface DayActivity {
   dayShort: string;
@@ -24,6 +25,7 @@ export const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({
   onSelectDate,
   totalFocusTime,
 }) => {
+  const { t } = useTranslation();
   const [activeTooltipDay, setActiveTooltipDay] = useState<DayActivity | null>(null);
 
   const avgCompletion = Math.round(
@@ -41,10 +43,10 @@ export const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({
           </div>
           <div>
             <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#18181B]">
-              Weekly Momentum
+              {t('stats.weeklyMomentum')}
             </h3>
             <p className="text-[10px] font-semibold text-slate-500">
-              {avgCompletion}% average daily score
+              {t('stats.avgDailyScore', { percent: avgCompletion })}
             </p>
           </div>
         </div>
@@ -52,7 +54,7 @@ export const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({
         {/* Weekly Focus Badge */}
         <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#FEF08A] border border-[#18181B] rounded-full text-[10px] font-black text-[#18181B] shadow-2xs">
           <Flame className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
-          <span>{totalFocusTime}m focus</span>
+          <span>{t('stats.totalFocusMinutes', { minutes: totalFocusTime })}</span>
         </div>
       </div>
 
@@ -62,13 +64,13 @@ export const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#C084FC] animate-ping" />
             <span className="font-black font-display text-[#18181B]">
-              {activeTooltipDay.dayShort}, Day {activeTooltipDay.dayNumber}
+              {activeTooltipDay.dayShort}, {activeTooltipDay.dayNumber}
             </span>
           </div>
           <div className="flex items-center gap-3 text-[11px] font-bold font-mono-num text-purple-900">
             <span className="flex items-center gap-1">
               <Target className="w-3 h-3 text-purple-700 stroke-[2.25]" />
-              {activeTooltipDay.completionRate}% Done
+              {t('stats.doneRatio', { percent: activeTooltipDay.completionRate })}
             </span>
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3 text-purple-700 stroke-[2.25]" />

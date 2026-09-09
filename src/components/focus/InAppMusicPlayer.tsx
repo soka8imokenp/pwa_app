@@ -15,8 +15,10 @@ import {
 import { playClickSound } from '../../lib/sound';
 import { musicPlayer, MusicPlayerState, extractYouTubeId } from '../../lib/musicPlayerService';
 import { RadioStation } from '../../types/radio';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 export const InAppMusicPlayer: React.FC = () => {
+  const { t } = useTranslation();
   const [playerState, setPlayerState] = useState<MusicPlayerState>(() => musicPlayer.getState());
   const [isStationsOpen, setIsStationsOpen] = useState(false);
   const [customUrl, setCustomUrl] = useState('');
@@ -75,13 +77,13 @@ export const InAppMusicPlayer: React.FC = () => {
     setCustomError(null);
 
     if (!customUrl.trim()) {
-      setCustomError('Please enter a YouTube URL or Video ID');
+      setCustomError(t('focus.enterYouTubePrompt'));
       return;
     }
 
     const videoId = extractYouTubeId(customUrl);
     if (!videoId) {
-      setCustomError('Invalid YouTube URL or Video ID');
+      setCustomError(t('focus.invalidYouTubeUrl'));
       return;
     }
 
@@ -90,7 +92,7 @@ export const InAppMusicPlayer: React.FC = () => {
       setCustomUrl('');
       setCustomName('');
     } else {
-      setCustomError('Could not add this station');
+      setCustomError(t('focus.couldNotAddStation'));
     }
   };
 
@@ -112,10 +114,10 @@ export const InAppMusicPlayer: React.FC = () => {
           </div>
           <div>
             <h3 className="text-xs font-bold font-display text-[#24201D] leading-tight">
-              Lofi Radio
+              {t('focus.lofiRadio')}
             </h3>
             <p className="text-[10px] text-[#6B635B] font-medium leading-none mt-0.5">
-              24/7 Deep Work Audio
+              {t('focus.lofiSubtitle')}
             </p>
           </div>
         </div>
@@ -133,7 +135,7 @@ export const InAppMusicPlayer: React.FC = () => {
           }`}
         >
           <ListMusic className="w-3.5 h-3.5" />
-          <span>Stations</span>
+          <span>{t('focus.stations')}</span>
         </button>
       </div>
 
@@ -172,7 +174,7 @@ export const InAppMusicPlayer: React.FC = () => {
         <div className="flex items-center gap-2 pt-0.5">
           <button
             onClick={handleToggleMute}
-            title={isMuted ? 'Unmute' : 'Mute'}
+            title={isMuted ? t('focus.unmute') : t('focus.mute')}
             className="w-7 h-7 rounded-lg bg-white hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-[#24201D] cursor-pointer shrink-0 active:translate-y-0.5"
           >
             {isMuted || volume === 0 ? (
@@ -205,7 +207,7 @@ export const InAppMusicPlayer: React.FC = () => {
           <button
             onClick={handlePrevStation}
             className="w-12 h-11 rounded-xl bg-white border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer transition-all hover:bg-stone-50"
-            title="Previous Station"
+            title={t('focus.prevStation')}
           >
             <SkipBack className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -213,7 +215,7 @@ export const InAppMusicPlayer: React.FC = () => {
           {/* Big Play/Pause Toggle Button */}
           <button
             onClick={handleTogglePlay}
-            title={isPlaying ? 'Click to Pause' : 'Click to Play'}
+            title={isPlaying ? t('focus.clickToPause') : t('focus.clickToPlay')}
             className="w-20 h-12 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] border-[2px] border-[#24201D] flex items-center justify-center text-white shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
           >
             {isPlaying ? (
@@ -227,7 +229,7 @@ export const InAppMusicPlayer: React.FC = () => {
           <button
             onClick={handleNextStation}
             className="w-12 h-11 rounded-xl bg-white border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:translate-y-0.5 cursor-pointer transition-all hover:bg-stone-50"
-            title="Next Station"
+            title={t('focus.nextStation')}
           >
             <SkipForward className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -244,7 +246,7 @@ export const InAppMusicPlayer: React.FC = () => {
                 type="text"
                 value={customUrl}
                 onChange={(e) => setCustomUrl(e.target.value)}
-                placeholder="YouTube URL or Video ID..."
+                placeholder={t('focus.stationUrlPlaceholder')}
                 className="flex-1 px-3 py-2 bg-white border border-[#24201D] rounded-xl text-xs font-medium text-[#24201D] outline-none placeholder:text-stone-400"
               />
               <div className="flex items-center gap-2">
@@ -252,7 +254,7 @@ export const InAppMusicPlayer: React.FC = () => {
                   type="text"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  placeholder="Station Name (optional)"
+                  placeholder={t('focus.stationNamePlaceholder')}
                   className="w-32 sm:w-36 px-3 py-2 bg-white border border-[#24201D] rounded-xl text-xs font-medium text-[#24201D] outline-none placeholder:text-stone-400"
                 />
                 <button
@@ -260,7 +262,7 @@ export const InAppMusicPlayer: React.FC = () => {
                   className="px-3.5 py-2 bg-[#3D6B52] hover:bg-[#345B45] text-white border border-[#24201D] rounded-xl text-xs font-bold shadow-2xs active:translate-y-0.5 cursor-pointer shrink-0 transition-all flex items-center gap-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Add</span>
+                  <span>{t('common.add')}</span>
                 </button>
               </div>
             </form>
@@ -303,7 +305,7 @@ export const InAppMusicPlayer: React.FC = () => {
                     {stations.length > 1 && (
                       <button
                         onClick={(e) => handleDeleteStation(e, station.id)}
-                        title="Delete Station"
+                        title={t('common.delete')}
                         className="w-7 h-7 rounded-lg hover:bg-red-50 text-stone-400 hover:text-[#E15A46] flex items-center justify-center cursor-pointer transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -337,7 +339,7 @@ export const InAppMusicPlayer: React.FC = () => {
               className="text-[10px] font-bold text-[#6B635B] hover:text-[#24201D] transition-colors flex items-center gap-1 cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>Reset default stations</span>
+              <span>{t('focus.resetDefaultStations')}</span>
             </button>
           </div>
         </div>

@@ -19,6 +19,7 @@ import { estimateMealNutritionWithAI } from '../../lib/aiHealthService';
 import { MacroProgressCards } from './intake/MacroProgressCards';
 import { WaterTrackerCard } from './intake/WaterTrackerCard';
 import { MealListSection } from './intake/MealListSection';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface HealthIntakePageProps {
   metrics: CalculatedHealthMetrics;
@@ -66,6 +67,7 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
   onLogWater,
   onRemoveLatestWater,
 }) => {
+  const { t } = useTranslation();
   const [mealText, setMealText] = useState('');
   const [mealType, setMealType] = useState<MealType>('lunch');
   const [isVoiceActive, setIsVoiceActive] = useState(false);
@@ -292,10 +294,10 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
             </div>
             <div>
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] leading-none">
-                Meal Logger
+                {t.healthIntake.mealLoggerTitle}
               </h3>
               <span className="text-[10px] font-bold text-[#6B635B]">
-                AI voice dictation or text
+                {t.healthIntake.mealLoggerSubtitle}
               </span>
             </div>
           </div>
@@ -313,7 +315,7 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
                   : 'text-[#6B635B] hover:text-[#24201D]'
               }`}
             >
-              AI Auto
+              {t.healthIntake.aiAuto}
             </button>
             <button
               type="button"
@@ -327,7 +329,7 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
                   : 'text-[#6B635B] hover:text-[#24201D]'
               }`}
             >
-              Manual
+              {t.healthIntake.manual}
             </button>
           </div>
         </div>
@@ -340,7 +342,7 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
                 type="text"
                 value={mealText}
                 onChange={(e) => setMealText(e.target.value)}
-                placeholder='e.g. "Chicken salad with avocado and 2 toasts"'
+                placeholder={t.healthIntake.mealNamePlaceholder}
                 className="w-full px-3 py-2 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-stone-400 focus:outline-none focus:bg-white transition-all pr-8"
               />
               {mealText && (
@@ -371,21 +373,28 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
 
           {/* Meal Type Pill Selector */}
           <div className="grid grid-cols-4 gap-1.5">
-            {(['breakfast', 'lunch', 'dinner', 'snack'] as MealType[]).map((t) => (
+            {(
+              [
+                { type: 'breakfast' as MealType, label: t.healthIntake.breakfast },
+                { type: 'lunch' as MealType, label: t.healthIntake.lunch },
+                { type: 'dinner' as MealType, label: t.healthIntake.dinner },
+                { type: 'snack' as MealType, label: t.healthIntake.snack },
+              ]
+            ).map((item) => (
               <button
-                key={t}
+                key={item.type}
                 type="button"
                 onClick={() => {
                   playClickSound();
-                  setMealType(t);
+                  setMealType(item.type);
                 }}
                 className={`py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-wider font-display transition-all cursor-pointer ${
-                  mealType === t
+                  mealType === item.type
                     ? 'bg-[#24201D] text-white border-[#24201D] shadow-2xs'
                     : 'bg-[#FAF8F5] hover:bg-stone-100 text-[#6B635B] border-[#24201D]/20'
                 }`}
               >
-                {t}
+                {item.label}
               </button>
             ))}
           </div>
@@ -404,7 +413,7 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
                 />
               </div>
               <div>
-                <span className="text-[9px] font-bold text-[#6B635B] uppercase block">Protein</span>
+                <span className="text-[9px] font-bold text-[#6B635B] uppercase block">{t.healthIntake.protein}</span>
                 <input
                   type="number"
                   value={manualProtein}
@@ -414,7 +423,7 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
                 />
               </div>
               <div>
-                <span className="text-[9px] font-bold text-[#6B635B] uppercase block">Carbs</span>
+                <span className="text-[9px] font-bold text-[#6B635B] uppercase block">{t.healthIntake.carbs}</span>
                 <input
                   type="number"
                   value={manualCarbs}
@@ -424,7 +433,7 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
                 />
               </div>
               <div>
-                <span className="text-[9px] font-bold text-[#6B635B] uppercase block">Fat</span>
+                <span className="text-[9px] font-bold text-[#6B635B] uppercase block">{t.healthIntake.fat}</span>
                 <input
                   type="number"
                   value={manualFat}
@@ -441,7 +450,7 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
             disabled={!mealText.trim() || isEstimating}
             className="w-full py-2.5 bg-[#3D6B52] hover:bg-[#345B45] disabled:opacity-50 text-white border border-[#24201D] rounded-xl text-xs font-black shadow-2xs uppercase tracking-wider font-display transition-all cursor-pointer active:translate-y-0.5"
           >
-            {isEstimating ? 'AI Estimating Kcal & Macros...' : '+ Add Meal'}
+            {isEstimating ? t.healthIntake.estimating : `+ ${t.healthIntake.addMealBtn}`}
           </button>
         </form>
 
@@ -449,7 +458,7 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
         <div className="pt-2 border-t border-[#24201D]/15 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display">
-              Quick Meal Presets
+              {t.healthIntake.quickPresets}
             </span>
             <button
               type="button"
@@ -491,14 +500,14 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
           {isEditingPresets && (
             <div className="p-3 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-2 text-xs">
               <span className="text-[10px] font-black uppercase text-[#6B635B] block font-display">
-                Create New Quick Preset
+                {t.healthIntake.newPresetTitle}
               </span>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={newPresetName}
                   onChange={(e) => setNewPresetName(e.target.value)}
-                  placeholder="Preset title (e.g. Oatmeal)"
+                  placeholder={t.healthIntake.mealNamePlaceholder}
                   className="flex-1 px-2.5 py-1.5 bg-white border border-[#24201D]/20 rounded-xl text-xs font-bold"
                 />
                 <input
@@ -511,9 +520,9 @@ export const HealthIntakePage: React.FC<HealthIntakePageProps> = ({
                 <button
                   type="button"
                   onClick={handleSaveNewPreset}
-                  className="px-3 py-1.5 bg-[#24201D] text-white rounded-xl text-xs font-black"
+                  className="px-3 py-1.5 bg-[#24201D] text-white rounded-xl text-xs font-black cursor-pointer"
                 >
-                  Save
+                  {t.healthIntake.savePreset}
                 </button>
               </div>
             </div>

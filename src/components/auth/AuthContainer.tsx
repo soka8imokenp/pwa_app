@@ -14,6 +14,7 @@ import { LottiePlayer } from '../common/LottiePlayer';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import confetti from 'canvas-confetti';
 import { authApi, setAuthToken, setRefreshToken } from '../../lib/api';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export interface UserProfile {
   id?: string;
@@ -37,6 +38,7 @@ interface AuthContainerProps {
 type AuthMode = 'login' | 'register' | 'forgot-password';
 
 export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) => {
+  const { language } = useLanguage();
   const [mode, setMode] = useState<AuthMode>('login');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -63,7 +65,13 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     setErrorMsg(null);
 
     if (!identifier.trim() || !password.trim()) {
-      setErrorMsg('Please enter your username and password.');
+      setErrorMsg(
+        language === 'uz'
+          ? 'Iltimos, foydalanuvchi nomi va parolni kiriting.'
+          : language === 'ru'
+          ? 'Пожалуйста, введите имя пользователя и пароль.'
+          : 'Please enter your username and password.'
+      );
       return;
     }
 
@@ -92,7 +100,13 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       onLoginSuccess(res.user);
     } catch (err: any) {
       if (err?.message && (err.message.includes('429') || err.message.includes('Too many') || err.message.includes('attempts'))) {
-        setErrorMsg(err.message || 'Too many login attempts. Please wait 15 minutes.');
+        setErrorMsg(
+          language === 'uz'
+            ? 'Juda koʻp urinish. Iltimos, 15 daqiqa kuting.'
+            : language === 'ru'
+            ? 'Слишком много попыток. Подождите 15 минут.'
+            : err.message || 'Too many login attempts. Please wait 15 minutes.'
+        );
         return;
       }
       // Offline fallback
@@ -115,7 +129,13 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     setErrorMsg(null);
 
     if (!fullName.trim() || !email.trim() || !regUsername.trim() || !regPassword.trim()) {
-      setErrorMsg('Please fill in all fields.');
+      setErrorMsg(
+        language === 'uz'
+          ? 'Iltimos, barcha maydonlarni toʻldiring.'
+          : language === 'ru'
+          ? 'Пожалуйста, заполните все поля.'
+          : 'Please fill in all fields.'
+      );
       return;
     }
 
@@ -150,7 +170,13 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       onLoginSuccess(res.user);
     } catch (err: any) {
       if (err?.message && err.message.includes('already exists')) {
-        setErrorMsg('User with this email already exists.');
+        setErrorMsg(
+          language === 'uz'
+            ? 'Ushbu email bilan roʻyxatdan oʻtilgan.'
+            : language === 'ru'
+            ? 'Пользователь с таким email уже существует.'
+            : 'User with this email already exists.'
+        );
         return;
       }
       // Offline fallback
@@ -272,7 +298,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       onLoginSuccess(finalUser);
     } catch (err: any) {
       console.error('Google authentication error:', err);
-      setErrorMsg(err?.message || 'Failed to authenticate with Google.');
+      setErrorMsg(err?.message || (language === 'uz' ? 'Google orqali kirishda xatolik yuz berdi.' : language === 'ru' ? 'Не удалось войти через Google.' : 'Failed to authenticate with Google.'));
     } finally {
       setIsLoading(false);
     }
@@ -372,8 +398,8 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
   const handleGuest = () => {
     playClickSound();
     const guestUser: UserProfile = {
-      firstName: 'Guest',
-      lastName: 'Traveler',
+      firstName: language === 'uz' ? 'Mehmon' : language === 'ru' ? 'Гость' : 'Guest',
+      lastName: language === 'uz' ? 'Sayohatchi' : language === 'ru' ? 'Путешественник' : 'Traveler',
       email: 'guest@sumire.app',
       username: 'guest_user',
     };
@@ -391,7 +417,13 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
   const handleForgot = (e: React.FormEvent) => {
     e.preventDefault();
     if (!forgotEmail.trim() || !forgotEmail.includes('@')) {
-      setErrorMsg('Please enter a valid email address.');
+      setErrorMsg(
+        language === 'uz'
+          ? 'Iltimos, toʻgʻri email manzilini kiriting.'
+          : language === 'ru'
+          ? 'Пожалуйста, введите корректный email.'
+          : 'Please enter a valid email address.'
+      );
       return;
     }
     playClickSound();
@@ -423,7 +455,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
               Daily Planner
             </span>
             <span className="text-[9px] font-bold text-[#6B635B] uppercase tracking-wider">
-              Focus & Habits
+              {language === 'uz' ? 'Fokus va odatlar' : language === 'ru' ? 'Фокус и привычки' : 'Focus & Habits'}
             </span>
           </div>
         </div>
@@ -433,7 +465,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
           onClick={handleGuest}
           className="text-xs font-bold text-[#6B635B] hover:text-[#24201D] px-3 py-1.5 bg-white border-[1.5px] border-[#24201D] rounded-xl shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1"
         >
-          <span>Guest</span>
+          <span>{language === 'uz' ? 'Mehmon' : language === 'ru' ? 'Гость' : 'Guest'}</span>
           <ArrowRight className="w-3 h-3 text-[#6B635B]" />
         </button>
       </div>
@@ -467,7 +499,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
                   : 'text-[#6B635B] hover:text-[#24201D]'
               }`}
             >
-              Sign In
+              {language === 'uz' ? 'Kirish' : language === 'ru' ? 'Вход' : 'Sign In'}
             </button>
             <button
               type="button"
@@ -478,7 +510,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
                   : 'text-[#6B635B] hover:text-[#24201D]'
               }`}
             >
-              Sign Up
+              {language === 'uz' ? 'Roʻyxatdan oʻtish' : language === 'ru' ? 'Регистрация' : 'Sign Up'}
             </button>
           </div>
         )}
@@ -497,7 +529,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             {/* Identifier Input */}
             <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
               <label className="block text-[10px] font-black uppercase tracking-wider text-[#6B635B] mb-1 font-display">
-                Username or Email
+                {language === 'uz' ? 'Foydalanuvchi nomi yoki email' : language === 'ru' ? 'Имя пользователя или email' : 'Username or Email'}
               </label>
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4 text-[#6B635B] shrink-0" />
@@ -506,7 +538,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
                   required
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="alex or alex@example.com"
+                  placeholder={language === 'uz' ? 'alex yoki alex@example.com' : language === 'ru' ? 'alex или alex@example.com' : 'alex or alex@example.com'}
                   className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
                 />
               </div>
@@ -516,14 +548,14 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
               <div className="flex items-center justify-between mb-1">
                 <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display">
-                  Password
+                  {language === 'uz' ? 'Parol' : language === 'ru' ? 'Пароль' : 'Password'}
                 </label>
                 <button
                   type="button"
                   onClick={() => switchMode('forgot-password')}
                   className="text-[10px] font-bold text-[#3D6B52] hover:underline cursor-pointer"
                 >
-                  Forgot?
+                  {language === 'uz' ? 'Unutdingizmi?' : language === 'ru' ? 'Забыли?' : 'Forgot?'}
                 </button>
               </div>
               <div className="flex items-center gap-2">
@@ -552,7 +584,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
               disabled={isLoading}
               className="w-full py-3.5 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2"
             >
-              <span>{isLoading ? 'Signing in...' : 'Sign In'}</span>
+              <span>{isLoading ? (language === 'uz' ? 'Kirilmoqda...' : language === 'ru' ? 'Вход...' : 'Signing in...') : (language === 'uz' ? 'Kirish' : language === 'ru' ? 'Войти' : 'Sign In')}</span>
               <ArrowRight className="w-4 h-4 stroke-[2.5]" />
             </button>
           </form>
@@ -564,14 +596,14 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             {/* Full Name */}
             <div className="p-2.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
               <label className="block text-[9px] font-black uppercase text-[#6B635B] mb-0.5 font-display">
-                Full Name
+                {language === 'uz' ? 'Toʻliq ism' : language === 'ru' ? 'Полное имя' : 'Full Name'}
               </label>
               <input
                 type="text"
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="Alex Smith"
+                placeholder={language === 'uz' ? 'Anvar Karimov' : language === 'ru' ? 'Алекс Смирнов' : 'Alex Smith'}
                 className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
               />
             </div>
@@ -579,7 +611,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             {/* Email */}
             <div className="p-2.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
               <label className="block text-[9px] font-black uppercase text-[#6B635B] mb-0.5 font-display">
-                Email
+                {language === 'uz' ? 'Elektron pochta' : language === 'ru' ? 'Электронная почта' : 'Email'}
               </label>
               <input
                 type="email"
@@ -594,7 +626,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             {/* Username */}
             <div className="p-2.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
               <label className="block text-[9px] font-black uppercase text-[#6B635B] mb-0.5 font-display">
-                Username
+                {language === 'uz' ? 'Foydalanuvchi nomi' : language === 'ru' ? 'Имя пользователя' : 'Username'}
               </label>
               <input
                 type="text"
@@ -609,14 +641,14 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             {/* Password */}
             <div className="p-2.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
               <label className="block text-[9px] font-black uppercase text-[#6B635B] mb-0.5 font-display">
-                Password
+                {language === 'uz' ? 'Parol' : language === 'ru' ? 'Пароль' : 'Password'}
               </label>
               <input
                 type="password"
                 required
                 value={regPassword}
                 onChange={(e) => setRegPassword(e.target.value)}
-                placeholder="At least 4 characters"
+                placeholder={language === 'uz' ? 'Kamida 4 ta belgi' : language === 'ru' ? 'Минимум 4 символа' : 'At least 4 characters'}
                 className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
               />
             </div>
@@ -627,7 +659,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
               disabled={isLoading}
               className="w-full py-3.5 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-2 mt-1"
             >
-              <span>{isLoading ? 'Creating account...' : 'Create Account'}</span>
+              <span>{isLoading ? (language === 'uz' ? 'Hisob yaratilmoqda...' : language === 'ru' ? 'Создание аккаунта...' : 'Creating account...') : (language === 'uz' ? 'Hisob yaratish' : language === 'ru' ? 'Создать аккаунт' : 'Create Account')}</span>
               <ArrowRight className="w-4 h-4 stroke-[2.5]" />
             </button>
           </form>
@@ -639,7 +671,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             <div className="flex items-center gap-3">
               <div className="flex-1 h-[1.5px] bg-[#24201D]/15" />
               <span className="text-[10px] font-black uppercase text-[#6B635B] tracking-wider font-display">
-                or continue with
+                {language === 'uz' ? 'yoki quyidagi orqali' : language === 'ru' ? 'или продолжить через' : 'or continue with'}
               </span>
               <div className="flex-1 h-[1.5px] bg-[#24201D]/15" />
             </div>
@@ -668,7 +700,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                 />
               </svg>
-              <span>Continue with Google</span>
+              <span>{language === 'uz' ? 'Google orqali kirish' : language === 'ru' ? 'Продолжить с Google' : 'Continue with Google'}</span>
             </button>
           </div>
         )}
@@ -682,30 +714,30 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
                   <CheckCircle2 className="w-5 h-5 text-[#2D503C]" />
                 </div>
                 <h3 className="text-xs font-black font-display text-[#24201D]">
-                  Reset Link Sent
+                  {language === 'uz' ? 'Tiklash havolasi yuborildi' : language === 'ru' ? 'Ссылка для сброса отправлена' : 'Reset Link Sent'}
                 </h3>
                 <p className="text-[11px] text-[#6B635B] font-medium">
-                  Check your inbox for <b>{forgotEmail}</b>.
+                  {language === 'uz' ? 'Elektron pochtangizni tekshiring: ' : language === 'ru' ? 'Проверьте почту: ' : 'Check your inbox for '}<b>{forgotEmail}</b>.
                 </p>
                 <button
                   type="button"
                   onClick={() => switchMode('login')}
                   className="w-full py-2 bg-[#F0BB58] border border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] shadow-2xs cursor-pointer"
                 >
-                  Back to Sign In
+                  {language === 'uz' ? 'Kirishga qaytish' : language === 'ru' ? 'Назад ко входу' : 'Back to Sign In'}
                 </button>
               </div>
             ) : (
               <form onSubmit={handleForgot} className="w-full space-y-3">
                 <div className="text-center mb-1">
                   <h2 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                    Reset Password
+                    {language === 'uz' ? 'Parolni tiklash' : language === 'ru' ? 'Сброс пароля' : 'Reset Password'}
                   </h2>
                 </div>
 
                 <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
                   <label className="block text-[10px] font-black uppercase text-[#6B635B] mb-1 font-display">
-                    Your Email
+                    {language === 'uz' ? 'Sizning emailingiz' : language === 'ru' ? 'Ваш email' : 'Your Email'}
                   </label>
                   <input
                     type="email"
@@ -721,7 +753,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
                   type="submit"
                   className="w-full py-3 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] font-black text-xs uppercase shadow-[2px_2px_0px_#24201D] cursor-pointer"
                 >
-                  Send Reset Link
+                  {language === 'uz' ? 'Tiklash havolasini yuborish' : language === 'ru' ? 'Отправить ссылку' : 'Send Reset Link'}
                 </button>
 
                 <button
@@ -729,7 +761,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
                   onClick={() => switchMode('login')}
                   className="w-full py-1 text-xs font-bold text-[#6B635B] hover:text-[#24201D] cursor-pointer"
                 >
-                  ← Back to Sign In
+                  {language === 'uz' ? '← Kirishga qaytish' : language === 'ru' ? '← Назад ко входу' : '← Back to Sign In'}
                 </button>
               </form>
             )}
@@ -742,7 +774,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       <div className="w-full text-center z-10 pt-2 border-t border-[#24201D]/10">
         <div className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#6B635B]">
           <ShieldCheck className="w-3.5 h-3.5 text-[#3D6B52]" />
-          <span>Daily Planner • Encrypted Personal Vault</span>
+          <span>{language === 'uz' ? 'Daily Planner • Shifrlangan shaxsiy ombor' : language === 'ru' ? 'Daily Planner • Зашифрованное личное хранилище' : 'Daily Planner • Encrypted Personal Vault'}</span>
         </div>
       </div>
 

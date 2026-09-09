@@ -28,6 +28,7 @@ import {
 } from '../../lib/dateUtils';
 import type { Task } from '../../types';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface CalendarPlannerModalProps {
   isOpen: boolean;
@@ -52,6 +53,7 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
   onDeleteTask,
   onOpenExport,
 }) => {
+  const { t, language } = useTranslation();
   const [currentMonthDate, setCurrentMonthDate] = useState<Date>(() => {
     try {
       return parseISO(selectedDate);
@@ -141,11 +143,11 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
   };
 
   const categories = [
-    { id: 'code' as const, label: 'Code', icon: <Code className="w-3 h-3 stroke-[2.25]" /> },
-    { id: 'design' as const, label: 'Design', icon: <Palette className="w-3 h-3 stroke-[2.25]" /> },
-    { id: 'learn' as const, label: 'Learn', icon: <BookOpen className="w-3 h-3 stroke-[2.25]" /> },
-    { id: 'health' as const, label: 'Health', icon: <Activity className="w-3 h-3 stroke-[2.25]" /> },
-    { id: 'general' as const, label: 'General', icon: <Layers className="w-3 h-3 stroke-[2.25]" /> },
+    { id: 'code' as const, label: t.categories.code, icon: <Code className="w-3 h-3 stroke-[2.25]" /> },
+    { id: 'design' as const, label: t.categories.design, icon: <Palette className="w-3 h-3 stroke-[2.25]" /> },
+    { id: 'learn' as const, label: t.categories.learn, icon: <BookOpen className="w-3 h-3 stroke-[2.25]" /> },
+    { id: 'health' as const, label: t.categories.health, icon: <Activity className="w-3 h-3 stroke-[2.25]" /> },
+    { id: 'general' as const, label: t.categories.general, icon: <Layers className="w-3 h-3 stroke-[2.25]" /> },
   ];
 
   return (
@@ -160,10 +162,10 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D]">
-                Interactive Calendar
+                {language === 'uz' ? 'Interaktiv taqvim' : language === 'ru' ? 'Интерактивный календарь' : 'Interactive Calendar'}
               </h3>
               <p className="text-[10px] font-bold text-[#6B635B]">
-                {allTasks.length} total tasks across schedule
+                {allTasks.length} {language === 'uz' ? 'ta rejalashtirilgan vazifa' : language === 'ru' ? 'всего задач в расписании' : 'total tasks across schedule'}
               </p>
             </div>
           </div>
@@ -175,7 +177,7 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
                   playClickSound();
                   onOpenExport();
                 }}
-                title="Export schedule to iCalendar (.ics)"
+                title={language === 'uz' ? 'Jadvalni iCalendar (.ics) formatida eksport qilish' : language === 'ru' ? 'Экспорт расписания в iCalendar (.ics)' : 'Export schedule to iCalendar (.ics)'}
                 className="w-8 h-8 rounded-xl bg-[#FAF8F5] hover:bg-[#F4F0EA] border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer"
               >
                 <Download className="w-4 h-4 stroke-[2.25]" />
@@ -221,7 +223,12 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
         <div className="space-y-1">
           {/* Weekday headers */}
           <div className="grid grid-cols-7 text-center">
-            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+            {(language === 'uz'
+              ? ['Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan', 'Yak']
+              : language === 'ru'
+              ? ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+              : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+            ).map((day) => (
               <span key={day} className="text-[10px] font-black uppercase tracking-wider text-stone-400 py-1">
                 {day}
               </span>
@@ -292,7 +299,7 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
                 {formatDisplayDate(activeDate)}
               </h4>
               <p className="text-[10px] font-bold text-[#6B635B] mt-0.5">
-                {activeDayTasks.length} {activeDayTasks.length === 1 ? 'event scheduled' : 'events scheduled'}
+                {activeDayTasks.length} {language === 'uz' ? 'ta vazifa rejalashtirilgan' : language === 'ru' ? 'задач запланировано' : (activeDayTasks.length === 1 ? 'event scheduled' : 'events scheduled')}
               </p>
             </div>
 
@@ -308,7 +315,7 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
                 type="text"
                 value={newEventTitle}
                 onChange={(e) => setNewEventTitle(e.target.value)}
-                placeholder={`Add event for ${formatDisplayDate(activeDate)}...`}
+                placeholder={language === 'uz' ? `${formatDisplayDate(activeDate)} uchun vazifa qoʻshish...` : language === 'ru' ? `Добавить задачу на ${formatDisplayDate(activeDate)}...` : `Add event for ${formatDisplayDate(activeDate)}...`}
                 className="flex-1 px-3 py-2 bg-white text-xs font-bold text-[#24201D] rounded-xl border-[1.5px] border-[#24201D] outline-none placeholder:text-stone-400 shadow-2xs"
               />
               <button
@@ -317,7 +324,7 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
                 className="py-2 px-3 bg-[#3D6B52] hover:bg-[#345B45] border-[1.5px] border-[#24201D] rounded-xl text-xs font-black text-white flex items-center gap-1 shadow-2xs active:translate-y-0.5 transition-all cursor-pointer disabled:opacity-40"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                <span>Add</span>
+                <span>{t.common.add}</span>
               </button>
             </div>
 
@@ -392,7 +399,7 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
                       ? 'bg-[#F0BB58] border-[#24201D] text-[#24201D]'
                       : 'bg-white border-[#24201D]/30 text-stone-400 hover:text-stone-700'
                   }`}
-                  title={newEventPriority ? 'Marked as High Priority' : 'Mark as High Priority'}
+                  title={newEventPriority ? (language === 'uz' ? 'Yuqori muhimlik belgilangan' : language === 'ru' ? 'Высокий приоритет' : 'Marked as High Priority') : (language === 'uz' ? 'Yuqori muhimlik belgilash' : language === 'ru' ? 'Сделать высоким приоритетом' : 'Mark as High Priority')}
                 >
                   <Star className={`w-4 h-4 ${newEventPriority ? 'fill-[#24201D]' : ''}`} />
                 </button>
@@ -404,8 +411,12 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
           <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
             {activeDayTasks.length === 0 ? (
               <div className="p-3 text-center bg-white border border-dashed border-[#24201D]/30 rounded-xl">
-                <p className="text-xs font-bold text-[#6B635B]">No tasks scheduled for this day.</p>
-                <p className="text-[10px] text-stone-400">Add events using the quick form above!</p>
+                <p className="text-xs font-bold text-[#6B635B]">
+                  {language === 'uz' ? 'Ushbu kunga vazifalar belgilanmagan.' : language === 'ru' ? 'На этот день задач не запланировано.' : 'No tasks scheduled for this day.'}
+                </p>
+                <p className="text-[10px] text-stone-400">
+                  {language === 'uz' ? 'Yuqoridagi tezkor shakl orqali yangi vazifa qoʻshing!' : language === 'ru' ? 'Добавьте события через форму выше!' : 'Add events using the quick form above!'}
+                </p>
               </div>
             ) : (
               activeDayTasks.map((task) => (
@@ -438,7 +449,7 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
                           <>
                             <span>•</span>
                             <span className="text-[#C25E40] flex items-center gap-0.5">
-                              <Star className="w-2.5 h-2.5 fill-[#C25E40]" /> Priority
+                              <Star className="w-2.5 h-2.5 fill-[#C25E40]" /> {t.priorities.title}
                             </span>
                           </>
                         )}
@@ -471,7 +482,7 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
             onClick={handleJumpToDayAndClose}
             className="flex-1 py-3 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[2px] border-[#24201D] rounded-2xl font-black font-display uppercase tracking-wider text-xs shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 cursor-pointer transition-all"
           >
-            Open {formatDisplayDate(activeDate)} in Planner
+            {language === 'uz' ? `${formatDisplayDate(activeDate)} kunini rejalashtirgichda ochish` : language === 'ru' ? `Открыть ${formatDisplayDate(activeDate)} в планнере` : `Open ${formatDisplayDate(activeDate)} in Planner`}
           </button>
         </div>
 

@@ -16,6 +16,7 @@ import {
   shareIcsCalendarFile,
 } from '../../lib/calendarExport';
 import { parseISO, format, subDays, addDays } from 'date-fns';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface CalendarExportModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
   allTasks,
   selectedDate,
 }) => {
+  const { t, language } = useTranslation();
   const [scope, setScope] = useState<ExportScope>('today');
   const [includeCompleted, setIncludeCompleted] = useState<boolean>(true);
   const [isDownloaded, setIsDownloaded] = useState<boolean>(false);
@@ -92,10 +94,10 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-black font-display text-[#24201D]">
-                Calendar Export
+                {t.modals.calendarExportTitle}
               </h3>
               <p className="text-[10px] text-[#6B635B] font-bold">
-                Universal .ics file for Google, Apple & Outlook
+                {t.modals.calendarExportDesc}
               </p>
             </div>
           </div>
@@ -115,9 +117,9 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
         {/* Scope Selector */}
         <div className="grid grid-cols-3 gap-2">
           {[
-            { id: 'today', label: 'Today Only', desc: selectedDate },
-            { id: 'week', label: 'Week (7d)', desc: 'Current Week' },
-            { id: 'all', label: 'All Tasks', desc: 'Full Schedule' },
+            { id: 'today', label: language === 'uz' ? 'Faqat bugun' : language === 'ru' ? 'Только сегодня' : 'Today Only', desc: selectedDate },
+            { id: 'week', label: language === 'uz' ? 'Hafta (7 kun)' : language === 'ru' ? 'Неделя (7 дн)' : 'Week (7d)', desc: language === 'uz' ? 'Joriy hafta' : language === 'ru' ? 'Текущая неделя' : 'Current Week' },
+            { id: 'all', label: language === 'uz' ? 'Barcha vazifalar' : language === 'ru' ? 'Все задачи' : 'All Tasks', desc: language === 'uz' ? 'Toʻliq jadval' : language === 'ru' ? 'Полное расписание' : 'Full Schedule' },
           ].map((item) => (
             <button
               key={item.id}
@@ -143,7 +145,7 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-stone-700 stroke-[2.25]" />
             <span className="text-xs font-black text-[#24201D]">
-              {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'} to export
+              {filteredTasks.length} {language === 'uz' ? 'ta vazifa eksport qilinadi' : language === 'ru' ? 'задач для экспорта' : (filteredTasks.length === 1 ? 'task to export' : 'tasks to export')}
             </span>
           </div>
 
@@ -154,7 +156,9 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
               onChange={(e) => setIncludeCompleted(e.target.checked)}
               className="accent-[#3D6B52] w-3.5 h-3.5 rounded cursor-pointer"
             />
-            <span className="text-[10px] font-bold text-[#6B635B]">Include completed</span>
+            <span className="text-[10px] font-bold text-[#6B635B]">
+              {language === 'uz' ? 'Tugallanganlarni kiritish' : language === 'ru' ? 'Включая завершенные' : 'Include completed'}
+            </span>
           </label>
         </div>
 
@@ -162,7 +166,7 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
         <div className="flex-1 overflow-y-auto space-y-1.5 max-h-48 pr-1">
           {filteredTasks.length === 0 ? (
             <div className="p-6 text-center text-xs text-stone-400 font-semibold bg-[#FAF8F5] rounded-2xl border border-dashed border-stone-200">
-              No tasks found for export in selected timeframe
+              {language === 'uz' ? 'Tanlangan davr uchun eksport qilishga vazifalar topilmadi' : language === 'ru' ? 'Нет задач для экспорта в выбранном периоде' : 'No tasks found for export in selected timeframe'}
             </div>
           ) : (
             filteredTasks.map((t) => (
@@ -204,12 +208,12 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
             {isDownloaded ? (
               <>
                 <CheckCircle2 className="w-4 h-4 text-emerald-200 stroke-[2.5]" />
-                <span>Downloaded!</span>
+                <span>{language === 'uz' ? 'Yuklab olindi!' : language === 'ru' ? 'Скачано!' : 'Downloaded!'}</span>
               </>
             ) : (
               <>
                 <Download className="w-4 h-4 stroke-[2.25]" />
-                <span>Download .ics</span>
+                <span>{t.modals.downloadIcs}</span>
               </>
             )}
           </button>
@@ -223,12 +227,12 @@ export const CalendarExportModal: React.FC<CalendarExportModalProps> = ({
             {isShared ? (
               <>
                 <CheckCircle2 className="w-4 h-4 text-[#3D6B52] stroke-[2.5]" />
-                <span>Shared!</span>
+                <span>{language === 'uz' ? 'Ulashildi!' : language === 'ru' ? 'Отправлено!' : 'Shared!'}</span>
               </>
             ) : (
               <>
                 <Share2 className="w-4 h-4 stroke-[2.25]" />
-                <span>Share .ics</span>
+                <span>{language === 'uz' ? '.ics ulashish' : language === 'ru' ? 'Поделиться .ics' : 'Share .ics'}</span>
               </>
             )}
           </button>

@@ -24,6 +24,7 @@ import {
   calculateBmi,
 } from '../../lib/healthFormulas';
 import { db } from '../../lib/db';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 // Decomposed Modular Subcomponents
 import { ZeppBodyCompositionCard } from './body/ZeppBodyCompositionCard';
@@ -62,6 +63,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
   autoOpenWizard,
   onWizardHandled,
 }) => {
+  const { t } = useTranslation();
   const [isLogWeightOpen, setIsLogWeightOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isScaleModalOpen, setIsScaleModalOpen] = useState(false);
@@ -312,12 +314,12 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             </div>
             <div className="min-w-0">
               <h4 className="text-xs font-black text-[#854D0E] font-display uppercase tracking-wide truncate">
-                {currentWeight <= 0 ? 'Calibrate Your Health Profile' : 'Personalize Your Targets'}
+                {currentWeight <= 0 ? t('healthBody.calibrateBannerTitle') : t('healthBody.calibrateProfile')}
               </h4>
               <p className="text-[10px] text-[#854D0E]/80 font-medium truncate">
                 {currentWeight <= 0
-                  ? 'Set your baseline weight & biometrics to unlock telemetry'
-                  : 'Calibrate metabolism, water goal & WHO healthy weight'}
+                  ? t('healthBody.calibrateBannerDesc')
+                  : t('healthBody.calibrateBannerDesc')}
               </p>
             </div>
           </div>
@@ -330,7 +332,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             }}
             className="py-1.5 px-3 rounded-xl bg-[#854D0E] hover:bg-[#6D3E0B] text-white border border-[#24201D] text-xs font-black shadow-2xs active:translate-y-0.5 transition-all cursor-pointer shrink-0 font-display uppercase tracking-wider"
           >
-            Calibrate
+            {t('healthBody.calibrateProfile')}
           </button>
         </div>
       )}
@@ -345,10 +347,10 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-black text-[#6B635B] uppercase tracking-wider block font-display leading-none">
-                Weight & Milestones
+                {t('healthBody.telemetryTitle')}
               </span>
               <h2 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none">
-                Goal & BMI Telemetry
+                {t('healthBody.telemetrySubtitle')}
               </h2>
             </div>
           </div>
@@ -359,7 +361,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
               playClickSound();
               setIsProfileOpen(true);
             }}
-            title="Edit Profile Parameters"
+            title={t('healthBody.editProfileParams')}
             className="p-1.5 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer shrink-0"
           >
             <Settings2 className="w-4 h-4 stroke-[2]" />
@@ -370,7 +372,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
         <div className="flex items-end justify-between gap-2 pt-1">
           <div>
             <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block font-display">
-              Current Body Mass
+              {t('healthBody.currentWeight')}
             </span>
             <div className="flex items-baseline gap-1.5 mt-0.5">
               <span className="text-4xl sm:text-5xl font-black font-mono-num text-[#24201D] tracking-tight">
@@ -398,7 +400,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
 
           <div className="text-right">
             <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block font-display">
-              WHO Clinical BMI
+              {t('healthBody.bmiLabel')}
             </span>
             <div className="flex items-center justify-end gap-1.5 mt-0.5">
               <span className="text-2xl font-black font-mono-num text-[#24201D]">
@@ -408,11 +410,11 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
                 className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase text-white shadow-2xs"
                 style={{ backgroundColor: bmiColor }}
               >
-                {bmi > 0 ? bmiCategoryLabel.split(' ')[0] : 'NOT SET'}
+                {bmi > 0 ? bmiCategoryLabel.split(' ')[0] : '—'}
               </span>
             </div>
             <span className="text-[10px] font-bold text-[#6B635B] block">
-              {idealWeightMin > 0 ? `Ideal: ${idealWeightMin}–${idealWeightMax} kg` : 'Ideal: —'}
+              {idealWeightMin > 0 ? t('healthBody.idealRange', { min: idealWeightMin, max: idealWeightMax }) : 'Ideal: —'}
             </span>
           </div>
         </div>
@@ -426,11 +428,11 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
               playClickSound();
               setIsScaleModalOpen(true);
             }}
-            title="Sync with Smart Scale"
+            title={t('healthBody.scaleConnectBtn')}
             className="py-2.5 px-3 bg-[#EEF2FF] hover:bg-[#E0E7FF] text-[#4F46E5] border-[1.75px] border-[#24201D] rounded-xl text-xs font-black shadow-[2px_2px_0px_#24201D] cursor-pointer active:translate-y-0.5 transition-all flex items-center justify-center gap-2 uppercase tracking-wider font-display"
           >
             <Bluetooth className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
-            <span>Smart Scale</span>
+            <span>{t('healthBody.scaleConnectBtn')}</span>
           </button>
 
           {/* Clean Weigh-In Button (without '+' icon) */}
@@ -442,24 +444,24 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             }}
             className="py-2.5 px-3 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-black shadow-[2px_2px_0px_#24201D] cursor-pointer active:translate-y-0.5 transition-all flex items-center justify-center uppercase tracking-wider font-display"
           >
-            Weigh-In
+            {t('healthBody.logWeightBtn')}
           </button>
         </div>
 
         {/* BMI Color Gauge Bar */}
         <div className="space-y-1 pt-1">
           <div className="flex items-center justify-between text-[9px] font-bold text-[#6B635B] uppercase font-mono-num">
-            <span>&lt;18.5 Deficit</span>
-            <span>18.5 – 24.9 Normal</span>
-            <span>25 – 29.9 Over</span>
-            <span>30+ Obese</span>
+            <span>&lt;18.5 {t('healthBody.underweight')}</span>
+            <span>18.5 – 24.9 {t('healthBody.normal')}</span>
+            <span>25 – 29.9 {t('healthBody.overweight')}</span>
+            <span>30+ {t('healthBody.obese')}</span>
           </div>
 
           <div className="relative w-full h-3 rounded-full border border-[#24201D] overflow-hidden flex shadow-2xs">
-            <div className="h-full bg-[#60A5FA]" style={{ width: '22%' }} title="Underweight (<18.5)" />
-            <div className="h-full bg-[#86EFAC]" style={{ width: '32%' }} title="Normal (18.5-24.9)" />
-            <div className="h-full bg-[#FDE047]" style={{ width: '25%' }} title="Overweight (25-29.9)" />
-            <div className="h-full bg-[#F87171]" style={{ width: '21%' }} title="Obese (30+)" />
+            <div className="h-full bg-[#60A5FA]" style={{ width: '22%' }} title={t('healthBody.underweight')} />
+            <div className="h-full bg-[#86EFAC]" style={{ width: '32%' }} title={t('healthBody.normal')} />
+            <div className="h-full bg-[#FDE047]" style={{ width: '25%' }} title={t('healthBody.overweight')} />
+            <div className="h-full bg-[#F87171]" style={{ width: '21%' }} title={t('healthBody.obese')} />
           </div>
 
           {/* Marker pointer */}
@@ -479,16 +481,16 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-[#854D0E]" />
               <span className="text-[11px] font-black font-display uppercase tracking-wider text-[#854D0E]">
-                {targetWeight > 0 ? `Goal: ${targetWeight} kg (${profile.goal.toUpperCase()})` : 'Goal: Not Set'}
+                {targetWeight > 0 ? t('healthBody.goalTitle', { weight: targetWeight, goal: profile.goal.toUpperCase() }) : t('healthBody.goalNotSet')}
               </span>
             </div>
             {targetWeight > 0 && currentWeight > 0 ? (
               <span className="text-xs font-black font-mono-num text-[#24201D] px-2 py-0.5 rounded-lg bg-white border border-[#24201D]/20 shadow-2xs">
-                {progressPercent}% Done
+                {t('healthBody.donePercent', { percent: progressPercent })}
               </span>
             ) : (
               <span className="text-xs font-bold text-[#854D0E] font-display uppercase tracking-wider">
-                Setup Target
+                {t('healthBody.setupTarget')}
               </span>
             )}
           </div>
@@ -503,9 +505,9 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
 
           {/* Start vs Current vs Goal Markers */}
           <div className="flex items-center justify-between text-[10px] font-bold text-[#6B635B] pt-0.5">
-            <span>Start: <b className="font-mono-num text-[#24201D]">{startingWeight > 0 ? `${startingWeight}kg` : '—'}</b></span>
-            <span>Now: <b className="font-mono-num text-[#24201D]">{currentWeight > 0 ? `${currentWeight}kg` : '—'}</b></span>
-            <span>Target: <b className="font-mono-num text-[#24201D]">{targetWeight > 0 ? `${targetWeight}kg` : '—'}</b></span>
+            <span>{t('healthBody.startLabel')} <b className="font-mono-num text-[#24201D]">{startingWeight > 0 ? `${startingWeight}kg` : '—'}</b></span>
+            <span>{t('healthBody.nowLabel')} <b className="font-mono-num text-[#24201D]">{currentWeight > 0 ? `${currentWeight}kg` : '—'}</b></span>
+            <span>{t('healthBody.targetLabel')} <b className="font-mono-num text-[#24201D]">{targetWeight > 0 ? `${targetWeight}kg` : '—'}</b></span>
           </div>
 
           {/* Rate of Change & ETA Badge */}
@@ -513,7 +515,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#854D0E]/20">
               <div className="p-2 bg-white/80 border border-[#24201D]/20 rounded-xl space-y-0.5">
                 <span className="text-[9px] font-bold text-[#6B635B] uppercase block font-display">
-                  Weekly Pace:
+                  {t('healthBody.weeklyPace')}:
                 </span>
                 <span className={`text-[11px] font-black font-mono-num block ${weeklyPaceInfo.isOptimal ? 'text-[#2D503C]' : 'text-[#854D0E]'}`}>
                   {weeklyPaceInfo.paceLabel}
@@ -522,7 +524,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
 
               <div className="p-2 bg-white/80 border border-[#24201D]/20 rounded-xl space-y-0.5">
                 <span className="text-[9px] font-bold text-[#6B635B] uppercase block font-display">
-                  Projected Finish:
+                  {t('healthBody.projectedFinish')}:
                 </span>
                 <span className="text-[11px] font-black font-mono-num text-[#24201D] block">
                   {projectedGoal.dateString}
@@ -567,10 +569,10 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             </div>
             <div>
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] leading-none">
-                AI Science & Health Facts
+                {t('healthBody.aiClinicalSummary')}
               </h3>
               <span className="text-[9px] text-stone-400 font-bold block mt-0.5">
-                Evidence-based physiology analysis
+                {t('healthBody.evidenceAnalysis')}
               </span>
             </div>
           </div>
@@ -580,7 +582,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             onClick={handleGenerateSummary}
             disabled={isGeneratingSummary || currentWeight <= 0}
             className="p-1.5 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D] text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer disabled:opacity-50"
-            title="Refresh Insights"
+            title={t('healthBody.refreshSummary')}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isGeneratingSummary ? 'animate-spin text-[#3D6B52]' : ''}`} />
           </button>
@@ -590,12 +592,12 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
           {isGeneratingSummary ? (
             <div className="flex items-center gap-2 text-stone-500 py-2">
               <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#3D6B52]" />
-              <span>Analyzing metabolic telemetry and scientific literature...</span>
+              <span>{t('healthBody.generatingSummary')}</span>
             </div>
           ) : currentWeight <= 0 ? (
-            'Calibrate your health profile to generate personalized clinical analysis.'
+            t('healthBody.calibrateBannerDesc')
           ) : (
-            aiSummary || 'Tap the refresh button to generate an evidence-based clinical analysis.'
+            aiSummary || t('healthBody.refreshSummary')
           )}
         </div>
       </div>

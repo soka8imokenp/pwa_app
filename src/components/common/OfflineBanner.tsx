@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export const OfflineBanner: React.FC = () => {
+  const { language } = useLanguage();
   const [isOnline, setIsOnline] = useState<boolean>(() =>
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );
@@ -20,6 +22,13 @@ export const OfflineBanner: React.FC = () => {
 
   if (isOnline) return null;
 
+  const offlineText =
+    language === 'uz'
+      ? 'Oflayn rejim — Barcha oʻzgarishlar keshda saqlanadi va internet ulanganda sinxronlanadi'
+      : language === 'ru'
+      ? 'Офлайн-режим — Все изменения сохранены локально и синхронизируются при подключении'
+      : 'Offline Mode — All changes saved locally & will sync when reconnected';
+
   return (
     <div
       role="status"
@@ -27,7 +36,7 @@ export const OfflineBanner: React.FC = () => {
       className="bg-[#24201D] text-[#DDE8DE] text-xs font-bold py-1.5 px-3 border-b-2 border-[#3D6B52] flex items-center justify-center gap-2 shadow-sm transition-all duration-300 z-50 sticky top-0"
     >
       <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse inline-block" />
-      <span>Offline Mode — All changes saved locally & will sync when reconnected</span>
+      <span>{offlineText}</span>
     </div>
   );
 };

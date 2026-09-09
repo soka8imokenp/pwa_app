@@ -18,6 +18,7 @@ import {
 } from '../../lib/securityService';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import confetti from 'canvas-confetti';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface SecuritySetupModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export const SecuritySetupModal: React.FC<SecuritySetupModalProps> = ({
   onClose,
   onSecurityUpdated,
 }) => {
+  const { language } = useLanguage();
   const [pinExists, setPinExists] = useState(false);
   const [step, setStep] = useState<SetupStep>('enter_new');
   const [currentPinInput, setCurrentPinInput] = useState('');
@@ -77,7 +79,7 @@ export const SecuritySetupModal: React.FC<SecuritySetupModalProps> = ({
             setStep('enter_new');
           } else {
             setIsError(true);
-            setErrorMsg('Incorrect current PIN');
+            setErrorMsg(language === 'uz' ? 'Joriy PIN kod notoʻgʻri' : language === 'ru' ? 'Неверный текущий PIN' : 'Incorrect current PIN');
             setTimeout(() => {
               setCurrentPinInput('');
               setIsError(false);
@@ -111,7 +113,7 @@ export const SecuritySetupModal: React.FC<SecuritySetupModalProps> = ({
             onSecurityUpdated();
           } else {
             setIsError(true);
-            setErrorMsg('PINs do not match. Please try again.');
+            setErrorMsg(language === 'uz' ? 'PIN kodlar mos kelmadi. Qaytadan urinib koʻring.' : language === 'ru' ? 'PIN-коды не совпадают. Попробуйте снова.' : 'PINs do not match. Please try again.');
             setTimeout(() => {
               setConfirmPinInput('');
               setIsError(false);
@@ -120,7 +122,7 @@ export const SecuritySetupModal: React.FC<SecuritySetupModalProps> = ({
         }
       }
     },
-    [step, currentPinInput, newPinInput, confirmPinInput, onSecurityUpdated]
+    [step, currentPinInput, newPinInput, confirmPinInput, onSecurityUpdated, language]
   );
 
   const handleDelete = () => {
@@ -137,7 +139,12 @@ export const SecuritySetupModal: React.FC<SecuritySetupModalProps> = ({
   };
 
   const handleRemovePin = async () => {
-    if (confirm('Are you sure you want to disable PIN and biometrics protection?')) {
+    const confirmPrompt = language === 'uz'
+      ? 'Haqiqatan ham PIN kod va biometrik himoyani oʻchirmoqchimisiz?'
+      : language === 'ru'
+      ? 'Вы уверены, что хотите отключить защиту PIN-кодом и биометрией?'
+      : 'Are you sure you want to disable PIN and biometrics protection?';
+    if (confirm(confirmPrompt)) {
       playClickSound();
       removePin();
       setPinExists(false);
@@ -184,9 +191,13 @@ export const SecuritySetupModal: React.FC<SecuritySetupModalProps> = ({
             </div>
             <div>
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                {pinExists ? 'Security Settings' : 'Set Master PIN'}
+                {pinExists
+                  ? (language === 'uz' ? 'Xavfsizlik sozlamalari' : language === 'ru' ? 'Настройки безопасности' : 'Security Settings')
+                  : (language === 'uz' ? 'Asosiy PIN kod oʻrnatish' : language === 'ru' ? 'Установка PIN-кода' : 'Set Master PIN')}
               </h3>
-              <p className="text-[10px] text-[#6B635B] font-bold">100% local device security</p>
+              <p className="text-[10px] text-[#6B635B] font-bold">
+                {language === 'uz' ? '100% qurilmada saqlanuvchi xavfsizlik' : language === 'ru' ? '100% локальная защита' : '100% local device security'}
+              </p>
             </div>
           </div>
 
@@ -212,10 +223,14 @@ export const SecuritySetupModal: React.FC<SecuritySetupModalProps> = ({
               </div>
               <div>
                 <h4 className="text-sm font-black font-display text-[#24201D]">
-                  PIN Configured Successfully!
+                  {language === 'uz' ? 'PIN kod muvaffaqiyatli oʻrnatildi!' : language === 'ru' ? 'PIN-код успешно настроен!' : 'PIN Configured Successfully!'}
                 </h4>
                 <p className="text-xs text-[#6B635B] font-medium mt-1 max-w-xs mx-auto">
-                  Your daily tasks, reflections, and habits are now securely locked.
+                  {language === 'uz'
+                    ? 'Kundalik vazifalaringiz, fikrlaringiz va odatlaringiz endi xavfsiz himoyalangan.'
+                    : language === 'ru'
+                    ? 'Ваши задачи, размышления и привычки теперь надежно защищены.'
+                    : 'Your daily tasks, reflections, and habits are now securely locked.'}
                 </p>
               </div>
 
@@ -226,10 +241,10 @@ export const SecuritySetupModal: React.FC<SecuritySetupModalProps> = ({
                     <Fingerprint className="w-5 h-5 text-[#3D6B52] stroke-[2.25]" />
                     <div>
                       <span className="text-xs font-black text-[#24201D] block">
-                        Biometric Unlock
+                        {language === 'uz' ? 'Biometrik ochish' : language === 'ru' ? 'Биометрический вход' : 'Biometric Unlock'}
                       </span>
                       <span className="text-[10px] text-[#6B635B] font-bold">
-                        Face ID / Fingerprint
+                        {language === 'uz' ? 'Barmoq izi / Face ID' : language === 'ru' ? 'Отпечаток пальца / Face ID' : 'Face ID / Fingerprint'}
                       </span>
                     </div>
                   </div>
@@ -243,7 +258,9 @@ export const SecuritySetupModal: React.FC<SecuritySetupModalProps> = ({
                         : 'bg-stone-100 text-[#6B635B]'
                     }`}
                   >
-                    {biometricsActive ? 'Enabled' : 'Disabled'}
+                    {biometricsActive
+                      ? (language === 'uz' ? 'Yoqilgan' : language === 'ru' ? 'Включено' : 'Enabled')
+                      : (language === 'uz' ? 'Oʻchirilgan' : language === 'ru' ? 'Выключено' : 'Disabled')}
                   </button>
                 </div>
               )}
@@ -256,7 +273,7 @@ export const SecuritySetupModal: React.FC<SecuritySetupModalProps> = ({
                 }}
                 className="w-full py-2.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-black shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 cursor-pointer mt-2"
               >
-                Done
+                {language === 'uz' ? 'Tayyor' : language === 'ru' ? 'Готово' : 'Done'}
               </button>
             </div>
           ) : (
@@ -265,18 +282,18 @@ export const SecuritySetupModal: React.FC<SecuritySetupModalProps> = ({
               <div className="text-center space-y-1.5">
                 <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
                   {step === 'verify_current'
-                    ? 'Enter Current PIN'
+                    ? (language === 'uz' ? 'Joriy PIN kodni kiriting' : language === 'ru' ? 'Введите текущий PIN' : 'Enter Current PIN')
                     : step === 'enter_new'
-                    ? 'Create 4-Digit PIN'
-                    : 'Confirm New PIN'}
+                    ? (language === 'uz' ? '4 xonali PIN kod yarating' : language === 'ru' ? 'Создайте 4-значный PIN' : 'Create 4-Digit PIN')
+                    : (language === 'uz' ? 'Yangi PIN kodni tasdiqlang' : language === 'ru' ? 'Подтвердите новый PIN' : 'Confirm New PIN')}
                 </h4>
                 <p className="text-[11px] font-semibold text-[#6B635B]">
                   {errorMsg ||
                     (step === 'verify_current'
-                      ? 'Confirm your identity to proceed'
+                      ? (language === 'uz' ? 'Davom etish uchun shaxsingizni tasdiqlang' : language === 'ru' ? 'Подтвердите личность для продолжения' : 'Confirm your identity to proceed')
                       : step === 'enter_new'
-                      ? 'Choose a memorable 4-digit code'
-                      : 'Re-enter your PIN to verify')}
+                      ? (language === 'uz' ? 'Eslab qolish oson 4 xonali kod tanlang' : language === 'ru' ? 'Выберите 4-значный код' : 'Choose a memorable 4-digit code')
+                      : (language === 'uz' ? 'Tasdiqlash uchun PIN kodni qayta kiriting' : language === 'ru' ? 'Повторите PIN для проверки' : 'Re-enter your PIN to verify'))}
                 </p>
               </div>
 
@@ -330,7 +347,7 @@ export const SecuritySetupModal: React.FC<SecuritySetupModalProps> = ({
                   type="button"
                   onClick={handleDelete}
                   className="h-11 rounded-xl bg-white hover:bg-rose-50 active:bg-rose-100 border-[1.5px] border-[#24201D] text-[#6B635B] hover:text-rose-700 shadow-2xs active:translate-y-0.5 cursor-pointer flex items-center justify-center transition-all"
-                  title="Delete"
+                  title={language === 'uz' ? 'Oʻchirish' : language === 'ru' ? 'Удалить' : 'Delete'}
                 >
                   <Delete className="w-4 h-4 stroke-[2.25]" />
                 </button>
@@ -343,7 +360,7 @@ export const SecuritySetupModal: React.FC<SecuritySetupModalProps> = ({
                   onClick={handleRemovePin}
                   className="text-[11px] font-bold text-rose-700 hover:underline pt-1 cursor-pointer"
                 >
-                  Disable Security & Remove PIN
+                  {language === 'uz' ? 'Himoyani oʻchirish va PIN kodni bekor qilish' : language === 'ru' ? 'Отключить защиту и удалить PIN' : 'Disable Security & Remove PIN'}
                 </button>
               )}
             </>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Flame, Droplets, BookOpen, Activity, Moon, Zap, Target, Check, X } from 'lucide-react';
 import type { Habit } from '../../types';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface AddHabitModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
   onClose,
   onAddHabit,
 }) => {
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [iconKey, setIconKey] = useState('zap');
   const [color, setColor] = useState('#3D6B52');
@@ -30,12 +32,12 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
   if (!isOpen) return null;
 
   const iconChoices = [
-    { id: 'zap', label: 'Energy', icon: <Zap className="w-4 h-4 stroke-[2.25]" /> },
-    { id: 'water', label: 'Water', icon: <Droplets className="w-4 h-4 stroke-[2.25]" /> },
-    { id: 'book', label: 'Reading', icon: <BookOpen className="w-4 h-4 stroke-[2.25]" /> },
-    { id: 'stretch', label: 'Movement', icon: <Activity className="w-4 h-4 stroke-[2.25]" /> },
-    { id: 'sleep', label: 'Sleep', icon: <Moon className="w-4 h-4 stroke-[2.25]" /> },
-    { id: 'target', label: 'Focus', icon: <Target className="w-4 h-4 stroke-[2.25]" /> },
+    { id: 'zap', label: t('habits.icons.energy'), icon: <Zap className="w-4 h-4 stroke-[2.25]" /> },
+    { id: 'water', label: t('habits.icons.water'), icon: <Droplets className="w-4 h-4 stroke-[2.25]" /> },
+    { id: 'book', label: t('habits.icons.reading'), icon: <BookOpen className="w-4 h-4 stroke-[2.25]" /> },
+    { id: 'stretch', label: t('habits.icons.movement'), icon: <Activity className="w-4 h-4 stroke-[2.25]" /> },
+    { id: 'sleep', label: t('habits.icons.sleep'), icon: <Moon className="w-4 h-4 stroke-[2.25]" /> },
+    { id: 'target', label: t('habits.icons.focus'), icon: <Target className="w-4 h-4 stroke-[2.25]" /> },
   ];
 
   const colorOptions = [
@@ -46,14 +48,15 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
     { label: 'Sage', hex: '#8FA89B' },
   ];
 
+  const weekdays = t('date.weekdaysShort');
   const daysList = [
-    { id: 'mon', label: 'M' },
-    { id: 'tue', label: 'T' },
-    { id: 'wed', label: 'W' },
-    { id: 'thu', label: 'T' },
-    { id: 'fri', label: 'F' },
-    { id: 'sat', label: 'S' },
-    { id: 'sun', label: 'S' },
+    { id: 'mon', label: weekdays[0] || 'M' },
+    { id: 'tue', label: weekdays[1] || 'T' },
+    { id: 'wed', label: weekdays[2] || 'W' },
+    { id: 'thu', label: weekdays[3] || 'T' },
+    { id: 'fri', label: weekdays[4] || 'F' },
+    { id: 'sat', label: weekdays[5] || 'S' },
+    { id: 'sun', label: weekdays[6] || 'S' },
   ];
 
   const toggleDay = (dayId: string) => {
@@ -95,10 +98,10 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
             </div>
             <div>
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                Create Habit Streak
+                {t('habits.addHabit')}
               </h3>
               <p className="text-[10px] font-bold text-[#6B635B]">
-                Track daily quantifiable consistency
+                {t('habits.subtitle')}
               </p>
             </div>
           </div>
@@ -118,7 +121,7 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
           {/* Title */}
           <div>
             <label className="block text-[10px] font-black uppercase tracking-wider text-[#6B635B] mb-1 px-1">
-              Habit Name
+              {t('habits.habitNameLabel')}
             </label>
             <input
               type="text"
@@ -126,7 +129,7 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
               autoFocus
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Read 20 pages or 2L pure water"
+              placeholder={t('habits.habitNamePlaceholder')}
               className="w-full px-3.5 py-2.5 bg-[#F4F0EA] text-xs font-bold text-[#24201D] rounded-xl border border-[#24201D] outline-none placeholder:text-[#A89F91] shadow-2xs"
             />
           </div>
@@ -134,7 +137,7 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
           {/* Lucide Icon Selector */}
           <div>
             <label className="block text-[10px] font-black uppercase tracking-wider text-[#6B635B] mb-1 px-1">
-              Icon Badge
+              {t('habits.iconBadgeLabel')}
             </label>
             <div className="grid grid-cols-6 gap-1.5">
               {iconChoices.map((item) => (
@@ -161,7 +164,7 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
           {/* Color Accent */}
           <div>
             <label className="block text-[10px] font-black uppercase tracking-wider text-[#6B635B] mb-1 px-1">
-              Accent Color
+              {t('habits.accentColorLabel')}
             </label>
             <div className="flex items-center gap-2">
               {colorOptions.map((c) => (
@@ -190,7 +193,7 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
           <div>
             <div className="flex items-center justify-between mb-1 px-1">
               <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B]">
-                Frequency
+                {t('habits.frequency')}
               </label>
               <div className="flex gap-2">
                 <button
@@ -198,14 +201,14 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
                   onClick={() => setTargetDays(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])}
                   className="text-[10px] font-bold text-[#3D6B52] underline cursor-pointer"
                 >
-                  Daily
+                  {t('habits.frequencyDaily')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setTargetDays(['mon', 'tue', 'wed', 'thu', 'fri'])}
                   className="text-[10px] font-bold text-[#3D6B52] underline cursor-pointer"
                 >
-                  Weekdays
+                  {t('habits.frequencyWeekdays')}
                 </button>
               </div>
             </div>
@@ -235,13 +238,13 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 rounded-xl border border-[#24201D]/30 text-xs font-bold text-[#6B635B] hover:bg-[#F4F0EA] cursor-pointer"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               className="px-5 py-2 rounded-xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.5px] border-[#24201D] text-xs font-black shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 cursor-pointer"
             >
-              Start Habit
+              {t('habits.startHabitBtn')}
             </button>
           </div>
         </form>

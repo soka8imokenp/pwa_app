@@ -3,6 +3,7 @@ import { Play, Pause, RotateCcw, Minimize2, Target, Check, Hourglass, Music2, Al
 import { playClickSound } from '../../lib/sound';
 import { AmbientSoundType } from '../../lib/ambientSound';
 import { musicPlayer, MusicPlayerState } from '../../lib/musicPlayerService';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface ZenFullscreenTimerProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
   taskTitle,
   mode,
 }) => {
+  const { t } = useTranslation();
   const [playerState, setPlayerState] = useState<MusicPlayerState>(() => musicPlayer.getState());
   const [pausedSeconds, setPausedSeconds] = useState(0);
 
@@ -77,10 +79,10 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
           </div>
           <div>
             <span className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] block leading-tight">
-              Zen Desk Stand Mode
+              {t('focus.zenTitle')}
             </span>
             <span className="text-[10px] text-[#6B635B] font-bold uppercase tracking-wider">
-              Sumire Focus Flow
+              {t('focus.zenSubtitle')}
             </span>
           </div>
         </div>
@@ -91,7 +93,7 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
             onClose();
           }}
           className="w-10 h-10 rounded-xl bg-white hover:bg-stone-100 border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs cursor-pointer active:scale-95 transition-all"
-          title="Exit Zen Mode"
+          title={t('focus.exitZen')}
         >
           <Minimize2 className="w-4 h-4 stroke-[2.5]" />
         </button>
@@ -115,14 +117,14 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
 
           <div className="flex flex-col items-center justify-center gap-2">
             <span className="text-xs font-black uppercase tracking-widest text-[#24201D] bg-[#F0BB58] px-3.5 py-1 rounded-full border-[1.5px] border-[#24201D] shadow-2xs inline-block">
-              {isRunning ? 'Flow Active' : 'Session Paused'} • {mode.toUpperCase()}
+              {isRunning ? t('focus.flowActive') : t('focus.sessionPaused')} • {mode.toUpperCase()}
             </span>
 
             {/* Red Paused Time Counter */}
             {!isRunning && elapsedFocusSeconds > 0 && (
               <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F7E3DC] border-[1.5px] border-[#C25E40] rounded-full text-xs font-black font-mono-num text-[#C25E40] shadow-2xs animate-in fade-in zoom-in-95 duration-150">
                 <span className="w-2 h-2 rounded-full bg-[#C25E40] animate-ping" />
-                <span>Paused: {formatPauseTime(pausedSeconds)}</span>
+                <span>{t('focus.pausedElapsed', { time: formatPauseTime(pausedSeconds) })}</span>
               </div>
             )}
           </div>
@@ -135,7 +137,7 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
               playClickSound();
               musicPlayer.togglePlay();
             }}
-            title={isMusicPlaying ? 'Click to Pause Lofi Radio' : 'Click to Play Lofi Radio'}
+            title={isMusicPlaying ? t('focus.clickToPause') : t('focus.clickToPlay')}
             className="inline-flex items-center gap-2.5 px-4 py-2 bg-white hover:bg-stone-50 border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] max-w-xs sm:max-w-sm mx-auto cursor-pointer transition-all active:translate-y-0.5"
           >
             <div className="w-6 h-6 rounded-lg bg-[#F0BB58] border border-[#24201D] flex items-center justify-center shrink-0">
@@ -168,7 +170,7 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
             className="w-full py-3.5 px-5 rounded-2xl border-[2px] border-[#24201D] font-extrabold font-display text-xs sm:text-sm uppercase tracking-wider shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer bg-[#3D6B52] text-white"
           >
             <Play className="w-4 h-4 fill-current stroke-[2.25]" />
-            <span>Start Flow</span>
+            <span>{t('focus.startFlow')}</span>
           </button>
         ) : (
           <>
@@ -181,19 +183,19 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
               {isRunning ? (
                 <>
                   <Pause className="w-4 h-4 fill-current stroke-[2.25]" />
-                  <span>Pause Session</span>
+                  <span>{t('focus.pauseSession')}</span>
                 </>
               ) : (
                 <>
                   <Play className="w-4 h-4 fill-current stroke-[2.25]" />
-                  <span>Resume Flow</span>
+                  <span>{t('focus.resumeFlow')}</span>
                 </>
               )}
             </button>
 
             <button
               onClick={onReset}
-              title="Reset Timer"
+              title={t('focus.reset')}
               className="w-12 h-12 rounded-2xl bg-white hover:bg-stone-100 border-[2px] border-[#24201D] flex items-center justify-center text-stone-700 shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0"
             >
               <RotateCcw className="w-4 h-4 stroke-[2.5]" />
@@ -201,7 +203,7 @@ export const ZenFullscreenTimer: React.FC<ZenFullscreenTimerProps> = ({
 
             <button
               onClick={onComplete}
-              title="Complete & Log Session"
+              title={t('focus.saveSession')}
               className="w-12 h-12 rounded-2xl bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[2px] border-[#24201D] flex items-center justify-center text-[#2D503C] shadow-[2.5px_2.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer shrink-0"
             >
               <Check className="w-5 h-5 stroke-[3]" />

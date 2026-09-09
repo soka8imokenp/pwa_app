@@ -10,6 +10,7 @@ import {
   Bot,
 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 export type TabView = 'priorities' | 'backlog' | 'habits' | 'focus' | 'stats' | 'links';
 export type HealthTab = 'body' | 'intake' | 'activity' | 'coach';
@@ -31,6 +32,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onChangeHealthTab,
   onOpenMenu,
 }) => {
+  const { t } = useTranslation();
+
   const handleTabClick = (tab: TabView) => {
     playClickSound();
     onChangeTab(tab);
@@ -83,7 +86,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                     activeHealthTab === 'body' ? 'font-bold text-[#24201D]' : 'font-medium text-[#78716C]'
                   }`}
                 >
-                  Body
+                  {t('nav.body')}
                 </span>
               </button>
 
@@ -106,7 +109,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                     activeHealthTab === 'intake' ? 'font-bold text-[#24201D]' : 'font-medium text-[#78716C]'
                   }`}
                 >
-                  Intake
+                  {t('nav.intake')}
                 </span>
               </button>
 
@@ -129,7 +132,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                     activeHealthTab === 'activity' ? 'font-bold text-[#24201D]' : 'font-medium text-[#78716C]'
                   }`}
                 >
-                  Activity
+                  {t('nav.activity')}
                 </span>
               </button>
 
@@ -152,7 +155,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                     activeHealthTab === 'coach' ? 'font-bold text-[#24201D]' : 'font-medium text-[#78716C]'
                   }`}
                 >
-                  AI Assistant
+                  {t('nav.coach')}
                 </span>
               </button>
             </>
@@ -178,7 +181,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                     activeTab === 'priorities' ? 'font-bold text-[#24201D]' : 'font-medium text-[#78716C]'
                   }`}
                 >
-                  Today
+                  {t('nav.today')}
                 </span>
               </button>
 
@@ -201,7 +204,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                     activeTab === 'habits' ? 'font-bold text-[#24201D]' : 'font-medium text-[#78716C]'
                   }`}
                 >
-                  Habits
+                  {t('nav.habits')}
                 </span>
               </button>
 
@@ -224,7 +227,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                     activeTab === 'focus' ? 'font-bold text-[#24201D]' : 'font-medium text-[#78716C]'
                   }`}
                 >
-                  Focus
+                  {t('nav.focus')}
                 </span>
               </button>
 
@@ -250,7 +253,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                     isSecondaryActive ? 'font-bold text-[#24201D]' : 'font-medium text-[#78716C]'
                   }`}
                 >
-                  Menu
+                  {t('nav.menu')}
                 </span>
               </button>
             </>

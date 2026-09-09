@@ -22,6 +22,7 @@ import type { OverallActivityStats } from '../../lib/streaks';
 import { AVATAR_OPTIONS, getAvatarById } from '../../data/avatars';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import confetti from 'canvas-confetti';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -38,55 +39,55 @@ interface ProfileModalProps {
   selectedDate?: string;
 }
 
-const ROLE_PRESETS = [
-  'Software Engineer',
-  'Product Designer',
-  'Student / Scholar',
-  'Writer & Creator',
-  'Zen Seeker',
-];
+const ROLE_PRESETS_BY_LANG: Record<string, string[]> = {
+  uz: [
+    'Dasturchi-muhandis',
+    'Mahsulot dizayneri',
+    'Talaba / Tadqiqotchi',
+    'Muallif va ijodkor',
+    'Zen izlovchisi',
+  ],
+  ru: [
+    'Инженер-программист',
+    'Продуктовый дизайнер',
+    'Студент / Исследователь',
+    'Автор и создатель',
+    'Искатель дзена',
+  ],
+  en: [
+    'Software Engineer',
+    'Product Designer',
+    'Student / Scholar',
+    'Writer & Creator',
+    'Zen Seeker',
+  ],
+};
 
-const MOTTO_PRESETS = [
-  'Focus on what matters, let the rest flow.',
-  'Small steps every day lead to giant leaps.',
-  'Calm mind, sharp focus, relentless action.',
-  'Build with passion, live with balance.',
-  'One task at a time, with complete presence.',
-];
+const MOTTO_PRESETS_BY_LANG: Record<string, string[]> = {
+  uz: [
+    'Muhim narsaga eʼtibor qarat, qolgani oʻz oqimida ketsin.',
+    'Har kungi kichik qadamlar buyuk natijalarga yetaklaydi.',
+    'Xotirjam aql, oʻtkir fokus, qatʼiy harakat.',
+    'Ishtiyoq bilan yarat, muvozanat bilan yasha.',
+    'Har safar bitta vazifa — toʻliq diqqat bilan.',
+  ],
+  ru: [
+    'Фокусируйся на главном, остальное пусть течет само.',
+    'Маленькие шаги каждый день ведут к большим вершинам.',
+    'Спокойный ум, острый фокус, решительные действия.',
+    'Создавай со страстью, живи в гармонии.',
+    'Одно дело за раз — с полным присутствием.',
+  ],
+  en: [
+    'Focus on what matters, let the rest flow.',
+    'Small steps every day lead to giant leaps.',
+    'Calm mind, sharp focus, relentless action.',
+    'Build with passion, live with balance.',
+    'One task at a time, with complete presence.',
+  ],
+};
 
 const FOCUS_GOAL_OPTIONS = [1, 2, 3, 4, 6, 8];
-
-const WORK_STYLES: {
-  id: 'deep_focus' | 'balanced' | 'sprint' | 'zen';
-  label: string;
-  desc: string;
-  badge: string;
-}[] = [
-  {
-    id: 'deep_focus',
-    label: 'Deep Focus',
-    desc: '50m Flow / 10m Break',
-    badge: '50/10',
-  },
-  {
-    id: 'balanced',
-    label: 'Classic Pomodoro',
-    desc: '25m Focus / 5m Break',
-    badge: '25/5',
-  },
-  {
-    id: 'sprint',
-    label: 'Flow Sprint',
-    desc: '90m Ultradian Sprint',
-    badge: '90m',
-  },
-  {
-    id: 'zen',
-    label: 'Zen Stopwatch',
-    desc: 'Open-ended immersion',
-    badge: 'Open',
-  },
-];
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({
   isOpen,
@@ -102,6 +103,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   activityStats,
   selectedDate = new Date().toISOString().split('T')[0],
 }) => {
+  const { language } = useLanguage();
   // Navigation State: 'overview' vs 'edit'
   const [activeTab, setActiveTab] = useState<'overview' | 'edit'>('overview');
 
@@ -117,6 +119,36 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const [selectedAvatar, setSelectedAvatar] = useState<string>('sumire-scout');
   const [feedback, setFeedback] = useState<string | null>(null);
 
+  const rolePresets = ROLE_PRESETS_BY_LANG[language] || ROLE_PRESETS_BY_LANG.uz;
+  const mottoPresets = MOTTO_PRESETS_BY_LANG[language] || MOTTO_PRESETS_BY_LANG.uz;
+
+  const workStyles = [
+    {
+      id: 'deep_focus' as const,
+      label: language === 'uz' ? 'Chuqur fokus' : language === 'ru' ? 'Глубокий фокус' : 'Deep Focus',
+      desc: language === 'uz' ? '50d oqim / 10d tanaffus' : language === 'ru' ? '50м поток / 10м отдых' : '50m Flow / 10m Break',
+      badge: '50/10',
+    },
+    {
+      id: 'balanced' as const,
+      label: language === 'uz' ? 'Klassik Pomodoro' : language === 'ru' ? 'Классический Pomodoro' : 'Classic Pomodoro',
+      desc: language === 'uz' ? '25d fokus / 5d tanaffus' : language === 'ru' ? '25м фокус / 5м отдых' : '25m Focus / 5m Break',
+      badge: '25/5',
+    },
+    {
+      id: 'sprint' as const,
+      label: language === 'uz' ? 'Oqim sprinti' : language === 'ru' ? 'Потоковый спринт' : 'Flow Sprint',
+      desc: language === 'uz' ? '90d ultradian sprint' : language === 'ru' ? '90м ультрадианный спринт' : '90m Ultradian Sprint',
+      badge: '90m',
+    },
+    {
+      id: 'zen' as const,
+      label: language === 'uz' ? 'Zen sekundomer' : language === 'ru' ? 'Дзен-секундомер' : 'Zen Stopwatch',
+      desc: language === 'uz' ? 'Cheksiz shoʻngʻish' : language === 'ru' ? 'Свободное погружение' : 'Open-ended immersion',
+      badge: language === 'uz' ? 'Ochiq' : language === 'ru' ? 'Открытый' : 'Open',
+    },
+  ];
+
   // Synchronize initial data from currentUser and localStorage
   useEffect(() => {
     if (currentUser) {
@@ -125,11 +157,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       setEmail(currentUser.email || '');
       setUsername(currentUser.username || '');
       setRole(currentUser.role || '');
-      setMotto(currentUser.motto || 'Focus on what matters, let the rest flow.');
+      setMotto(currentUser.motto || (language === 'uz' ? 'Muhim narsaga eʼtibor qarat, qolgani oʻz oqimida ketsin.' : language === 'ru' ? 'Фокусируйся на главном, остальное пусть течет само.' : 'Focus on what matters, let the rest flow.'));
       setFocusDailyGoalHours(currentUser.focusDailyGoalHours || 4);
       setWorkStyle(currentUser.workStyle || 'deep_focus');
     }
-  }, [currentUser]);
+  }, [currentUser, language]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -171,7 +203,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   if (!isOpen || !currentUser) return null;
 
   const activeAvatar = getAvatarById(selectedAvatar);
-  const fullName = `${firstName} ${lastName}`.trim() || currentUser.username || 'Daily User';
+  const fullName = `${firstName} ${lastName}`.trim() || currentUser.username || (language === 'uz' ? 'Kundalik foydalanuvchi' : language === 'ru' ? 'Пользователь' : 'Daily User');
 
   const handleSelectAvatar = (id: string) => {
     playClickSound();
@@ -193,7 +225,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       email: email.trim(),
       username: username.trim(),
       role: role.trim(),
-      motto: motto.trim() || 'Focus on what matters, let the rest flow.',
+      motto: motto.trim() || (language === 'uz' ? 'Muhim narsaga eʼtibor qarat, qolgani oʻz oqimida ketsin.' : language === 'ru' ? 'Фокусируйся на главном, остальное пусть течет само.' : 'Focus on what matters, let the rest flow.'),
       focusDailyGoalHours,
       workStyle,
       avatarId: selectedAvatar,
@@ -201,7 +233,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
     onUpdateProfile(updated);
     localStorage.setItem('kairo_auth_user', JSON.stringify(updated));
-    setFeedback('Profile updated successfully!');
+    setFeedback(language === 'uz' ? 'Profil muvaffaqiyatli yangilandi!' : language === 'ru' ? 'Профиль успешно обновлен!' : 'Profile updated successfully!');
     setActiveTab('overview');
 
     confetti({
@@ -215,7 +247,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   };
 
   const handleLogoutClick = () => {
-    if (window.confirm('Are you sure you want to sign out of this vault?')) {
+    if (window.confirm(language === 'uz' ? 'Haqiqatan ham ushbu hisobdan chiqmoqchimisiz?' : language === 'ru' ? 'Вы уверены, что хотите выйти из профиля?' : 'Are you sure you want to sign out of this vault?')) {
       playClickSound();
       onClose();
       onLogout();
@@ -256,7 +288,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     URL.revokeObjectURL(url);
 
     playSuccessChime();
-    setFeedback('Vault backup exported as JSON!');
+    setFeedback(language === 'uz' ? 'Zaxira nusxasi JSON formatida yuklab olindi!' : language === 'ru' ? 'Резервная копия сохранена в JSON!' : 'Vault backup exported as JSON!');
     setTimeout(() => setFeedback(null), 3000);
   };
 
@@ -274,10 +306,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             </div>
             <div>
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                Resident Profile
+                {language === 'uz' ? 'Rezident profili' : language === 'ru' ? 'Профиль резидента' : 'Resident Profile'}
               </h3>
               <p className="text-[10px] font-bold text-[#6B635B]">
-                Identity & Mascot Companion
+                {language === 'uz' ? 'Shaxsiyat va hamroh maskot' : language === 'ru' ? 'Личность и компаньон' : 'Identity & Mascot Companion'}
               </p>
             </div>
           </div>
@@ -288,7 +320,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               onClose();
             }}
             className="w-8 h-8 rounded-xl bg-[#F4F0EA] hover:bg-rose-50 hover:text-rose-600 border-[1.5px] border-[#24201D] flex items-center justify-center text-[#24201D] cursor-pointer shadow-2xs active:scale-95 transition-all"
-            title="Close"
+            title={language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
           >
             <X className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -318,7 +350,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               }`}
             >
               <User className="w-3.5 h-3.5" />
-              <span>Overview</span>
+              <span>{language === 'uz' ? 'Umumiy' : language === 'ru' ? 'Обзор' : 'Overview'}</span>
             </button>
             <button
               type="button"
@@ -333,7 +365,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               }`}
             >
               <Edit3 className="w-3.5 h-3.5" />
-              <span>Edit Profile</span>
+              <span>{language === 'uz' ? 'Tahrirlash' : language === 'ru' ? 'Редактировать' : 'Edit Profile'}</span>
             </button>
           </div>
         </div>
@@ -393,16 +425,16 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#24201D]/10">
                   <div className="p-2 rounded-xl bg-[#FBECCF] border border-[#24201D] flex flex-col items-center text-center shadow-2xs">
                     <span className="text-[9px] font-black uppercase text-[#854D0E] flex items-center gap-1">
-                      <Flame className="w-3 h-3 fill-[#E09F3E] text-[#C25E40]" /> Streak
+                      <Flame className="w-3 h-3 fill-[#E09F3E] text-[#C25E40]" /> {language === 'uz' ? 'Ketma-ketlik' : language === 'ru' ? 'Серия' : 'Streak'}
                     </span>
                     <span className="text-sm font-black font-mono-num text-[#24201D] mt-0.5">
-                      {streakCount}d
+                      {streakCount}{language === 'uz' ? 'k' : language === 'ru' ? 'д' : 'd'}
                     </span>
                   </div>
 
                   <div className="p-2 rounded-xl bg-[#DDE8DE] border border-[#24201D] flex flex-col items-center text-center shadow-2xs">
                     <span className="text-[9px] font-black uppercase text-[#2D503C] flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> Tasks
+                      <CheckCircle2 className="w-3 h-3" /> {language === 'uz' ? 'Vazifalar' : language === 'ru' ? 'Задачи' : 'Tasks'}
                     </span>
                     <span className="text-sm font-black font-mono-num text-[#24201D] mt-0.5">
                       {lifetimeStats.totalCompletedTasks}
@@ -411,10 +443,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
                   <div className="p-2 rounded-xl bg-[#EDE9FE] border border-[#24201D] flex flex-col items-center text-center shadow-2xs">
                     <span className="text-[9px] font-black uppercase text-[#6B21A8] flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> Focus
+                      <Clock className="w-3 h-3" /> {language === 'uz' ? 'Fokus' : language === 'ru' ? 'Фокус' : 'Focus'}
                     </span>
                     <span className="text-sm font-black font-mono-num text-[#24201D] mt-0.5">
-                      {lifetimeStats.totalFocusHours}h
+                      {lifetimeStats.totalFocusHours}{language === 'uz' ? 's' : language === 'ru' ? 'ч' : 'h'}
                     </span>
                   </div>
                 </div>
@@ -428,7 +460,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                       <Smile className="w-3.5 h-3.5 text-[#24201D] stroke-[2.25]" />
                     </div>
                     <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                      Active Mascot Companion
+                      {language === 'uz' ? 'Faol hamroh maskot' : language === 'ru' ? 'Активный талисман' : 'Active Mascot Companion'}
                     </h4>
                   </div>
                   <span className="text-[10px] font-black text-[#6B635B] font-display">
@@ -472,7 +504,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   className="py-2.5 px-3 rounded-2xl bg-white hover:bg-[#F4F0EA] border-[1.75px] border-[#24201D] text-xs font-black text-[#24201D] flex items-center justify-center gap-1.5 shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5 stroke-[2.5]" />
-                  <span>Backup JSON</span>
+                  <span>{language === 'uz' ? 'JSON zaxira nusxa' : language === 'ru' ? 'Резервная копия' : 'Backup JSON'}</span>
                 </button>
 
                 <button
@@ -481,7 +513,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   className="py-2.5 px-3 rounded-2xl bg-[#F9E2E5] hover:bg-[#F4CCD1] text-[#8C2B39] border-[1.75px] border-[#8C2B39] text-xs font-black shadow-[2px_2px_0px_#8C2B39] flex items-center justify-center gap-1.5 active:translate-y-0.5 transition-all cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5 stroke-[2.5]" />
-                  <span>Sign Out</span>
+                  <span>{language === 'uz' ? 'Chiqish' : language === 'ru' ? 'Выйти' : 'Sign Out'}</span>
                 </button>
               </div>
             </>
@@ -495,33 +527,33 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
                 <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] flex items-center gap-1.5 border-b border-[#24201D]/15 pb-2">
                   <User className="w-3.5 h-3.5 text-[#3D6B52]" />
-                  <span>Personal Identity</span>
+                  <span>{language === 'uz' ? 'Shaxsiy maʼlumotlar' : language === 'ru' ? 'Личные данные' : 'Personal Identity'}</span>
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-black uppercase text-[#6B635B] mb-1 px-1">
-                      First Name
+                      {language === 'uz' ? 'Ism' : language === 'ru' ? 'Имя' : 'First Name'}
                     </label>
                     <input
                       type="text"
                       required
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
-                      placeholder="e.g. Ken"
+                      placeholder={language === 'uz' ? 'masalan, Anvar' : language === 'ru' ? 'напр., Алекс' : 'e.g. Ken'}
                       className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] outline-none shadow-2xs focus:ring-2 focus:ring-[#3D6B52]"
                     />
                   </div>
 
                   <div>
                     <label className="block text-[10px] font-black uppercase text-[#6B635B] mb-1 px-1">
-                      Last Name
+                      {language === 'uz' ? 'Familiya' : language === 'ru' ? 'Фамилия' : 'Last Name'}
                     </label>
                     <input
                       type="text"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      placeholder="e.g. Sato"
+                      placeholder={language === 'uz' ? 'masalan, Karimov' : language === 'ru' ? 'напр., Смирнов' : 'e.g. Sato'}
                       className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] outline-none shadow-2xs focus:ring-2 focus:ring-[#3D6B52]"
                     />
                   </div>
@@ -530,7 +562,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-black uppercase text-[#6B635B] mb-1 px-1">
-                      Username / Handle
+                      {language === 'uz' ? 'Foydalanuvchi nomi' : language === 'ru' ? 'Имя пользователя' : 'Username / Handle'}
                     </label>
                     <div className="relative">
                       <input
@@ -547,7 +579,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
                   <div>
                     <label className="block text-[10px] font-black uppercase text-[#6B635B] mb-1 px-1">
-                      Email Address
+                      {language === 'uz' ? 'Elektron pochta' : language === 'ru' ? 'Электронная почта' : 'Email Address'}
                     </label>
                     <div className="relative">
                       <input
@@ -569,10 +601,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 <div className="flex items-center justify-between border-b border-[#24201D]/15 pb-2">
                   <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] flex items-center gap-1.5">
                     <Briefcase className="w-3.5 h-3.5 text-[#E09F3E]" />
-                    <span>Role & Specialty</span>
+                    <span>{language === 'uz' ? 'Kasb va ixtisoslik' : language === 'ru' ? 'Роль и специализация' : 'Role & Specialty'}</span>
                   </h4>
                   <span className="text-[10px] font-bold text-[#6B635B]">
-                    Shown on Resident Badge
+                    {language === 'uz' ? 'Rezident nishonida koʻrsatiladi' : language === 'ru' ? 'На бейдже резидента' : 'Shown on Resident Badge'}
                   </span>
                 </div>
 
@@ -581,14 +613,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     type="text"
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
-                    placeholder="e.g. Software Engineer / Writer"
+                    placeholder={language === 'uz' ? 'masalan, Dasturchi-muhandis' : language === 'ru' ? 'напр., Инженер-программист' : 'e.g. Software Engineer / Writer'}
                     className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] outline-none shadow-2xs focus:ring-2 focus:ring-[#3D6B52]"
                   />
                 </div>
 
                 {/* Quick Role Preset Chips */}
                 <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                  {ROLE_PRESETS.map((p) => (
+                  {rolePresets.map((p) => (
                     <button
                       key={p}
                       type="button"
@@ -610,7 +642,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 <div className="flex items-center justify-between border-b border-[#24201D]/15 pb-2">
                   <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] flex items-center gap-1.5">
                     <Quote className="w-3.5 h-3.5 text-[#C25E40]" />
-                    <span>Personal Motto / Daily Mantra</span>
+                    <span>{language === 'uz' ? 'Shaxsiy shior / Kundalik mantra' : language === 'ru' ? 'Личный девиз / Мантра дня' : 'Personal Motto / Daily Mantra'}</span>
                   </h4>
                   <span className="text-[10px] font-bold text-[#6B635B]">
                     {motto.length}/100
@@ -623,16 +655,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     maxLength={100}
                     value={motto}
                     onChange={(e) => setMotto(e.target.value)}
-                    placeholder="Write an inspirational daily reminder..."
+                    placeholder={language === 'uz' ? 'Kundalik ilhomlantiruvchi eslatma yozing...' : language === 'ru' ? 'Напишите вдохновляющее напоминание...' : 'Write an inspirational daily reminder...'}
                     className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] outline-none shadow-2xs focus:ring-2 focus:ring-[#3D6B52]"
                   />
                 </div>
 
                 {/* Quick Motto Presets */}
                 <div className="space-y-1 pt-1">
-                  <p className="text-[9px] font-black uppercase text-[#6B635B] px-1">Quick inspiration:</p>
+                  <p className="text-[9px] font-black uppercase text-[#6B635B] px-1">
+                    {language === 'uz' ? 'Tezkor ilhom:' : language === 'ru' ? 'Быстрое вдохновение:' : 'Quick inspiration:'}
+                  </p>
                   <div className="flex flex-col gap-1">
-                    {MOTTO_PRESETS.map((m) => (
+                    {mottoPresets.map((m) => (
                       <button
                         key={m}
                         type="button"
@@ -654,13 +688,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
                 <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] flex items-center gap-1.5 border-b border-[#24201D]/15 pb-2">
                   <Target className="w-3.5 h-3.5 text-[#3D6B52]" />
-                  <span>Daily Focus Targets & Rhythm</span>
+                  <span>{language === 'uz' ? 'Kundalik fokus maqsadlari va maromi' : language === 'ru' ? 'Ежедневные цели фокуса и ритм' : 'Daily Focus Targets & Rhythm'}</span>
                 </h4>
 
                 {/* Focus Target Hours */}
                 <div className="space-y-1.5">
                   <label className="block text-[10px] font-black uppercase text-[#6B635B] px-1">
-                    Daily Focus Goal (Hours / Day)
+                    {language === 'uz' ? 'Kundalik fokus maqsadi (soat/kun)' : language === 'ru' ? 'Цель фокуса (часов/день)' : 'Daily Focus Goal (Hours / Day)'}
                   </label>
                   <div className="grid grid-cols-6 gap-1.5">
                     {FOCUS_GOAL_OPTIONS.map((hours) => {
@@ -676,7 +710,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                               : 'bg-[#FAF8F5] border-[#24201D]/25 text-[#6B635B] hover:border-[#24201D]'
                           }`}
                         >
-                          {hours}h
+                          {hours}{language === 'uz' ? 's' : language === 'ru' ? 'ч' : 'h'}
                         </button>
                       );
                     })}
@@ -686,10 +720,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 {/* Work Style Selection */}
                 <div className="space-y-1.5 pt-2">
                   <label className="block text-[10px] font-black uppercase text-[#6B635B] px-1">
-                    Focus Flow Rhythm
+                    {language === 'uz' ? 'Fokus oqimi maromi' : language === 'ru' ? 'Ритм потока фокуса' : 'Focus Flow Rhythm'}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
-                    {WORK_STYLES.map((ws) => {
+                    {workStyles.map((ws) => {
                       const isSelected = workStyle === ws.id;
                       return (
                         <button
@@ -721,7 +755,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 <div className="flex items-center justify-between border-b border-[#24201D]/15 pb-2">
                   <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] flex items-center gap-1.5">
                     <Smile className="w-3.5 h-3.5 text-[#E09F3E]" />
-                    <span>Select Mascot Avatar</span>
+                    <span>{language === 'uz' ? 'Hamroh maskotni tanlang' : language === 'ru' ? 'Выберите талисмана' : 'Select Mascot Avatar'}</span>
                   </h4>
                 </div>
 
@@ -763,7 +797,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   }}
                   className="flex-1 py-3 px-4 rounded-2xl bg-white hover:bg-stone-100 border-[1.75px] border-[#24201D] text-xs font-black text-[#6B635B] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer"
                 >
-                  Cancel
+                  {language === 'uz' ? 'Bekor qilish' : language === 'ru' ? 'Отмена' : 'Cancel'}
                 </button>
 
                 <button
@@ -771,7 +805,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   className="flex-2 py-3 px-4 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] border-[1.75px] border-[#24201D] text-xs font-black text-white shadow-[2px_2px_0px_#24201D] flex items-center justify-center gap-2 active:translate-y-0.5 transition-all cursor-pointer uppercase tracking-wider"
                 >
                   <Save className="w-4 h-4 stroke-[2.5]" />
-                  <span>Save Profile Changes</span>
+                  <span>{language === 'uz' ? 'Oʻzgarishlarni saqlash' : language === 'ru' ? 'Сохранить профиль' : 'Save Profile Changes'}</span>
                 </button>
               </div>
             </form>

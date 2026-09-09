@@ -15,6 +15,7 @@ import {
 } from 'date-fns';
 import { Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
+import { useTranslation, formatMonthYearDirect, formatDateDirect } from '../../i18n/LanguageContext';
 
 interface CustomDatePickerProps {
   selectedDate: string;
@@ -27,6 +28,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   onChangeDate,
   label = 'Date',
 }) => {
+  const { language, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const parsedDate = React.useMemo(() => {
     try {
@@ -62,7 +64,11 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
   const allDays = eachDayOfInterval({ start: startDate, end: endDate });
 
-  const weekHeaders = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+  const weekHeaders = language === 'uz'
+    ? ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya']
+    : language === 'ru'
+    ? ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+    : ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
   return (
     <div className="w-full space-y-1.5 font-body select-none">
@@ -86,7 +92,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
             <Calendar className="w-3.5 h-3.5 text-[#3D6B52]" />
           </div>
           <span className="text-xs font-black font-display text-[#24201D]">
-            {format(parsedDate, 'EEEE, MMM d, yyyy')}
+            {formatDateDirect(selectedDate, language)}
           </span>
         </div>
 
@@ -113,7 +119,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
             </button>
 
             <span className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-              {format(viewMonth, 'MMMM yyyy')}
+              {formatMonthYearDirect(viewMonth, language)}
             </span>
 
             <button

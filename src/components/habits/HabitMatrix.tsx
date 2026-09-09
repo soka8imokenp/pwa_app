@@ -5,6 +5,7 @@ import { BrutalCard } from '../common/BrutalCard';
 import { BrutalButton } from '../common/BrutalButton';
 import { playTaskCheckSound, playSuccessChime } from '../../lib/sound';
 import confetti from 'canvas-confetti';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface HabitMatrixProps {
   habits: HabitWithStats[];
@@ -21,6 +22,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
   onDeleteHabit,
   onOpenAddHabit,
 }) => {
+  const { t } = useTranslation();
   const completedTodayCount = habits.filter((h) => h.completedToday).length;
 
   const handleToggle = (habitId: number, dateStr: string, currentStatus: boolean) => {
@@ -53,10 +55,10 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
           </div>
           <div>
             <h3 className="text-lg font-black text-[#24201D] tracking-tight flex items-center gap-2">
-              Habit Streaks Matrix
+              {t('habits.habitStreakMatrix')}
             </h3>
             <p className="text-xs font-bold text-[#6B635B]">
-              Quantifiable consistency • {completedTodayCount}/{habits.length} completed today
+              {t('habits.completedTodaySummary', { completed: completedTodayCount, total: habits.length })}
             </p>
           </div>
         </div>
@@ -68,7 +70,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
           className="flex items-center gap-1 self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
-          <span>New Habit</span>
+          <span>{t('habits.addHabit')}</span>
         </BrutalButton>
       </div>
 
@@ -78,13 +80,13 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
           <div className="p-8 text-center bg-white/70 border-2 border-dashed border-[#24201D]/25 rounded-2xl">
             <Target className="w-8 h-8 text-[#3D6B52] mx-auto mb-2" />
             <p className="text-sm font-black text-[#24201D]">
-              No habits created yet!
+              {t('habits.noHabitsCreated')}
             </p>
             <p className="text-xs font-semibold text-[#6B635B] mt-1 mb-3">
-              Add your first micro-habit to start building your streak fire.
+              {t('habits.addFirstMicroHabit')}
             </p>
             <BrutalButton variant="primary" size="sm" onClick={onOpenAddHabit}>
-              Create First Habit
+              {t('habits.createFirstHabit')}
             </BrutalButton>
           </div>
         ) : (
@@ -110,11 +112,11 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="inline-flex items-center gap-1 text-[11px] font-black text-[#D97706] font-mono-num">
                         <Flame className="w-3.5 h-3.5 fill-current" />
-                        {habit.currentStreak}d Streak
+                        {t('habits.streakDaysCount', { count: habit.currentStreak })}
                       </span>
                       <span className="text-stone-300">•</span>
                       <span className="text-[11px] font-bold text-[#6B635B] font-mono-num">
-                        Best: {habit.longestStreak}d
+                        {t('habits.bestStreakCount', { count: habit.longestStreak })}
                       </span>
                     </div>
                   </div>
@@ -126,13 +128,14 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                     {habit.recentLogs.map((log) => {
                       const isSelected = log.date === selectedDate;
                       const dateObj = new Date(log.date);
-                      const dayLetter = ['S', 'M', 'T', 'W', 'T', 'F', 'S'][dateObj.getDay()];
+                      const dayIndex = (dateObj.getDay() + 6) % 7;
+                      const dayLetter = t('date.weekdaysShort')[dayIndex]?.charAt(0) || 'D';
 
                       return (
                         <button
                           key={log.date}
                           onClick={() => handleToggle(habit.id!, log.date, log.completed)}
-                          title={`${log.date}: ${log.completed ? 'Done' : 'Not Done'}`}
+                          title={`${log.date}: ${log.completed ? t('common.completed') : t('habits.markIncomplete')}`}
                           className={`w-7 h-8 rounded-lg border-[1.5px] flex flex-col items-center justify-center transition-all cursor-pointer select-none ${
                             log.completed
                               ? 'bg-[#3D6B52] text-white border-[#24201D] shadow-[1px_1px_0px_#24201D] font-black'
@@ -156,7 +159,7 @@ export const HabitMatrix: React.FC<HabitMatrixProps> = ({
                   {habit.id && (
                     <button
                       onClick={() => onDeleteHabit(habit.id!)}
-                      title="Delete habit"
+                      title={t('common.delete')}
                       className="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors shrink-0"
                     >
                       <Trash2 className="w-4 h-4" />

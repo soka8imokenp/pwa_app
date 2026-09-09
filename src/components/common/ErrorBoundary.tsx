@@ -39,7 +39,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   };
 
   handleResetCacheAndReload = () => {
-    if (window.confirm('Reset local cache and reload? This will clear temporary UI state while preserving your synced data.')) {
+    const lang = typeof window !== 'undefined' ? (localStorage.getItem('kairo_app_language') || 'uz') : 'uz';
+    const confirmMsg =
+      lang === 'uz'
+        ? 'Vaqtinchalik keshni tozalab, ilovani qayta yuklamoqchimisiz? Bu sinxronlangan maʼlumotlaringizni saqlagan holda vaqtinchalik holatni tozalaydi.'
+        : lang === 'ru'
+        ? 'Очистить временный кэш и перезагрузить? Это очистит временное состояние интерфейса, сохранив все синхронизированные данные.'
+        : 'Reset local cache and reload? This will clear temporary UI state while preserving your synced data.';
+
+    if (window.confirm(confirmMsg)) {
       try {
         // Clear non-critical caches
         sessionStorage.clear();
@@ -62,6 +70,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         return this.props.fallback;
       }
 
+      const lang = typeof window !== 'undefined' ? (localStorage.getItem('kairo_app_language') || 'uz') : 'uz';
+
       return (
         <div className="min-h-screen bg-[#F4F0EA] text-[#24201D] flex items-center justify-center p-4 font-sans">
           <div className="max-w-md w-full bg-white border-3 border-[#24201D] rounded-3xl p-6 shadow-[6px_6px_0px_#24201D] flex flex-col items-center text-center">
@@ -71,10 +81,18 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </div>
 
             <h1 className="text-2xl font-black tracking-tight mb-2 text-[#24201D]">
-              Oops! Something went sideways
+              {lang === 'uz'
+                ? 'Kutilmagan xatolik yuz berdi'
+                : lang === 'ru'
+                ? 'Ой! Что-то пошло не так'
+                : 'Oops! Something went sideways'}
             </h1>
             <p className="text-sm font-medium text-[#24201D]/70 mb-6">
-              Daily Sumire encountered an unexpected error. Don't worry, your offline database and synced records are safe.
+              {lang === 'uz'
+                ? 'Daily Sumire dasturida kutilmagan xatolik yuz berdi. Xavotir olmang, sizning oflayn bazangiz va maʼlumotlaringiz xavfsiz holatda.'
+                : lang === 'ru'
+                ? 'Daily Sumire столкнулся с непредвиденной ошибкой. Не волнуйтесь, ваша локальная база и синхронизированные записи в безопасности.'
+                : "Daily Sumire encountered an unexpected error. Don't worry, your offline database and synced records are safe."}
             </p>
 
             <div className="w-full flex flex-col gap-3 mb-4">
@@ -84,7 +102,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 onClick={this.handleReload}
                 className="w-full justify-center"
               >
-                Reload Daily Sumire 🔄
+                {lang === 'uz'
+                  ? 'Daily Sumire-ni qayta yuklash 🔄'
+                  : lang === 'ru'
+                  ? 'Перезагрузить Daily Sumire 🔄'
+                  : 'Reload Daily Sumire 🔄'}
               </BrutalButton>
 
               <BrutalButton
@@ -93,7 +115,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 onClick={this.handleResetCacheAndReload}
                 className="w-full justify-center text-xs"
               >
-                Clear Temp Cache & Reload
+                {lang === 'uz'
+                  ? 'Keshni tozalash va qayta yuklash'
+                  : lang === 'ru'
+                  ? 'Очистить кэш и перезагрузить'
+                  : 'Clear Temp Cache & Reload'}
               </BrutalButton>
             </div>
 
@@ -102,7 +128,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               onClick={this.toggleDetails}
               className="text-xs font-bold text-[#3D6B52] underline hover:text-[#24201D] cursor-pointer mt-2"
             >
-              {this.state.showDetails ? 'Hide technical details ▲' : 'Show technical details ▼'}
+              {this.state.showDetails
+                ? (lang === 'uz' ? 'Texnik tafsilotlarni yashirish ▲' : lang === 'ru' ? 'Скрыть технические детали ▲' : 'Hide technical details ▲')
+                : (lang === 'uz' ? 'Texnik tafsilotlarni koʻrsatish ▼' : lang === 'ru' ? 'Показать технические детали ▼' : 'Show technical details ▼')}
             </button>
 
             {this.state.showDetails && (

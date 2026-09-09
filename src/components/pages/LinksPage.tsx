@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ExternalLink,
   Copy,
@@ -20,6 +20,7 @@ import type { LinkItem } from '../../types';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import { QRCodeModal } from '../modals/QRCodeModal';
 import confetti from 'canvas-confetti';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface LinksPageProps {
   links: LinkItem[];
@@ -39,75 +40,13 @@ interface EcosystemService {
   borderColor: string;
 }
 
-const ECOSYSTEM_SERVICES: EcosystemService[] = [
-  {
-    id: 'tv',
-    title: 'Kawaii TV',
-    badge: 'Watch Party & Streams',
-    description: 'Anime streaming, sync rooms & creator tiers',
-    url: 'https://tv.kawaii.uz',
-    icon: <Tv className="w-5 h-5 text-[#2D503C] stroke-[2.25]" />,
-    bg: 'bg-[#DDE8DE]',
-    borderColor: 'border-[#24201D]',
-  },
-  {
-    id: 'manga',
-    title: 'Manga Hub',
-    badge: 'Reader & Novels',
-    description: 'Manga, light novels, webtoons & translations',
-    url: 'https://manga.kawaii.uz',
-    icon: <BookOpen className="w-5 h-5 text-[#854D0E] stroke-[2.25]" />,
-    bg: 'bg-[#FBECCF]',
-    borderColor: 'border-[#24201D]',
-  },
-  {
-    id: 'anime',
-    title: 'Anime Hub',
-    badge: 'Catalog & Dubs',
-    description: 'Release calendar, anime database & dub studios',
-    url: 'https://anime.kawaii.uz',
-    icon: <Film className="w-5 h-5 text-[#C25E40] stroke-[2.25]" />,
-    bg: 'bg-[#F7E3DC]',
-    borderColor: 'border-[#24201D]',
-  },
-  {
-    id: 'bot',
-    title: 'Kawaii Bot',
-    badge: 'Assistant & Tools',
-    description: 'Telegram bot assistant, release alerts & automation',
-    url: 'https://bot.kawaii.uz',
-    icon: <Bot className="w-5 h-5 text-[#2A495E] stroke-[2.25]" />,
-    bg: 'bg-[#DEE8EF]',
-    borderColor: 'border-[#24201D]',
-  },
-  {
-    id: 'wiki',
-    title: 'Kawaii Wiki',
-    badge: 'Knowledge Base',
-    description: 'Community guides, archive & anime encyclopaedia',
-    url: 'https://wiki.kawaii.uz',
-    icon: <Library className="w-5 h-5 text-[#854D0E] stroke-[2.25]" />,
-    bg: 'bg-[#FBECCF]',
-    borderColor: 'border-[#24201D]',
-  },
-  {
-    id: 'portal',
-    title: 'Kawaii.uz',
-    badge: 'Central Portal',
-    description: 'Home of the anime community & ecosystem hub',
-    url: 'https://kawaii.uz',
-    icon: <Compass className="w-5 h-5 text-[#2D503C] stroke-[2.25]" />,
-    bg: 'bg-[#FAF8F5]',
-    borderColor: 'border-[#24201D]',
-  },
-];
-
 export const LinksPage: React.FC<LinksPageProps> = ({
   links,
   onAddLink,
   onDeleteLink,
   onIncrementClicks,
 }) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [copiedEcosystemId, setCopiedEcosystemId] = useState<string | null>(null);
@@ -119,12 +58,75 @@ export const LinksPage: React.FC<LinksPageProps> = ({
   const [newUrl, setNewUrl] = useState('');
   const [newColor, setNewColor] = useState('#3D6B52');
 
+  const ecosystemServices: EcosystemService[] = useMemo(() => [
+    {
+      id: 'tv',
+      title: t('links.tvTitle'),
+      badge: t('links.tvBadge'),
+      description: t('links.tvDesc'),
+      url: 'https://tv.kawaii.uz',
+      icon: <Tv className="w-5 h-5 text-[#2D503C] stroke-[2.25]" />,
+      bg: 'bg-[#DDE8DE]',
+      borderColor: 'border-[#24201D]',
+    },
+    {
+      id: 'manga',
+      title: t('links.mangaTitle'),
+      badge: t('links.mangaBadge'),
+      description: t('links.mangaDesc'),
+      url: 'https://manga.kawaii.uz',
+      icon: <BookOpen className="w-5 h-5 text-[#854D0E] stroke-[2.25]" />,
+      bg: 'bg-[#FBECCF]',
+      borderColor: 'border-[#24201D]',
+    },
+    {
+      id: 'anime',
+      title: t('links.animeTitle'),
+      badge: t('links.animeBadge'),
+      description: t('links.animeDesc'),
+      url: 'https://anime.kawaii.uz',
+      icon: <Film className="w-5 h-5 text-[#C25E40] stroke-[2.25]" />,
+      bg: 'bg-[#F7E3DC]',
+      borderColor: 'border-[#24201D]',
+    },
+    {
+      id: 'bot',
+      title: t('links.botTitle'),
+      badge: t('links.botBadge'),
+      description: t('links.botDesc'),
+      url: 'https://bot.kawaii.uz',
+      icon: <Bot className="w-5 h-5 text-[#2A495E] stroke-[2.25]" />,
+      bg: 'bg-[#DEE8EF]',
+      borderColor: 'border-[#24201D]',
+    },
+    {
+      id: 'wiki',
+      title: t('links.wikiTitle'),
+      badge: t('links.wikiBadge'),
+      description: t('links.wikiDesc'),
+      url: 'https://wiki.kawaii.uz',
+      icon: <Library className="w-5 h-5 text-[#854D0E] stroke-[2.25]" />,
+      bg: 'bg-[#FBECCF]',
+      borderColor: 'border-[#24201D]',
+    },
+    {
+      id: 'portal',
+      title: t('links.portalTitle'),
+      badge: t('links.portalBadge'),
+      description: t('links.portalDesc'),
+      url: 'https://kawaii.uz',
+      icon: <Compass className="w-5 h-5 text-[#2D503C] stroke-[2.25]" />,
+      bg: 'bg-[#FAF8F5]',
+      borderColor: 'border-[#24201D]',
+    },
+  ], [t]);
+
   const filteredCustomLinks = links.filter((l) =>
     l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     l.url.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredEcosystem = ECOSYSTEM_SERVICES.filter((s) =>
+  const filteredEcosystem = ecosystemServices.filter((s) =>
     s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.badge.toLowerCase().includes(searchQuery.toLowerCase())
@@ -186,10 +188,10 @@ export const LinksPage: React.FC<LinksPageProps> = ({
       <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between gap-3">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block font-display">
-            Kawaii Ecosystem
+            {t('links.subtitle')}
           </span>
           <h2 className="text-base font-bold font-display text-[#24201D] mt-0.5">
-            Portals & Hub
+            {t('links.title')}
           </h2>
         </div>
 
@@ -200,7 +202,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
               setIsQrOpen(true);
             }}
             className="w-8 h-8 rounded-xl bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[1.5px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs cursor-pointer"
-            title="Generate QR Code"
+            title={t('links.generateQr')}
           >
             <QrCode className="w-4 h-4" />
           </button>
@@ -213,7 +215,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
             className="px-3 py-1.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.5px] border-[#24201D] rounded-xl flex items-center gap-1 text-xs font-bold shadow-2xs active:translate-y-0.5 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Add Link</span>
+            <span>{t('links.addLink')}</span>
           </button>
         </div>
       </div>
@@ -225,7 +227,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search ecosystem services & links..."
+          placeholder={t('links.searchPlaceholder')}
           className="w-full pl-10 pr-4 py-2 bg-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-medium text-[#24201D] placeholder:text-stone-400 shadow-2xs focus:outline-none"
         />
       </div>
@@ -234,10 +236,10 @@ export const LinksPage: React.FC<LinksPageProps> = ({
       <div className="space-y-2.5">
         <div className="flex items-center justify-between px-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] font-display">
-            Official Services
+            {t('links.officialServices')}
           </span>
           <span className="text-[10px] font-bold text-stone-400">
-            {filteredEcosystem.length} Platforms
+            {t('links.platformsCount', { count: filteredEcosystem.length })}
           </span>
         </div>
 
@@ -268,7 +270,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
                 <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={(e) => handleCopyLink(e, service.url, undefined, service.id)}
-                    title="Copy URL"
+                    title={t('links.copyLink')}
                     className="w-7 h-7 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-stone-200 hover:border-[#24201D] flex items-center justify-center text-stone-600 cursor-pointer"
                   >
                     {copiedEcosystemId === service.id ? (
@@ -279,7 +281,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
                   </button>
                   <button
                     onClick={() => handleOpenUrl(service.url)}
-                    title="Open Service"
+                    title={t('links.openLink')}
                     className="w-7 h-7 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-stone-200 hover:border-[#24201D] flex items-center justify-center text-stone-600 cursor-pointer"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -299,10 +301,10 @@ export const LinksPage: React.FC<LinksPageProps> = ({
       <div className="space-y-2.5 pt-2">
         <div className="flex items-center justify-between px-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] font-display">
-            Personal Bookmarks
+            {t('links.personalBookmarks')}
           </span>
           <span className="text-[10px] font-bold text-stone-400">
-            {filteredCustomLinks.length} Saved
+            {t('links.savedCount', { count: filteredCustomLinks.length })}
           </span>
         </div>
 
@@ -310,7 +312,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
         {isAddOpen && (
           <form onSubmit={handleCreateSubmit} className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
             <h3 className="text-xs font-bold font-display text-[#24201D] uppercase tracking-wider">
-              Create New Bookmark
+              {t('links.createBookmarkTitle')}
             </h3>
 
             <div className="space-y-2">
@@ -318,7 +320,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
                 type="text"
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="Bookmark Title (e.g. My GitHub)"
+                placeholder={t('links.titlePlaceholder')}
                 className="w-full px-3.5 py-2 bg-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-medium text-[#24201D] placeholder:text-stone-400 focus:outline-none"
               />
               <input
@@ -351,13 +353,13 @@ export const LinksPage: React.FC<LinksPageProps> = ({
                   onClick={() => setIsAddOpen(false)}
                   className="px-3 py-1.5 text-xs text-[#6B635B] font-bold hover:underline cursor-pointer"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-1.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.5px] border-[#24201D] rounded-xl text-xs font-bold shadow-2xs active:translate-y-0.5 cursor-pointer"
                 >
-                  Save
+                  {t('common.save')}
                 </button>
               </div>
             </div>
@@ -370,10 +372,10 @@ export const LinksPage: React.FC<LinksPageProps> = ({
             <div className="p-6 text-center bg-[#FAF8F5] border-[1.75px] border-dashed border-[#24201D]/25 rounded-2xl space-y-1.5">
               <Globe className="w-6 h-6 text-stone-300 mx-auto" />
               <h4 className="text-xs font-bold font-display text-[#6B635B]">
-                No personal links yet
+                {t('links.emptyTitle')}
               </h4>
               <p className="text-[10px] text-stone-400">
-                Tap «Add Link» above to pin your favorite tools or sites
+                {t('links.emptyDesc')}
               </p>
             </div>
           ) : (
@@ -404,7 +406,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
                 <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={(e) => handleCopyLink(e, link.url, link.id)}
-                    title="Copy URL"
+                    title={t('links.copyLink')}
                     className="w-7 h-7 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-stone-200 hover:border-[#24201D] flex items-center justify-center text-stone-600 cursor-pointer"
                   >
                     {copiedId === link.id ? <Check className="w-3.5 h-3.5 text-[#3D6B52]" /> : <Copy className="w-3.5 h-3.5" />}
@@ -412,7 +414,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
 
                   <button
                     onClick={() => handleOpenUrl(link.url, link.id)}
-                    title="Open Link"
+                    title={t('links.openLink')}
                     className="w-7 h-7 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-stone-200 hover:border-[#24201D] flex items-center justify-center text-stone-600 cursor-pointer"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -424,7 +426,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
                         playClickSound();
                         onDeleteLink(link.id!);
                       }}
-                      title="Delete"
+                      title={t('links.deleteLink')}
                       className="w-7 h-7 rounded-lg bg-stone-50 hover:bg-rose-50 border border-stone-200 hover:border-rose-400 flex items-center justify-center text-stone-400 hover:text-rose-600 cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -442,7 +444,7 @@ export const LinksPage: React.FC<LinksPageProps> = ({
           isOpen={isQrOpen}
           onClose={() => setIsQrOpen(false)}
           hubUrl={typeof window !== 'undefined' ? window.location.href : 'https://kawaii.uz'}
-          linksCount={links.length + ECOSYSTEM_SERVICES.length}
+          linksCount={links.length + ecosystemServices.length}
         />
       )}
     </div>

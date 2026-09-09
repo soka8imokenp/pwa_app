@@ -3,6 +3,7 @@ import { Share2, X, Flame, Target } from 'lucide-react';
 import fireAnimation from '../../assets/fire.json';
 import { LottiePlayer } from '../common/LottiePlayer';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
+import { useTranslation } from '../../i18n/LanguageContext';
 import type { OverallActivityStats } from '../../lib/streaks';
 import confetti from 'canvas-confetti';
 
@@ -19,6 +20,8 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
   streakCount,
   activityStats,
 }) => {
+  const { t, language } = useTranslation();
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -55,7 +58,12 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
 
   const today = new Date();
   const currentDayIndex = today.getDay(); // 0 is Sunday
-  const defaultWeekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  const defaultWeekDays =
+    language === 'uz'
+      ? ['Yak', 'Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan']
+      : language === 'ru'
+      ? ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+      : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
   // Current week number in the year
   const startOfYear = new Date(today.getFullYear(), 0, 1);
@@ -75,14 +83,30 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
 
   const handleShare = async () => {
     playClickSound();
-    const shareText = streakCount > 0
-      ? `I'm on a ${streakCount} day streak on Daily Sumire! 🔥 Keep the momentum going!`
-      : `Starting my productivity streak on Daily Sumire! 🔥`;
+    const shareText =
+      streakCount > 0
+        ? (language === 'uz'
+            ? `${streakCount} kunlik strik! Daily Sumire bilan intizom davom etmoqda! 🔥`
+            : language === 'ru'
+            ? `У меня ${streakCount} дн. ударного режима в Daily Sumire! 🔥 Не сбавляем темп!`
+            : `I'm on a ${streakCount} day streak on Daily Sumire! 🔥 Keep the momentum going!`)
+        : (language === 'uz'
+            ? `Daily Sumire bilan yangi intizom striki boshlanmoqda! 🔥`
+            : language === 'ru'
+            ? `Начинаю ударный режим продуктивности в Daily Sumire! 🔥`
+            : `Starting my productivity streak on Daily Sumire! 🔥`);
+
+    const shareTitle =
+      language === 'uz'
+        ? `Daily Sumire - ${streakCount > 0 ? `${streakCount} kunlik strik!` : 'Kundalik reja'}`
+        : language === 'ru'
+        ? `Daily Sumire - ${streakCount > 0 ? `${streakCount} дн. ударный режим!` : 'Ежедневник'}`
+        : `Daily Sumire - ${streakCount > 0 ? `${streakCount} Day Streak!` : 'Daily Planner'}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Daily Sumire - ${streakCount > 0 ? `${streakCount} Day Streak!` : 'Daily Planner'}`,
+          title: shareTitle,
           text: shareText,
           url: window.location.href,
         });
@@ -131,14 +155,16 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
         {/* 2. Streak Title */}
         <div className="space-y-1 mb-4">
           <h2 className="text-2xl sm:text-3xl font-black font-display text-[#24201D] uppercase tracking-tight leading-none">
-            {streakCount > 0 ? `${streakCount} Day Streak!` : 'Start Your Streak!'}
+            {streakCount > 0
+              ? (language === 'uz' ? `${streakCount} kunlik strik!` : language === 'ru' ? `${streakCount} дн. ударный режим!` : `${streakCount} Day Streak!`)
+              : (language === 'uz' ? 'Strikni boshlang!' : language === 'ru' ? 'Начните ударный режим!' : 'Start Your Streak!')}
           </h2>
           <span className="inline-block px-3 py-0.5 rounded-full bg-[#FBECCF] border border-[#24201D] text-[10px] font-black uppercase tracking-wider text-[#854D0E] shadow-2xs">
             {streakCount > 0
               ? isActiveToday
-                ? 'Streak Secured for Today! 🔥'
-                : 'Complete an activity today'
-              : 'Complete 1 activity to ignite'}
+                ? (language === 'uz' ? 'Bugungi strik himoyalandi! 🔥' : language === 'ru' ? 'Ударный режим на сегодня защищен! 🔥' : 'Streak Secured for Today! 🔥')
+                : (language === 'uz' ? 'Bugun biror amal bajaring' : language === 'ru' ? 'Выполните действие сегодня' : 'Complete an activity today')
+              : (language === 'uz' ? 'Olovni yoqish uchun 1 ta amal bajaring' : language === 'ru' ? 'Выполните 1 действие, чтобы зажечь' : 'Complete 1 activity to ignite')}
           </span>
         </div>
 
@@ -178,10 +204,10 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
           {/* Week Counter Label */}
           <div className="flex items-center justify-between">
             <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B]">
-              Weekly Goal
+              {language === 'uz' ? 'Haftalik maqsad' : language === 'ru' ? 'Цель на неделю' : 'Weekly Goal'}
             </span>
             <span className="px-2 py-0.5 bg-white border border-[#24201D] rounded-md text-[9px] font-black font-mono-num uppercase tracking-wider text-[#24201D] shadow-2xs">
-              WEEK {weekNumber}
+              {language === 'uz' ? `${weekNumber}-HAFTA` : language === 'ru' ? `НЕДЕЛЯ ${weekNumber}` : `WEEK ${weekNumber}`}
             </span>
           </div>
 
@@ -190,9 +216,9 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
             <p className="text-xs font-bold text-[#6B635B] text-center leading-snug">
               {streakCount > 0
                 ? isActiveToday
-                  ? "Great job! You've kept your flame burning today."
-                  : "Complete 1 task, habit, or focus session today to protect your streak!"
-                : "Complete any task, habit, or focus session today to ignite your 1-day streak!"}
+                  ? (language === 'uz' ? 'Ajoyib natija! Bugun intizom olovingizni saqlab qoldingiz.' : language === 'ru' ? 'Отличная работа! Сегодня вы сохранили огонь дисциплины.' : "Great job! You've kept your flame burning today.")
+                  : (language === 'uz' ? 'Strikni himoya qilish uchun bugun kamida 1 ta vazifa, odat yoki fokus seansini bajaring!' : language === 'ru' ? 'Выполните 1 задачу, привычку или сессию фокуса сегодня, чтобы защитить серию!' : 'Complete 1 task, habit, or focus session today to protect your streak!')
+                : (language === 'uz' ? '1 kunlik strikni boshlash uchun bugun istalgan vazifa, odat yoki fokus seansini bajaring!' : language === 'ru' ? 'Выполните любую задачу, привычку или сессию фокуса сегодня, чтобы начать серию!' : 'Complete any task, habit, or focus session today to ignite your 1-day streak!')}
             </p>
           </div>
 
@@ -203,7 +229,7 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
           {/* Share Button */}
           <button
             onClick={handleShare}
-            title="Share Streak"
+            title={t.modals.shareStreakBtn}
             className="w-12 h-12 rounded-2xl bg-[#FAF8F5] hover:bg-stone-100 border-[2px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-[2px_2px_0px_#24201D] cursor-pointer active:translate-y-0.5 active:shadow-none transition-all shrink-0"
           >
             <Share2 className="w-4 h-4 stroke-[2.25]" />
@@ -215,7 +241,11 @@ export const DuolingoStreakModal: React.FC<DuolingoStreakModalProps> = ({
             className="flex-1 py-3.5 px-6 rounded-2xl bg-[#F0BB58] hover:bg-[#E5A943] border-[2px] border-[#24201D] text-[#24201D] font-black font-display text-xs uppercase tracking-wider shadow-[3px_3px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer transition-all flex items-center justify-center gap-2"
           >
             <Flame className="w-4 h-4 stroke-[2.5] text-[#854D0E] fill-[#F0BB58]" />
-            <span>{streakCount > 0 ? 'I CAN DO IT!' : "LET'S GO!"}</span>
+            <span>
+              {streakCount > 0
+                ? (language === 'uz' ? 'QOʻLIMDAN KELADI!' : language === 'ru' ? 'Я СПРАВЛЮСЬ!' : 'I CAN DO IT!')
+                : (language === 'uz' ? 'KETDIK!' : language === 'ru' ? 'ПОЕХАЛИ!' : "LET'S GO!")}
+            </span>
           </button>
         </div>
 

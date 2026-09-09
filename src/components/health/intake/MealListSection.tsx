@@ -13,6 +13,7 @@ import {
 import { playClickSound } from '../../../lib/sound';
 import type { MealLog, MealType } from '../../../types/health';
 import { translateFoodNameSync } from '../../../lib/mealTranslator';
+import { useTranslation } from '../../../i18n/LanguageContext';
 
 interface MealListSectionProps {
   todaysMeals: MealLog[];
@@ -21,22 +22,22 @@ interface MealListSectionProps {
 
 interface CategoryConfig {
   type: MealType;
-  label: string;
   icon: React.ComponentType<{ className?: string }>;
   accentColor: string;
 }
 
 const CATEGORIES: CategoryConfig[] = [
-  { type: 'breakfast', label: 'Breakfast', icon: Sun, accentColor: '#FEF08A' },
-  { type: 'lunch', label: 'Lunch', icon: Flame, accentColor: '#FECDD3' },
-  { type: 'dinner', label: 'Dinner', icon: Moon, accentColor: '#E9D5FF' },
-  { type: 'snack', label: 'Snacks & Drinks', icon: Coffee, accentColor: '#DCFCE7' },
+  { type: 'breakfast', icon: Sun, accentColor: '#FEF08A' },
+  { type: 'lunch', icon: Flame, accentColor: '#FECDD3' },
+  { type: 'dinner', icon: Moon, accentColor: '#E9D5FF' },
+  { type: 'snack', icon: Coffee, accentColor: '#DCFCE7' },
 ];
 
 export const MealListSection: React.FC<MealListSectionProps> = ({
   todaysMeals,
   onDeleteMeal,
 }) => {
+  const { t } = useTranslation();
   const [collapsedCategories, setCollapsedCategories] = useState<Record<MealType, boolean>>({
     breakfast: false,
     lunch: false,
@@ -51,6 +52,19 @@ export const MealListSection: React.FC<MealListSectionProps> = ({
     kcal: number;
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const getCategoryLabel = (type: MealType) => {
+    switch (type) {
+      case 'breakfast':
+        return t.healthIntake.breakfast;
+      case 'lunch':
+        return t.healthIntake.lunch;
+      case 'dinner':
+        return t.healthIntake.dinner;
+      case 'snack':
+        return t.healthIntake.snack;
+    }
+  };
 
   const toggleCategory = (cat: MealType) => {
     playClickSound();
@@ -86,6 +100,7 @@ export const MealListSection: React.FC<MealListSectionProps> = ({
         const mealsInCat = todaysMeals.filter((m) => m.mealType === cat.type);
         const catKcal = mealsInCat.reduce((acc, m) => acc + (m.kcal || 0), 0);
         const isCollapsed = collapsedCategories[cat.type];
+        const catLabel = getCategoryLabel(cat.type);
 
         return (
           <div
@@ -107,12 +122,12 @@ export const MealListSection: React.FC<MealListSectionProps> = ({
                 </div>
                 <div className="text-left">
                   <h4 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] leading-none">
-                    {cat.label}
+                    {catLabel}
                   </h4>
                   <span className="text-[10px] font-bold text-[#6B635B] font-mono-num mt-1 block">
                     {mealsInCat.length === 0
-                      ? 'No entries'
-                      : `${mealsInCat.length} ${mealsInCat.length === 1 ? 'item' : 'items'}`}
+                      ? t.healthIntake.noEntries
+                      : t.healthIntake.itemsCount.replace('{count}', String(mealsInCat.length))}
                   </span>
                 </div>
               </div>
@@ -138,10 +153,10 @@ export const MealListSection: React.FC<MealListSectionProps> = ({
                   <div className="py-5 px-3 text-center rounded-xl border border-dashed border-[#24201D]/20 bg-white/70">
                     <Utensils className="w-5 h-5 text-stone-300 mx-auto mb-1.5 stroke-[1.5]" />
                     <p className="text-[11px] text-[#8C827A] font-bold">
-                      No {cat.label.toLowerCase()} entries logged yet
+                      {t.healthIntake.noCatEntriesYet.replace('{cat}', catLabel)}
                     </p>
                     <span className="text-[10px] text-stone-400 mt-0.5 block">
-                      Use AI voice dictation, camera or presets above
+                      {t.healthIntake.noCatEntriesHint}
                     </span>
                   </div>
                 ) : (
@@ -198,20 +213,20 @@ export const MealListSection: React.FC<MealListSectionProps> = ({
                           </div>
                         </div>
 
-                        {/* Bottom Row: Macronutrient Chips in English (PROTEIN, FAT, CARBS) */}
+                        {/* Bottom Row: Macronutrient Chips */}
                         <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                           <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#DDE8DE] text-[#2D503C] border border-[#2D503C]/20 text-[10px] font-bold font-mono-num">
-                            <span className="text-[9px] font-black opacity-70">PROTEIN</span>
+                            <span className="text-[9px] font-black opacity-70">{t.healthIntake.protein.toUpperCase()}</span>
                             <span>{meal.proteinGrams}g</span>
                           </div>
 
                           <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FEF3C7] text-[#92400E] border border-[#92400E]/20 text-[10px] font-bold font-mono-num">
-                            <span className="text-[9px] font-black opacity-70">FAT</span>
+                            <span className="text-[9px] font-black opacity-70">{t.healthIntake.fat.toUpperCase()}</span>
                             <span>{meal.fatGrams}g</span>
                           </div>
 
                           <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#E0F2FE] text-[#0369A1] border border-[#0369A1]/20 text-[10px] font-bold font-mono-num">
-                            <span className="text-[9px] font-black opacity-70">CARBS</span>
+                            <span className="text-[9px] font-black opacity-70">{t.healthIntake.carbs.toUpperCase()}</span>
                             <span>{meal.carbsGrams}g</span>
                           </div>
                         </div>
@@ -244,10 +259,13 @@ export const MealListSection: React.FC<MealListSectionProps> = ({
               </div>
               <div className="space-y-1">
                 <h4 className="text-sm font-black font-display text-[#24201D] leading-tight">
-                  Remove Meal Entry?
+                  {t.healthIntake.deleteMealModalTitle}
                 </h4>
                 <p className="text-xs text-[#6B635B] leading-relaxed">
-                  Are you sure you want to remove <span className="font-bold text-[#24201D] underline decoration-stone-300">{mealToDelete.name}</span> ({mealToDelete.kcal} kcal) from your daily log?
+                  {t.healthIntake.deleteMealModalDesc}
+                </p>
+                <p className="text-xs font-bold text-[#24201D]">
+                  <span className="underline decoration-stone-300">{mealToDelete.name}</span> ({mealToDelete.kcal} kcal)
                 </p>
               </div>
             </div>
@@ -260,7 +278,7 @@ export const MealListSection: React.FC<MealListSectionProps> = ({
                 disabled={isDeleting}
                 className="px-3.5 py-2 rounded-xl bg-[#FAF8F5] hover:bg-stone-100 border-[1.5px] border-[#24201D] text-xs font-bold text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer font-display"
               >
-                Cancel
+                {t.common.cancel}
               </button>
               <button
                 type="button"
@@ -269,7 +287,7 @@ export const MealListSection: React.FC<MealListSectionProps> = ({
                 className="px-4 py-2 rounded-xl bg-[#DC2626] hover:bg-red-700 text-white border-[1.5px] border-[#24201D] text-xs font-black shadow-2xs active:scale-95 transition-all cursor-pointer font-display flex items-center gap-1.5 disabled:opacity-50"
               >
                 <Trash2 className="w-3.5 h-3.5 stroke-[2.5]" />
-                {isDeleting ? 'Deleting...' : 'Delete'}
+                {isDeleting ? '...' : t.common.delete}
               </button>
             </div>
           </div>

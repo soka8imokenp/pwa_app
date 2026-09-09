@@ -20,6 +20,7 @@ import {
   ArrowDownCircle,
 } from 'lucide-react';
 import { playClickSound } from '../../../lib/sound';
+import { useTranslation } from '../../../i18n/LanguageContext';
 
 export interface MetricDetailModalInfo {
   title: string;
@@ -90,6 +91,7 @@ export function getMetricGaugePercentage(
 }
 
 export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({ info, onClose }) => {
+  const { t } = useTranslation();
   if (!info) return null;
 
   const getMetricIcon = () => {
@@ -153,7 +155,7 @@ export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({ info, onCl
             </div>
             <div className="min-w-0">
               <span className="text-[9px] font-black uppercase tracking-widest text-[#6B635B] font-display block leading-none">
-                Clinical Telemetry & Science
+                {t('healthBody.telemetrySubtitle')}
               </span>
               <h3 className="text-base sm:text-lg font-black font-display text-[#24201D] mt-1 leading-tight truncate">
                 {info.title}
@@ -168,7 +170,7 @@ export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({ info, onCl
               onClose();
             }}
             className="p-1.5 rounded-xl bg-white hover:bg-stone-100 border-[1.5px] border-[#24201D] text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer shrink-0"
-            title="Close"
+            title={t('common.cancel')}
           >
             <X className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -179,7 +181,7 @@ export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({ info, onCl
           <div className="flex items-center justify-between gap-2">
             <div>
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
-                Recorded Biomarker Value
+                {info.title}
               </span>
               <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-3xl sm:text-4xl font-black font-mono-num text-[#24201D] tracking-tight">
@@ -212,15 +214,15 @@ export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({ info, onCl
           {/* Stepped Reference Range Spectrum Bar */}
           <div className="pt-2 space-y-1.5 border-t border-[#24201D]/10">
             <div className="flex items-center justify-between text-[9px] font-black text-[#6B635B] uppercase font-display">
-              <span className="text-blue-600">Below Norm</span>
-              <span className="text-[#2D503C]">Target Clinical Range</span>
-              <span className="text-rose-600">Above Norm</span>
+              <span className="text-blue-600">{t('healthBody.underweight')}</span>
+              <span className="text-[#2D503C]">{t('healthBody.normal')}</span>
+              <span className="text-rose-600">{t('healthBody.overweight')}</span>
             </div>
 
             <div className="relative w-full h-3 rounded-full border-[1.5px] border-[#24201D] overflow-hidden flex shadow-2xs bg-stone-100">
-              <div className="h-full bg-[#93C5FD]" style={{ width: '25%' }} title="Below" />
-              <div className="h-full bg-[#86EFAC]" style={{ width: '50%' }} title="Target" />
-              <div className="h-full bg-[#FCA5A5]" style={{ width: '25%' }} title="Above" />
+              <div className="h-full bg-[#93C5FD]" style={{ width: '25%' }} title={t('healthBody.underweight')} />
+              <div className="h-full bg-[#86EFAC]" style={{ width: '50%' }} title={t('healthBody.normal')} />
+              <div className="h-full bg-[#FCA5A5]" style={{ width: '25%' }} title={t('healthBody.overweight')} />
             </div>
 
             {/* Spectrum Marker Needle */}
@@ -231,14 +233,14 @@ export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({ info, onCl
               >
                 <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[6px] border-b-[#24201D]" />
                 <span className="text-[8px] font-black font-mono-num text-[#24201D] leading-none mt-0.5">
-                  YOU
+                  ●
                 </span>
               </div>
             </div>
 
             {info.normRange && (
               <div className="p-2 bg-[#FAF8F5] border border-[#24201D]/15 rounded-xl flex items-center justify-between text-[10px] font-bold text-[#6B635B]">
-                <span>Standard Clinical Target:</span>
+                <span>{t('zepp.normRange')}:</span>
                 <span className="font-mono-num font-black text-[#24201D]">
                   {info.normRange}
                 </span>
@@ -251,7 +253,7 @@ export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({ info, onCl
         <div className="p-4 bg-white border border-[#24201D]/20 rounded-2xl space-y-1.5 shadow-2xs">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display">
             <Microscope className="w-4 h-4 text-[#3D6B52]" />
-            <span>Physiological Mechanism</span>
+            <span>{t('healthBody.evidenceAnalysis')}</span>
           </div>
           <p className="text-xs text-[#24201D] leading-relaxed font-medium">
             {info.description}
@@ -262,7 +264,7 @@ export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({ info, onCl
         <div className="p-3.5 bg-[#DDE8DE]/60 border border-[#3D6B52]/30 rounded-2xl space-y-1.5">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-[#2D503C] font-display">
             <Activity className="w-4 h-4 text-[#2D503C]" />
-            <span>Calculation Protocol & Formula</span>
+            <span>Formula</span>
           </div>
           <div className="p-2.5 bg-white/80 border border-[#2D503C]/20 rounded-xl">
             <span className="text-xs font-mono font-bold text-[#24201D] block break-all">
@@ -275,7 +277,7 @@ export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({ info, onCl
         <div className="p-4 bg-[#FBECCF] border border-[#854D0E]/30 rounded-2xl space-y-1.5">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-[#854D0E] font-display">
             <Target className="w-4 h-4 text-[#854D0E]" />
-            <span>Evidence-Based Clinical Guidance</span>
+            <span>Recommendation</span>
           </div>
           <p className="text-xs font-bold text-[#713F12] leading-relaxed">
             {info.clinicalTip}
@@ -292,7 +294,7 @@ export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({ info, onCl
           className="w-full py-3 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black shadow-[2px_2px_0px_#24201D] uppercase tracking-wider font-display cursor-pointer active:translate-y-0.5 transition-all flex items-center justify-center gap-2"
         >
           <CheckCircle2 className="w-4 h-4" />
-          <span>Understood</span>
+          <span>{t('common.done')}</span>
         </button>
       </div>
     </div>

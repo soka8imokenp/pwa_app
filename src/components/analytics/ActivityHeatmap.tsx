@@ -3,6 +3,7 @@ import { format, subDays, eachDayOfInterval, isSameDay, parseISO } from 'date-fn
 import { Calendar, Check, Clock, Flame } from 'lucide-react';
 import type { Task, HabitLog, FocusSession } from '../../types';
 import { playClickSound } from '../../lib/sound';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface ActivityHeatmapProps {
   tasks: Task[];
@@ -17,6 +18,7 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
   focusSessions,
   onSelectDate,
 }) => {
+  const { t } = useTranslation();
   const today = new Date();
   const days = eachDayOfInterval({
     start: subDays(today, 27), // 4 full weeks (28 days)
@@ -71,22 +73,22 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
           </div>
           <div>
             <h3 className="text-xs font-bold font-display uppercase tracking-wider text-[#24201D]">
-              Activity Heatmap
+              {t('stats.heatmapTitle')}
             </h3>
             <span className="text-[10px] text-[#6B635B] font-bold">
-              Last 4 Weeks Consistency
+              {t('stats.lastWeeksConsistency')}
             </span>
           </div>
         </div>
 
         {/* Legend */}
         <div className="flex items-center gap-1 text-[9px] font-bold text-stone-400">
-          <span>Less</span>
+          <span>{t('stats.less')}</span>
           <div className="w-3 h-3 rounded bg-[#F4F0EA] border border-[#24201D]/15" />
           <div className="w-3 h-3 rounded bg-[#DDE8DE] border border-[#3D6B52]/40" />
           <div className="w-3 h-3 rounded bg-[#8FA89B] border border-[#3D6B52]" />
           <div className="w-3 h-3 rounded bg-[#3D6B52] border border-[#24201D]" />
-          <span>More</span>
+          <span>{t('stats.more')}</span>
         </div>
       </div>
 
@@ -131,13 +133,13 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
           </span>
           <div className="flex items-center gap-3 text-[10px] font-bold text-[#6B635B]">
             <span className="flex items-center gap-1">
-              <Check className="w-3 h-3 text-[#3D6B52]" /> {selectedDayInfo.tasksDone} tasks
+              <Check className="w-3 h-3 text-[#3D6B52]" /> {selectedDayInfo.tasksDone} {t('common.done')}
             </span>
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3 text-[#3D6B52]" /> {selectedDayInfo.focusMins}m
             </span>
             <span className="flex items-center gap-1">
-              <Flame className="w-3 h-3 text-[#C25E40]" /> {selectedDayInfo.habitsDone} habits
+              <Flame className="w-3 h-3 text-[#C25E40]" /> {selectedDayInfo.habitsDone} {t('stats.habitsLogged')}
             </span>
           </div>
         </div>

@@ -19,6 +19,7 @@ import { sendLocalNotification, requestNotificationPermission } from '../../lib/
 import { ZenFullscreenTimer } from '../focus/ZenFullscreenTimer';
 import { InAppMusicPlayer } from '../focus/InAppMusicPlayer';
 import confetti from 'canvas-confetti';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface FocusPageProps {
   activeTasks: Task[];
@@ -41,6 +42,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
   todaysSessions,
   selectedDate,
 }) => {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<'pomodoro' | 'break' | 'stopwatch'>('pomodoro');
   const [customMinutes, setCustomMinutes] = useState<number>(25);
   const [breakMinutes, setBreakMinutes] = useState<number>(5);
@@ -143,7 +145,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
 
     const titleToSave =
       goalTitle.trim() ||
-      (mode === 'break' ? 'Rest Break' : 'Deep Focus');
+      (mode === 'break' ? t('focus.restBreak') : t('focus.deepFocus'));
 
     await onLogFocusSession({
       taskId: selectedTask?.id || undefined,
@@ -154,8 +156,8 @@ export const FocusPage: React.FC<FocusPageProps> = ({
     });
 
     sendLocalNotification(
-      'Focus Session Complete',
-      `Logged ${actualMinutes}m on "${titleToSave}".`,
+      t('focus.sessionCompleteTitle'),
+      t('focus.sessionCompleteBody', { minutes: actualMinutes, task: titleToSave }),
       { tab: 'focus' }
     );
 
@@ -186,7 +188,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
 
     const titleToSave =
       goalTitle.trim() ||
-      (mode === 'break' ? 'Rest Break' : 'Deep Focus');
+      (mode === 'break' ? t('focus.restBreak') : t('focus.deepFocus'));
 
     await onLogFocusSession({
       taskId: selectedTask?.id || undefined,
@@ -197,8 +199,8 @@ export const FocusPage: React.FC<FocusPageProps> = ({
     });
 
     sendLocalNotification(
-      'Session Saved',
-      `Saved ${actualMinutes}m on "${titleToSave}".`,
+      t('focus.sessionSavedTitle'),
+      t('focus.sessionSavedBody', { minutes: actualMinutes, task: titleToSave }),
       { tab: 'focus' }
     );
 
@@ -263,7 +265,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
             </div>
             <div>
               <h2 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                Sumire Focus Mode
+                {t('focus.title')}
               </h2>
             </div>
           </div>
@@ -274,7 +276,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
               playClickSound();
               setIsZenModeOpen(true);
             }}
-            title="Zen Desk Stand Mode"
+            title={t('focus.zenTitle')}
             className="w-8 h-8 rounded-xl bg-[#F4F0EA] hover:bg-[#DDE8DE] border-[1.5px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:translate-y-0.5 transition-all cursor-pointer"
           >
             <Maximize2 className="w-4 h-4 stroke-[2.25]" />
@@ -284,9 +286,9 @@ export const FocusPage: React.FC<FocusPageProps> = ({
         {/* Mode Selector Tabs (Focus Flow, Rest Break, Stopwatch) */}
         <div className="flex items-center gap-1.5 p-1 bg-[#F4F0EA] border-[1.5px] border-[#24201D] rounded-2xl shadow-2xs">
           {[
-            { id: 'pomodoro', label: 'Focus Flow', icon: <Zap className="w-3.5 h-3.5" /> },
-            { id: 'break', label: 'Rest Break', icon: <Coffee className="w-3.5 h-3.5" /> },
-            { id: 'stopwatch', label: 'Stopwatch', icon: <Timer className="w-3.5 h-3.5" /> },
+            { id: 'pomodoro', label: t('focus.focusFlow'), icon: <Zap className="w-3.5 h-3.5" /> },
+            { id: 'break', label: t('focus.restBreak'), icon: <Coffee className="w-3.5 h-3.5" /> },
+            { id: 'stopwatch', label: t('focus.stopwatch'), icon: <Timer className="w-3.5 h-3.5" /> },
           ].map((m) => (
             <button
               key={m.id}
@@ -309,7 +311,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
             type="text"
             value={goalTitle}
             onChange={(e) => setGoalTitle(e.target.value)}
-            placeholder="Focus goal or task title..."
+            placeholder={t('focus.goalPlaceholder')}
             className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
           />
           {goalTitle && (
@@ -335,16 +337,16 @@ export const FocusPage: React.FC<FocusPageProps> = ({
           <div className="flex items-center justify-center gap-2">
             {isRunning ? (
               <span className="px-3 py-1 bg-[#DDE8DE] border border-[#3D6B52] rounded-full text-[10px] font-black font-mono-num text-[#2D503C] shadow-2xs">
-                Active • {currentElapsedMinutes}m elapsed
+                {t('focus.activeElapsed', { minutes: currentElapsedMinutes })}
               </span>
             ) : elapsedFocusSeconds > 0 ? (
               <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F7E3DC] border-[1.5px] border-[#C25E40] rounded-full text-xs font-black font-mono-num text-[#9A3412] shadow-[1px_1px_0px_#C25E40] animate-in fade-in zoom-in-95 duration-150">
                 <span className="w-2 h-2 rounded-full bg-[#C25E40] animate-ping" />
-                <span>Paused: {formatTime(pausedSeconds)}</span>
+                <span>{t('focus.pausedElapsed', { time: formatTime(pausedSeconds) })}</span>
               </div>
             ) : (
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#6B635B]">
-                Ready to Focus
+                {t('focus.readyToFocus')}
               </span>
             )}
           </div>
@@ -382,7 +384,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
             >
               <Play className="w-4 h-4 fill-white" />
               <span>
-                {mode === 'break' ? 'Start Rest Break' : mode === 'stopwatch' ? 'Start Stopwatch' : 'Start Focus Flow'}
+                {mode === 'break' ? t('focus.startBreak') : mode === 'stopwatch' ? t('focus.startStopwatch') : t('focus.startFlow')}
               </span>
             </button>
           ) : (
@@ -400,12 +402,12 @@ export const FocusPage: React.FC<FocusPageProps> = ({
                 {isRunning ? (
                   <>
                     <Pause className="w-4 h-4 fill-white" />
-                    <span>Pause</span>
+                    <span>{t('focus.pause')}</span>
                   </>
                 ) : (
                   <>
                     <Play className="w-4 h-4 fill-[#24201D]" />
-                    <span>Resume</span>
+                    <span>{t('focus.resume')}</span>
                   </>
                 )}
               </button>
@@ -413,7 +415,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
               {/* Reset / Discard Button (Only appears when session is active or paused) */}
               <button
                 onClick={handleReset}
-                title="Reset / Discard Session"
+                title={t('focus.discardSession')}
                 className="w-11 h-11 rounded-2xl bg-white hover:bg-rose-50 border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] hover:text-rose-600 shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 cursor-pointer shrink-0 transition-colors"
               >
                 <RotateCcw className="w-4 h-4 stroke-[2.25]" />
@@ -422,7 +424,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
               {/* Complete & Log Session Checkmark Button */}
               <button
                 onClick={handleStopAndLogSession}
-                title={`Complete & Log Session (${currentElapsedMinutes}m)`}
+                title={t('focus.completeAndLog', { minutes: currentElapsedMinutes })}
                 className="w-11 h-11 rounded-2xl bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[1.75px] border-[#24201D] flex items-center justify-center text-[#2D503C] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 cursor-pointer shrink-0 transition-all"
               >
                 <Check className="w-5 h-5 stroke-[3]" />
@@ -441,22 +443,22 @@ export const FocusPage: React.FC<FocusPageProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xs font-black font-display text-[#6B635B] uppercase tracking-wider">
-              Today's Focus Log
+              {t('focus.todayLogTitle')}
             </span>
             <span className="px-2 py-0.5 bg-[#F4F0EA] border border-[#24201D]/20 text-[9px] font-bold text-[#6B635B] rounded-full">
-              {todaysSessions.length} sessions
+              {t('focus.sessionsCount', { count: todaysSessions.length })}
             </span>
           </div>
 
           <span className="text-xs font-black font-mono-num text-[#24201D]">
-            {totalFocusTodayMins}m total
+            {t('focus.totalFocusTime', { time: totalFocusTodayMins })}
           </span>
         </div>
 
         {todaysSessions.length === 0 ? (
           <div className="py-4 text-center bg-[#FAF8F5] border border-dashed border-[#24201D]/25 rounded-xl">
-            <p className="text-xs font-bold text-[#6B635B]">No focus sessions logged today yet.</p>
-            <p className="text-[10px] text-stone-400 mt-0.5">Start a timer above to track your deep work!</p>
+            <p className="text-xs font-bold text-[#6B635B]">{t('focus.emptyLogTitle')}</p>
+            <p className="text-[10px] text-stone-400 mt-0.5">{t('focus.emptyLogDesc')}</p>
           </div>
         ) : (
           <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
@@ -470,7 +472,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
                     <Check className="w-3 h-3 text-[#2D503C] stroke-[3]" />
                   </div>
                   <span className="font-bold text-[#24201D] truncate">
-                    {s.taskTitle || 'Focus Session'}
+                    {s.taskTitle || t('focus.title')}
                   </span>
                 </div>
 
@@ -481,7 +483,7 @@ export const FocusPage: React.FC<FocusPageProps> = ({
                   {s.id && onDeleteFocusSession && (
                     <button
                       onClick={() => handleDeleteSession(s.id)}
-                      title="Delete log entry"
+                      title={t('common.delete')}
                       className="w-5 h-5 rounded hover:bg-rose-100 flex items-center justify-center text-stone-400 hover:text-rose-600 cursor-pointer"
                     >
                       <Trash2 className="w-3 h-3" />

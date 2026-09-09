@@ -3,6 +3,7 @@ import { X, Scale, FileText, Check, ChevronDown, ChevronUp } from 'lucide-react'
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import { calculateBmi, getBmiCategory } from '../../lib/healthFormulas';
 import { CustomDatePicker } from './CustomDatePicker';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface LogWeightModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
   defaultWaist,
   onSaveWeight,
 }) => {
+  const { t } = useTranslation();
   const [weight, setWeight] = useState<string>(String(currentWeight || 70));
   const [date, setDate] = useState<string>(selectedDate);
   const [note, setNote] = useState<string>('');
@@ -78,7 +80,12 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
     onClose();
   };
 
-  const notePresets = ['Morning fasting', 'Post-workout', 'Evening', 'Post-meal'];
+  const notePresets = [
+    t.modals.noteMorningFasting,
+    t.modals.notePostWorkout,
+    t.modals.noteEvening,
+    t.modals.notePostMeal,
+  ];
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-[#24201D]/55 backdrop-blur-sm animate-in fade-in duration-150 font-body select-none">
@@ -92,7 +99,7 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
             </div>
             <div>
               <h2 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D]">
-                Log Body Weight
+                {t.modals.logWeightModalTitle}
               </h2>
             </div>
           </div>
@@ -116,11 +123,11 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
           <div className="p-3.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display">
-                Scale Reading (kg)
+                {t.modals.scaleReading}
               </span>
               {diffFromCurrent !== 0 && (
                 <span className={`text-[10px] font-black font-mono-num ${diffFromCurrent < 0 ? 'text-[#3D6B52]' : 'text-[#DC2626]'}`}>
-                  {diffFromCurrent > 0 ? `+${diffFromCurrent}` : diffFromCurrent} kg vs last
+                  {diffFromCurrent > 0 ? `+${diffFromCurrent}` : diffFromCurrent} kg {t.modals.vsLastWeight}
                 </span>
               )}
             </div>
@@ -177,7 +184,7 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
           {/* Real-time BMI Indicator */}
           {bmi > 0 && (
             <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#24201D]/20 flex items-center justify-between shadow-2xs">
-              <span className="text-xs font-bold text-[#6B635B]">Calculated BMI:</span>
+              <span className="text-xs font-bold text-[#6B635B]">{t.modals.calculatedBmi}</span>
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-black font-mono-num text-[#24201D]">{bmi}</span>
                 <span
@@ -200,7 +207,7 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
               }}
               className="w-full px-3 py-2 flex items-center justify-between text-xs font-bold text-[#6B635B] hover:text-[#24201D] cursor-pointer"
             >
-              <span>Body Fat % & Waist (Optional)</span>
+              <span>{t.modals.bodyFatWaistOptional}</span>
               {showAdvanced ? (
                 <ChevronUp className="w-3.5 h-3.5" />
               ) : (
@@ -212,7 +219,7 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
               <div className="p-3 bg-white border-t border-[#24201D]/15 grid grid-cols-2 gap-2.5 animate-in fade-in duration-100">
                 <div>
                   <label className="text-[9px] font-black uppercase text-[#6B635B] block mb-1 font-display">
-                    Body Fat (%)
+                    {t.modals.bodyFatLabel}
                   </label>
                   <input
                     type="number"
@@ -222,12 +229,12 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
                     onChange={(e) => setBodyFat(e.target.value)}
                     className="w-full px-2.5 py-1.5 bg-[#FAF8F5] border border-[#24201D] rounded-lg text-xs font-bold font-mono-num text-[#24201D] focus:outline-none"
                   />
-                  <span className="text-[8px] text-stone-400 mt-0.5 block">From smart scale</span>
+                  <span className="text-[8px] text-stone-400 mt-0.5 block">{t.modals.fromSmartScale}</span>
                 </div>
 
                 <div>
                   <label className="text-[9px] font-black uppercase text-[#6B635B] block mb-1 font-display">
-                    Waist (cm)
+                    {t.modals.waistLabel}
                   </label>
                   <input
                     type="number"
@@ -237,7 +244,7 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
                     onChange={(e) => setWaist(e.target.value)}
                     className="w-full px-2.5 py-1.5 bg-[#FAF8F5] border border-[#24201D] rounded-lg text-xs font-bold font-mono-num text-[#24201D] focus:outline-none"
                   />
-                  <span className="text-[8px] text-stone-400 mt-0.5 block">At navel level</span>
+                  <span className="text-[8px] text-stone-400 mt-0.5 block">{t.modals.atNavelLevel}</span>
                 </div>
               </div>
             )}
@@ -247,17 +254,17 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
           <CustomDatePicker
             selectedDate={date}
             onChangeDate={(newDate) => setDate(newDate)}
-            label="Date"
+            label={t.modals.dateLabel}
           />
 
           {/* Note Input */}
           <div className="space-y-1.5">
             <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] flex items-center gap-1 font-display">
-              <FileText className="w-3 h-3 text-[#3D6B52]" /> Note
+              <FileText className="w-3 h-3 text-[#3D6B52]" /> {t.modals.noteLabel}
             </label>
             <input
               type="text"
-              placeholder="e.g. morning fasting, post-workout..."
+              placeholder={t.modals.notePlaceholder}
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className="w-full px-3 py-2 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-stone-400 shadow-2xs focus:outline-none"
@@ -292,7 +299,7 @@ export const LogWeightModal: React.FC<LogWeightModalProps> = ({
               className="w-full py-3 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black shadow-[2px_2px_0px_#24201D] cursor-pointer active:translate-y-0.5 transition-all font-display uppercase tracking-wider flex items-center justify-center gap-2"
             >
               <Scale className="w-4 h-4 stroke-[2.5]" />
-              <span>Save Record</span>
+              <span>{t.modals.saveRecord}</span>
             </button>
           </div>
         </form>

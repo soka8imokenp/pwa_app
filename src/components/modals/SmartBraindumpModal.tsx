@@ -12,6 +12,7 @@ import {
   VoiceLanguage,
 } from '../../lib/speechRecognition';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
+import { useTranslation } from '../../i18n/LanguageContext';
 import confetti from 'canvas-confetti';
 
 interface SmartBraindumpModalProps {
@@ -36,6 +37,7 @@ export const SmartBraindumpModal: React.FC<SmartBraindumpModalProps> = ({
   selectedDate,
   canAddPriority,
 }) => {
+  const { t } = useTranslation();
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [voiceLang, setVoiceLang] = useState<VoiceLanguage>(() => getVoiceLanguage());
@@ -159,10 +161,10 @@ export const SmartBraindumpModal: React.FC<SmartBraindumpModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D]">
-                Smart Braindump & Voice
+                {t.modals.braindumpTitle}
               </h3>
               <p className="text-[10px] font-semibold text-[#6B635B]">
-                Dump tasks or speak freely — auto-categorized
+                {t.modals.braindumpSubtitle}
               </p>
             </div>
           </div>
@@ -185,7 +187,7 @@ export const SmartBraindumpModal: React.FC<SmartBraindumpModalProps> = ({
               rows={4}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Paste or type raw thoughts:&#10;• Fix navigation bug&#10;• Gym workout and stretch&#10;• Read 25 pages&#10;• Review roadmap"
+              placeholder={t.modals.braindumpPlaceholder}
               className="w-full p-3.5 bg-[#FAF8F5] text-xs font-bold text-[#24201D] rounded-2xl border-[1.75px] border-[#24201D] outline-none placeholder:text-stone-400 shadow-2xs resize-none"
             />
 
@@ -226,7 +228,7 @@ export const SmartBraindumpModal: React.FC<SmartBraindumpModalProps> = ({
             className="w-full py-2.5 rounded-full bg-[#FAF8F5] hover:bg-stone-100 disabled:opacity-40 text-[#24201D] border-[1.75px] border-[#24201D] text-xs font-black shadow-xs active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-1.5 transition-all"
           >
             <Wand2 className="w-4 h-4 stroke-[2.5]" />
-            <span>Parse & Organize Thoughts</span>
+            <span>{t.modals.braindumpParseBtn}</span>
           </button>
         </div>
 
@@ -235,10 +237,10 @@ export const SmartBraindumpModal: React.FC<SmartBraindumpModalProps> = ({
           <div className="space-y-2 pt-1">
             <div className="flex items-center justify-between px-1">
               <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B]">
-                Organized Quests ({parsedTasks.length})
+                {t.priorities.title} ({parsedTasks.length})
               </span>
               <span className="text-[10px] font-bold text-[#854D0E] bg-[#FBECCF] px-2 py-0.5 rounded-full border border-[#24201D]">
-                Top {parsedTasks.filter((t) => t.isPriority).length} Priorities
+                Top {parsedTasks.filter((t) => t.isPriority).length} {t.modals.topPriority}
               </span>
             </div>
 
@@ -280,7 +282,7 @@ export const SmartBraindumpModal: React.FC<SmartBraindumpModalProps> = ({
               className="w-full py-2.5 rounded-full bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] text-xs font-black shadow-xs active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-1.5 transition-all mt-2"
             >
               <Check className="w-4 h-4 stroke-[3]" />
-              <span>Import All into Planner</span>
+              <span>{t.modals.braindumpAddAll.replace('{count}', String(parsedTasks.length))}</span>
             </button>
           </div>
         )}

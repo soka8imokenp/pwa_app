@@ -14,6 +14,7 @@ import {
 import { playClickSound } from '../../../lib/sound';
 import type { HealthProfile, CalculatedHealthMetrics } from '../../../types/health';
 import type { MetricDetailModalInfo } from './MetricDetailModal';
+import { useTranslation } from '../../../i18n/LanguageContext';
 
 interface BiometricsGridProps {
   profile: HealthProfile;
@@ -26,6 +27,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
   metrics,
   onSelectMetric,
 }) => {
+  const { t } = useTranslation();
   const {
     tdee,
     targetWaterMl,
@@ -45,10 +47,10 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
       : '±0 kcal';
   const energyBalanceLabel =
     profile.goal === 'lose'
-      ? 'Caloric Deficit'
+      ? t('biometrics.caloricDeficit')
       : profile.goal === 'gain'
-      ? 'Caloric Surplus'
-      : 'Energy Balance';
+      ? t('biometrics.caloricSurplus')
+      : t('biometrics.caloricBalance');
 
   const isWhtrOptimal = waistToHeightRatio ? waistToHeightRatio < 0.5 : false;
 
@@ -62,10 +64,10 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
           </div>
           <div className="min-w-0">
             <span className="text-[9px] font-black uppercase tracking-widest text-[#6B635B] font-display block leading-none">
-              Clinical Telemetry Matrix
+              {t('biometrics.telemetryMatrix')}
             </span>
             <h3 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none truncate">
-              Daily Energy & Metabolic Targets
+              {t('biometrics.dailyEnergyTargets')}
             </h3>
           </div>
         </div>
@@ -83,11 +85,11 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
           onClick={() => {
             playClickSound();
             onSelectMetric({
-              title: 'Waist-to-Height Ratio (WHtR)',
+              title: t('biometrics.whtrTitle'),
               value: waistToHeightRatio ? String(waistToHeightRatio) : 'N/A',
               category: waistRiskCategory || 'Enter waist in Profile',
               statusType: isWhtrOptimal ? 'optimal' : 'alert',
-              statusLabel: isWhtrOptimal ? 'Safe (<0.50)' : waistRiskCategory || 'Attention',
+              statusLabel: isWhtrOptimal ? t('biometrics.whtrOptimal') : waistRiskCategory || t('biometrics.whtrAlert'),
               normRange: '< 0.50 Ratio',
               numericValue: waistToHeightRatio,
               metricId: 'whtr',
@@ -131,11 +133,11 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
           onClick={() => {
             playClickSound();
             onSelectMetric({
-              title: 'Total Daily Energy Expenditure (TDEE)',
+              title: t('biometrics.tdeeTitle'),
               value: `${tdee} kcal`,
               category: `${profile.activityLevel.replace('_', ' ').toUpperCase()} Activity`,
               statusType: 'optimal',
-              statusLabel: 'Maintenance Energy',
+              statusLabel: t('biometrics.tdeeDesc'),
               normRange: `~${tdee} kcal/day`,
               numericValue: tdee,
               metricId: 'bmr',
@@ -154,7 +156,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
                 <Flame className="w-3.5 h-3.5" />
               </div>
               <span className="text-[10px] font-black text-[#B45309] uppercase tracking-wider font-display truncate">
-                TDEE Total
+                {t('biometrics.tdeeTitle')}
               </span>
             </div>
             <ChevronRight className="w-3 h-3 text-[#B45309]/60 group-hover:text-[#B45309] transition-colors shrink-0" />
@@ -173,7 +175,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
           </div>
 
           <div className="pt-1 border-t border-[#B45309]/20 flex items-center justify-between text-[9px] font-bold text-[#92400E]">
-            <span>Maintenance Burn</span>
+            <span>{t('biometrics.tdeeDesc')}</span>
           </div>
         </button>
 
@@ -183,7 +185,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
           onClick={() => {
             playClickSound();
             onSelectMetric({
-              title: 'Prescribed Target Energy Intake',
+              title: t('biometrics.calorieTargetTitle'),
               value: `${targetDailyCalories} kcal`,
               category: `Goal: ${profile.goal.toUpperCase()}`,
               statusType: 'optimal',
@@ -211,7 +213,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
                 <Target className="w-3.5 h-3.5" />
               </div>
               <span className="text-[10px] font-black text-[#854D0E] uppercase tracking-wider font-display truncate">
-                Target Intake
+                {t('biometrics.calorieTargetTitle')}
               </span>
             </div>
             <ChevronRight className="w-3 h-3 text-[#854D0E]/60 group-hover:text-[#854D0E] transition-colors shrink-0" />
@@ -240,7 +242,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
           onClick={() => {
             playClickSound();
             onSelectMetric({
-              title: 'Prescribed Energy Balance Delta',
+              title: t('biometrics.energyBalanceTitle'),
               value: energyBalanceValue,
               category: energyBalanceLabel,
               statusType: 'optimal',
@@ -272,7 +274,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
                 )}
               </div>
               <span className="text-[10px] font-black text-[#1D4ED8] uppercase tracking-wider font-display truncate">
-                Energy Delta
+                {t('biometrics.energyBalanceTitle')}
               </span>
             </div>
             <ChevronRight className="w-3 h-3 text-[#1D4ED8]/60 group-hover:text-[#1D4ED8] transition-colors shrink-0" />
@@ -295,11 +297,11 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
           onClick={() => {
             playClickSound();
             onSelectMetric({
-              title: 'Prescribed Daily Protein Target',
+              title: t('biometrics.proteinTargetTitle'),
               value: `${targetProteinGrams} g`,
               category: `${profile.goal === 'maintain' ? '1.5g' : '1.8g'} per kg bodyweight`,
               statusType: 'optimal',
-              statusLabel: 'Target Synthesis',
+              statusLabel: t('biometrics.proteinTargetDesc'),
               normRange: `≥ ${targetProteinGrams} g`,
               numericValue: targetProteinGrams,
               metricId: 'protein',
@@ -318,7 +320,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
                 <Dumbbell className="w-3.5 h-3.5" />
               </div>
               <span className="text-[10px] font-black text-[#6B21A8] uppercase tracking-wider font-display truncate">
-                Protein Goal
+                {t('biometrics.proteinTargetTitle')}
               </span>
             </div>
             <ChevronRight className="w-3 h-3 text-[#6B21A8]/60 group-hover:text-[#6B21A8] transition-colors shrink-0" />
@@ -337,7 +339,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
           </div>
 
           <div className="pt-1 border-t border-[#6B21A8]/20 flex items-center justify-between text-[9px] font-bold text-[#6B21A8]">
-            <span>Tissue Synthesis</span>
+            <span>{t('biometrics.proteinTargetDesc')}</span>
           </div>
         </button>
 
@@ -347,11 +349,11 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
           onClick={() => {
             playClickSound();
             onSelectMetric({
-              title: 'Prescribed Daily Hydration',
+              title: t('biometrics.waterTitle'),
               value: `${targetWaterMl} ml`,
               category: '35 ml per kg bodyweight',
               statusType: 'optimal',
-              statusLabel: 'Cellular Hydration',
+              statusLabel: t('biometrics.waterDesc'),
               normRange: `~${targetWaterMl} ml`,
               numericValue: targetWaterMl,
               metricId: 'water',
@@ -370,7 +372,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
                 <Droplets className="w-3.5 h-3.5" />
               </div>
               <span className="text-[10px] font-black text-[#0369A1] uppercase tracking-wider font-display truncate">
-                Water Target
+                {t('biometrics.waterTitle')}
               </span>
             </div>
             <ChevronRight className="w-3 h-3 text-[#0369A1]/60 group-hover:text-[#0369A1] transition-colors shrink-0" />
@@ -389,7 +391,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
           </div>
 
           <div className="pt-1 border-t border-[#0369A1]/20 flex items-center justify-between text-[9px] font-bold text-[#0369A1]">
-            <span>Cellular Hydration</span>
+            <span>{t('biometrics.waterDesc')}</span>
           </div>
         </button>
       </div>

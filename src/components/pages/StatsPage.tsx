@@ -12,6 +12,7 @@ import type { Task, HabitLog, FocusSession } from '../../types';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import { ActivityHeatmap } from '../analytics/ActivityHeatmap';
 import confetti from 'canvas-confetti';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface StatsPageProps {
   tasks: Task[];
@@ -30,6 +31,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
   onSelectDate,
   onOpenInfographic,
 }) => {
+  const { t } = useTranslation();
   const [timeframe, setTimeframe] = useState<Timeframe>('30d');
   const [copiedShare, setCopiedShare] = useState(false);
 
@@ -93,10 +95,10 @@ export const StatsPage: React.FC<StatsPageProps> = ({
             </div>
             <div>
               <span className="text-[10px] font-bold text-[#6B635B] uppercase tracking-wider block leading-none">
-                Mastery Rank
+                {t('stats.masteryRank')}
               </span>
               <h2 className="text-base font-bold font-display text-[#24201D] mt-0.5">
-                Level {currentLevel} Architect
+                {t('stats.levelArchitect', { level: currentLevel })}
               </h2>
             </div>
           </div>
@@ -113,7 +115,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
             className="px-3.5 py-1.5 bg-[#DDE8DE] hover:bg-[#C9DCCB] border-[1.5px] border-[#24201D] rounded-xl flex items-center gap-1.5 text-xs font-bold text-[#2D503C] cursor-pointer shadow-2xs active:translate-y-0.5"
           >
             <Share2 className="w-3.5 h-3.5 stroke-[2.25]" />
-            <span>Weekly Card</span>
+            <span>{t('stats.weeklyCard')}</span>
           </button>
         </div>
 
@@ -140,7 +142,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
             {totalTasksDone}
           </span>
           <span className="text-[10px] font-bold text-[#6B635B] uppercase">
-            Tasks Done
+            {t('stats.tasksDone')}
           </span>
         </div>
 
@@ -150,7 +152,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
             {totalFocusHours}h
           </span>
           <span className="text-[10px] font-bold text-[#6B635B] uppercase">
-            Focus Time
+            {t('stats.focusTime')}
           </span>
         </div>
 
@@ -160,7 +162,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
             {totalHabitChecks}
           </span>
           <span className="text-[10px] font-bold text-[#6B635B] uppercase">
-            Habit Logs
+            {t('stats.habitsLogged')}
           </span>
         </div>
       </div>
@@ -176,7 +178,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
       {/* 4. Timeframe Filter Selector */}
       <div className="flex items-center justify-between px-1">
         <span className="text-xs font-bold font-display text-[#6B635B] uppercase tracking-wider">
-          Time Period
+          {t('stats.timePeriod')}
         </span>
         <div className="flex items-center gap-1">
           {(['7d', '30d', 'all'] as const).map((tf) => (
@@ -192,7 +194,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
                   : 'bg-white text-[#6B635B] border-stone-200 hover:border-[#24201D]'
               }`}
             >
-              {tf === 'all' ? 'All Time' : tf}
+              {tf === 'all' ? t('stats.allTime') : tf}
             </button>
           ))}
         </div>
@@ -203,16 +205,16 @@ export const StatsPage: React.FC<StatsPageProps> = ({
         <div className="flex items-center gap-2">
           <Trophy className="w-4 h-4 text-[#F0BB58]" />
           <span className="text-xs font-bold font-display text-[#24201D] uppercase tracking-wider">
-            Unlocked Milestones
+            {t('stats.milestones')}
           </span>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
           {[
-            { title: 'First Blood', desc: 'Complete 1st Task', unlocked: totalTasksDone >= 1, xp: '+50 XP', color: '#F0BB58' },
-            { title: 'Deep Worker', desc: '5h Focus Logged', unlocked: Number(totalFocusHours) >= 5, xp: '+200 XP', color: '#3D6B52' },
-            { title: 'Habit Master', desc: '10 Habit Logs', unlocked: totalHabitChecks >= 10, xp: '+150 XP', color: '#3D6B52' },
-            { title: 'Rule of 3 Hero', desc: 'Clear Daily Top 3', unlocked: totalTasksDone >= 3, xp: '+300 XP', color: '#C25E40' },
+            { title: t('stats.milestoneFirstBlood'), desc: t('stats.milestoneFirstBloodDesc'), unlocked: totalTasksDone >= 1, xp: '+50 XP', color: '#F0BB58' },
+            { title: t('stats.milestoneDeepWorker'), desc: t('stats.milestoneDeepWorkerDesc'), unlocked: Number(totalFocusHours) >= 5, xp: '+200 XP', color: '#3D6B52' },
+            { title: t('stats.milestoneHabitMaster'), desc: t('stats.milestoneHabitMasterDesc'), unlocked: totalHabitChecks >= 10, xp: '+150 XP', color: '#3D6B52' },
+            { title: t('stats.milestoneRuleOfThree'), desc: t('stats.milestoneRuleOfThreeDesc'), unlocked: totalTasksDone >= 3, xp: '+300 XP', color: '#C25E40' },
           ].map((item, idx) => (
             <div
               key={idx}
@@ -222,7 +224,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
             >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: item.color }}>
-                  {item.unlocked ? 'Unlocked' : 'Locked'}
+                  {item.unlocked ? t('stats.unlocked') : t('stats.locked')}
                 </span>
                 <span className="text-[9px] font-bold font-mono-num text-[#6B635B]">{item.xp}</span>
               </div>

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
+import { useTranslation } from '../../i18n/LanguageContext';
 import { AVATAR_OPTIONS, getAvatarById } from '../../data/avatars';
 import {
   calculateBmi,
@@ -48,6 +49,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
   onSaveInitialWeight,
   hasExistingWeightLogs = false,
 }) => {
+  const { t } = useTranslation();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Form states initialized with existing profile values or friendly defaults
@@ -158,10 +160,10 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
             </div>
             <div>
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                Health & Body Setup
+                {t.modals.profileSetupTitle}
               </h3>
               <p className="text-[10px] font-bold text-[#6B635B]">
-                {step === 4 ? 'Calibration Completed' : `Step ${step} of 3`}
+                {step === 4 ? t.modals.stepFinalTelemetry : `${step} / 3`}
               </p>
             </div>
           </div>
@@ -172,7 +174,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
               onClick={handleSkip}
               className="text-[11px] font-bold text-[#6B635B] hover:text-[#24201D] px-2.5 py-1 rounded-lg hover:bg-stone-100 transition-colors cursor-pointer"
             >
-              Skip for now
+              {t.modals.skipForNow}
             </button>
           )}
         </div>
@@ -210,17 +212,17 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
               <p className="text-[11px] font-bold text-[#24201D] leading-snug">
                 {step === 1 && (
                   <span>
-                    «Welcome to Health! Let's calibrate your basic biometrics to compute your true daily energy expenditure.»
+                    {t.modals.mascotStep1}
                   </span>
                 )}
                 {step === 2 && (
                   <span>
-                    «Set your current body mass and your ambition. Sumire will calculate healthy WHO target guidelines.»
+                    {t.modals.mascotStep2}
                   </span>
                 )}
                 {step === 3 && (
                   <span>
-                    «Almost there! Select your lifestyle rhythm so we can balance your daily calories and hydration goals.»
+                    {t.modals.mascotStep3}
                   </span>
                 )}
               </p>
@@ -240,7 +242,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
               {/* Biological Sex */}
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block font-display px-1">
-                  Biological Sex
+                  {t.modals.biologicalSex}
                 </label>
                 <div className="grid grid-cols-2 gap-2 p-1 bg-[#EAE5DC] border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs">
                   <button
@@ -255,7 +257,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
                         : 'text-[#6B635B] hover:text-[#24201D]'
                     }`}
                   >
-                    <span>♂ Male</span>
+                    <span>{t.modals.maleSex}</span>
                   </button>
                   <button
                     type="button"
@@ -269,7 +271,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
                         : 'text-[#6B635B] hover:text-[#24201D]'
                     }`}
                   >
-                    <span>♀ Female</span>
+                    <span>{t.modals.femaleSex}</span>
                   </button>
                 </div>
               </div>
@@ -279,7 +281,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
                 {/* Age */}
                 <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2">
                   <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block font-display">
-                    Age (Years)
+                    {t.modals.ageLabel}
                   </span>
                   <div className="flex items-center justify-between">
                     <button
@@ -311,7 +313,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
                 {/* Height */}
                 <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2">
                   <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block font-display">
-                    Height (cm)
+                    {t.modals.heightLabel}
                   </span>
                   <div className="flex items-center justify-between">
                     <button
@@ -344,7 +346,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
               {/* Height Presets Strip */}
               <div className="space-y-1">
                 <span className="text-[9px] font-bold uppercase tracking-wider text-[#6B635B] block px-1">
-                  Quick Height Presets:
+                  {t.modals.quickHeightPresets}
                 </span>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {HEIGHT_PRESETS.map((h) => (
@@ -379,7 +381,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
               <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display">
-                    Current Body Mass
+                    {t.modals.currentBodyMass}
                   </span>
                   <span
                     className="text-[10px] font-black font-mono-num px-2 py-0.5 rounded-full border border-[#24201D]/30"
@@ -449,14 +451,14 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
               <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display flex items-center gap-1">
-                    <Target className="w-3.5 h-3.5 text-[#3D6B52]" /> Target Weight
+                    <Target className="w-3.5 h-3.5 text-[#3D6B52]" /> {t.modals.targetGoalWeight}
                   </span>
                   <span className="text-[10px] font-bold text-[#6B635B]">
                     {weightDeltaToTarget > 0
-                      ? `${weightDeltaToTarget} kg to lose`
+                      ? `${weightDeltaToTarget} ${t.modals.kgToLose}`
                       : weightDeltaToTarget < 0
-                      ? `${Math.abs(weightDeltaToTarget)} kg to gain`
-                      : 'Target reached!'}
+                      ? `${Math.abs(weightDeltaToTarget)} ${t.modals.kgToGain}`
+                      : t.modals.targetReached}
                   </span>
                 </div>
 
@@ -496,7 +498,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
               <div className="p-3 bg-[#FAF8F5] border-[1.5px] border-[#24201D]/20 rounded-2xl flex items-center justify-between shadow-2xs">
                 <span className="text-[10px] font-bold text-[#6B635B] flex items-center gap-1.5">
                   <Info className="w-3.5 h-3.5 text-[#3D6B52]" />
-                  <span>WHO Healthy Range for {height}cm:</span>
+                  <span>{t.modals.whoHealthyRange} ({height} sm):</span>
                 </span>
                 <span className="text-xs font-black font-mono-num text-[#24201D]">
                   {idealMin} – {idealMax} kg
@@ -514,7 +516,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
               {/* Primary Goal Selection */}
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block font-display px-1">
-                  Primary Fitness Ambition
+                  {t.modals.primaryFitnessAmbition}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
@@ -530,7 +532,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
                     }`}
                   >
                     <Flame className="w-4 h-4 text-[#854D0E] fill-[#E09F3E]" />
-                    <span className="text-xs font-black text-[#24201D]">Fat Loss</span>
+                    <span className="text-xs font-black text-[#24201D]">{t.modals.fatLoss}</span>
                     <span className="text-[9px] text-[#854D0E] font-medium">-400 kcal</span>
                   </button>
 
@@ -547,8 +549,8 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
                     }`}
                   >
                     <Scale className="w-4 h-4 text-[#2D503C]" />
-                    <span className="text-xs font-black text-[#24201D]">Maintain</span>
-                    <span className="text-[9px] text-[#2D503C] font-medium">Equilibrium</span>
+                    <span className="text-xs font-black text-[#24201D]">{t.modals.maintain}</span>
+                    <span className="text-[9px] text-[#2D503C] font-medium">{t.modals.equilibrium}</span>
                   </button>
 
                   <button
@@ -564,7 +566,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
                     }`}
                   >
                     <Dumbbell className="w-4 h-4 text-[#6B21A8]" />
-                    <span className="text-xs font-black text-[#24201D]">Muscle Gain</span>
+                    <span className="text-xs font-black text-[#24201D]">{t.modals.muscleGain}</span>
                     <span className="text-[9px] text-[#6B21A8] font-medium">+350 kcal</span>
                   </button>
                 </div>
@@ -573,15 +575,15 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
               {/* Activity Level Selection */}
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block font-display px-1">
-                  Daily Activity Rhythm
+                  {t.modals.dailyActivityRhythm}
                 </label>
                 <div className="space-y-1.5">
                   {(
                     [
-                      { id: 'sedentary', label: 'Sedentary', desc: 'Desk job, minimal workouts' },
-                      { id: 'light', label: 'Light Activity', desc: '1–3 light workouts per week' },
-                      { id: 'moderate', label: 'Moderate Flow', desc: '3–5 energetic workouts per week' },
-                      { id: 'very_active', label: 'Very Active', desc: 'Heavy sports or daily athletic labor' },
+                      { id: 'sedentary', label: t.modals.activitySedentary },
+                      { id: 'light', label: t.modals.activityLight },
+                      { id: 'moderate', label: t.modals.activityModerate },
+                      { id: 'very_active', label: t.modals.activityVeryActive },
                     ] as const
                   ).map((item) => (
                     <button
@@ -599,7 +601,6 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
                     >
                       <div>
                         <h5 className="text-xs font-black text-[#24201D]">{item.label}</h5>
-                        <p className="text-[10px] text-[#6B635B]">{item.desc}</p>
                       </div>
                       {activityLevel === item.id && (
                         <div className="w-5 h-5 rounded-full bg-[#3D6B52] text-white flex items-center justify-center shrink-0">
@@ -615,17 +616,17 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
               <div className="p-3 bg-[#DDE8DE] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-1.5">
                 <span className="text-[9px] font-black uppercase tracking-wider text-[#2D503C] flex items-center gap-1 font-display">
                   <Zap className="w-3 h-3 text-[#2D503C]" />
-                  <span>Computed Daily Baseline:</span>
+                  <span>{t.modals.computedDailyBaseline}</span>
                 </span>
                 <div className="grid grid-cols-2 gap-2 text-xs font-bold text-[#24201D]">
                   <div className="p-2 rounded-xl bg-white border border-[#24201D]/20">
-                    <span className="text-[10px] text-[#6B635B] block">Target Intake</span>
+                    <span className="text-[10px] text-[#6B635B] block">{t.healthIntake.target}</span>
                     <span className="text-sm font-black font-mono-num text-[#2D503C]">
                       {targetDailyCalories} kcal
                     </span>
                   </div>
                   <div className="p-2 rounded-xl bg-white border border-[#24201D]/20">
-                    <span className="text-[10px] text-[#6B635B] block">Target Water</span>
+                    <span className="text-[10px] text-[#6B635B] block">{t.healthIntake.waterTarget}</span>
                     <span className="text-sm font-black font-mono-num text-[#2A495E]">
                       {targetWaterL} L / day
                     </span>
@@ -646,17 +647,17 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
 
               <div className="space-y-1">
                 <h3 className="text-base font-black font-display uppercase tracking-wide text-[#24201D]">
-                  Calibration Complete!
+                  {t.modals.calibrationComplete}
                 </h3>
                 <p className="text-xs font-bold text-[#6B635B] max-w-xs mx-auto">
-                  Your biometric profile and targets are now personalized and active across all health charts.
+                  {t.modals.calibrationCompleteDesc}
                 </p>
               </div>
 
               {/* Summary Metrics Matrix */}
               <div className="grid grid-cols-2 gap-2.5 text-left pt-1">
                 <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs space-y-0.5">
-                  <span className="text-[9px] font-black uppercase text-[#6B635B]">Starting Mass</span>
+                  <span className="text-[9px] font-black uppercase text-[#6B635B]">{t.modals.startingMass}</span>
                   <div className="text-base font-black font-mono-num text-[#24201D]">
                     {currentWeight} kg
                   </div>
@@ -664,7 +665,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
                 </div>
 
                 <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs space-y-0.5">
-                  <span className="text-[9px] font-black uppercase text-[#6B635B]">Target Mass</span>
+                  <span className="text-[9px] font-black uppercase text-[#6B635B]">{t.modals.targetMass}</span>
                   <div className="text-base font-black font-mono-num text-[#24201D]">
                     {targetWeight} kg
                   </div>
@@ -674,7 +675,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
                 </div>
 
                 <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs space-y-0.5">
-                  <span className="text-[9px] font-black uppercase text-[#6B635B]">Daily Calorie Plan</span>
+                  <span className="text-[9px] font-black uppercase text-[#6B635B]">{t.modals.dailyCaloriePlan}</span>
                   <div className="text-base font-black font-mono-num text-[#24201D]">
                     {targetDailyCalories} kcal
                   </div>
@@ -682,7 +683,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
                 </div>
 
                 <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs space-y-0.5">
-                  <span className="text-[9px] font-black uppercase text-[#6B635B]">Daily Hydration</span>
+                  <span className="text-[9px] font-black uppercase text-[#6B635B]">{t.modals.dailyHydration}</span>
                   <div className="text-base font-black font-mono-num text-[#24201D]">
                     {targetWaterL} L
                   </div>
@@ -697,7 +698,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
                 disabled={isSaving}
                 className="w-full py-3.5 px-4 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[2px] border-[#24201D] rounded-2xl text-xs font-black shadow-[3px_3px_0px_#24201D] flex items-center justify-center gap-2 cursor-pointer active:translate-y-0.5 transition-all uppercase tracking-wider font-display mt-2"
               >
-                <span>{isSaving ? 'Calibrating...' : 'Enter Health Dashboard'}</span>
+                <span>{isSaving ? t.modals.calibrating : t.modals.enterHealthDashboard}</span>
                 <ArrowRight className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
@@ -715,7 +716,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
                 className="py-2.5 px-4 rounded-xl bg-[#FAF8F5] hover:bg-stone-200 border-[1.5px] border-[#24201D] text-xs font-black text-[#24201D] flex items-center gap-1.5 shadow-2xs active:translate-y-0.5 transition-all cursor-pointer font-display uppercase tracking-wider"
               >
                 <ArrowLeft className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Back</span>
+                <span>{t.common.back}</span>
               </button>
             ) : (
               <div />
@@ -726,7 +727,7 @@ export const HealthOnboardingWizard: React.FC<HealthOnboardingWizardProps> = ({
               onClick={handleNext}
               className="py-2.5 px-5 rounded-xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.5px] border-[#24201D] text-xs font-black flex items-center gap-1.5 shadow-2xs active:translate-y-0.5 transition-all cursor-pointer font-display uppercase tracking-wider"
             >
-              <span>{step === 3 ? 'Finalize Calibration' : 'Continue'}</span>
+              <span>{step === 3 ? t.modals.finalizeCalibration : t.common.next}</span>
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
             </button>
           </div>

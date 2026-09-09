@@ -18,6 +18,7 @@ import {
   type XiaomiScaleReading,
   type XiaomiBiometricMetrics,
 } from '../../lib/xiaomiScale';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface XiaomiScaleModalProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
   profile,
   onSaveReading,
 }) => {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<ScanStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [liveWeight, setLiveWeight] = useState<number>(0);
@@ -87,7 +89,6 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
     }
     if (scanAbortController.current) {
       scanAbortController.current.abort();
-      scanAbortController.current = null;
     }
   };
 
@@ -97,24 +98,18 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
   const handleIncomingReading = (parsed: XiaomiScaleReading | null) => {
     if (!parsed) return;
 
-    // 1. Ghost Reading Filter:
-    // If the scale broadcasts an old cached packet where the load was already removed (stepped off)
-    // before the user has stepped onto the scale during this scan session, ignore it!
     if (parsed.loadRemoved && !hasSeenLiveWeightRef.current) {
       return;
     }
 
-    // 2. Ignore noise under 10 kg
     if (parsed.weight < 10.0) {
       return;
     }
 
-    // Mark that a live person is standing on the scale
     hasSeenLiveWeightRef.current = true;
     lastValidReadingRef.current = parsed;
     setLiveWeight(parsed.weight);
 
-    // 3. Scale weight is still settling/fluctuating
     if (!parsed.isStabilized) {
       setStatus('stabilizing');
       if (impedanceTimeoutRef.current) {
@@ -126,15 +121,11 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
       return;
     }
 
-    // 4. Scale weight is stabilized
     if (parsed.isStabilized) {
       if (!stabilizedAtRef.current) {
         stabilizedAtRef.current = Date.now();
       }
 
-      // Active fallback timer (3.5 seconds)
-      // Guarantees that even if the scale halts BLE transmission after weight lock (e.g. user wearing socks),
-      // the interface smoothly auto-finalizes and never hangs at 2 bars!
       if (!impedanceTimeoutRef.current) {
         impedanceTimeoutRef.current = setTimeout(() => {
           if (lastValidReadingRef.current) {
@@ -147,7 +138,6 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
         }, 3500);
       }
 
-      // Case A: Bio-impedance is fully completed by hardware!
       if (parsed.isImpedanceComplete) {
         if (impedanceTimeoutRef.current) {
           clearTimeout(impedanceTimeoutRef.current);
@@ -161,7 +151,6 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
         return;
       }
 
-      // Case B: Analyzing impedance (calculating resistance across feet)
       setStatus('analyzing');
       const elapsed = Date.now() - (stabilizedAtRef.current || Date.now());
       if (elapsed < 800) {
@@ -174,7 +163,6 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
         setImpedanceProgress(100);
       }
 
-      // Case C: If user stepped off after stabilization, finalize immediately
       if (parsed.loadRemoved) {
         if (impedanceTimeoutRef.current) {
           clearTimeout(impedanceTimeoutRef.current);
@@ -213,7 +201,6 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
       return;
     }
 
-    // 1. Android Native Bluetooth Low Energy Bridge
     if (isNativeBt) {
       (window as any).__onNativeScaleData = (base64Payload: string) => {
         try {
@@ -256,11 +243,9 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
       return;
     }
 
-    // 2. Standard Web Bluetooth API (Google Chrome fallback)
     try {
       const navBt = (navigator as any).bluetooth;
 
-      // Request device with Smart Scale filters
       const device = await navBt.requestDevice({
         filters: [
           { namePrefix: 'MIBFS' },
@@ -289,7 +274,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
         try {
           const service = await server.getPrimaryService(XIAOMI_SERVICE_UUID);
           const characteristic = await service.getCharacteristic(
-            '00002a9c-0000-1000-8000-00805f9b34fb' // Body Composition Measurement
+            '00002a9c-0000-1000-8000-00805f9b34fb'
           );
 
           await characteristic.startNotifications();
@@ -368,10 +353,10 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
             </div>
             <div>
               <span className="text-[10px] font-black uppercase tracking-wider text-[#4F46E5] font-display block leading-none">
-                Smart Scale
+                Xiaomi
               </span>
               <h3 className="text-sm font-black font-display text-[#24201D] leading-tight mt-0.5">
-                Bio-Impedance Sync
+                {t.modals.scaleModalTitle}
               </h3>
             </div>
           </div>
@@ -414,10 +399,10 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
 
               <div className="space-y-1">
                 <h4 className="text-sm font-black text-[#24201D] font-display uppercase tracking-wide">
-                  Step on Barefoot
+                  {t.modals.stepOnBarefootTitle}
                 </h4>
                 <p className="text-xs text-[#6B635B] max-w-xs mx-auto leading-relaxed">
-                  Make sure both feet touch the silver electrode circles to allow the bio-impedance measurement.
+                  {t.modals.stepOnBarefootDesc}
                 </p>
               </div>
 
@@ -429,7 +414,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                   className="w-full py-3 px-4 bg-[#4F46E5] hover:bg-[#4338CA] text-white border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer font-display uppercase tracking-wider"
                 >
                   <Bluetooth className="w-4 h-4 stroke-[2.5]" />
-                  <span>Connect</span>
+                  <span>{t.modals.connectBtn}</span>
                 </button>
               </div>
             </div>
@@ -445,7 +430,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                 <div className="relative w-28 h-28 rounded-full bg-white border-[2px] border-[#24201D] shadow-[2px_2px_0px_#24201D] flex flex-col items-center justify-center">
                   <Bluetooth className="w-6 h-6 text-[#4F46E5] animate-bounce" />
                   <span className="text-[10px] font-black font-display uppercase tracking-wider text-[#4F46E5] mt-1">
-                    {status === 'scanning' ? 'Searching...' : 'Measuring...'}
+                    {status === 'scanning' ? t.modals.searchingStatus : t.modals.measuringStatus}
                   </span>
                 </div>
               </div>
@@ -453,7 +438,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
               {/* Live Weight Readout */}
               <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-2xs space-y-1">
                 <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
-                  Current Scale Telemetry
+                  {t.modals.currentTelemetry}
                 </span>
                 <div className="flex items-baseline justify-center gap-1.5">
                   <span className="text-4xl font-black font-mono-num text-[#24201D] tracking-tight">
@@ -465,15 +450,15 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                 </div>
                 {liveWeight === 0 && (
                   <p className="text-[11px] text-[#6B635B] font-medium pt-1">
-                    Step onto your scale barefoot to start measuring
+                    {t.modals.stepBarefootHint}
                   </p>
                 )}
 
                 {/* Impedance bars */}
                 <div className="pt-2">
                   <div className="flex items-center justify-between text-[9px] font-bold text-[#6B635B] mb-1">
-                    <span>Bio-Impedance Sensors</span>
-                    <span>{status === 'analyzing' ? 'Analyzing...' : 'Stand still'}</span>
+                    <span>{t.modals.bioImpedanceSensors}</span>
+                    <span>{status === 'analyzing' ? t.modals.measuringStatus : t.modals.standStill}</span>
                   </div>
                   <div className="grid grid-cols-4 gap-1.5 h-2">
                     {[1, 2, 3, 4].map((bar) => {
@@ -505,7 +490,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                   className="w-full py-2.5 px-4 bg-[#2D503C] hover:bg-[#233F2F] text-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-black shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer font-display uppercase tracking-wider"
                 >
                   <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
-                  <span>Lock in {liveWeight} kg</span>
+                  <span>{t.modals.lockInWeight.replace('{weight}', String(liveWeight))}</span>
                 </button>
               )}
 
@@ -517,7 +502,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                 }}
                 className="py-1.5 px-3 rounded-xl bg-white hover:bg-stone-100 border border-[#24201D] text-xs font-bold text-[#6B635B] shadow-2xs cursor-pointer"
               >
-                Cancel Scan
+                {t.modals.cancelScan}
               </button>
             </div>
           )}
@@ -529,7 +514,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
               <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between">
                 <div>
                   <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block font-display">
-                    Verified Scale Weight
+                    {t.modals.verifiedWeight}
                   </span>
                   <div className="flex items-baseline gap-1 mt-0.5">
                     <span className="text-4xl font-black font-mono-num text-[#24201D]">
@@ -544,7 +529,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                 <div className="text-right">
                   <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-[#2D503C] bg-[#DDE8DE] border border-[#24201D] px-2 py-0.5 rounded-full shadow-2xs">
                     <CheckCircle2 className="w-3 h-3" />
-                    <span>Locked</span>
+                    <span>{t.modals.lockedBadge}</span>
                   </div>
                   {reading.impedance > 0 ? (
                     <span className="text-[10px] font-bold text-[#6B635B] block mt-1 font-mono-num">
@@ -552,7 +537,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                     </span>
                   ) : (
                     <span className="text-[10px] font-bold text-[#92400E] bg-[#FEF3C7] px-1.5 py-0.5 rounded border border-[#F59E0B]/30 block mt-1">
-                      Weight locked (step barefoot for bio-impedance)
+                      {t.modals.weightLockedNoImpedance}
                     </span>
                   )}
                 </div>
@@ -575,19 +560,19 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                         </div>
                         <div>
                           <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
-                            Body Score
+                            {t.zepp.bodyScore}
                           </span>
                           <h4 className="text-sm font-black font-display text-[#24201D] leading-tight">
-                            Physique: {reading.metrics.bodyType}
+                            {t.zepp.bodyType}: {reading.metrics.bodyType}
                           </h4>
                           <span className="text-[9px] text-[#2D503C] font-bold block mt-0.5">
-                            {reading.metrics.bodyScore >= 85 ? 'Optimal Composition' : 'Good Condition'}
+                            {reading.metrics.bodyScore >= 85 ? t.zepp.statusOptimal : t.zepp.statusAttention}
                           </span>
                         </div>
                       </div>
 
                       <div className="text-right p-2 bg-white/80 border border-[#24201D]/20 rounded-xl">
-                        <span className="text-[9px] font-bold text-[#6B635B] uppercase font-display block">Ideal Weight</span>
+                        <span className="text-[9px] font-bold text-[#6B635B] uppercase font-display block">{t.modals.idealWeightLabel}</span>
                         <span className="text-xs font-black font-mono-num text-[#24201D]">
                           ~{reading.metrics.idealWeightKg} kg
                         </span>
@@ -599,10 +584,10 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                        Body Composition Telemetry
+                        {t.modals.compositionTelemetry}
                       </span>
                       <span className="text-[9px] font-bold text-[#2D503C] bg-[#DDE8DE] border border-[#2D503C]/30 px-2.5 py-0.5 rounded-full font-mono-num">
-                        10 Parameters
+                        {t.modals.parametersCount}
                       </span>
                     </div>
 
@@ -627,7 +612,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                               )}
                             </div>
                             <span className="text-[9px] text-[#6B635B] font-medium block">
-                              Target: {item.normRange}
+                              {t.zepp.normRange.replace('{range}', item.normRange)}
                             </span>
                           </div>
 
@@ -665,7 +650,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                   className="flex-1 py-3 px-4 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer font-display uppercase tracking-wider disabled:opacity-50"
                 >
                   <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
-                  <span>{isSaving ? 'Saving...' : 'Save to Health Diary'}</span>
+                  <span>{isSaving ? t.common.loading : t.modals.saveToDiary}</span>
                 </button>
 
                 <button
@@ -678,10 +663,10 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                     handleStartScan();
                   }}
                   className="py-3 px-3.5 bg-white hover:bg-stone-100 border border-[#24201D] rounded-2xl text-[#24201D] shadow-2xs active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold font-display uppercase tracking-wider"
-                  title="Weigh In Again"
+                  title={t.modals.weighInAgain}
                 >
                   <RefreshCw className="w-4 h-4" />
-                  <span className="hidden sm:inline">Weigh In Again</span>
+                  <span className="hidden sm:inline">{t.modals.weighInAgain}</span>
                 </button>
               </div>
             </div>
@@ -696,7 +681,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
 
               <div className="space-y-1">
                 <h4 className="text-sm font-black text-[#24201D] font-display uppercase tracking-wide">
-                  Connection Notice
+                  {t.modals.connectionNotice}
                 </h4>
                 <p className="text-xs text-[#DC2626] max-w-xs mx-auto leading-relaxed font-medium">
                   {errorMessage || 'Unable to communicate with the scale.'}
@@ -706,12 +691,12 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
               <div className="p-3 bg-white border border-[#24201D]/20 rounded-xl text-left space-y-1 text-xs text-[#6B635B]">
                 <div className="font-bold text-[#24201D] flex items-center gap-1.5">
                   <Info className="w-3.5 h-3.5 text-[#4F46E5]" />
-                  <span>Troubleshooting tips:</span>
+                  <span>{t.modals.troubleshootingTips}</span>
                 </div>
                 <ul className="list-disc pl-4 space-y-0.5 text-[11px]">
-                  <li>Ensure Bluetooth and Location are enabled on your Android phone.</li>
-                  <li>Step onto the scale to wake it up before clicking scan.</li>
-                  <li>Keep both feet barefoot on the metal sensor electrodes.</li>
+                  <li>{t.modals.tipBluetoothLocation}</li>
+                  <li>{t.modals.tipStepToWake}</li>
+                  <li>{t.modals.tipBarefootElectrodes}</li>
                 </ul>
               </div>
 
@@ -721,7 +706,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                   onClick={handleStartScan}
                   className="w-full py-2.5 px-4 bg-[#4F46E5] hover:bg-[#4338CA] text-white border border-[#24201D] rounded-xl text-xs font-black shadow-2xs active:translate-y-0.5 transition-all cursor-pointer font-display uppercase tracking-wider"
                 >
-                  Connect Again
+                  {t.modals.connectAgain}
                 </button>
               </div>
             </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Trash2, Calendar } from 'lucide-react';
 import { playClickSound } from '../../../lib/sound';
 import type { WeightLog } from '../../../types/health';
+import { useTranslation } from '../../../i18n/LanguageContext';
 
 interface WeightHistoryListProps {
   weightLogs: WeightLog[];
@@ -12,6 +13,7 @@ export const WeightHistoryList: React.FC<WeightHistoryListProps> = ({
   weightLogs,
   onDeleteLog,
 }) => {
+  const { t } = useTranslation();
   const [displayLimit, setDisplayLimit] = useState(7);
 
   // Newest first
@@ -23,7 +25,7 @@ export const WeightHistoryList: React.FC<WeightHistoryListProps> = ({
 
   const handleDelete = async (id: number) => {
     playClickSound();
-    if (confirm('Delete this weigh-in entry?')) {
+    if (confirm(t('common.delete') + '?')) {
       await onDeleteLog(id);
     }
   };
@@ -32,16 +34,16 @@ export const WeightHistoryList: React.FC<WeightHistoryListProps> = ({
     <div className="p-4 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-3">
       <div className="flex items-center justify-between border-b border-[#24201D]/15 pb-2">
         <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
-          Weigh-In Log History
+          {t('healthBody.historyTitle')}
         </h3>
         <span className="text-[10px] font-bold text-stone-400 font-mono-num">
-          {weightLogs.length} entries
+          {weightLogs.length}
         </span>
       </div>
 
       {visibleLogs.length === 0 ? (
         <p className="text-xs text-[#6B635B] font-bold text-center py-4">
-          No records found.
+          {t('healthBody.historyEmpty')}
         </p>
       ) : (
         <div className="space-y-2">

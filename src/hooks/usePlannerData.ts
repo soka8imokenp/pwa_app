@@ -8,6 +8,14 @@ import { triggerTwoWaySync } from '../lib/syncEngine';
 import { sendLocalNotification } from '../lib/notifications';
 import { logActivity, seedInitialActivityFromHistoryIfEmpty } from '../lib/activityLogger';
 
+const getLanguage = (): 'uz' | 'en' | 'ru' => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('kairo_app_language');
+    if (saved === 'ru' || saved === 'en' || saved === 'uz') return saved;
+  }
+  return 'uz';
+};
+
 export function usePlannerData(selectedDate: string) {
   // Ensure database is initialized with initial sample data on first load and trigger sync
   useEffect(() => {
@@ -106,15 +114,38 @@ export function usePlannerData(selectedDate: string) {
       createdAt: Date.now(),
     });
     triggerTwoWaySync();
+
+    const lang = getLanguage();
+    const taskDetails =
+      lang === 'uz'
+        ? (task.isPriority ? 'Top-3 ustuvorliklarga qoʻshildi' : 'Bosh rejaga qoʻshildi')
+        : lang === 'ru'
+        ? (task.isPriority ? 'Добавлено в топ-3 приоритетов' : 'Добавлено в бэклог')
+        : (task.isPriority ? 'Added to Top 3 Priorities' : 'Added to Backlog');
+
+    const notifTitle =
+      lang === 'uz'
+        ? 'Vazifa rejalashtirildi'
+        : lang === 'ru'
+        ? 'Задача запланирована'
+        : 'Task Scheduled';
+
+    const notifBody =
+      lang === 'uz'
+        ? `"${task.title}" ${task.isPriority ? 'Top ustuvorliklar' : 'Bosh reja'}ga saqlandi`
+        : lang === 'ru'
+        ? `"${task.title}" сохранено в ${task.isPriority ? 'Топ приоритеты' : 'Бэклог'}`
+        : `"${task.title}" saved to ${task.isPriority ? 'Top Priorities' : 'Backlog'}`;
+
     logActivity({
       action: 'created',
       entity: task.isPriority ? 'priority' : 'backlog',
       title: task.title,
-      details: task.isPriority ? 'Added to Top 3 Priorities' : 'Added to Backlog',
+      details: taskDetails,
     });
     sendLocalNotification(
-      'Task Scheduled',
-      `"${task.title}" saved to ${task.isPriority ? 'Top Priorities' : 'Backlog'}`,
+      notifTitle,
+      notifBody,
       { tab: task.isPriority ? 'priorities' : 'backlog', taskId: Number(id) }
     );
   };
@@ -124,11 +155,20 @@ export function usePlannerData(selectedDate: string) {
     const nextDone = !task.isCompleted;
     await db.tasks.update(task.id, { isCompleted: nextDone, updatedAt: Date.now() });
     triggerTwoWaySync();
+
+    const lang = getLanguage();
+    const completeDetails =
+      lang === 'uz'
+        ? (nextDone ? 'Bajarildi deb belgilandi' : 'Qayta ochildi')
+        : lang === 'ru'
+        ? (nextDone ? 'Отмечено выполненным' : 'Задача возобновлена')
+        : (nextDone ? 'Marked as completed' : 'Reopened task');
+
     logActivity({
       action: nextDone ? 'completed' : 'uncompleted',
       entity: task.isPriority ? 'priority' : 'task',
       title: task.title,
-      details: nextDone ? 'Marked as completed' : 'Reopened task',
+      details: completeDetails,
     });
   };
 
@@ -213,15 +253,38 @@ export function usePlannerData(selectedDate: string) {
       createdAt: Date.now(),
     });
     triggerTwoWaySync();
+
+    const lang = getLanguage();
+    const habitDetails =
+      lang === 'uz'
+        ? 'Yangi kunlik odat trekeri yaratildi'
+        : lang === 'ru'
+        ? 'Создан новый трекер ежедневной привычки'
+        : 'Created new daily habit tracker';
+
+    const habitNotifTitle =
+      lang === 'uz'
+        ? 'Odat yaratildi'
+        : lang === 'ru'
+        ? 'Привычка создана'
+        : 'Habit Created';
+
+    const habitNotifBody =
+      lang === 'uz'
+        ? `"${habit.title}" kunlik odatlar trekeriga qoʻshildi`
+        : lang === 'ru'
+        ? `"${habit.title}" добавлена в трекер ежедневных привычек`
+        : `"${habit.title}" added to daily habits streak tracker`;
+
     logActivity({
       action: 'created',
       entity: 'habit',
       title: habit.title,
-      details: 'Created new daily habit tracker',
+      details: habitDetails,
     });
     sendLocalNotification(
-      'Habit Created',
-      `"${habit.title}" added to daily habits streak tracker`,
+      habitNotifTitle,
+      habitNotifBody,
       { tab: 'habits', habitId: Number(id) }
     );
   };
@@ -239,11 +302,19 @@ export function usePlannerData(selectedDate: string) {
     });
     triggerTwoWaySync();
     if (habitToDelete) {
+      const lang = getLanguage();
+      const deleteDetails =
+        lang === 'uz'
+          ? 'Odat butunlay oʻchirildi'
+          : lang === 'ru'
+          ? 'Привычка удалена навсегда'
+          : 'Habit deleted permanently';
+
       logActivity({
         action: 'deleted',
         entity: 'habit',
         title: habitToDelete.title,
-        details: 'Habit deleted permanently',
+        details: deleteDetails,
       });
     }
   };
@@ -267,11 +338,19 @@ export function usePlannerData(selectedDate: string) {
     triggerTwoWaySync();
 
     const targetHabit = allHabits.find((h) => h.id === habitId);
+    const lang = getLanguage();
+    const habitLogDetails =
+      lang === 'uz'
+        ? (nextCompleted ? `${dateStr} uchun bajarilganlik qayd etildi` : `${dateStr} uchun belgi olib tashlandi`)
+        : lang === 'ru'
+        ? (nextCompleted ? `Отмечено выполнение на ${dateStr}` : `Снята отметка за ${dateStr}`)
+        : (nextCompleted ? `Logged completion for ${dateStr}` : `Unchecked for ${dateStr}`);
+
     logActivity({
       action: nextCompleted ? 'completed' : 'uncompleted',
       entity: 'habit',
-      title: targetHabit?.title || 'Habit',
-      details: nextCompleted ? `Logged completion for ${dateStr}` : `Unchecked for ${dateStr}`,
+      title: targetHabit?.title || (lang === 'uz' ? 'Odat' : lang === 'ru' ? 'Привычка' : 'Habit'),
+      details: habitLogDetails,
     });
   };
 
@@ -282,11 +361,21 @@ export function usePlannerData(selectedDate: string) {
       completedAt: now,
     });
     triggerTwoWaySync();
+
+    const lang = getLanguage();
+    const focusTitle = session.taskTitle || (lang === 'uz' ? 'Fokus seansi' : lang === 'ru' ? 'Сессия фокуса' : 'Focus Session');
+    const focusDetails =
+      lang === 'uz'
+        ? `${session.durationMinutes} daqiqalik fokus yakunlandi (${session.mode})`
+        : lang === 'ru'
+        ? `${session.durationMinutes} мин фокуса завершено (${session.mode})`
+        : `${session.durationMinutes}m focus completed (${session.mode})`;
+
     logActivity({
       action: 'focus',
       entity: 'focus',
-      title: session.taskTitle || 'Focus Session',
-      details: `${session.durationMinutes}m focus completed (${session.mode})`,
+      title: focusTitle,
+      details: focusDetails,
       timestamp: now,
     });
   };

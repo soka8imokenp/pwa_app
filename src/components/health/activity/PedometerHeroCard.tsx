@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { playClickSound, playSuccessChime } from '../../../lib/sound';
 
+import { useTranslation } from '../../../i18n/LanguageContext';
+
 interface PedometerHeroCardProps {
   currentSteps: number;
   goal: number;
@@ -46,6 +48,7 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
   onSetGoal,
   onResyncSensor,
 }) => {
+  const { t } = useTranslation();
   const [isEditingSteps, setIsEditingSteps] = useState(false);
   const [inputSteps, setInputSteps] = useState(String(currentSteps));
   const [isEditingGoal, setIsEditingGoal] = useState(false);
@@ -55,8 +58,8 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
   const formatHoursMinutes = (mins: number) => {
     const h = Math.floor(mins / 60);
     const m = mins % 60;
-    if (h === 0) return `${m}m`;
-    return `${h}h ${m}m`;
+    if (h === 0) return `${m} ${t.common.minutesShort}`;
+    return `${h} ${t.common.hoursShort} ${m} ${t.common.minutesShort}`;
   };
 
   // Circular gauge geometry
@@ -104,10 +107,10 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
           </div>
           <div>
             <span className="text-[10px] font-black text-[#6B635B] uppercase tracking-wider block font-display leading-none">
-              Daily Movement
+              {t.healthActivity.movementOs}
             </span>
             <h2 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none">
-              Pedometer
+              {t.healthActivity.stepsToday}
             </h2>
           </div>
         </div>
@@ -117,11 +120,11 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
           <button
             type="button"
             onClick={handleSync}
-            title="Sync live step counter from phone"
+            title={t.healthActivity.syncSteps}
             className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/25 active:translate-y-0.5 text-[11px] font-bold text-[#24201D] shadow-2xs transition-all cursor-pointer font-display"
           >
             <RefreshCw className={`w-3 h-3 text-[#3D6B52] ${isSyncing ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Sync</span>
+            <span className="hidden sm:inline">{t.healthActivity.syncSteps}</span>
           </button>
 
           {/* Goal Setting Button */}
@@ -132,7 +135,7 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
               setInputGoal(String(goal));
               setIsEditingGoal(!isEditingGoal);
             }}
-            title="Edit daily step goal"
+            title={t.healthActivity.editGoal}
             className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/25 active:translate-y-0.5 shadow-2xs transition-all cursor-pointer"
           >
             <Edit2 className="w-3.5 h-3.5 text-[#24201D] stroke-[2.25]" />
@@ -144,7 +147,7 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
       {isEditingGoal && (
         <form onSubmit={handleSaveGoal} className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl flex items-center justify-between gap-2 animate-in fade-in duration-150">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-[#6B635B] font-display">Daily Target:</span>
+            <span className="text-xs font-bold text-[#6B635B] font-display">{t.healthActivity.dailyTargetSteps}</span>
             <input
               type="number"
               step="500"
@@ -160,14 +163,14 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
               type="submit"
               className="px-2.5 py-1 bg-[#3D6B52] text-white rounded-lg text-xs font-bold shadow-2xs cursor-pointer font-display"
             >
-              Save
+              {t.common.save}
             </button>
             <button
               type="button"
               onClick={() => setIsEditingGoal(false)}
               className="px-2 py-1 bg-white border border-[#24201D]/20 text-[#6B635B] rounded-lg text-xs font-bold cursor-pointer font-display"
             >
-              Cancel
+              {t.common.cancel}
             </button>
           </div>
         </form>
@@ -251,7 +254,7 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
                   setIsEditingSteps(true);
                 }}
                 className="group cursor-pointer flex flex-col items-center"
-                title="Click to edit steps manually"
+                title={t.healthActivity.editGoal}
               >
                 <div className="relative inline-flex items-center justify-center">
                   <span className="text-3xl sm:text-4xl font-black font-mono-num text-[#24201D] group-hover:text-[#3D6B52] transition-colors leading-none tracking-tight text-center">
@@ -260,7 +263,7 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
                   <Edit2 className="w-3.5 h-3.5 text-stone-400 group-hover:text-[#24201D] opacity-70 group-hover:opacity-100 transition-opacity absolute -right-5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
                 <span className="text-[11px] font-bold font-mono-num text-[#6B635B] mt-1">
-                  of {goal.toLocaleString()} steps
+                  / {t.healthActivity.stepCountFormatted.replace('{count}', goal.toLocaleString())}
                 </span>
               </div>
             )}
@@ -268,7 +271,7 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
             {isGoalMet && (
               <span className="mt-1 text-[10px] font-black text-[#2D503C] uppercase tracking-wider bg-[#DDE8DE] px-2 py-0.5 rounded-full border border-[#2D503C]/30 flex items-center gap-1 shadow-2xs animate-in zoom-in-95 duration-200 font-display">
                 <Sparkles className="w-2.5 h-2.5 text-[#F59E0B]" />
-                Goal Reached
+                {t.healthActivity.goalMetBadge}
               </span>
             )}
           </div>
@@ -281,14 +284,14 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
           <div className="flex items-center justify-center gap-1 text-[#DC2626]">
             <Flame className="w-3.5 h-3.5 stroke-[2.25]" />
             <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display">
-              Burn
+              {t.healthActivity.burnStat}
             </span>
           </div>
           <div className="flex items-baseline justify-center gap-0.5">
             <span className="text-lg font-black font-mono-num text-[#24201D]">
               +{caloriesBurned}
             </span>
-            <span className="text-[10px] font-bold text-[#6B635B]">kcal</span>
+            <span className="text-[10px] font-bold text-[#6B635B]">kkal</span>
           </div>
         </div>
 
@@ -296,7 +299,7 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
           <div className="flex items-center justify-center gap-1 text-[#2563EB]">
             <MapPin className="w-3.5 h-3.5 stroke-[2.25]" />
             <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display">
-              Distance
+              {t.healthActivity.distanceStat}
             </span>
           </div>
           <div className="flex items-baseline justify-center gap-0.5">
@@ -311,7 +314,7 @@ export const PedometerHeroCard: React.FC<PedometerHeroCardProps> = ({
           <div className="flex items-center justify-center gap-1 text-[#D97706]">
             <Clock className="w-3.5 h-3.5 stroke-[2.25]" />
             <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display">
-              Time
+              {t.healthActivity.timeStat}
             </span>
           </div>
           <div className="flex items-baseline justify-center gap-0.5">

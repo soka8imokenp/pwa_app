@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { QrCode, Copy, Check, X, Share2, Link2 } from 'lucide-react';
 import { playClickSound, playSuccessChime } from '../../lib/sound';
 import confetti from 'canvas-confetti';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface QRCodeModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({
   hubUrl = window.location.origin,
   linksCount,
 }) => {
+  const { language } = useLanguage();
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
@@ -49,7 +51,7 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({
               <QrCode className="w-4 h-4 text-[#C25E40] stroke-[2.25]" />
             </div>
             <span className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-              Share Hub QR Code
+              {language === 'uz' ? 'Havolalar markazi QR kodi' : language === 'ru' ? 'QR-код центра ссылок' : 'Share Hub QR Code'}
             </span>
           </div>
 
@@ -74,13 +76,13 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({
           />
           <div className="mt-2 flex items-center justify-center gap-1.5 text-[10px] font-black text-[#2D503C] uppercase">
             <Link2 className="w-3 h-3" />
-            <span>{linksCount} Active Capsules</span>
+            <span>{linksCount} {language === 'uz' ? 'Faol havola' : language === 'ru' ? 'Активных ссылок' : 'Active Capsules'}</span>
           </div>
         </div>
 
         <div className="space-y-1">
           <h4 className="text-xs font-black font-display text-[#24201D]">
-            Scan to Open Link-in-Bio Hub
+            {language === 'uz' ? 'Havolalar sahifasini ochish uchun skanerlang' : language === 'ru' ? 'Отсканируйте для открытия хаба ссылок' : 'Scan to Open Link-in-Bio Hub'}
           </h4>
           <p className="text-[10px] font-semibold text-[#6B635B] font-mono-num truncate max-w-xs mx-auto">
             {hubUrl}
@@ -95,12 +97,12 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({
           {copied ? (
             <>
               <Check className="w-4 h-4 stroke-[3]" />
-              <span>Link Copied!</span>
+              <span>{language === 'uz' ? 'Havola nusxalandi!' : language === 'ru' ? 'Ссылка скопирована!' : 'Link Copied!'}</span>
             </>
           ) : (
             <>
               <Copy className="w-4 h-4 stroke-[2.25]" />
-              <span>Copy Hub Link</span>
+              <span>{language === 'uz' ? 'Havolani nusxalash' : language === 'ru' ? 'Скопировать ссылку' : 'Copy Hub Link'}</span>
             </>
           )}
         </button>

@@ -2,7 +2,7 @@
 // Supports Native Android SpeechRecognizer Bridge & Web Speech API
 // Features: Bilingual / Multi-language, Continuous Flow, Smart Punctuation & Task Splitting
 
-export type VoiceLanguage = 'auto' | 'ru-RU' | 'en-US' | 'ja-JP';
+export type VoiceLanguage = 'auto' | 'uz-UZ' | 'ru-RU' | 'en-US' | 'ja-JP';
 
 export interface VoiceLanguageOption {
   id: VoiceLanguage;
@@ -11,13 +11,15 @@ export interface VoiceLanguageOption {
 }
 
 export const VOICE_LANGUAGES: VoiceLanguageOption[] = [
-  { id: 'auto', label: 'Auto (RU / EN)', badge: 'AUTO' },
+  { id: 'auto', label: 'Auto (UZ / RU / EN)', badge: 'AUTO' },
+  { id: 'uz-UZ', label: 'Oʻzbekcha (UZ)', badge: 'UZ' },
   { id: 'ru-RU', label: 'Русский (RU)', badge: 'RU' },
   { id: 'en-US', label: 'English (EN)', badge: 'EN' },
   { id: 'ja-JP', label: '日本語 (JP)', badge: 'JP' },
 ];
 
 export function getVoiceLanguageBadge(lang: VoiceLanguage): string {
+  if (lang === 'uz-UZ') return 'UZ';
   if (lang === 'ja-JP') return 'JP';
   if (lang === 'ru-RU') return 'RU';
   if (lang === 'en-US') return 'EN';
@@ -27,7 +29,7 @@ export function getVoiceLanguageBadge(lang: VoiceLanguage): string {
 export function getVoiceLanguage(): VoiceLanguage {
   if (typeof window === 'undefined') return 'auto';
   const saved = localStorage.getItem('kairo_voice_lang');
-  if (saved === 'ru-RU' || saved === 'en-US' || saved === 'ja-JP' || saved === 'auto') {
+  if (saved === 'uz-UZ' || saved === 'ru-RU' || saved === 'en-US' || saved === 'ja-JP' || saved === 'auto') {
     return saved;
   }
   return 'auto';
@@ -48,8 +50,17 @@ export function cleanAndFormatVoiceTranscript(rawText: string, isFinal: boolean 
 
   let text = rawText;
 
-  // 1. Spoken punctuation substitution (Russian & English)
+  // 1. Spoken punctuation substitution (Uzbek, Russian & English)
   const replacements: [RegExp, string][] = [
+    // Uzbek
+    [/\s+(?:yangi qator)\s*/gi, '\n'],
+    [/\s+(?:savol belgisi)\s*/gi, '? '],
+    [/\s+(?:undov belgisi)\s*/gi, '! '],
+    [/\s+(?:ikki nuqta)\s*/gi, ': '],
+    [/\s+(?:nuqta)\s*/gi, '. '],
+    [/\s+(?:vergul)\s*/gi, ', '],
+    [/\s+(?:chiziqcha|tire)\s*/gi, ' - '],
+
     // Russian
     [/\s+(?:с новой строки|новая строка|перенос строки)\s*/gi, '\n'],
     [/\s+(?:вопросительный знак)\s*/gi, '? '],
@@ -89,7 +100,7 @@ export function cleanAndFormatVoiceTranscript(rawText: string, isFinal: boolean 
 
 /**
  * Intelligent task splitting: splits a single continuous voice stream into individual tasks
- * by newlines or by sequential transition words ("затем", "потом", "после этого", "and then", etc.)
+ * by newlines or by sequential transition words ("затем", "потом", "после этого", "and then", "so'ngra", etc.)
  */
 export function splitVoiceIntoTasks(transcript: string): string[] {
   if (!transcript || !transcript.trim()) return [];
@@ -97,7 +108,7 @@ export function splitVoiceIntoTasks(transcript: string): string[] {
   // Replace transition words with newline markers
   const normalized = transcript
     .replace(/\s*(?:\r\n|\r|\n)+\s*/g, '\n')
-    .replace(/\s+(?:затем|потом|после этого|после чего|также|и еще|и потом|а также|and then|then next|next|also)\s+/gi, '\n');
+    .replace(/\s+(?:so['ʻ`]?ngra|keyin|undan keyin|shuningdek|yana|va yana|затем|потом|после этого|после чего|также|и еще|и потом|а также|and then|then next|next|also)\s+/gi, '\n');
 
   return normalized
     .split('\n')

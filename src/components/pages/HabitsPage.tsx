@@ -16,6 +16,7 @@ import {
 import type { HabitWithStats } from '../../types';
 import { playTaskCheckSound, playSuccessChime, playClickSound } from '../../lib/sound';
 import confetti from 'canvas-confetti';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface HabitsPageProps {
   habits: HabitWithStats[];
@@ -56,13 +57,6 @@ export const renderHabitLucideIcon = (iconKey?: string) => {
   }
 };
 
-const STARTER_TEMPLATES = [
-  { title: 'Hydrate 2.5L Water', icon: 'water', color: '#DEE8EF', desc: 'Daily hydration & vitality' },
-  { title: 'Read 20 Pages', icon: 'book', color: '#FBECCF', desc: 'Mind expansion & learning' },
-  { title: 'Morning Movement & Stretch', icon: 'stretch', color: '#DDE8DE', desc: 'Energy flow & posture' },
-  { title: 'Deep Work Focus Block', icon: 'zap', color: '#F7E3DC', desc: 'Distraction-free output' },
-];
-
 export const HabitsPage: React.FC<HabitsPageProps> = ({
   habits,
   selectedDate,
@@ -71,6 +65,15 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
   onOpenAddHabit,
   onQuickAddHabit,
 }) => {
+  const { t } = useTranslation();
+
+  const starterTemplates = [
+    { title: t('habits.starterHydrate'), icon: 'water', color: '#DEE8EF', desc: t('habits.starterHydrateDesc') },
+    { title: t('habits.starterRead'), icon: 'book', color: '#FBECCF', desc: t('habits.starterReadDesc') },
+    { title: t('habits.starterStretch'), icon: 'stretch', color: '#DDE8DE', desc: t('habits.starterStretchDesc') },
+    { title: t('habits.starterFocus'), icon: 'zap', color: '#F7E3DC', desc: t('habits.starterFocusDesc') },
+  ];
+
   const completedTodayCount = habits.filter((h) => h.completedToday).length;
   const totalHabits = habits.length;
   const bestStreak = totalHabits > 0 ? Math.max(...habits.map((h) => h.currentStreak), 0) : 0;
@@ -96,7 +99,7 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
     }
   };
 
-  const handleApplyTemplate = (tmpl: typeof STARTER_TEMPLATES[0]) => {
+  const handleApplyTemplate = (tmpl: typeof starterTemplates[0]) => {
     if (!onQuickAddHabit) return;
     playSuccessChime();
     onQuickAddHabit(tmpl.title, tmpl.icon, tmpl.color);
@@ -116,12 +119,12 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
         <div className="flex items-center justify-between gap-3">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block font-display">
-              Habit Consistency
+              {t('habits.consistency')}
             </span>
             <h2 className="text-sm font-bold font-display text-[#24201D] mt-0.5">
               {totalHabits === 0
-                ? 'No Active Habits'
-                : `${completedTodayCount} of ${totalHabits} Completed Today`}
+                ? t('habits.noActiveHabits')
+                : t('habits.completedTodaySummary', { completed: completedTodayCount, total: totalHabits })}
             </h2>
           </div>
 
@@ -129,7 +132,7 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#FBECCF] border border-[#24201D] rounded-xl shadow-2xs">
               <Flame className="w-3.5 h-3.5 text-[#C25E40] fill-[#E09F3E]" />
               <span className="text-[11px] font-black text-[#24201D] font-mono-num">
-                {bestStreak}d best
+                {t('habits.bestDays', { days: bestStreak })}
               </span>
             </div>
 
@@ -157,7 +160,7 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
       {/* 2. Habits Section Header & Clean New Habit Button */}
       <div className="flex items-center justify-between px-1">
         <h3 className="text-xs font-black font-display text-[#24201D] uppercase tracking-wider">
-          Daily Habits
+          {t('habits.title')}
         </h3>
 
         <button
@@ -169,7 +172,7 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
           className="px-3.5 py-1.5 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.5px] border-[#24201D] rounded-xl text-xs font-black shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1.5"
         >
           <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-          <span>New Habit</span>
+          <span>{t('habits.addHabit')}</span>
         </button>
       </div>
 
@@ -185,21 +188,21 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
 
             <div className="space-y-1">
               <h4 className="text-sm font-black font-display text-[#24201D]">
-                Build Your Daily Streaks
+                {t('habits.emptyTitle')}
               </h4>
               <p className="text-xs text-[#6B635B] font-medium max-w-xs mx-auto leading-relaxed">
-                Start small with daily routines that compound over time into unbreakable habits.
+                {t('habits.emptyDesc')}
               </p>
             </div>
 
             {/* Quick Starter Cards */}
             <div className="space-y-2 pt-1 text-left">
               <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block px-1">
-                Popular Daily Routines
+                {t('habits.popularRoutines')}
               </span>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {STARTER_TEMPLATES.map((tmpl) => (
+                {starterTemplates.map((tmpl) => (
                   <button
                     key={tmpl.title}
                     type="button"
@@ -239,7 +242,7 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
                 className="w-full py-3 px-4 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wide"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
-                <span>Create Custom Habit</span>
+                <span>{t('habits.createCustomHabit')}</span>
               </button>
             </div>
 
@@ -269,11 +272,11 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#854D0E] font-mono-num">
                         <Flame className="w-3 h-3 text-[#C25E40] fill-[#E09F3E]" />
-                        {habit.currentStreak}d streak
+                        {t('habits.streakDaysCount', { count: habit.currentStreak })}
                       </span>
                       <span className="text-stone-300">•</span>
                       <span className="text-[10px] font-bold text-[#6B635B] font-mono-num">
-                        best: {habit.longestStreak}d
+                        {t('habits.bestStreakCount', { count: habit.longestStreak })}
                       </span>
                     </div>
                   </div>
@@ -284,7 +287,7 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
                   <button
                     type="button"
                     onClick={() => habit.id && handleToggle(habit.id, selectedDate, habit.completedToday)}
-                    title={habit.completedToday ? 'Mark incomplete' : 'Complete today'}
+                    title={habit.completedToday ? t('habits.markIncomplete') : t('habits.completeToday')}
                     className={`w-9 h-9 rounded-xl border-[1.75px] border-[#24201D] flex items-center justify-center transition-transform active:scale-90 cursor-pointer shadow-2xs ${
                       habit.completedToday
                         ? 'bg-[#3D6B52] text-white shadow-[1px_1px_0px_#24201D]'
@@ -307,7 +310,7 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
                         onDeleteHabit(habit.id);
                       }
                     }}
-                    title="Delete habit"
+                    title={t('common.delete')}
                     className="w-7 h-7 rounded-lg bg-[#F4F0EA] hover:bg-rose-50 border border-[#24201D]/20 hover:border-rose-400 flex items-center justify-center text-[#6B635B] hover:text-rose-600 cursor-pointer shadow-2xs active:scale-95 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -318,15 +321,15 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
               {/* Bottom Row: 7-Day History Interactive Tracker Pills */}
               <div className="flex items-center justify-between pt-2 border-t border-[#24201D]/10">
                 <span className="text-[9px] font-bold uppercase tracking-wider text-[#6B635B]">
-                  Past 7 Days
+                  {t('habits.pastSevenDays')}
                 </span>
 
                 <div className="flex items-center gap-1.5">
                   {habit.recentLogs.map((log) => {
                     const isSelected = log.date === selectedDate;
                     const dateObj = new Date(log.date);
-                    const dayLetters = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-                    const dayLetter = dayLetters[dateObj.getDay()];
+                    const dayIndex = (dateObj.getDay() + 6) % 7;
+                    const dayLetter = t('date.weekdaysShort')[dayIndex]?.charAt(0) || 'D';
 
                     return (
                       <button
@@ -340,7 +343,7 @@ export const HabitsPage: React.FC<HabitsPageProps> = ({
                             ? 'bg-[#F0BB58] text-[#24201D] border-[#24201D] shadow-2xs'
                             : 'bg-[#F4F0EA] text-[#6B635B] border-[#24201D]/20 hover:border-[#24201D]'
                         }`}
-                        title={`${log.date}: ${log.completed ? 'Completed' : 'Not completed'}`}
+                        title={`${log.date}: ${log.completed ? t('common.completed') : t('habits.markIncomplete')}`}
                       >
                         <span className="text-[8px] font-bold opacity-75">{dayLetter}</span>
                         <span className="text-[10px] leading-none font-mono-num">

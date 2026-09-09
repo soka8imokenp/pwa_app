@@ -1,5 +1,6 @@
 import React from 'react';
 import { Droplets, Minus, Plus, Target, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from '../../../i18n/LanguageContext';
 
 interface WaterTrackerCardProps {
   todaysWaterTotalMl: number;
@@ -17,6 +18,7 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
   onAddWater,
   onRemoveWater,
 }) => {
+  const { t } = useTranslation();
   const targetGlasses = targetWaterMl > 0 ? Math.max(1, Math.round(targetWaterMl / GLASS_SIZE_ML)) : 8;
   const consumedGlasses = Math.round(todaysWaterTotalMl / GLASS_SIZE_ML);
   const waterPercent = targetWaterMl > 0 ? Math.min(100, Math.round((todaysWaterTotalMl / targetWaterMl) * 100)) : 0;
@@ -47,17 +49,17 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] leading-none">
-                Water Hydration
+                {t.healthIntake.waterTrackerTitle}
               </h3>
               {isGoalReached && (
                 <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#DDE8DE] text-[#2D503C] border border-[#24201D]">
                   <CheckCircle2 className="w-2.5 h-2.5" />
-                  Goal Reached
+                  {t.healthIntake.goalReached}
                 </span>
               )}
             </div>
 
-            {/* Adapted Clean Liter Display in English */}
+            {/* Clean Liter Display */}
             <div className="flex items-baseline gap-1 mt-1">
               <span className="text-xl sm:text-2xl font-black font-mono-num text-[#24201D] tracking-tight leading-none">
                 {currentLiters}
@@ -75,7 +77,7 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
             type="button"
             onClick={onRemoveWater}
             disabled={todaysWaterTotalMl <= 0}
-            title="Remove 250 ml"
+            title={t.healthIntake.removeWaterTitle}
             className="w-8 h-8 rounded-xl bg-[#FAF8F5] hover:bg-stone-200 disabled:opacity-25 disabled:cursor-not-allowed border-[1.5px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-2xs active:scale-95 cursor-pointer"
           >
             <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -84,7 +86,7 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
           <button
             type="button"
             onClick={() => onAddWater(250)}
-            title="Add 250 ml (1 glass)"
+            title={t.healthIntake.addWaterTitle}
             className="h-8 px-3 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white border-[1.5px] border-[#24201D] text-xs font-black shadow-2xs active:scale-95 cursor-pointer font-display flex items-center gap-1"
           >
             <Plus className="w-3.5 h-3.5 stroke-[3]" />
@@ -103,8 +105,8 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
         </div>
       </div>
 
-      {/* 3. Milestone Guide: 4 gl = 1.0L • 8 gl = 2.0L • 12 gl = 3.0L • 16 gl = 4.0L */}
-      <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-[#6B635B] bg-[#FAF8F5] px-2.5 py-1 rounded-lg border border-[#24201D]/20">
+      {/* 3. Milestone Guide */}
+      <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-[#6B635B] bg-[#FAF8F5] px-2.5 py-1 rounded-lg border border-[#24201D]/20 font-mono-num">
         <span className={consumedGlasses >= 4 ? 'text-[#0284C7] font-black' : ''}>4 gl = 1.0L</span>
         <span>•</span>
         <span className={consumedGlasses >= 8 ? 'text-[#0284C7] font-black' : ''}>8 gl = 2.0L</span>
@@ -114,7 +116,7 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
         <span className={consumedGlasses >= 16 ? 'text-[#0284C7] font-black' : ''}>16 gl = 4.0L</span>
       </div>
 
-      {/* 4. Symmetrical 16-Glass Matrix: 2 even rows of 8 glasses */}
+      {/* 4. Symmetrical 16-Glass Matrix */}
       <div className="grid grid-cols-8 gap-1.5 sm:gap-2 pt-0.5">
         {Array.from({ length: TOTAL_GRID_GLASSES }).map((_, i) => {
           const glassNum = i + 1;
@@ -127,7 +129,7 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
               key={i}
               type="button"
               onClick={() => handleGlassClick(i)}
-              title={`Glass #${glassNum} (${glassNum * GLASS_SIZE_ML} ml / ${(glassNum * 0.25).toFixed(2)} L)`}
+              title={t.healthIntake.glassTitle.replace('{num}', String(glassNum)).replace('{ml}', String(glassNum * GLASS_SIZE_ML))}
               className={`relative h-12 rounded-xl border-[1.5px] border-[#24201D] flex flex-col items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-90 select-none ${
                 isFilled
                   ? 'bg-gradient-to-b from-[#38BDF8] to-[#0284C7] text-white font-black'
@@ -137,7 +139,7 @@ export const WaterTrackerCard: React.FC<WaterTrackerCardProps> = ({
               {/* Daily Target Badge on exact target glass */}
               {isTarget && (
                 <div
-                  title={`Goal: ${glassNum} glasses (${targetLiters} L)`}
+                  title={`Goal: ${glassNum} (${targetLiters})`}
                   className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#FFE873] border border-[#24201D] flex items-center justify-center shadow-2xs"
                 >
                   <Target className="w-2.5 h-2.5 text-[#24201D] stroke-[2.5]" />

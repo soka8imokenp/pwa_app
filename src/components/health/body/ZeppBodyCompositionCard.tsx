@@ -27,6 +27,7 @@ import { playClickSound } from '../../../lib/sound';
 import type { HealthProfile, WeightLog } from '../../../types/health';
 import type { XiaomiBiometricMetrics, ZeppMetricItem } from '../../../lib/xiaomiScale';
 import type { MetricDetailModalInfo } from './MetricDetailModal';
+import { useTranslation } from '../../../i18n/LanguageContext';
 
 interface ZeppBodyCompositionCardProps {
   profile: HealthProfile;
@@ -47,6 +48,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
   onOpenScaleModal,
   onSelectMetric,
 }) => {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
 
@@ -89,10 +91,10 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
             </div>
             <div>
               <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display block leading-none">
-                Clinical Telemetry
+                {t('healthBody.telemetryTitle')}
               </span>
               <h3 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none">
-                Body Composition Analysis
+                {t('zepp.title')}
               </h3>
             </div>
           </div>
@@ -100,7 +102,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
 
         <div className="p-4 bg-[#FAF8F5] border border-[#24201D]/20 rounded-2xl text-center space-y-2.5">
           <p className="text-xs text-[#6B635B] font-medium leading-relaxed max-w-xs mx-auto">
-            Step onto your smart scale barefoot to unlock your full body composition breakdown: body score, muscle mass, hydration, visceral fat, and physique classification.
+            {t('zepp.noScaleData')}
           </p>
           <button
             type="button"
@@ -111,7 +113,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
             className="py-2.5 px-4 bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] rounded-xl text-xs font-black shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 transition-all inline-flex items-center gap-2 cursor-pointer font-display uppercase tracking-wider"
           >
             <Scale className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>Weigh In on Smart Scale</span>
+            <span>{t('healthBody.scaleConnectBtn')}</span>
           </button>
         </div>
       </div>
@@ -286,7 +288,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
             <div className="flex items-center gap-1.5">
               <Activity className="w-4 h-4 text-[#3D6B52] stroke-[2.5]" />
               <span className="text-[9px] font-black uppercase tracking-widest text-[#6B635B] font-display">
-                BODY HEALTH SCORE
+                {t('zepp.bodyScore')}
               </span>
             </div>
             <div className={`px-2.5 py-0.5 rounded-md border text-[10px] font-black font-display inline-flex items-center gap-1.5 shadow-2xs ${scoreTierColor}`}>
@@ -308,7 +310,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
             <div className="text-right">
               <span className="text-[10px] text-[#6B635B] font-medium block">Progress</span>
               <span className="text-xs font-black font-mono-num text-[#24201D]">
-                {deltaSign !== '0' ? `${deltaSign} kg` : 'Maintained'}
+                {deltaSign !== '0' ? `${deltaSign} kg` : t('healthBody.normal')}
               </span>
             </div>
           </div>
@@ -322,9 +324,9 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
               />
             </div>
             <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-wider text-[#6B635B]/70 font-display">
-              <span>Attention &lt;70</span>
-              <span>Solid 70–84</span>
-              <span>Optimal 85+</span>
+              <span>{t('zepp.statusAttention')} &lt;70</span>
+              <span>70–84</span>
+              <span>{t('zepp.statusOptimal')} 85+</span>
             </div>
           </div>
         </div>
@@ -335,27 +337,27 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
           <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-1">
             <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display">
               <Award className="w-3.5 h-3.5 text-[#3D6B52]" />
-              <span>Somatotype</span>
+              <span>{t('zepp.bodyType')}</span>
             </div>
             <span className="text-base font-black font-display text-[#24201D] block truncate leading-tight mt-0.5">
               {metrics.bodyType}
             </span>
             <span className="text-[9px] text-[#6B635B] font-medium block truncate">
-              Physique Profile
+              {t('zepp.bodyType')}
             </span>
           </div>
 
           {/* Scale Weight Pod */}
           <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-1">
             <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display">
-              <Scale className="w-3.5 h-3.5 text-[#2563EB]" />
-              <span>Scale Weight</span>
+              <Scale className="w-3.5 h-3.5 text-[#3D6B52]" />
+              <span>{t('healthBody.currentWeight')}</span>
             </div>
             <div className="flex items-baseline gap-1 mt-0.5">
               <span className="text-base font-black font-mono-num text-[#24201D] leading-tight">
                 {currentWeight.toFixed(2)}
               </span>
-              <span className="text-[10px] font-bold text-[#6B635B]">kg</span>
+              <span className="text-[10px] font-bold text-[#6B635B] uppercase font-display">kg</span>
             </div>
             <div className="flex items-center gap-1">
               {prevWeight !== undefined ? (
@@ -425,7 +427,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                   : 'bg-white hover:bg-stone-100 text-[#6B635B] border border-[#24201D]/20'
               }`}
             >
-              All
+              {t('zepp.filterAll')}
             </button>
 
             {achievedItems.length > 0 && (
@@ -435,14 +437,13 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                   playClickSound();
                   setActiveFilter('achieved');
                 }}
-                className={`py-1.5 px-3.5 rounded-xl text-xs font-black transition-all cursor-pointer font-display uppercase tracking-wider shrink-0 flex items-center gap-1.5 ${
+                className={`py-1.5 px-3.5 rounded-xl text-xs font-black transition-all cursor-pointer font-display uppercase tracking-wider shrink-0 ${
                   activeFilter === 'achieved'
                     ? 'bg-[#2D503C] text-white shadow-2xs'
-                    : 'bg-white hover:bg-stone-100 text-[#2D503C] border border-[#24201D]/20'
+                    : 'bg-white hover:bg-stone-100 text-[#6B635B] border border-[#24201D]/20'
                 }`}
               >
-                <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Achieved</span>
+                {t('zepp.filterAchieved')}
               </button>
             )}
 
@@ -453,14 +454,13 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                   playClickSound();
                   setActiveFilter('attention');
                 }}
-                className={`py-1.5 px-3.5 rounded-xl text-xs font-black transition-all cursor-pointer font-display uppercase tracking-wider shrink-0 flex items-center gap-1.5 ${
+                className={`py-1.5 px-3.5 rounded-xl text-xs font-black transition-all cursor-pointer font-display uppercase tracking-wider shrink-0 ${
                   activeFilter === 'attention'
                     ? 'bg-[#854D0E] text-white shadow-2xs'
-                    : 'bg-white hover:bg-stone-100 text-[#854D0E] border border-[#24201D]/20'
+                    : 'bg-white hover:bg-stone-100 text-[#6B635B] border border-[#24201D]/20'
                 }`}
               >
-                <AlertTriangle className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Attention</span>
+                {t('zepp.filterAttention')}
               </button>
             )}
 
@@ -471,14 +471,13 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                   playClickSound();
                   setActiveFilter('not_reached');
                 }}
-                className={`py-1.5 px-3.5 rounded-xl text-xs font-black transition-all cursor-pointer font-display uppercase tracking-wider shrink-0 flex items-center gap-1.5 ${
+                className={`py-1.5 px-3.5 rounded-xl text-xs font-black transition-all cursor-pointer font-display uppercase tracking-wider shrink-0 ${
                   activeFilter === 'not_reached'
-                    ? 'bg-[#991B1B] text-white shadow-2xs'
-                    : 'bg-white hover:bg-stone-100 text-[#991B1B] border border-[#24201D]/20'
+                    ? 'bg-[#C25E40] text-white shadow-2xs'
+                    : 'bg-white hover:bg-stone-100 text-[#6B635B] border border-[#24201D]/20'
                 }`}
               >
-                <ArrowDownCircle className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Below Target</span>
+                {t('zepp.filterNotReached')}
               </button>
             )}
           </div>

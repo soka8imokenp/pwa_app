@@ -17,6 +17,7 @@ import {
 import type { Task, HabitWithStats, FocusSession } from '../../types';
 import { playSuccessChime, playClickSound, playTaskCheckSound } from '../../lib/sound';
 import { shiftDate } from '../../lib/dateUtils';
+import { useTranslation } from '../../i18n/LanguageContext';
 import confetti from 'canvas-confetti';
 
 interface EveningReviewModalProps {
@@ -54,6 +55,7 @@ export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
   onToggleComplete,
   onDataChanged,
 }) => {
+  const { t, language } = useTranslation();
   const [selectedMood, setSelectedMood] = useState<string>('focused');
   const [winNote, setWinNote] = useState('');
   const [isSaved, setIsSaved] = useState(false);
@@ -138,10 +140,10 @@ export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-black font-display uppercase tracking-wider text-[#24201D]">
-                Evening Debrief
+                {t.modals.eveningReviewTitle}
               </h3>
               <p className="text-[10px] font-bold text-[#6B635B]">
-                Daily Wrap-Up • {selectedDate}
+                {t.modals.eveningReviewSubtitle} • {selectedDate}
               </p>
             </div>
           </div>
@@ -161,10 +163,14 @@ export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
         <div className="p-3.5 bg-[#DDE8DE] border-[1.75px] border-[#24201D] rounded-2xl flex items-center justify-between shadow-2xs">
           <div>
             <span className="text-[9px] font-black uppercase text-[#2D503C] block">
-              Day Productivity Score
+              {t.modals.dailyScore}
             </span>
             <span className="text-sm font-black text-[#2D503C] font-display">
-              {score >= 80 ? 'Exceptional Work!' : score >= 50 ? 'Solid Consistency' : 'Good Recovery Day'}
+              {score >= 80
+                ? (language === 'uz' ? 'Ajoyib natija!' : language === 'ru' ? 'Превосходная работа!' : 'Exceptional Work!')
+                : score >= 50
+                ? (language === 'uz' ? 'Mustahkam intizom' : language === 'ru' ? 'Стабильная дисциплина' : 'Solid Consistency')
+                : (language === 'uz' ? 'Yaxshi tiklanish kuni' : language === 'ru' ? 'Хороший день восстановления' : 'Good Recovery Day')}
             </span>
           </div>
           <span className="text-2xl font-black font-mono-num text-[#2D503C]">
@@ -180,7 +186,7 @@ export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
               {completedPriorities}/{priorityTasks.length}
             </p>
             <p className="text-[9px] font-black uppercase text-[#6B635B]">
-              Priorities
+              {t.priorities.title}
             </p>
           </div>
 
@@ -190,7 +196,7 @@ export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
               {completedHabits}/{habits.length}
             </p>
             <p className="text-[9px] font-black uppercase text-[#6B635B]">
-              Habits
+              {t.habits.title}
             </p>
           </div>
 
@@ -200,7 +206,7 @@ export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
               {totalFocusMins}m
             </p>
             <p className="text-[9px] font-black uppercase text-[#6B635B]">
-              Deep Flow
+              {t.focus.title}
             </p>
           </div>
         </div>
@@ -208,12 +214,23 @@ export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
         {/* 3. Mood & State Check-In */}
         <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl space-y-2 shadow-2xs">
           <label className="block text-xs font-black uppercase tracking-wider text-[#24201D]">
-            How was your day?
+            {t.modals.moodQuestion}
           </label>
           
           <div className="grid grid-cols-5 gap-1.5">
             {MOOD_OPTIONS.map((m) => {
               const isSelected = selectedMood === m.id;
+              const moodLabel =
+                m.id === 'fire'
+                  ? (language === 'uz' ? 'Gʻayratli' : language === 'ru' ? 'В огне' : 'On Fire')
+                  : m.id === 'focused'
+                  ? (language === 'uz' ? 'Fokuslangan' : language === 'ru' ? 'В фокусе' : 'Focused')
+                  : m.id === 'calm'
+                  ? (language === 'uz' ? 'Xotirjam' : language === 'ru' ? 'Спокойно' : 'Calm')
+                  : m.id === 'energetic'
+                  ? (language === 'uz' ? 'Kuchli' : language === 'ru' ? 'Энергично' : 'Energetic')
+                  : (language === 'uz' ? 'Charchagan' : language === 'ru' ? 'Устал' : 'Tired');
+
               return (
                 <button
                   key={m.id}
@@ -231,7 +248,7 @@ export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
                 >
                   {m.icon}
                   <span className="text-[8px] font-black text-[#24201D] truncate max-w-full">
-                    {m.label}
+                    {moodLabel}
                   </span>
                 </button>
               );
@@ -241,13 +258,13 @@ export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
           {/* Win of the Day Input */}
           <div className="pt-1">
             <label className="block text-[10px] font-black uppercase text-[#6B635B] mb-1">
-              Biggest Win or Takeaway
+              {t.modals.gratitudeQuestion}
             </label>
             <input
               type="text"
               value={winNote}
               onChange={(e) => setWinNote(e.target.value)}
-              placeholder="e.g. Shipped APK update, 2h deep focus code sprint..."
+              placeholder={t.modals.gratitudePlaceholder}
               className="w-full px-3 py-2 bg-[#FAF8F5] text-xs font-bold rounded-xl border border-[#24201D] outline-none placeholder:text-stone-400 shadow-2xs text-[#24201D]"
             />
           </div>
@@ -258,32 +275,32 @@ export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
           <div className="p-3.5 bg-[#FAF8F5] border-[1.75px] border-[#24201D] rounded-2xl space-y-2.5 shadow-2xs">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase text-[#854D0E]">
-                {pendingTasks.length} Unfinished Task{pendingTasks.length > 1 ? 's' : ''} Today
+                {pendingTasks.length} {language === 'uz' ? 'ta tugallanmagan vazifa' : language === 'ru' ? 'незавершенных задач сегодня' : 'Unfinished Tasks Today'}
               </span>
               <span className="text-[9px] font-bold text-[#854D0E]">
-                Choose action
+                {language === 'uz' ? 'Amalni tanlang' : language === 'ru' ? 'Выберите действие' : 'Choose action'}
               </span>
             </div>
 
             <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
-              {pendingTasks.map((t) => (
+              {pendingTasks.map((taskItem) => (
                 <div
-                  key={t.id}
+                  key={taskItem.id}
                   className="p-2 bg-white border border-[#24201D]/20 rounded-xl flex items-center justify-between gap-2 text-xs"
                 >
-                  <span className="font-bold text-[#24201D] truncate flex-1">{t.title}</span>
-                  {t.id && onRolloverTask && (
+                  <span className="font-bold text-[#24201D] truncate flex-1">{taskItem.title}</span>
+                  {taskItem.id && onRolloverTask && (
                     <button
                       type="button"
                       onClick={() => {
                         playClickSound();
-                        onRolloverTask(t.id!, shiftDate(selectedDate, 1));
+                        onRolloverTask(taskItem.id!, shiftDate(selectedDate, 1));
                         if (onDataChanged) onDataChanged();
                       }}
-                      title="Move to tomorrow"
+                      title={language === 'uz' ? 'Ertaga koʻchirish' : language === 'ru' ? 'Перенести на завтра' : 'Move to tomorrow'}
                       className="px-2 py-0.5 bg-[#DDE8DE] hover:bg-[#C9DCCB] border border-[#24201D] rounded-lg text-[9px] font-black text-[#2D503C] cursor-pointer shrink-0"
                     >
-                      +1 Day
+                      {language === 'uz' ? '+1 kun' : language === 'ru' ? '+1 день' : '+1 Day'}
                     </button>
                   )}
                 </div>
@@ -297,7 +314,7 @@ export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
                 className="py-1.5 px-2 bg-white hover:bg-amber-50 border border-[#24201D] rounded-xl text-[10px] font-black text-[#24201D] flex items-center justify-center gap-1 cursor-pointer shadow-2xs active:scale-95"
               >
                 <Calendar className="w-3 h-3 text-[#854D0E]" />
-                <span>Move All to Tomorrow</span>
+                <span>{t.modals.rolloverToTomorrow}</span>
               </button>
 
               <button
@@ -306,7 +323,7 @@ export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
                 className="py-1.5 px-2 bg-white hover:bg-stone-100 border border-[#24201D] rounded-xl text-[10px] font-black text-[#24201D] flex items-center justify-center gap-1 cursor-pointer shadow-2xs active:scale-95"
               >
                 <Archive className="w-3 h-3 text-[#476C85]" />
-                <span>Move to Backlog</span>
+                <span>{t.priorities.moveToBacklog}</span>
               </button>
             </div>
           </div>
@@ -319,7 +336,7 @@ export const EveningReviewModal: React.FC<EveningReviewModalProps> = ({
           className="w-full py-3 rounded-2xl bg-[#3D6B52] hover:bg-[#345B45] text-white border-[1.75px] border-[#24201D] text-xs font-black shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-2 transition-all"
         >
           <Check className="w-4 h-4 stroke-[3]" />
-          <span>Save & Complete Daily Wrap-Up</span>
+          <span>{t.modals.finishDebriefBtn}</span>
         </button>
 
       </div>

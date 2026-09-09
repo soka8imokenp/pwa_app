@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { BrutalButton } from './BrutalButton';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface ModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   maxWidth = 'max-w-lg',
 }) => {
+  const { language } = useLanguage();
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -69,7 +71,7 @@ export const Modal: React.FC<ModalProps> = ({
             variant="secondary"
             size="icon"
             onClick={onClose}
-            aria-label="Close modal"
+            aria-label={language === 'uz' ? 'Modalni yopish' : language === 'ru' ? 'Закрыть окно' : 'Close modal'}
             className="w-9 h-9"
           >
             <X className="w-4 h-4 text-slate-900 dark:text-white" />

@@ -9,6 +9,7 @@ import {
 } from '../../lib/dateUtils';
 import { DayOverviewStats } from '../../types';
 import { playClickSound } from '../../lib/sound';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface DateNavigatorProps {
   selectedDate: string;
@@ -22,6 +23,7 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
   onSelectDate,
   onOpenCalendar,
 }) => {
+  const { t, formatDisplayDate, getRelativeDayLabel } = useTranslation();
   const isTodaySelected = selectedDate === getTodayString();
   const weekDays = getWeekDaysForDate(selectedDate);
 
@@ -53,7 +55,7 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
           <button
             onClick={handlePrevDay}
             className="w-8 h-8 rounded-xl bg-[#F4F0EA] hover:bg-stone-200 border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-[1px_1px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0"
-            aria-label="Previous day"
+            aria-label={t('date.prevDay')}
           >
             <ChevronLeft className="w-4 h-4 stroke-[2.25]" />
           </button>
@@ -62,7 +64,7 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
           <button
             onClick={handleCalendarClick}
             className="px-3 py-1.5 bg-[#F4F0EA] hover:bg-[#F0BB58] border-[1.75px] border-[#24201D] rounded-xl flex items-center gap-2 shadow-[1px_1px_0px_#24201D] cursor-pointer transition-all active:translate-y-0.5"
-            title="Open Calendar Planner"
+            title={t('date.calendarPlanner')}
           >
             <Calendar className="w-3.5 h-3.5 text-[#24201D] stroke-[2.5]" />
             <span className="text-xs sm:text-sm font-bold font-display text-[#24201D] tracking-tight">
@@ -82,7 +84,7 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
           <button
             onClick={handleNextDay}
             className="w-8 h-8 rounded-xl bg-[#F4F0EA] hover:bg-stone-200 border-[1.75px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-[1px_1px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer shrink-0"
-            aria-label="Next day"
+            aria-label={t('date.nextDay')}
           >
             <ChevronRight className="w-4 h-4 stroke-[2.25]" />
           </button>
@@ -94,7 +96,7 @@ export const DateNavigator: React.FC<DateNavigatorProps> = ({
             onClick={handleToday}
             className="absolute right-0 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider neo-btn bg-[#F4F0EA] hover:bg-[#F0BB58] text-[#24201D] cursor-pointer shadow-[1px_1px_0px_#24201D]"
           >
-            Today
+            {t('common.today')}
           </button>
         )}
       </div>

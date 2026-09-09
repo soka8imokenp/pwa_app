@@ -22,6 +22,7 @@ import type { WorkoutLog, HealthProfile, CalculatedHealthMetrics } from '../../t
 import { PedometerHeroCard } from './activity/PedometerHeroCard';
 import { ActivityCalendarCard } from './activity/ActivityCalendarCard';
 import { useStepTracker } from '../../hooks/useStepTracker';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface HealthActivityPageProps {
   profile?: HealthProfile;
@@ -78,6 +79,7 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
   onDeleteWorkout,
   onSelectDate,
 }) => {
+  const { t } = useTranslation();
   const stepTracker = useStepTracker({
     selectedDate,
     profile,
@@ -162,35 +164,35 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
     switch (cat) {
       case 'gym':
         return {
-          label: 'Strength',
+          label: t.healthActivity.workoutGym,
           icon: <Dumbbell className="w-3.5 h-3.5 stroke-[2.25]" />,
           color: '#854D0E',
           bg: '#FEF3C7',
         };
       case 'run':
         return {
-          label: 'Run',
+          label: t.healthActivity.workoutRunning,
           icon: <Flame className="w-3.5 h-3.5 stroke-[2.25]" />,
           color: '#DC2626',
           bg: '#FEE2E2',
         };
       case 'cardio':
         return {
-          label: 'Cardio',
+          label: t.healthActivity.workoutCardio,
           icon: <Zap className="w-3.5 h-3.5 stroke-[2.25]" />,
           color: '#D97706',
           bg: '#FFEDD5',
         };
       case 'walk':
         return {
-          label: 'Walk',
+          label: t.healthActivity.workoutWalking,
           icon: <Footprints className="w-3.5 h-3.5 stroke-[2.25]" />,
           color: '#2D503C',
           bg: '#DDE8DE',
         };
       case 'stretch':
         return {
-          label: 'Mobility',
+          label: t.healthActivity.workoutYoga,
           icon: <Heart className="w-3.5 h-3.5 stroke-[2.25]" />,
           color: '#7C3AED',
           bg: '#F3E8FF',
@@ -198,7 +200,7 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
       case 'sports':
       default:
         return {
-          label: 'Sports',
+          label: t.healthActivity.workoutFootball,
           icon: <Trophy className="w-3.5 h-3.5 stroke-[2.25]" />,
           color: '#2563EB',
           bg: '#DBEAFE',
@@ -319,25 +321,25 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
             </div>
             <div>
               <span className="text-[10px] font-black text-[#6B635B] uppercase tracking-wider block font-display leading-none">
-                Movement OS
+                {t.healthActivity.movementOs}
               </span>
               <h2 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none">
-                Daily Workouts & Burn
+                {t.healthActivity.dailyWorkoutsAndBurn}
               </h2>
             </div>
           </div>
 
           <span className="text-xs font-black font-mono-num text-[#24201D] px-2 py-0.5 rounded-lg bg-[#FAF8F5] border border-[#24201D]/25 shadow-2xs">
-            {goalPercent}% of Goal
+            {t.healthActivity.percentOfGoal.replace('{percent}', String(goalPercent))}
           </span>
         </div>
 
         {/* Progress Bar towards active target */}
         <div className="space-y-1.5">
           <div className="flex items-baseline justify-between text-xs font-bold text-[#6B635B]">
-            <span>Active Burn vs Daily Target</span>
+            <span>{t.healthActivity.activeBurnVsTarget}</span>
             <span className="font-mono-num font-black text-[#24201D]">
-              {todaysActiveCaloriesBurned} / {dailyTargetActiveKcal} kcal
+              {todaysActiveCaloriesBurned} / {dailyTargetActiveKcal} kkal
             </span>
           </div>
 
@@ -350,8 +352,8 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
 
           {/* Sub-breakdown: Workouts vs Steps */}
           <div className="flex items-center justify-between text-[10px] font-bold font-mono-num text-[#6B635B] pt-0.5">
-            <span>🏋️ Workouts: +{todaysWorkouts.reduce((acc, w) => acc + (w.caloriesBurned || 0), 0)} kcal</span>
-            <span>🚶 Steps: +{stepTracker.currentCalories} kcal</span>
+            <span>{t.healthActivity.workoutsBadge.replace('{kcal}', String(todaysWorkouts.reduce((acc, w) => acc + (w.caloriesBurned || 0), 0)))}</span>
+            <span>{t.healthActivity.stepsBadge.replace('{kcal}', String(stepTracker.currentCalories))}</span>
           </div>
         </div>
 
@@ -359,37 +361,37 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
           <div className="p-3 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
             <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
-              Active Burn
+              {t.healthActivity.activeBurn}
             </span>
             <div className="flex items-baseline gap-1 mt-0.5">
               <span className="text-2xl font-black font-mono-num text-[#24201D]">
                 {todaysActiveCaloriesBurned}
               </span>
-              <span className="text-xs font-bold text-[#6B635B]">kcal</span>
+              <span className="text-xs font-bold text-[#6B635B]">kkal</span>
             </div>
           </div>
 
           <div className="p-3 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
             <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
-              Active Time
+              {t.healthActivity.activeTime}
             </span>
             <div className="flex items-baseline gap-1 mt-0.5">
               <span className="text-2xl font-black font-mono-num text-[#24201D]">
                 {totalWorkoutMinutes}
               </span>
-              <span className="text-xs font-bold text-[#6B635B]">mins</span>
+              <span className="text-xs font-bold text-[#6B635B]">{t.common.minutesShort}</span>
             </div>
           </div>
 
           <div className="col-span-2 sm:col-span-1 p-3 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
             <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
-              Energy Rate
+              {t.healthActivity.energyRate}
             </span>
             <div className="flex items-baseline gap-1 mt-0.5">
               <span className="text-2xl font-black font-mono-num text-[#24201D]">
                 {totalWorkoutMinutes > 0 ? Math.round((todaysActiveCaloriesBurned / totalWorkoutMinutes) * 60) : 0}
               </span>
-              <span className="text-xs font-bold text-[#6B635B]">kcal/hr</span>
+              <span className="text-xs font-bold text-[#6B635B]">kkal/{t.common.hoursShort}</span>
             </div>
           </div>
         </div>
@@ -403,7 +405,7 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
               <Plus className="w-3.5 h-3.5 text-[#24201D]" />
             </div>
             <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] leading-none">
-              Log Workout Session
+              {t.healthActivity.logWorkoutSession}
             </h3>
           </div>
         </div>
@@ -439,7 +441,7 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
         <div className="space-y-1.5 pt-0.5">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-black uppercase text-[#6B635B] font-display tracking-wider">
-              Quick Workout Presets
+              {t.healthActivity.quickWorkoutPresets}
             </span>
             <button
               type="button"
@@ -454,7 +456,7 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
               }`}
             >
               <Settings2 className="w-3 h-3 stroke-[2.25]" />
-              <span>{isEditingPresets ? 'Done' : 'Edit'}</span>
+              <span>{isEditingPresets ? t.common.done : t.common.edit}</span>
             </button>
           </div>
 
@@ -470,7 +472,7 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
                   className="px-2.5 py-1 text-[11px] font-bold text-[#24201D] cursor-pointer flex items-center gap-1"
                 >
                   <span>{p.title}</span>
-                  <span className="font-mono-num text-[10px] text-[#6B635B]">({p.durationMinutes}m)</span>
+                  <span className="font-mono-num text-[10px] text-[#6B635B]">({p.durationMinutes}{t.common.minutesShort})</span>
                 </button>
 
                 {isEditingPresets && (
@@ -491,19 +493,19 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
           {isEditingPresets && (
             <form onSubmit={handleAddPreset} className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-2 animate-in fade-in duration-100">
               <span className="text-[10px] font-black uppercase text-[#24201D] block font-display">
-                Add Custom Workout Template
+                {t.healthActivity.addWorkoutTemplate}
               </span>
               <div className="grid grid-cols-3 gap-1.5">
                 <input
                   type="text"
-                  placeholder="Title (e.g. Leg Day)"
+                  placeholder={t.healthActivity.workoutTitlePlaceholder}
                   value={newPresetTitle}
                   onChange={(e) => setNewPresetTitle(e.target.value)}
                   className="col-span-2 px-2.5 py-1.5 bg-white border border-[#24201D] rounded-lg text-xs font-bold text-[#24201D] focus:outline-none"
                 />
                 <input
                   type="number"
-                  placeholder="Minutes"
+                  placeholder={t.common.minutesShort}
                   value={newPresetDuration}
                   onChange={(e) => setNewPresetDuration(Number(e.target.value))}
                   className="px-2 py-1.5 bg-white border border-[#24201D] rounded-lg text-xs font-bold text-[#24201D] font-mono-num focus:outline-none"
@@ -512,18 +514,18 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
 
               <div className="flex items-center justify-between pt-1">
                 <div className="flex items-center gap-1">
-                  {(['gym', 'run', 'cardio', 'walk', 'stretch', 'sports'] as const).map((t) => (
+                  {(['gym', 'run', 'cardio', 'walk', 'stretch', 'sports'] as const).map((tCat) => (
                     <button
-                      key={t}
+                      key={tCat}
                       type="button"
-                      onClick={() => setNewPresetCategory(t)}
+                      onClick={() => setNewPresetCategory(tCat)}
                       className={`px-2 py-0.5 rounded text-[9px] font-black uppercase transition-all cursor-pointer ${
-                        newPresetCategory === t
+                        newPresetCategory === tCat
                           ? 'bg-[#24201D] text-white'
                           : 'bg-white text-[#6B635B] border border-[#24201D]/20'
                       }`}
                     >
-                      {t.slice(0, 3).toUpperCase()}
+                      {tCat.slice(0, 3).toUpperCase()}
                     </button>
                   ))}
                 </div>
@@ -533,7 +535,7 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
                   disabled={!newPresetTitle.trim()}
                   className="px-3 py-1 bg-[#3D6B52] disabled:opacity-40 text-white rounded-lg text-xs font-bold shadow-2xs cursor-pointer font-display"
                 >
-                  + Add
+                  + {t.common.add}
                 </button>
               </div>
             </form>
@@ -544,7 +546,7 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
             type="text"
-            placeholder="e.g. Upper Body Push, 5km Morning Run..."
+            placeholder={t.healthActivity.workoutTitlePlaceholder}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-stone-400 shadow-2xs focus:outline-none"
@@ -555,7 +557,7 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
             {/* Duration Stepper */}
             <div className="p-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1">
               <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] flex items-center gap-1 font-display">
-                <Clock className="w-3 h-3 text-[#3D6B52]" /> Duration
+                <Clock className="w-3 h-3 text-[#3D6B52]" /> {t.healthActivity.durationLabel}
               </label>
               <div className="flex items-center justify-between">
                 <button
@@ -569,7 +571,7 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
                   <span className="text-base font-black font-mono-num text-[#24201D]">
                     {durationMinutes}
                   </span>
-                  <span className="text-[10px] font-bold text-[#6B635B]">min</span>
+                  <span className="text-[10px] font-bold text-[#6B635B]">{t.common.minutesShort}</span>
                 </div>
                 <button
                   type="button"
@@ -584,10 +586,14 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
             {/* Intensity Selector */}
             <div className="p-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1">
               <label className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] block font-display">
-                Intensity Level
+                {t.healthActivity.intensityLabel}
               </label>
               <div className="grid grid-cols-3 gap-1 pt-0.5">
-                {(['low', 'moderate', 'high'] as const).map((lvl) => (
+                {([
+                  { lvl: 'low', label: t.healthActivity.intensityLow },
+                  { lvl: 'moderate', label: t.healthActivity.intensityModerate },
+                  { lvl: 'high', label: t.healthActivity.intensityHigh },
+                ] as const).map(({ lvl, label }) => (
                   <button
                     key={lvl}
                     type="button"
@@ -602,7 +608,7 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
                         : 'bg-white text-[#6B635B] border border-[#24201D]/20 hover:border-[#24201D]'
                     }`}
                   >
-                    {lvl.slice(0, 3)}
+                    {label}
                   </button>
                 ))}
               </div>
@@ -626,7 +632,7 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
                     : 'bg-[#FAF8F5] text-[#6B635B] border-[#24201D]/20 hover:border-[#24201D]'
                 }`}
               >
-                {m}m
+                {m}{t.common.minutesShort}
               </button>
             ))}
           </div>
@@ -635,10 +641,19 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
           <div className="p-3 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl flex items-center justify-between shadow-2xs">
             <div>
               <span className="text-[10px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
-                Calculated Burn (MET formula)
+                {t.healthActivity.calculatedBurn}
               </span>
               <span className="text-[9px] text-stone-400">
-                Personalized for {userWeight}kg at {intensity} intensity
+                {t.healthActivity.personalizedBurn
+                  .replace('{weight}', String(userWeight))
+                  .replace(
+                    '{intensity}',
+                    intensity === 'low'
+                      ? t.healthActivity.intensityLow
+                      : intensity === 'high'
+                      ? t.healthActivity.intensityHigh
+                      : t.healthActivity.intensityModerate
+                  )}
               </span>
             </div>
 
@@ -649,7 +664,7 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
                 onChange={(e) => setCustomCalories(e.target.value)}
                 className="w-20 px-2 py-1 bg-white border border-[#24201D] rounded-lg text-sm font-black font-mono-num text-[#24201D] text-right focus:outline-none"
               />
-              <span className="text-xs font-bold text-[#6B635B]">kcal</span>
+              <span className="text-xs font-bold text-[#6B635B]">kkal</span>
             </div>
           </div>
 
@@ -660,7 +675,7 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
             className="w-full py-3 bg-[#3D6B52] hover:bg-[#345B45] disabled:opacity-40 text-white border-[1.75px] border-[#24201D] rounded-2xl text-xs font-black shadow-[2px_2px_0px_#24201D] cursor-pointer active:translate-y-0.5 transition-all uppercase tracking-wider font-display flex items-center justify-center gap-2"
           >
             <Activity className="w-4 h-4 stroke-[2.5]" />
-            <span>Save Workout Session</span>
+            <span>{t.healthActivity.saveWorkoutSession}</span>
           </button>
         </form>
       </div>
@@ -674,22 +689,22 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
             </div>
             <div>
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D] leading-none">
-                Workout Activity Log
+                {t.healthActivity.workoutsHistoryTitle}
               </h3>
               <span className="text-[10px] font-bold text-[#6B635B]">
-                {todaysWorkouts.length} sessions logged
+                {t.healthActivity.workoutHistorySubtitle.replace('{count}', String(todaysWorkouts.length))}
               </span>
             </div>
           </div>
 
           <span className="text-xs font-black font-mono-num text-[#DC2626] px-2 py-0.5 bg-[#FAF8F5] border border-[#24201D]/25 rounded-lg shadow-2xs">
-            +{todaysActiveCaloriesBurned} kcal
+            +{todaysActiveCaloriesBurned} kkal
           </span>
         </div>
 
         {todaysWorkouts.length === 0 ? (
           <div className="p-6 text-center text-xs font-bold text-stone-400 bg-[#FAF8F5] rounded-xl border border-dashed border-[#24201D]/20">
-            No workouts logged for this date. Log a session above to boost your daily calorie budget!
+            {t.healthActivity.noWorkoutsHint}
           </div>
         ) : (
           <div className="space-y-2">
@@ -713,9 +728,9 @@ export const HealthActivityPage: React.FC<HealthActivityPageProps> = ({
                         {w.title}
                       </span>
                       <div className="flex items-center gap-2 mt-0.5 text-[10px] font-bold font-mono-num text-[#6B635B]">
-                        <span>{w.durationMinutes} mins</span>
+                        <span>{t.healthActivity.workoutDuration.replace('{min}', String(w.durationMinutes))}</span>
                         <span>•</span>
-                        <span className="text-[#DC2626] font-black">+{w.caloriesBurned} kcal</span>
+                        <span className="text-[#DC2626] font-black">+{w.caloriesBurned} kkal</span>
                         <span>•</span>
                         <span className="uppercase text-[9px] font-display">{config.label}</span>
                       </div>

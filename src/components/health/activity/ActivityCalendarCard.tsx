@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import type { DayStepItem } from '../../../hooks/useStepTracker';
 import { playClickSound } from '../../../lib/sound';
+import { useTranslation, formatDateDirect, formatMonthYearDirect } from '../../../i18n/LanguageContext';
 
 interface ActivityCalendarCardProps {
   selectedDate: string;
@@ -54,6 +55,7 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
   weekStats,
   monthStats,
 }) => {
+  const { language, t } = useTranslation();
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
   const [inspectedDateStr, setInspectedDateStr] = useState<string>(selectedDate);
 
@@ -94,16 +96,16 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
     setInspectedDateStr(dateStr);
   };
 
-  const WEEK_DAYS_HEADER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const WEEK_DAYS_HEADER = t.date.weekdaysShort;
 
   // Current period subtitle for header
   const weekRangeLabel =
     weekStats.days.length >= 7
-      ? `${format(parseISO(weekStats.days[0].dateStr), 'MMM d')} – ${format(
-          parseISO(weekStats.days[6].dateStr),
-          'MMM d'
+      ? `${formatDateDirect(weekStats.days[0].dateStr, language)} – ${formatDateDirect(
+          weekStats.days[6].dateStr,
+          language
         )}`
-      : 'Weekly Summary';
+      : t.healthActivity.viewWeek;
 
   return (
     <div className="p-4 sm:p-5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-4 font-body select-none">
@@ -116,14 +118,14 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] font-black text-[#6B635B] uppercase tracking-wider block font-display leading-none">
-                Movement History
+                {t.healthActivity.movementHistory}
               </span>
               <span className="text-[10px] font-bold text-[#3D6B52] bg-[#DDE8DE] px-1.5 py-0.2 rounded-full leading-none">
-                {viewMode === 'week' ? weekRangeLabel : monthStats.monthName}
+                {viewMode === 'week' ? weekRangeLabel : formatMonthYearDirect(parseISO(selectedDate), language)}
               </span>
             </div>
             <h2 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none">
-              Activity & Trends
+              {t.healthActivity.activityTrends}
             </h2>
           </div>
         </div>
@@ -144,7 +146,7 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
                   : 'text-[#6B635B] hover:text-[#24201D]'
               }`}
             >
-              Week
+              {t.healthActivity.viewWeek}
             </button>
             <button
               type="button"
@@ -158,7 +160,7 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
                   : 'text-[#6B635B] hover:text-[#24201D]'
               }`}
             >
-              Month
+              {t.healthActivity.viewMonth}
             </button>
           </div>
 
@@ -178,7 +180,7 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
               title="Jump to today"
               className="px-2 py-1 rounded-lg bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/25 text-[11px] font-bold text-[#24201D] active:translate-y-0.5 shadow-2xs cursor-pointer font-display transition-all"
             >
-              Today
+              {t.common.today}
             </button>
             <button
               type="button"
@@ -274,7 +276,7 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-0.5">
             <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
-                Total Steps
+                {t.healthActivity.totalSteps}
               </span>
               <span className="text-base font-black font-mono-num text-[#24201D] block leading-tight">
                 {weekStats.totalSteps.toLocaleString()}
@@ -283,7 +285,7 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
 
             <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
-                Daily Avg
+                {t.healthActivity.dailyAvg}
               </span>
               <span className="text-base font-black font-mono-num text-[#3D6B52] block leading-tight">
                 {weekStats.averageSteps.toLocaleString()}
@@ -292,16 +294,16 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
 
             <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
-                Total Burn
+                {t.healthActivity.totalBurn}
               </span>
               <span className="text-base font-black font-mono-num text-[#DC2626] block leading-tight">
-                +{weekStats.totalCalories} kcal
+                +{weekStats.totalCalories} kkal
               </span>
             </div>
 
             <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
-                Distance
+                {t.healthActivity.distanceStat}
               </span>
               <span className="text-base font-black font-mono-num text-[#2563EB] block leading-tight">
                 {weekStats.totalDistanceKm} km
@@ -317,10 +319,12 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
           {/* Month Header Banner */}
           <div className="flex items-center justify-between px-1">
             <span className="text-xs font-black font-display text-[#24201D]">
-              {format(parseISO(selectedDate), 'MMMM yyyy')}
+              {formatMonthYearDirect(parseISO(selectedDate), language)}
             </span>
             <span className="text-[11px] font-bold text-[#3D6B52] bg-[#DDE8DE] px-2 py-0.5 rounded-full font-mono-num">
-              Goal hit {monthStats.goalStreakDays} of {monthStats.daysInMonthCount} days
+              {t.healthActivity.goalHitDays
+                .replace('{total}', String(monthStats.daysInMonthCount))
+                .replace('{hit}', String(monthStats.goalStreakDays))}
             </span>
           </div>
 
@@ -402,7 +406,7 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-0.5">
             <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
-                Total Steps
+                {t.healthActivity.totalSteps}
               </span>
               <span className="text-base font-black font-mono-num text-[#24201D] block leading-tight">
                 {monthStats.totalSteps.toLocaleString()}
@@ -411,7 +415,7 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
 
             <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
-                Daily Avg
+                {t.healthActivity.dailyAvg}
               </span>
               <span className="text-base font-black font-mono-num text-[#3D6B52] block leading-tight">
                 {monthStats.averageSteps.toLocaleString()}
@@ -420,19 +424,19 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
 
             <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
-                Total Burn
+                {t.healthActivity.totalBurn}
               </span>
               <span className="text-base font-black font-mono-num text-[#DC2626] block leading-tight">
-                +{monthStats.totalCalories} kcal
+                +{monthStats.totalCalories} kkal
               </span>
             </div>
 
             <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/20 rounded-xl space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-[#6B635B] font-display block">
-                Goal Hit
+                {t.healthActivity.goalMetBadge}
               </span>
               <span className="text-base font-black font-mono-num text-[#10B981] block leading-tight">
-                {monthStats.goalStreakDays} days
+                {t.common.daysCount.replace('{count}', String(monthStats.goalStreakDays))}
               </span>
             </div>
           </div>
@@ -455,17 +459,17 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-black text-[#24201D] font-display">
-                  {format(parseISO(inspectedDayItem.dateStr), 'EEEE, MMMM d')}
+                  {formatDateDirect(inspectedDayItem.dateStr, language)}
                 </span>
                 {inspectedDayItem.isToday && (
                   <span className="text-[9px] font-bold text-[#3D6B52] bg-[#DDE8DE] px-1.5 py-0.2 rounded-full font-display">
-                    Today
+                    {t.common.today}
                   </span>
                 )}
                 {inspectedDayItem.isGoalMet && (
                   <span className="text-[9px] font-black uppercase text-[#10B981] bg-emerald-50 px-1.5 py-0.2 rounded border border-[#10B981]/30 flex items-center gap-0.5 font-display">
                     <Trophy className="w-2.5 h-2.5" />
-                    Goal Met
+                    {t.healthActivity.goalMetBadge}
                   </span>
                 )}
               </div>
@@ -475,7 +479,7 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
                   <strong className="text-[#24201D] font-black">
                     {inspectedDayItem.steps.toLocaleString()}
                   </strong>{' '}
-                  / {inspectedDayItem.goal.toLocaleString()} steps
+                  / {t.healthActivity.stepCountFormatted.replace('{count}', inspectedDayItem.goal.toLocaleString())}
                 </span>
                 <span>({inspectedDayItem.percent}%)</span>
               </div>
@@ -486,7 +490,7 @@ export const ActivityCalendarCard: React.FC<ActivityCalendarCardProps> = ({
           <div className="flex items-center gap-3 self-end sm:self-center border-t sm:border-t-0 pt-2 sm:pt-0 border-[#24201D]/10">
             <div className="flex items-center gap-1 text-[11px] font-black font-mono-num text-[#DC2626]">
               <Flame className="w-3.5 h-3.5 stroke-[2.25]" />
-              <span>+{inspectedDayItem.caloriesBurned} kcal</span>
+              <span>+{inspectedDayItem.caloriesBurned} kkal</span>
             </div>
             <span className="text-stone-300">•</span>
             <div className="flex items-center gap-1 text-[11px] font-black font-mono-num text-[#2563EB]">

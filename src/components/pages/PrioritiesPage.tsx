@@ -24,6 +24,7 @@ import type { Task, FocusSession, HabitLog } from '../../types';
 import { playTaskCheckSound, playSuccessChime, playClickSound } from '../../lib/sound';
 import { DailyMoodAndNote } from '../planner/DailyMoodAndNote';
 import { QuickScratchpadCard } from '../scratchpad/QuickScratchpadCard';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface PrioritiesPageProps {
   selectedDate: string;
@@ -60,6 +61,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
   onReorderPriority,
   onQuickCreateTask,
 }) => {
+  const { t } = useTranslation();
   const [localPriorities, setLocalPriorities] = useState<Task[]>(priorityTasks);
 
   React.useEffect(() => {
@@ -127,11 +129,11 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
   const SLOT_COLORS = ['#FBECCF', '#DDE8DE', '#F7E3DC'];
 
   const CATEGORY_CONFIG = [
-    { id: 'general', label: 'General', icon: Layers, bg: '#FAF8F5', text: '#6B635B' },
-    { id: 'code', label: 'Code', icon: Code, bg: '#DDE8DE', text: '#2D503C' },
-    { id: 'design', label: 'Design', icon: Palette, bg: '#F7E3DC', text: '#C25E40' },
-    { id: 'learn', label: 'Learn', icon: BookOpen, bg: '#FBECCF', text: '#854D0E' },
-    { id: 'health', label: 'Health', icon: Activity, bg: '#DDE8DE', text: '#2D503C' },
+    { id: 'general', label: t('priorities.categories.general'), icon: Layers, bg: '#FAF8F5', text: '#6B635B' },
+    { id: 'code', label: t('priorities.categories.code'), icon: Code, bg: '#DDE8DE', text: '#2D503C' },
+    { id: 'design', label: t('priorities.categories.design'), icon: Palette, bg: '#F7E3DC', text: '#C25E40' },
+    { id: 'learn', label: t('priorities.categories.learn'), icon: BookOpen, bg: '#FBECCF', text: '#854D0E' },
+    { id: 'health', label: t('priorities.categories.health'), icon: Activity, bg: '#DDE8DE', text: '#2D503C' },
   ] as const;
 
   // Backlog integration states
@@ -150,7 +152,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
   const handlePromote = (task: Task) => {
     if (localPriorities.length >= 3) {
       playClickSound();
-      setFeedbackNotice('Top 3 slots are full! Move one to Backlog first.');
+      setFeedbackNotice(t('priorities.priorityLimitReached'));
       setTimeout(() => setFeedbackNotice(null), 3500);
       return;
     }
@@ -206,10 +208,10 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
       <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] flex items-center justify-between gap-3">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] block font-display">
-            Daily Focus
+            {t('priorities.title')}
           </span>
           <h2 className="text-sm font-bold font-display text-[#24201D] mt-0.5">
-            {completedCount} of {priorityTasks.length} Priorities Completed
+            {completedCount} / {priorityTasks.length} {t('common.completed').toLowerCase()}
           </h2>
         </div>
 
@@ -233,7 +235,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
       <div className="space-y-2.5">
         <div className="flex items-center justify-between px-1">
           <span className="text-xs font-black font-display uppercase tracking-wider text-[#6B635B]">
-            Top 3 Priorities ({localPriorities.length}/3)
+            {t('priorities.title')} ({localPriorities.length}/3)
           </span>
         </div>
 
@@ -256,14 +258,14 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                     className="px-2.5 py-1 rounded-xl border border-[#24201D] text-xs font-black font-mono-num shadow-2xs text-[#24201D]"
                     style={{ backgroundColor: slotBg }}
                   >
-                    Priority #{idx + 1}
+                    {t('priorities.slotTitle', { number: idx + 1 })}
                   </span>
 
                   {/* Direct Switcher: Move to 1, 2, 3 */}
                   {localPriorities.length > 1 && (
                     <div className="flex items-center gap-1 bg-[#F4F0EA] p-0.5 rounded-xl border border-[#24201D]/25">
                       <span className="text-[9px] font-black text-[#6B635B] px-1 uppercase tracking-tight">
-                        Move:
+                        #
                       </span>
                       {localPriorities.map((_, targetSlot) => {
                         const isCurrent = targetSlot === idx;
@@ -332,7 +334,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                     <span className="text-[10px] text-stone-400">•</span>
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#6B635B]">
                       <Clock className="w-3 h-3" />
-                      {task.estimatedMinutes || 30}m
+                      {task.estimatedMinutes || 30} {t('common.minutesShort')}
                     </span>
 
                     {task.isRecurring && (
@@ -360,7 +362,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
               {task.subtasks && task.subtasks.length > 0 && (
                 <div className="p-2.5 bg-[#FAF8F5] border border-[#24201D]/15 rounded-xl space-y-1.5">
                   <div className="flex items-center justify-between text-[10px] font-bold text-[#6B635B] uppercase tracking-wider">
-                    <span>Checklist</span>
+                    <span>{t('modals.subtasksTitle')}</span>
                     <span>
                       {task.subtasks.filter((s) => s.isCompleted).length}/{task.subtasks.length}
                     </span>
@@ -394,16 +396,16 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                   className="px-3 py-1 bg-[#F7E3DC] hover:bg-[#EED5CE] border border-[#24201D] rounded-lg text-xs font-bold text-[#24201D] flex items-center gap-1.5 shadow-2xs cursor-pointer active:translate-y-0.5"
                 >
                   <Play className="w-3 h-3 fill-[#24201D]" />
-                  <span>Start Focus</span>
+                  <span>{t('priorities.startTimer')}</span>
                 </button>
 
                 <button
                   onClick={() => handleDemote(task)}
-                  title="Move to Backlog"
+                  title={t('priorities.moveToBacklog')}
                   className="px-2.5 py-1 bg-[#F4F0EA] hover:bg-stone-200 border border-[#24201D] rounded-lg text-[10px] font-bold text-[#6B635B] flex items-center gap-1 cursor-pointer shadow-2xs active:scale-95 transition-all"
                 >
                   <ArrowDown className="w-3 h-3 text-[#24201D]" />
-                  <span>To Backlog</span>
+                  <span>{t('priorities.moveToBacklog')}</span>
                 </button>
               </div>
             </div>
@@ -424,7 +426,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
           <div className="w-5 h-5 rounded-lg bg-[#3D6B52] text-white flex items-center justify-center shadow-2xs">
             <Plus className="w-3.5 h-3.5 stroke-[3]" />
           </div>
-          <span>Add Priority Goal #{localPriorities.length + 1}</span>
+          <span>{t('priorities.addPriorityTask')} #{localPriorities.length + 1}</span>
         </button>
       )}
 
@@ -438,7 +440,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                Task Backlog
+                {t('backlog.title')}
               </span>
               <span className="px-2 py-0.5 bg-[#FAF8F5] border border-[#24201D]/25 rounded-full text-[10px] font-black font-mono-num text-[#6B635B] shadow-2xs">
                 {activeBacklogTasks.length}
@@ -474,7 +476,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
               type="text"
               value={quickBacklogTitle}
               onChange={(e) => setQuickBacklogTitle(e.target.value)}
-              placeholder="Quick add to backlog..."
+              placeholder={t('priorities.quickAddBacklogPlaceholder')}
               className="flex-1 min-w-0 px-2.5 py-1.5 bg-transparent text-xs font-bold text-[#24201D] placeholder:text-[#8C827A] placeholder:font-normal focus:outline-none"
             />
 
@@ -500,7 +502,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                   />
                   <div className="absolute right-0 top-full mt-1.5 z-50 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[3px_3px_0px_#24201D] p-1.5 min-w-[145px] space-y-1 animate-in fade-in zoom-in-95">
                     <div className="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-[#8C827A] border-b border-[#24201D]/10">
-                      Category
+                      {t('priorities.category')}
                     </div>
                     {CATEGORY_CONFIG.map((cat) => {
                       const Icon = cat.icon;
@@ -543,7 +545,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
               disabled={!quickBacklogTitle.trim()}
               className="px-3.5 py-1.5 bg-[#3D6B52] hover:bg-[#325843] disabled:opacity-30 disabled:hover:bg-[#3D6B52] border-[1.5px] border-[#24201D] rounded-xl text-xs font-black uppercase tracking-wider text-white shadow-[1px_1px_0px_#24201D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer shrink-0"
             >
-              Add
+              {t('priorities.quickAddBacklogSubmit')}
             </button>
           </form>
         </div>
@@ -551,9 +553,9 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
         {/* Active Backlog Tasks List */}
         {activeBacklogTasks.length === 0 ? (
           <div className="p-4 bg-white/70 border-[1.75px] border-dashed border-[#24201D]/25 rounded-2xl text-center space-y-1 shadow-2xs">
-            <p className="text-xs font-bold text-[#6B635B]">Backlog is currently empty</p>
+            <p className="text-xs font-bold text-[#6B635B]">{t('priorities.backlogEmptyTitle')}</p>
             <p className="text-[10px] text-stone-400 font-medium">
-              Queue secondary tasks here or demote priorities anytime.
+              {t('priorities.backlogEmptyDesc')}
             </p>
           </div>
         ) : (
@@ -601,7 +603,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                     <button
                       type="button"
                       onClick={() => handlePromote(task)}
-                      title={localPriorities.length < 3 ? "Promote to Top 3 Priorities" : "Top 3 is full"}
+                      title={localPriorities.length < 3 ? t('priorities.promoteToToday') : t('priorities.topThreeFull')}
                       className={`px-2.5 py-1 rounded-xl border-[1.5px] border-[#24201D] text-[10px] font-black uppercase tracking-tight flex items-center gap-1 shadow-[1px_1px_0px_#24201D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer ${
                         localPriorities.length < 3
                           ? 'bg-[#F0BB58] hover:bg-[#e2af51] text-[#24201D]'
@@ -609,14 +611,14 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                       }`}
                     >
                       <ArrowUp className="w-3 h-3 stroke-[2.5]" />
-                      <span>To Today</span>
+                      <span>{t('priorities.promoteToToday')}</span>
                     </button>
 
                     {/* Quick Focus Button */}
                     <button
                       type="button"
                       onClick={() => onStartFocus(task)}
-                      title="Start Focus Session"
+                      title={t('priorities.startFocusSession')}
                       className="w-7 h-7 rounded-xl bg-[#FAF8F5] hover:bg-[#F7E3DC] border-[1.5px] border-[#24201D] flex items-center justify-center text-[#24201D] shadow-[1px_1px_0px_#24201D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
                     >
                       <Play className="w-3 h-3 fill-[#24201D]" />
@@ -626,7 +628,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                     <button
                       type="button"
                       onClick={() => task.id && onDeleteTask(task.id)}
-                      title="Delete task"
+                      title={t('priorities.deleteTask')}
                       className="w-7 h-7 rounded-xl bg-[#FAF8F5] hover:bg-rose-100 border-[1.5px] border-[#24201D] flex items-center justify-center text-[#8C827A] hover:text-rose-600 shadow-[1px_1px_0px_#24201D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
                     >
                       <Trash2 className="w-3 h-3 stroke-[2]" />
@@ -652,7 +654,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#3D6B52]" />
                 <span className="font-display uppercase tracking-wider text-[10px] font-black text-[#24201D]">
-                  Completed Backlog ({completedBacklogTasks.length})
+                  {t('priorities.completedBacklog', { count: completedBacklogTasks.length })}
                 </span>
               </div>
               <div className="w-5 h-5 rounded-lg bg-[#FAF8F5] border border-[#24201D]/25 flex items-center justify-center text-[#24201D]">

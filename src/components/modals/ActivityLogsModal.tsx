@@ -20,6 +20,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type ActivityLog } from '../../lib/db';
 import { clearActivityLogs } from '../../lib/activityLogger';
 import { playClickSound } from '../../lib/sound';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface ActivityLogsModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ interface ActivityLogsModalProps {
 type FilterCategory = 'all' | 'task' | 'habit' | 'scale' | 'focus';
 
 export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, onClose }) => {
+  const { t, language } = useTranslation();
   const [selectedFilter, setSelectedFilter] = useState<FilterCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
@@ -89,63 +91,63 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
           icon: <Check className="w-3.5 h-3.5 stroke-[3] text-[#2D503C]" />,
           bg: '#DDE8DE',
           text: '#2D503C',
-          label: 'Completed',
+          label: language === 'uz' ? 'Bajarildi' : language === 'ru' ? 'Выполнено' : 'Completed',
         };
       case 'uncompleted':
         return {
           icon: <RotateCcw className="w-3.5 h-3.5 stroke-[2.5] text-[#78716C]" />,
           bg: '#F4F0EA',
           text: '#78716C',
-          label: 'Reopened',
+          label: language === 'uz' ? 'Qaytarildi' : language === 'ru' ? 'Возвращено' : 'Reopened',
         };
       case 'created':
         return {
           icon: <Plus className="w-3.5 h-3.5 stroke-[3] text-[#24546B]" />,
           bg: '#DEE8EF',
           text: '#24546B',
-          label: 'Created',
+          label: language === 'uz' ? 'Yaratildi' : language === 'ru' ? 'Создано' : 'Created',
         };
       case 'promoted':
         return {
           icon: <ArrowUp className="w-3.5 h-3.5 stroke-[3] text-[#854D0E]" />,
           bg: '#FBECCF',
           text: '#854D0E',
-          label: 'Promoted',
+          label: language === 'uz' ? 'Muhimga' : language === 'ru' ? 'В важное' : 'Promoted',
         };
       case 'demoted':
         return {
           icon: <ArrowDown className="w-3.5 h-3.5 stroke-[3] text-[#6B635B]" />,
           bg: '#FAF8F5',
           text: '#6B635B',
-          label: 'Backlog',
+          label: language === 'uz' ? 'Beklog' : language === 'ru' ? 'В бэклог' : 'Backlog',
         };
       case 'deleted':
         return {
           icon: <Trash2 className="w-3.5 h-3.5 stroke-[2.5] text-[#991B1B]" />,
           bg: '#FEE2E2',
           text: '#991B1B',
-          label: 'Deleted',
+          label: language === 'uz' ? 'Oʻchirildi' : language === 'ru' ? 'Удалено' : 'Deleted',
         };
       case 'focus':
         return {
           icon: <Play className="w-3.5 h-3.5 fill-[#854D0E] text-[#854D0E]" />,
           bg: '#FBECCF',
           text: '#854D0E',
-          label: 'Focus Done',
+          label: language === 'uz' ? 'Fokus yakunlandi' : language === 'ru' ? 'Фокус завершен' : 'Focus Done',
         };
       case 'weight':
         return {
           icon: <Scale className="w-3.5 h-3.5 text-[#0369A1] stroke-[2.5]" />,
           bg: '#E0F2FE',
           text: '#0369A1',
-          label: 'Scale Synced',
+          label: language === 'uz' ? 'Tarozi sinxronlandi' : language === 'ru' ? 'Весы синхронизированы' : 'Scale Synced',
         };
       case 'habit':
         return {
           icon: <Sparkles className="w-3.5 h-3.5 text-[#6B21A8] stroke-[2.5]" />,
           bg: '#F3E8FF',
           text: '#6B21A8',
-          label: 'Habit Done',
+          label: language === 'uz' ? 'Odat bajarildi' : language === 'ru' ? 'Привычка выполнена' : 'Habit Done',
         };
       default:
         return {
@@ -167,16 +169,21 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
     const timeStr = `${hours}:${mins}`;
 
     if (isToday) {
-      return `Today, ${timeStr}`;
+      return language === 'uz' ? `Bugun, ${timeStr}` : language === 'ru' ? `Сегодня, ${timeStr}` : `Today, ${timeStr}`;
     }
 
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     if (d.toDateString() === yesterday.toDateString()) {
-      return `Yesterday, ${timeStr}`;
+      return language === 'uz' ? `Kecha, ${timeStr}` : language === 'ru' ? `Вчера, ${timeStr}` : `Yesterday, ${timeStr}`;
     }
 
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthNames =
+      language === 'uz'
+        ? ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn', 'Iyl', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek']
+        : language === 'ru'
+        ? ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек']
+        : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${monthNames[d.getMonth()]} ${d.getDate()}, ${timeStr}`;
   };
 
@@ -192,10 +199,10 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
             </div>
             <div>
               <h3 className="text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
-                Activity Log
+                {t.modals.activityLogsTitle}
               </h3>
               <p className="text-[10px] text-[#8C827A] font-medium leading-tight">
-                Recent activity & history
+                {t.modals.activityLogsSubtitle}
               </p>
             </div>
           </div>
@@ -209,12 +216,12 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
                   playClickSound();
                   setIsConfirmingClear(true);
                 }}
-                title="Clear all logs"
+                title={t.modals.clearLogs}
                 className="px-2.5 py-1.5 rounded-xl bg-[#FEE2E2] hover:bg-[#FECACA] border-[1.75px] border-[#24201D] text-[#991B1B] flex items-center gap-1.5 shadow-[2px_2px_0px_#24201D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer font-display"
               >
                 <Trash2 className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span className="text-[10px] font-black uppercase tracking-wider">
-                  Clear
+                  {t.modals.clearLogs}
                 </span>
               </button>
             )}
@@ -230,7 +237,7 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
           </div>
         </div>
 
-        {/* "Are You Sure?" Confirmation Popup Dialog in signature aesthetic */}
+        {/* "Are You Sure?" Confirmation Popup Dialog */}
         {isConfirmingClear && (
           <div className="absolute inset-0 z-40 bg-[#24201D]/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
             <div className="w-full max-w-[310px] bg-[#FAF8F5] border-[2.5px] border-[#24201D] rounded-3xl shadow-[5px_5px_0px_#24201D] p-5 text-center space-y-3.5 animate-in zoom-in-95 duration-150 select-none">
@@ -240,10 +247,10 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
               
               <div className="space-y-1">
                 <h4 className="text-sm font-black font-display uppercase tracking-wide text-[#24201D]">
-                  Clear Activity Log?
+                  {language === 'uz' ? 'Harakatlar jurnalini tozalashmi?' : language === 'ru' ? 'Очистить журнал активности?' : 'Clear Activity Log?'}
                 </h4>
                 <p className="text-[11px] text-[#6B635B] font-medium leading-snug">
-                  Are you sure you want to delete all activity history? This cannot be undone.
+                  {language === 'uz' ? 'Barcha harakatlar tarixini oʻchirib tashlamoqchimisiz? Bu amalni ortga qaytarib boʻlmaydi.' : language === 'ru' ? 'Вы уверены, что хотите удалить всю историю активности? Это действие необратимо.' : 'Are you sure you want to delete all activity history? This cannot be undone.'}
                 </p>
               </div>
 
@@ -256,7 +263,7 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
                   }}
                   className="flex-1 py-2.5 rounded-xl border-[1.75px] border-[#24201D] bg-white text-[#24201D] font-bold text-xs hover:bg-[#F4F0EA] shadow-[2px_2px_0px_#24201D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
                 >
-                  Cancel
+                  {t.common.cancel}
                 </button>
                 <button
                   type="button"
@@ -264,7 +271,7 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
                   className="flex-1 py-2.5 rounded-xl border-[1.75px] border-[#24201D] bg-[#DC2626] hover:bg-[#B91C1C] text-white font-black text-xs shadow-[2px_2px_0px_#24201D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5 stroke-[2.5]" />
-                  <span>Yes, Clear</span>
+                  <span>{language === 'uz' ? 'Ha, tozalash' : language === 'ru' ? 'Да, очистить' : 'Yes, Clear'}</span>
                 </button>
               </div>
             </div>
@@ -280,7 +287,7 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search actions, tasks or metrics..."
+              placeholder={language === 'uz' ? 'Amallar, vazifalar yoki koʻrsatkichlarni qidirish...' : language === 'ru' ? 'Поиск действий, задач или показателей...' : 'Search actions, tasks or metrics...'}
               className="w-full pl-9 pr-3 py-1.5 bg-white border-[1.5px] border-[#24201D] rounded-xl text-xs font-bold text-[#24201D] placeholder:text-[#8C827A] placeholder:font-normal focus:outline-none shadow-2xs"
             />
             {searchQuery && (
@@ -297,11 +304,11 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
           {/* Filter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
             {[
-              { id: 'all', label: 'All' },
-              { id: 'task', label: 'Tasks' },
-              { id: 'habit', label: 'Habits' },
-              { id: 'scale', label: 'Scale' },
-              { id: 'focus', label: 'Focus' },
+              { id: 'all', label: language === 'uz' ? 'Barchasi' : language === 'ru' ? 'Все' : 'All' },
+              { id: 'task', label: t.priorities.title },
+              { id: 'habit', label: t.habits.title },
+              { id: 'scale', label: language === 'uz' ? 'Tarozi' : language === 'ru' ? 'Весы' : 'Scale' },
+              { id: 'focus', label: t.focus.title },
             ].map((tab) => {
               const isActive = selectedFilter === tab.id;
               return (
@@ -333,10 +340,10 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
                 <History className="w-5 h-5 stroke-[1.75]" />
               </div>
               <p className="text-xs font-bold text-[#24201D]">
-                {searchQuery ? 'No matching logs found' : 'No activity logged yet'}
+                {searchQuery ? (language === 'uz' ? 'Mos keladigan yozuvlar topilmadi' : language === 'ru' ? 'Записей не найдено' : 'No matching logs found') : (t.modals.noLogs || (language === 'uz' ? 'Hozircha harakatlar qayd etilmagan' : language === 'ru' ? 'Пока нет записей активности' : 'No activity logged yet'))}
               </p>
               <p className="text-[10px] text-[#8C827A] max-w-xs mx-auto">
-                Actions like completing tasks, logging weights from smart scale, or finishing focus sessions will appear here.
+                {language === 'uz' ? 'Vazifalarni bajarish, aqlli tarozidan vazn kiritish yoki fokus seanslarini yakunlash kabi barcha amallar bu yerda koʻrinadi.' : language === 'ru' ? 'Действия вроде выполнения задач, взвешивания на умных весах или завершения фокус-сессий появятся здесь.' : 'Actions like completing tasks, logging weights from smart scale, or finishing focus sessions will appear here.'}
               </p>
             </div>
           ) : (

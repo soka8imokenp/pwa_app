@@ -1,5 +1,6 @@
 import React from 'react';
 import { Utensils, Flame } from 'lucide-react';
+import { useTranslation } from '../../../i18n/LanguageContext';
 
 interface MacroProgressCardsProps {
   todaysTotalKcal: number;
@@ -40,6 +41,8 @@ export const MacroProgressCards: React.FC<MacroProgressCardsProps> = ({
   fatPercent,
   fatRemaining,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="p-4 sm:p-5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-4">
       {/* Top Banner */}
@@ -50,10 +53,10 @@ export const MacroProgressCards: React.FC<MacroProgressCardsProps> = ({
           </div>
           <div>
             <span className="text-[10px] font-black text-[#6B635B] uppercase tracking-wider block font-display leading-none">
-              Daily Nutrition Target
+              {t.healthIntake.dailyNutritionTarget}
             </span>
             <h2 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none">
-              Calories & Macronutrients
+              {t.healthIntake.caloriesAndMacros}
             </h2>
           </div>
         </div>
@@ -62,7 +65,7 @@ export const MacroProgressCards: React.FC<MacroProgressCardsProps> = ({
           {todaysActiveCaloriesBurned > 0 && (
             <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#FEF3C7] border border-[#F59E0B] text-[10px] font-black text-[#B45309] font-mono-num shadow-2xs">
               <Flame className="w-3 h-3 text-[#D97706]" />
-              <span>+{todaysActiveCaloriesBurned} burned</span>
+              <span>{t.healthIntake.activeBurnedBadge.replace('{kcal}', String(todaysActiveCaloriesBurned))}</span>
             </div>
           )}
         </div>
@@ -73,7 +76,7 @@ export const MacroProgressCards: React.FC<MacroProgressCardsProps> = ({
         <div className="flex items-end justify-between">
           <div>
             <span className="text-[10px] font-black uppercase text-[#6B635B] font-display">
-              Total Intake
+              {t.healthIntake.totalIntake}
             </span>
             <div className="flex items-baseline gap-1 mt-0.5">
               <span className="text-4xl font-black font-mono-num text-[#24201D]">
@@ -87,7 +90,7 @@ export const MacroProgressCards: React.FC<MacroProgressCardsProps> = ({
 
           <div className="text-right">
             <span className="text-[10px] font-black uppercase text-[#6B635B] font-display block">
-              Remaining Budget
+              {t.healthIntake.remainingBudget}
             </span>
             {effectiveTarget > 0 ? (
               <span
@@ -95,7 +98,7 @@ export const MacroProgressCards: React.FC<MacroProgressCardsProps> = ({
                   remainingKcal >= 0 ? 'text-[#3D6B52]' : 'text-[#DC2626]'
                 }`}
               >
-                {remainingKcal >= 0 ? `${remainingKcal} kcal` : `${Math.abs(remainingKcal)} over`}
+                {remainingKcal >= 0 ? `${remainingKcal} kcal` : t.healthIntake.caloriesOver.replace('{over}', String(Math.abs(remainingKcal)))}
               </span>
             ) : (
               <span className="text-xl font-black font-mono-num text-[#6B635B] block">
@@ -120,7 +123,7 @@ export const MacroProgressCards: React.FC<MacroProgressCardsProps> = ({
         {/* Protein */}
         <div className="p-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1">
           <div className="flex items-center justify-between text-[9px] font-black uppercase text-[#6B635B] font-display">
-            <span>Protein</span>
+            <span>{t.healthIntake.protein}</span>
             <span className="font-mono-num">{targetProteinGrams > 0 ? `${proteinPercent}%` : '—'}</span>
           </div>
           <div className="text-xs font-black font-mono-num text-[#24201D]">
@@ -130,14 +133,14 @@ export const MacroProgressCards: React.FC<MacroProgressCardsProps> = ({
             <div className="h-full bg-[#10B981] rounded-full" style={{ width: targetProteinGrams > 0 ? `${proteinPercent}%` : '0%' }} />
           </div>
           <span className="text-[8px] font-bold text-stone-400 block font-mono-num">
-            {targetProteinGrams > 0 ? (proteinRemaining > 0 ? `${proteinRemaining}g left` : 'Goal reached') : '—'}
+            {targetProteinGrams > 0 ? (proteinRemaining > 0 ? t.healthIntake.leftGrams.replace('{g}', String(proteinRemaining)) : t.healthIntake.goalReached) : '—'}
           </span>
         </div>
 
         {/* Carbs */}
         <div className="p-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1">
           <div className="flex items-center justify-between text-[9px] font-black uppercase text-[#6B635B] font-display">
-            <span>Carbs</span>
+            <span>{t.healthIntake.carbs}</span>
             <span className="font-mono-num">{targetCarbsGrams > 0 ? `${carbsPercent}%` : '—'}</span>
           </div>
           <div className="text-xs font-black font-mono-num text-[#24201D]">
@@ -147,14 +150,14 @@ export const MacroProgressCards: React.FC<MacroProgressCardsProps> = ({
             <div className="h-full bg-[#3B82F6] rounded-full" style={{ width: targetCarbsGrams > 0 ? `${carbsPercent}%` : '0%' }} />
           </div>
           <span className="text-[8px] font-bold text-stone-400 block font-mono-num">
-            {targetCarbsGrams > 0 ? (carbsRemaining > 0 ? `${carbsRemaining}g left` : 'Goal reached') : '—'}
+            {targetCarbsGrams > 0 ? (carbsRemaining > 0 ? t.healthIntake.leftGrams.replace('{g}', String(carbsRemaining)) : t.healthIntake.goalReached) : '—'}
           </span>
         </div>
 
         {/* Fat */}
         <div className="p-2.5 bg-[#FAF8F5] border-[1.5px] border-[#24201D] rounded-xl shadow-2xs space-y-1">
           <div className="flex items-center justify-between text-[9px] font-black uppercase text-[#6B635B] font-display">
-            <span>Fat</span>
+            <span>{t.healthIntake.fat}</span>
             <span className="font-mono-num">{targetFatGrams > 0 ? `${fatPercent}%` : '—'}</span>
           </div>
           <div className="text-xs font-black font-mono-num text-[#24201D]">
@@ -164,7 +167,7 @@ export const MacroProgressCards: React.FC<MacroProgressCardsProps> = ({
             <div className="h-full bg-[#F59E0B] rounded-full" style={{ width: targetFatGrams > 0 ? `${fatPercent}%` : '0%' }} />
           </div>
           <span className="text-[8px] font-bold text-stone-400 block font-mono-num">
-            {targetFatGrams > 0 ? (fatRemaining > 0 ? `${fatRemaining}g left` : 'Goal reached') : '—'}
+            {targetFatGrams > 0 ? (fatRemaining > 0 ? t.healthIntake.leftGrams.replace('{g}', String(fatRemaining)) : t.healthIntake.goalReached) : '—'}
           </span>
         </div>
       </div>

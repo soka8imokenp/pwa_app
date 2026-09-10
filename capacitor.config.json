@@ -10,6 +10,8 @@
       "*.localhost",
       "https://localhost",
       "https://localhost/*",
+      "daily.kawaii.uz",
+      "*.kawaii.uz",
       "accounts.google.com",
       "*.google.com",
       "*.googleusercontent.com",

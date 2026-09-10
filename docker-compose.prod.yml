@@ -1,0 +1,31 @@
+services:
+  daily-sumire-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: daily_sumire_app
+    restart: unless-stopped
+    ports:
+      - "5050:5050"
+    environment:
+      - PORT=5050
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/server/prisma/dev.db
+      - JWT_SECRET=${JWT_SECRET:-daily_sumire_jwt_secret_production_32_chars_min}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-daily_sumire_refresh_secret_production_32_chars_min}
+      - CORS_ORIGIN=https://daily.kawaii.uz,https://www.daily.kawaii.uz,https://service.kawaii.uz,http://localhost:5173,capacitor://localhost,https://localhost
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-""}
+    volumes:
+      - ./server/prisma:/app/server/prisma
+    networks:
+      - app_default
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5050/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  app_default:
+    external: true

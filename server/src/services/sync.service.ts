@@ -273,7 +273,7 @@ export async function processSyncPush(userId: string, payload: ClientSyncPushPay
       });
 
       if (existing) {
-        const clientUpdatedAt = item.updatedAt ? new Date(item.updatedAt) : null;
+        const clientUpdatedAt = (item as any).updatedAt ? new Date((item as any).updatedAt) : null;
         if (!clientUpdatedAt || !existing.updatedAt || clientUpdatedAt >= existing.updatedAt) {
           await prisma.link.update({
             where: { id: existing.id },

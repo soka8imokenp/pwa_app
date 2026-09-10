@@ -321,7 +321,7 @@ export async function authenticateWithGoogle(idToken: string) {
     user = await prisma.user.create({
       data: {
         email: email.toLowerCase(),
-        password: hashedPassword,
+        passwordHash: hashedPassword,
         firstName,
         lastName,
         username,

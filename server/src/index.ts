@@ -83,6 +83,31 @@ app.use('/api/auth', authRouter);
 app.use('/api/sync', generalApiLimiter, syncRouter);
 app.use('/api/push', generalApiLimiter, pushRouter);
 
+// 6.1. Serve Static PWA Frontend Bundle in Production
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const webDistPath = path.resolve(__dirname, '../../public_web');
+
+if (fs.existsSync(webDistPath)) {
+  console.log(`📂 Serving static PWA frontend from ${webDistPath}`);
+  app.use(express.static(webDistPath, {
+    maxAge: '1d',
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('index.html')) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+      }
+    }
+  }));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(webDistPath, 'index.html'));
+  });
+}
+
 // 7. Global Centralized Error Handling
 app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   const isCorsError = err.message && err.message.includes('CORS');

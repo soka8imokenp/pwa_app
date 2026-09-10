@@ -961,6 +961,7 @@ export async function askSumireAI(
     jp: "Japanese (日本語)",
   };
   const targetLanguageName = langMap[appLang] || langMap['uz'];
+  const ragContext = await buildPlannerRAGContext();
 
   const formattedSystemInstruction = `${SUMIRE_SYSTEM_PROMPT}
 

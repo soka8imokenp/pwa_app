@@ -329,7 +329,10 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#6B635B] uppercase">
                       {getCategoryIcon(task.category)}
-                      {t.priorities?.categories?.[task.category as any] || t.categories?.[task.category as any] || task.category || 'general'}
+                      {(t.priorities?.categories as Record<string, string> | undefined)?.[task.category || ''] ||
+                        (t.categories as Record<string, string> | undefined)?.[task.category || ''] ||
+                        task.category ||
+                        'general'}
                     </span>
                     <span className="text-[10px] text-stone-400">•</span>
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#6B635B]">

@@ -63,7 +63,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
   autoOpenWizard,
   onWizardHandled,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [isLogWeightOpen, setIsLogWeightOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isScaleModalOpen, setIsScaleModalOpen] = useState(false);

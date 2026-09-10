@@ -6,7 +6,7 @@ import type { SubTask } from '../types';
 import type { MealType } from '../types/health';
 import { triggerTwoWaySync } from './syncEngine';
 
-export const APP_GEMINI_MODEL = 'gemini-2.5-flash';
+export const APP_GEMINI_MODEL = 'gemini-3.5-flash-lite';
 
 export function getStoredGeminiApiKey(): string {
   if (typeof window !== 'undefined') {
@@ -953,8 +953,22 @@ export async function askSumireAI(
   const now = new Date();
   const todayStr = getTodayString();
   const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  const ragContext = await buildPlannerRAGContext();
+  const appLang = (typeof window !== 'undefined' ? localStorage.getItem('kairo_app_language') : 'uz') || 'uz';
+  const langMap: Record<string, string> = {
+    uz: "Uzbek (O'zbekcha, Lotin yozuvida / Latin script)",
+    ru: "Russian (Русский язык)",
+    en: "English",
+    jp: "Japanese (日本語)",
+  };
+  const targetLanguageName = langMap[appLang] || langMap['uz'];
+
   const formattedSystemInstruction = `${SUMIRE_SYSTEM_PROMPT}
+
+=== STRICT APP LANGUAGE MANDATE ===
+- Current Application Interface Language: ${targetLanguageName} (Code: '${appLang}').
+- CRITICAL REQUIREMENT: You MUST respond ONLY in ${targetLanguageName}.
+- Even if the user writes their prompt/question in a different language (e.g. user writes in Russian, Uzbek, English, or Japanese), ALWAYS reply strictly in ${targetLanguageName}.
+- NEVER switch to the user's input language if it differs from ${targetLanguageName}.
 
 === CURRENT CLOCK & TEMPORAL CONTEXT ===
 - Current Local Time: ${currentTimeStr}
@@ -1012,6 +1026,7 @@ ${ragContext}`;
   const executedActions: AIChatMessage['executedActions'] = [];
 
   const candidateModels = [
+    'gemini-3.5-flash-lite',
     'gemini-2.5-flash',
     'gemini-2.0-flash',
     'gemini-1.5-flash',

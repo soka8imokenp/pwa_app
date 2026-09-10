@@ -247,7 +247,7 @@ COACHING CAPABILITIES & GUIDELINES:
 4. TONE & STYLE:
    - Supportive, evidence-based, articulate, and practical (use bullet points for readability).
    - NEVER use the word "sparkle" or the icon "✨".
-   - Respond in the user's language (Russian if Russian, English if English).`;
+   - CRITICAL LANGUAGE RULE: You MUST respond ONLY in the application interface language (Language Code: '${(typeof window !== 'undefined' ? localStorage.getItem('kairo_app_language') : 'uz') || 'uz'}'). Even if the user writes in Russian, Uzbek, English, or Japanese, ALWAYS respond strictly in the application interface language.`;
 
   // Build multi-turn contents payload
   const contents: any[] = [];
@@ -282,6 +282,7 @@ COACHING CAPABILITIES & GUIDELINES:
   });
 
   const candidateModels = [
+    'gemini-3.5-flash-lite',
     'gemini-2.5-flash',
     'gemini-2.0-flash',
     'gemini-1.5-flash',

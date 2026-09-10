@@ -525,6 +525,8 @@ export interface TranslationDictionary {
     noCatEntriesHint: string;
     deleteMealModalTitle: string;
     deleteMealModalDesc: string;
+    target: string;
+    waterTarget: string;
   };
   healthActivity: {
     title: string;
@@ -616,6 +618,14 @@ export interface TranslationDictionary {
     logToDailyMeals: string;
     mealAnalysisBadge: string;
     loggedToCategory: string;
+    voiceNotSupported: string;
+    activeDialogue: string;
+    restartBtn: string;
+    mealAnalysisTitle: string;
+    chipTrend7d: string;
+    chipRaiseBmr: string;
+    askPhotoPlaceholder: string;
+    restartChatConfirm: string;
   };
   settings: {
     title: string;

@@ -531,6 +531,8 @@ export const uzTranslations: TranslationDictionary = {
     noCatEntriesHint: 'Yuqoridagi AI ovozli diktovka yoki shablonlardan foydalaning',
     deleteMealModalTitle: 'Taomni oʻchirib tashlash',
     deleteMealModalDesc: 'Haqiqatan ham ushbu taomni kunlik roʻyxatdan oʻchirmoqchimisiz?',
+    target: 'Kaloriya maqsadi',
+    waterTarget: 'Suv meʼyori',
   },
   healthActivity: {
     title: 'Jismoniy faollik',
@@ -622,6 +624,14 @@ export const uzTranslations: TranslationDictionary = {
     logToDailyMeals: 'Kunlik taomlarga qoʻshish',
     mealAnalysisBadge: 'Taom tahlili',
     loggedToCategory: '✓ {category} roʻyxatiga qoʻshildi',
+    voiceNotSupported: 'Ovozli kiritish ushbu brauzer yoki qurilmada qoʻllab-quvvatlanmaydi.',
+    activeDialogue: 'Faol muloqot',
+    restartBtn: 'Qayta boshlash',
+    mealAnalysisTitle: 'Taom tahlili',
+    chipTrend7d: '7 kunlik tendensiya',
+    chipRaiseBmr: 'BMR metabolizmini oshirish',
+    askPhotoPlaceholder: 'Ushbu rasm boʻyicha savol bering yoki "Tahlil qilish" deb yozing...',
+    restartChatConfirm: 'Haqiqatan ham barcha suhbatlar tarixini tozalab, murabbiy bilan yangi muloqot boshlamoqchimisiz?',
   },
   settings: {
     title: 'Ilova sozlamalari',

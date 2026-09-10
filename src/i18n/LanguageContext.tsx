@@ -132,10 +132,13 @@ export function getRelativeDayDirect(dateStr: string, langOverride?: Language): 
   }
 }
 
-interface LanguageContextValue {
+export type TranslationFunction = ((keyPath: string, params?: Record<string, string | number>) => string) &
+  TranslationDictionary;
+
+export interface LanguageContextValue {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (keyPath: string, params?: Record<string, string | number>) => string;
+  t: TranslationFunction;
   dictionary: TranslationDictionary;
   isUz: boolean;
   isEn: boolean;
@@ -184,12 +187,12 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return translations[language] || translations.uz;
   }, [language]);
 
-  const t = useCallback(
-    (keyPath: string, params?: Record<string, string | number>): string => {
+  const t: TranslationFunction = useMemo(() => {
+    const fn = (keyPath: string, params?: Record<string, string | number>): string => {
       return tDirect(keyPath, params, language);
-    },
-    [language]
-  );
+    };
+    return Object.assign(fn, dictionary) as TranslationFunction;
+  }, [language, dictionary]);
 
   const formatDisplayDate = useCallback(
     (dateStr: string): string => {
@@ -236,11 +239,14 @@ export function useTranslation(): LanguageContextValue {
   if (!context) {
     // Fallback for components used outside Provider
     const fallbackLang = getStoredLanguage();
+    const fallbackDict = translations[fallbackLang] || translations.uz;
+    const fallbackFn = (k: string, p?: Record<string, string | number>) => tDirect(k, p, fallbackLang);
+    const fallbackT = Object.assign(fallbackFn, fallbackDict) as TranslationFunction;
     return {
       language: fallbackLang,
       setLanguage: setStoredLanguage,
-      t: (k, p) => tDirect(k, p, fallbackLang),
-      dictionary: translations[fallbackLang] || translations.uz,
+      t: fallbackT,
+      dictionary: fallbackDict,
       isUz: fallbackLang === 'uz',
       isEn: fallbackLang === 'en',
       isRu: fallbackLang === 'ru',
@@ -251,3 +257,5 @@ export function useTranslation(): LanguageContextValue {
   }
   return context;
 }
+
+export const useLanguage = useTranslation;

@@ -531,6 +531,8 @@ export const ruTranslations: TranslationDictionary = {
     noCatEntriesHint: 'Воспользуйтесь голосовым вводом или шаблонами выше',
     deleteMealModalTitle: 'Удалить прием пищи?',
     deleteMealModalDesc: 'Вы уверены, что хотите удалить эту запись из дневника?',
+    target: 'Целевая норма',
+    waterTarget: 'Норма воды',
   },
   healthActivity: {
     title: 'Физическая активность',
@@ -622,6 +624,14 @@ export const ruTranslations: TranslationDictionary = {
     logToDailyMeals: 'Внести в дневник питания',
     mealAnalysisBadge: 'Анализ блюда',
     loggedToCategory: '✓ Добавлено в категорию: {category}',
+    voiceNotSupported: 'Голосовой ввод не поддерживается в этом браузере.',
+    activeDialogue: 'Активный диалог',
+    restartBtn: 'Сбросить',
+    mealAnalysisTitle: 'Анализ блюда',
+    chipTrend7d: '7-дневный тренд веса',
+    chipRaiseBmr: 'Как повысить уровень BMR?',
+    askPhotoPlaceholder: 'Задайте вопрос по фото или напишите "Проанализируй"...',
+    restartChatConfirm: 'Вы уверены, что хотите очистить историю чата и начать заново?',
   },
   settings: {
     title: 'Настройки приложения',

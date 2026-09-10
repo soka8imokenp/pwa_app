@@ -531,6 +531,8 @@ export const enTranslations: TranslationDictionary = {
     noCatEntriesHint: 'Use AI voice dictation, camera or presets above',
     deleteMealModalTitle: 'Remove Meal Entry?',
     deleteMealModalDesc: 'Are you sure you want to remove this meal from your daily log?',
+    target: 'Target Energy',
+    waterTarget: 'Water Target',
   },
   healthActivity: {
     title: 'Physical Activity',
@@ -622,6 +624,14 @@ export const enTranslations: TranslationDictionary = {
     logToDailyMeals: 'Log to Daily Meals',
     mealAnalysisBadge: 'Meal Analysis',
     loggedToCategory: '✓ Logged to {category}',
+    voiceNotSupported: 'Speech recognition is not supported in this browser.',
+    activeDialogue: 'Active dialogue',
+    restartBtn: 'Restart',
+    mealAnalysisTitle: 'Meal Analysis',
+    chipTrend7d: '7-Day Weight Trend',
+    chipRaiseBmr: 'How to increase BMR metabolism?',
+    askPhotoPlaceholder: 'Ask about this photo or type "Analyze"...',
+    restartChatConfirm: 'Are you sure you want to clear chat history and restart conversation?',
   },
   settings: {
     title: 'App Settings',

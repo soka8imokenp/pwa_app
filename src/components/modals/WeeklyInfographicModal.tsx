@@ -436,7 +436,9 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
                   <div className="w-6 h-6 rounded-lg bg-[#FBECCF] border border-[#24201D]/40 flex items-center justify-center">
                     <Utensils className="w-3.5 h-3.5 text-[#854D0E]" />
                   </div>
-                  <span className="text-[8px] font-black text-[#854D0E] uppercase">{t.health.nutrition}</span>
+                  <span className="text-[8px] font-black text-[#854D0E] uppercase">
+                    {language === 'uz' ? 'Oziqlanish' : language === 'ru' ? 'Питание' : 'Nutrition'}
+                  </span>
                 </div>
                 <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
                   {avgDailyKcal > 0 ? `${avgDailyKcal} kcal` : `${healthMetrics.targetDailyCalories || 2000} kcal`}
@@ -454,7 +456,9 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
                   <div className="w-6 h-6 rounded-lg bg-[#DEE8EF] border border-[#24201D]/40 flex items-center justify-center">
                     <Droplets className="w-3.5 h-3.5 text-[#2A495E]" />
                   </div>
-                  <span className="text-[8px] font-black text-[#2A495E] uppercase">{t.health.water}</span>
+                  <span className="text-[8px] font-black text-[#2A495E] uppercase">
+                    {language === 'uz' ? 'Suv' : language === 'ru' ? 'Вода' : 'Water'}
+                  </span>
                 </div>
                 <p className="text-sm font-black font-mono-num text-[#24201D] mt-1">
                   {Number(avgDailyWaterL) > 0 ? `${avgDailyWaterL}L` : `${((healthProfile.currentWeight * 35) / 1000).toFixed(1)}L`}
@@ -496,7 +500,7 @@ export const WeeklyInfographicModal: React.FC<WeeklyInfographicModalProps> = ({
               <span>{language === 'uz' ? '7 kunlik aql va tana ritmi' : language === 'ru' ? '7-дневный ритм разума и тела' : '7-Day Mind & Body Rhythm'}</span>
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#3D6B52]" /> {t.focus.title}</span>
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#E09F3E]" /> {t.health.title}</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#E09F3E]" /> {language === 'uz' ? 'Sogʻliq' : language === 'ru' ? 'Здоровье' : 'Health'}</span>
               </div>
             </div>
 

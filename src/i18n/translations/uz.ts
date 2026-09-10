@@ -133,6 +133,23 @@ export const uzTranslations: TranslationDictionary = {
       all: 'Barchasi',
     },
   },
+  categories: {
+    general: 'Umumiy',
+    code: 'Dasturlash',
+    design: 'Dizayn',
+    learn: 'Oʻrganish',
+    health: 'Salomatlik',
+    admin: 'Boshqaruv / Ish',
+    all: 'Barchasi',
+  },
+  health: {
+    title: 'Sogʻliq',
+    nutrition: 'Oziqlanish',
+    water: 'Suv',
+    protein: 'Oqsil',
+    fat: 'Yogʻ',
+    carbs: 'Uglevod',
+  },
   backlog: {
     title: 'Vazifalar beklogi',
     subtitle: 'Kelajakdagi rejalar va vaqti belgilanmagan barcha gʻoyalar',

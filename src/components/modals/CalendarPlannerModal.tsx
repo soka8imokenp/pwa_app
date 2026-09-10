@@ -143,11 +143,11 @@ export const CalendarPlannerModal: React.FC<CalendarPlannerModalProps> = ({
   };
 
   const categories = [
-    { id: 'code' as const, label: t.categories.code, icon: <Code className="w-3 h-3 stroke-[2.25]" /> },
-    { id: 'design' as const, label: t.categories.design, icon: <Palette className="w-3 h-3 stroke-[2.25]" /> },
-    { id: 'learn' as const, label: t.categories.learn, icon: <BookOpen className="w-3 h-3 stroke-[2.25]" /> },
-    { id: 'health' as const, label: t.categories.health, icon: <Activity className="w-3 h-3 stroke-[2.25]" /> },
-    { id: 'general' as const, label: t.categories.general, icon: <Layers className="w-3 h-3 stroke-[2.25]" /> },
+    { id: 'code' as const, label: t.priorities.categories.code, icon: <Code className="w-3 h-3 stroke-[2.25]" /> },
+    { id: 'design' as const, label: t.priorities.categories.design, icon: <Palette className="w-3 h-3 stroke-[2.25]" /> },
+    { id: 'learn' as const, label: t.priorities.categories.learn, icon: <BookOpen className="w-3 h-3 stroke-[2.25]" /> },
+    { id: 'health' as const, label: t.priorities.categories.health, icon: <Activity className="w-3 h-3 stroke-[2.25]" /> },
+    { id: 'general' as const, label: t.priorities.categories.general, icon: <Layers className="w-3 h-3 stroke-[2.25]" /> },
   ];
 
   return (

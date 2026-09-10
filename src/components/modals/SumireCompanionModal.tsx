@@ -463,15 +463,15 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
                     {/* Macronutrient Pills Grid */}
                     <div className="grid grid-cols-3 gap-1.5 text-center">
                       <div className="p-1.5 rounded-xl bg-emerald-50 border border-emerald-300/60 shadow-2xs">
-                        <span className="text-[9px] font-bold text-emerald-700 block uppercase font-display">{t.health.protein}</span>
+                        <span className="text-[9px] font-bold text-emerald-700 block uppercase font-display">{t.healthIntake.protein}</span>
                         <span className="text-xs font-black font-mono-num text-emerald-900 block leading-tight">{msg.suggestedMeal.proteinGrams}g</span>
                       </div>
                       <div className="p-1.5 rounded-xl bg-amber-50 border border-amber-300/60 shadow-2xs">
-                        <span className="text-[9px] font-bold text-amber-700 block uppercase font-display">{t.health.fat}</span>
+                        <span className="text-[9px] font-bold text-amber-700 block uppercase font-display">{t.healthIntake.fat}</span>
                         <span className="text-xs font-black font-mono-num text-amber-900 block leading-tight">{msg.suggestedMeal.fatGrams}g</span>
                       </div>
                       <div className="p-1.5 rounded-xl bg-sky-50 border border-sky-300/60 shadow-2xs">
-                        <span className="text-[9px] font-bold text-sky-700 block uppercase font-display">{t.health.carbs}</span>
+                        <span className="text-[9px] font-bold text-sky-700 block uppercase font-display">{t.healthIntake.carbs}</span>
                         <span className="text-xs font-black font-mono-num text-sky-900 block leading-tight">{msg.suggestedMeal.carbsGrams}g</span>
                       </div>
                     </div>
@@ -526,15 +526,15 @@ export const SumireCompanionModal: React.FC<SumireCompanionModalProps> = ({
 
                             <div className="grid grid-cols-3 gap-1.5 text-center">
                               <div className="py-1 px-1.5 rounded-lg bg-[#FAF8F5] border border-stone-200">
-                                <span className="text-[8px] font-bold text-stone-500 block uppercase">{t.health.protein}</span>
+                                <span className="text-[8px] font-bold text-stone-500 block uppercase">{t.healthIntake.protein}</span>
                                 <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.proteinGrams}g</span>
                               </div>
                               <div className="py-1 px-1.5 rounded-lg bg-[#FAF8F5] border border-stone-200">
-                                <span className="text-[8px] font-bold text-stone-500 block uppercase">{t.health.fat}</span>
+                                <span className="text-[8px] font-bold text-stone-500 block uppercase">{t.healthIntake.fat}</span>
                                 <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.fatGrams}g</span>
                               </div>
                               <div className="py-1 px-1.5 rounded-lg bg-[#FAF8F5] border border-stone-200">
-                                <span className="text-[8px] font-bold text-stone-500 block uppercase">{t.health.carbs}</span>
+                                <span className="text-[8px] font-bold text-stone-500 block uppercase">{t.healthIntake.carbs}</span>
                                 <span className="text-[11px] font-black font-mono-num text-[#24201D]">{action.details.carbsGrams}g</span>
                               </div>
                             </div>

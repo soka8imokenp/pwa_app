@@ -133,6 +133,23 @@ export const enTranslations: TranslationDictionary = {
       all: 'All',
     },
   },
+  categories: {
+    general: 'General',
+    code: 'Code',
+    design: 'Design',
+    learn: 'Learn',
+    health: 'Health',
+    admin: 'Admin & Ops',
+    all: 'All',
+  },
+  health: {
+    title: 'Health',
+    nutrition: 'Nutrition',
+    water: 'Water',
+    protein: 'Protein',
+    fat: 'Fat',
+    carbs: 'Carbs',
+  },
   backlog: {
     title: 'Task Backlog',
     subtitle: 'Future tasks and unscheduled projects',

@@ -127,6 +127,23 @@ export interface TranslationDictionary {
       all: string;
     };
   };
+  categories: {
+    general: string;
+    code: string;
+    design: string;
+    learn: string;
+    health: string;
+    admin: string;
+    all: string;
+  };
+  health: {
+    title: string;
+    nutrition: string;
+    water: string;
+    protein: string;
+    fat: string;
+    carbs: string;
+  };
   backlog: {
     title: string;
     subtitle: string;

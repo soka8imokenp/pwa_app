@@ -133,6 +133,23 @@ export const ruTranslations: TranslationDictionary = {
       all: 'Все',
     },
   },
+  categories: {
+    general: 'Общее',
+    code: 'Разработка',
+    design: 'Дизайн',
+    learn: 'Обучение',
+    health: 'Здоровье',
+    admin: 'Админ и дела',
+    all: 'Все',
+  },
+  health: {
+    title: 'Здоровье',
+    nutrition: 'Питание',
+    water: 'Вода',
+    protein: 'Белки',
+    fat: 'Жиры',
+    carbs: 'Углеводы',
+  },
   backlog: {
     title: 'Бэклог задач',
     subtitle: 'Планы на будущее и несрочные идеи',

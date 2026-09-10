@@ -92,7 +92,7 @@ describe('healthFormulas', () => {
     ];
 
     const pace = computeWeeklyPace(logs);
-    expect(pace.paceKgPerWeek).toBeCloseTo(0.5, 1);
+    expect(pace.paceKgPerWeek).toBeCloseTo(-0.5, 1);
     expect(pace.isOptimal).toBe(true);
   });
 

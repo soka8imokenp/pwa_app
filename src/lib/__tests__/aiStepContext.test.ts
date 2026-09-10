@@ -11,7 +11,7 @@ describe('AI Context & Step/Activity Visibility', () => {
   it('SUMIRE_SYSTEM_PROMPT: asserts Daily Sumire app identity with zero-confusion rule', () => {
     expect(SUMIRE_SYSTEM_PROMPT).toContain('Daily Sumire');
     expect(SUMIRE_SYSTEM_PROMPT).toContain('APP IDENTITY & ZERO-CONFUSION MANDATE');
-    expect(SUMIRE_SYSTEM_PROMPT).toContain('Under NO circumstances should you EVER claim this application is "Zepp Life"');
+    expect(SUMIRE_SYSTEM_PROMPT).toContain('Under NO circumstances should you EVER claim this application is a third-party app');
   });
 
   it('SUMIRE_SYSTEM_PROMPT: incorporates steps, pedometer, and physical activity protocol', () => {

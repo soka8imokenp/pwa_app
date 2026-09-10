@@ -692,7 +692,7 @@ export const enTranslations: TranslationDictionary = {
     dangerPrompt: 'DANGER: This will permanently delete all data. Type "DELETE" to confirm:',
     appVersion: 'Release build',
     releaseBuild: 'Release build',
-    checkUpdates: 'Check Updates',
+    checkUpdates: 'Updates',
     checking: 'Checking...',
     latestVersion: 'You have the latest version!',
     privacyPolicy: 'Privacy Policy',

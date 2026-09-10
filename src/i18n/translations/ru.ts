@@ -696,7 +696,7 @@ export const ruTranslations: TranslationDictionary = {
     dangerPrompt: 'ВНИМАНИЕ: Это удалит все данные. Напишите "DELETE" для подтверждения:',
     appVersion: 'Версия сборки',
     releaseBuild: 'Релизная сборка',
-    checkUpdates: 'Проверить обновления',
+    checkUpdates: 'Обновление',
     checking: 'Проверка...',
     latestVersion: 'У вас установлена последняя версия!',
     privacyPolicy: 'Политика конфиденциальности',

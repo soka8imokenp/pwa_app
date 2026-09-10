@@ -692,7 +692,7 @@ export const uzTranslations: TranslationDictionary = {
     dangerPrompt: 'DIQQAT: Bu barcha maʼlumotlarni oʻchirib yuboradi. Tasdiqlash uchun "DELETE" deb yozing:',
     appVersion: 'Ilova versiyasi',
     releaseBuild: 'Rasmiy versiya',
-    checkUpdates: 'Yangilanishlarni tekshirish',
+    checkUpdates: 'Yangilash',
     checking: 'Tekshirilmoqda...',
     latestVersion: 'Sizda eng soʻnggi versiya oʻrnatilgan!',
     privacyPolicy: 'Maxfiylik siyosati',

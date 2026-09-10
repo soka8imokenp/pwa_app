@@ -208,24 +208,6 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Prominent Clear Button */}
-            {logs.length > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  playClickSound();
-                  setIsConfirmingClear(true);
-                }}
-                title={t.modals.clearLogs}
-                className="px-2.5 py-1.5 rounded-xl bg-[#FEE2E2] hover:bg-[#FECACA] border-[1.75px] border-[#24201D] text-[#991B1B] flex items-center gap-1.5 shadow-[2px_2px_0px_#24201D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer font-display"
-              >
-                <Trash2 className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span className="text-[10px] font-black uppercase tracking-wider">
-                  {t.modals.clearLogs}
-                </span>
-              </button>
-            )}
-
             {/* Close button */}
             <button
               type="button"
@@ -330,6 +312,41 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
               );
             })}
           </div>
+
+          {/* Sub-bar below filters: Entry Counter & Neat Clear Button */}
+          {logs.length > 0 && (
+            <div className="flex items-center justify-between pt-1.5 px-0.5 border-t border-[#24201D]/10">
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#6B635B]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3D6B52]" />
+                <span>
+                  {language === 'uz'
+                    ? `${filteredLogs.length} ta yozuv`
+                    : language === 'ru'
+                    ? `${filteredLogs.length} ${
+                        filteredLogs.length % 10 === 1 && filteredLogs.length % 100 !== 11
+                          ? 'запись'
+                          : [2, 3, 4].includes(filteredLogs.length % 10) && ![12, 13, 14].includes(filteredLogs.length % 100)
+                          ? 'записи'
+                          : 'записей'
+                      }`
+                    : `${filteredLogs.length} ${filteredLogs.length === 1 ? 'entry' : 'entries'}`}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  playClickSound();
+                  setIsConfirmingClear(true);
+                }}
+                title={t.modals.clearLogs}
+                className="px-2.5 py-1 rounded-lg bg-[#FAF8F5] hover:bg-[#FEE2E2] text-[#991B1B] border border-[#24201D]/25 hover:border-[#DC2626]/40 text-[10px] font-bold flex items-center gap-1.5 shadow-[1px_1px_0px_#24201D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer font-display"
+              >
+                <Trash2 className="w-3 h-3 stroke-[2.25]" />
+                <span className="uppercase tracking-wider">{t.modals.clearLogs}</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* 3. Feed List (Scrollable Area) */}

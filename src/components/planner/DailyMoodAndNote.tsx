@@ -100,6 +100,19 @@ export const DailyMoodAndNote: React.FC<DailyMoodAndNoteProps> = ({ selectedDate
     setIsSavedRecently(false);
   }, [selectedDate]);
 
+  // Reactive listener for Google Assistant / Gemini note inserts
+  useEffect(() => {
+    const handleNoteUpdated = (e: any) => {
+      if (e.detail?.date === selectedDate && typeof e.detail?.text === 'string') {
+        setDailyNote(e.detail.text);
+        setIsSavedRecently(true);
+        setTimeout(() => setIsSavedRecently(false), 2500);
+      }
+    };
+    window.addEventListener('sumire:note-updated', handleNoteUpdated);
+    return () => window.removeEventListener('sumire:note-updated', handleNoteUpdated);
+  }, [selectedDate]);
+
   const handleSelectMood = (moodId: string) => {
     playClickSound();
     const nextMood = selectedMood === moodId ? null : moodId;

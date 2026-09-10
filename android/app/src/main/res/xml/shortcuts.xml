@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 1. Google Assistant & Gemini Capability: Create Task / Goal -->
+    <capability android:name="actions.intent.CREATE_TASK">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.kairo.planner"
+            android:targetClass="com.kairo.planner.MainActivity"
+            android:data="sumire://assistant?action=create_task&amp;title={taskName}">
+            <parameter
+                android:name="task.name"
+                android:key="taskName" />
+        </intent>
+    </capability>
+
+    <!-- 2. Google Assistant & Gemini Capability: Create Note / Memo / Journal -->
+    <capability android:name="actions.intent.CREATE_NOTE">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.kairo.planner"
+            android:targetClass="com.kairo.planner.MainActivity"
+            android:data="sumire://assistant?action=create_note&amp;text={noteText}">
+            <parameter
+                android:name="note.text"
+                android:key="noteText" />
+        </intent>
+    </capability>
+
+    <!-- 3. Google Assistant & Gemini Capability: Start Focus Timer / Exercise -->
+    <capability android:name="actions.intent.START_EXERCISE">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.kairo.planner"
+            android:targetClass="com.kairo.planner.MainActivity"
+            android:data="sumire://assistant?action=start_focus&amp;duration={duration}">
+            <parameter
+                android:name="exercise.duration"
+                android:key="duration" />
+        </intent>
+    </capability>
+
+    <!-- 4. Google Assistant & Gemini Capability: Open App Feature -->
+    <capability android:name="actions.intent.OPEN_APP_FEATURE">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.kairo.planner"
+            android:targetClass="com.kairo.planner.MainActivity"
+            android:data="sumire://assistant?action=open_feature&amp;feature={feature}">
+            <parameter
+                android:name="feature"
+                android:key="feature" />
+        </intent>
+    </capability>
+
+    <!-- Static Launcher Shortcuts for Long-Press & Fast Voice Indexing -->
+    <shortcut
+        android:shortcutId="shortcut_create_task"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_create_task_short"
+        android:shortcutLongLabel="@string/shortcut_create_task_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.kairo.planner"
+            android:targetClass="com.kairo.planner.MainActivity"
+            android:data="sumire://assistant?action=create_task" />
+        <capability-binding android:key="actions.intent.CREATE_TASK" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="shortcut_create_note"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_note_short"
+        android:shortcutLongLabel="@string/shortcut_note_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.kairo.planner"
+            android:targetClass="com.kairo.planner.MainActivity"
+            android:data="sumire://assistant?action=create_note" />
+        <capability-binding android:key="actions.intent.CREATE_NOTE" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="shortcut_start_focus"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_focus_short"
+        android:shortcutLongLabel="@string/shortcut_focus_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.kairo.planner"
+            android:targetClass="com.kairo.planner.MainActivity"
+            android:data="sumire://assistant?action=start_focus&amp;duration=25" />
+        <capability-binding android:key="actions.intent.START_EXERCISE" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="shortcut_open_habits"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_habits_short"
+        android:shortcutLongLabel="@string/shortcut_habits_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.kairo.planner"
+            android:targetClass="com.kairo.planner.MainActivity"
+            android:data="sumire://assistant?action=open_feature&amp;feature=habits" />
+        <capability-binding android:key="actions.intent.OPEN_APP_FEATURE" />
+    </shortcut>
+
+</shortcuts>

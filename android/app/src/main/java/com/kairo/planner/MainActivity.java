@@ -157,6 +157,21 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Enable display on lock screen & wake display for Google Assistant / Gemini triggers
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                setShowWhenLocked(true);
+                setTurnScreenOn(true);
+            } else {
+                getWindow().addFlags(
+                    android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                    android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
+                    android.view.WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+                );
+            }
+        } catch (Exception ignored) {}
+
         applyLightSystemBars();
         configureWebView();
         initMediaSession();
@@ -168,6 +183,8 @@ public class MainActivity extends BridgeActivity {
         if (stepCounterInterface != null) {
             stepCounterInterface.startStepTracking();
         }
+
+        handleAssistantIntent(getIntent());
 
         MediaPlaybackService.setStateListener((isPlaying, isBuffering) -> {
             MainActivity.this.isAudioPlaying = isPlaying;
@@ -197,6 +214,68 @@ public class MainActivity extends BridgeActivity {
                     }
                 });
             }
+        });
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleAssistantIntent(intent);
+    }
+
+    private String pendingAssistantUri = null;
+
+    private void handleAssistantIntent(Intent intent) {
+        if (intent == null) return;
+        try {
+            Uri data = intent.getData();
+            String action = intent.getAction();
+
+            // 1. Custom scheme deep links (sumire:// or kairo://)
+            if (data != null && ("sumire".equalsIgnoreCase(data.getScheme()) || "kairo".equalsIgnoreCase(data.getScheme()))) {
+                dispatchAssistantUriToJs(data.toString());
+                return;
+            }
+
+            // 2. Android Assistant standard note creation intent
+            if ("android.intent.action.CREATE_NOTE".equals(action)) {
+                String noteText = intent.getStringExtra(Intent.EXTRA_TEXT);
+                if (noteText == null) {
+                    noteText = intent.getStringExtra("android.intent.extra.TEXT");
+                }
+                if (noteText != null && !noteText.trim().isEmpty()) {
+                    String uri = "sumire://assistant?action=create_note&text=" + Uri.encode(noteText.trim());
+                    dispatchAssistantUriToJs(uri);
+                    return;
+                }
+            }
+
+            // 3. Android Assistant standard text share
+            if (Intent.ACTION_SEND.equals(action) && "text/plain".equals(intent.getType())) {
+                String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
+                if (sharedText != null && !sharedText.trim().isEmpty()) {
+                    String uri = "sumire://assistant?action=create_note&text=" + Uri.encode(sharedText.trim());
+                    dispatchAssistantUriToJs(uri);
+                    return;
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private void dispatchAssistantUriToJs(String uriString) {
+        if (uriString == null || uriString.isEmpty()) return;
+        this.pendingAssistantUri = uriString;
+        runOnUiThread(() -> {
+            try {
+                if (getBridge() != null && getBridge().getWebView() != null) {
+                    String safeUri = uriString.replace("'", "\\'");
+                    getBridge().getWebView().evaluateJavascript(
+                        "window.__onAssistantIntent && window.__onAssistantIntent('" + safeUri + "');",
+                        null
+                    );
+                }
+            } catch (Exception ignored) {}
         });
     }
 
@@ -482,6 +561,14 @@ public class MainActivity extends BridgeActivity {
                 webView.addJavascriptInterface(bluetoothScaleInterface, "AndroidBluetoothScale");
                 stepCounterInterface = new StepCounterJsInterface();
                 webView.addJavascriptInterface(stepCounterInterface, "AndroidStepCounter");
+                webView.addJavascriptInterface(new AssistantJsInterface(), "AndroidAssistant");
+
+                if (pendingAssistantUri != null) {
+                    final String uriToDeliver = pendingAssistantUri;
+                    webView.postDelayed(() -> {
+                        dispatchAssistantUriToJs(uriToDeliver);
+                    }, 1500);
+                }
 
                 // Inject visibility spoofing so background audio (like YouTube Radio) continues when minimized
                 webView.evaluateJavascript(
@@ -667,6 +754,15 @@ public class MainActivity extends BridgeActivity {
                 notificationManager.cancel(NOTIFICATION_ID);
             }
         } catch (Exception ignored) {}
+    }
+
+    public class AssistantJsInterface {
+        @JavascriptInterface
+        public String getPendingAssistantIntent() {
+            String uri = pendingAssistantUri;
+            pendingAssistantUri = null;
+            return uri != null ? uri : "";
+        }
     }
 
     public class MediaJsInterface {

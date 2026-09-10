@@ -4,4 +4,12 @@
     <string name="title_activity_main">Daily Sumire</string>
     <string name="package_name">com.dailysumire.app</string>
     <string name="custom_url_scheme">com.dailysumire.app</string>
+    <string name="shortcut_create_task_short">Новая задача</string>
+    <string name="shortcut_create_task_long">Создать задачу или цель</string>
+    <string name="shortcut_note_short">Блокнот</string>
+    <string name="shortcut_note_long">Записать мысль или заметку</string>
+    <string name="shortcut_focus_short">Фокус-таймер</string>
+    <string name="shortcut_focus_long">Запустить фокус-сессию</string>
+    <string name="shortcut_habits_short">Привычки</string>
+    <string name="shortcut_habits_long">Отметить ежедневные привычки</string>
 </resources>

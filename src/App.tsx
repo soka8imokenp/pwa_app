@@ -26,6 +26,8 @@ import { getTodayString } from './lib/dateUtils';
 import { isSoundMuted, setSoundMuted, playClickSound, playSuccessChime } from './lib/sound';
 import { isAppLocked, setAppLocked } from './lib/securityService';
 import type { Task } from './types';
+import { Bot, X } from 'lucide-react';
+import { initAssistantService, type AssistantToast } from './lib/assistantService';
 
 export function App() {
   // Authentication State
@@ -127,6 +129,9 @@ export function App() {
   // Focus Timer active selection
   const [focusSelectedTask, setFocusSelectedTask] = useState<Task | null>(null);
 
+  // Google Assistant / Gemini voice feedback toast
+  const [assistantToast, setAssistantToast] = useState<AssistantToast | null>(null);
+
   // Initialize notification deep-linking system & check for Telegram APK updates & daily streak greeting
   useEffect(() => {
     initNotificationSystem((targetTab, extra) => {
@@ -188,7 +193,23 @@ export function App() {
       }
     }
 
-    return () => window.removeEventListener('sumire:navigate', handleWebNavigate);
+    // Initialize Google Assistant / Gemini voice command listener
+    const cleanupAssistant = initAssistantService(
+      (targetTab) => {
+        setActiveTab(targetTab);
+      },
+      (toast) => {
+        setAssistantToast(toast);
+        setTimeout(() => {
+          setAssistantToast((curr) => (curr?.id === toast.id ? null : curr));
+        }, 4000);
+      }
+    );
+
+    return () => {
+      window.removeEventListener('sumire:navigate', handleWebNavigate);
+      cleanupAssistant();
+    };
   }, []);
 
   // Planner Data Hook (IndexedDB / Dexie.js)
@@ -277,6 +298,32 @@ export function App() {
       <div className="w-full max-w-md min-h-screen flex flex-col relative px-3 sm:px-0 z-10">
         <OfflineBanner />
         <ToastContainer />
+
+        {/* Google Assistant / Gemini Voice Feedback Banner */}
+        {assistantToast && (
+          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[150] w-[92%] max-w-sm bg-[#FAF8F5] border-[2px] border-[#24201D] rounded-2xl shadow-[4px_4px_0px_#24201D] p-3 flex items-center justify-between gap-3 animate-in slide-in-from-top-4 duration-200 select-none font-body">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-[#3D6B52] text-white border border-[#24201D] shadow-2xs flex items-center justify-center shrink-0">
+                <Bot className="w-4 h-4 stroke-[2.25]" />
+              </div>
+              <div className="min-w-0 text-left">
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#3D6B52] block font-display leading-tight">
+                  {assistantToast.title}
+                </span>
+                <span className="text-xs font-bold text-[#24201D] truncate block">
+                  {assistantToast.subtitle}
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAssistantToast(null)}
+              className="w-6 h-6 rounded-lg hover:bg-stone-200 text-[#6B635B] flex items-center justify-center cursor-pointer shrink-0"
+            >
+              <X className="w-3.5 h-3.5 stroke-[2.5]" />
+            </button>
+          </div>
+        )}
         
         {/* Mobile Top Header with User Greeting & Streak Modal Trigger */}
         <Header

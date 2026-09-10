@@ -62,6 +62,22 @@ export const FocusPage: React.FC<FocusPageProps> = ({
     }
   }, [selectedTask]);
 
+  // Reactive listener for Google Assistant / Gemini voice focus command
+  useEffect(() => {
+    const handleStartVoiceFocus = (e: any) => {
+      const mins = Number(e.detail?.minutes) || 25;
+      setMode('pomodoro');
+      setCustomMinutes(mins);
+      setSecondsLeft(mins * 60);
+      setElapsedFocusSeconds(0);
+      setPausedSeconds(0);
+      setIsRunning(true);
+      playClickSound();
+    };
+    window.addEventListener('sumire:focus-start', handleStartVoiceFocus);
+    return () => window.removeEventListener('sumire:focus-start', handleStartVoiceFocus);
+  }, []);
+
   const handleSelectPreset = (mins: number) => {
     playClickSound();
     setIsRunning(false);

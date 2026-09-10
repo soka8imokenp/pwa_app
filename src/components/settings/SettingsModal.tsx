@@ -23,6 +23,8 @@ import {
   Apple,
   Languages,
   Globe,
+  ChevronRight,
+  Check,
 } from 'lucide-react';
 import {
   exportDatabaseToJson,
@@ -49,7 +51,33 @@ import { SecuritySetupModal } from '../security/SecuritySetupModal';
 import { PrivacyPolicyModal } from '../modals/PrivacyPolicyModal';
 import { TermsOfServiceModal } from '../modals/TermsOfServiceModal';
 import { useTranslation } from '../../i18n/LanguageContext';
-import type { Language } from '../../i18n/types';
+export interface InterfaceLanguageOption {
+  code: Language;
+  name: string;
+  description: string;
+  tag: string;
+}
+
+export const INTERFACE_LANGUAGES: InterfaceLanguageOption[] = [
+  {
+    code: 'uz',
+    name: 'Oʻzbekcha',
+    description: 'Oʻzbek tili (Lotin alifbosi)',
+    tag: 'UZ',
+  },
+  {
+    code: 'ru',
+    name: 'Русский',
+    description: 'Русский язык',
+    tag: 'RU',
+  },
+  {
+    code: 'en',
+    name: 'English',
+    description: 'International English',
+    tag: 'EN',
+  },
+];
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -86,6 +114,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   });
   const [showKeyText, setShowKeyText] = useState(false);
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
+  const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
   const [pinConfigured, setPinConfigured] = useState(false);
 
   // Evening Debrief settings state
@@ -327,63 +356,50 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         )}
 
-        {/* 0. Language Switcher Capsule (Prominently featured) */}
+        {/* 0. Language Switcher Capsule */}
         <div className="p-3.5 bg-white border-[1.75px] border-[#24201D] rounded-[2rem] space-y-2.5 shadow-[2px_2px_0px_#24201D]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-[#E0E7FF] border border-[#24201D] flex items-center justify-center text-xs shadow-2xs shrink-0">
-              <Languages className="w-4.5 h-4.5 text-[#3730A3] stroke-[2.25]" />
-            </div>
-            <div>
-              <span className="text-xs font-black font-display text-[#24201D] block">
-                {t('settings.languageTitle')}
-              </span>
-              <span className="text-[10px] font-semibold text-[#6B635B] block">
-                {t('settings.languageDesc')}
-              </span>
-            </div>
+          <div>
+            <span className="text-xs font-black font-display text-[#24201D] block">
+              {t('settings.languageTitle')}
+            </span>
+            <span className="text-[10px] font-semibold text-[#6B635B] block">
+              {t('settings.languageDesc')}
+            </span>
           </div>
 
-          {/* 3-Way Segmented Switcher */}
-          <div className="p-1 bg-[#F4F0EA] border border-[#24201D]/30 rounded-2xl flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => handleSelectLanguage('uz')}
-              className={`flex-1 py-2 px-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                language === 'uz'
-                  ? 'bg-[#3D6B52] text-white border border-[#24201D] shadow-2xs'
-                  : 'text-[#6B635B] hover:text-[#24201D] hover:bg-white/60'
-              }`}
-            >
-              <span className="text-sm">🇺🇿</span>
-              <span className="text-[11px] font-bold leading-tight">Oʻzbekcha</span>
-            </button>
+          {/* Tactile trigger to open popup selection modal */}
+          {(() => {
+            const currentLang = INTERFACE_LANGUAGES.find((l) => l.code === language);
+            return (
+              <button
+                type="button"
+                onClick={() => {
+                  playClickSound();
+                  setIsLanguageModalOpen(true);
+                }}
+                className="w-full p-3 bg-[#FAF8F5] hover:bg-[#F4EFEA] border-[1.75px] border-[#24201D] rounded-2xl flex items-center justify-between shadow-[1.5px_1.5px_0px_#24201D] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-3 text-left">
+                  <span className="w-8 h-8 rounded-xl bg-[#3D6B52] text-white font-black font-display text-xs border border-[#24201D] flex items-center justify-center shadow-2xs">
+                    {currentLang?.tag || language.toUpperCase()}
+                  </span>
+                  <div>
+                    <span className="text-xs font-black font-display text-[#24201D] block leading-tight">
+                      {currentLang?.name || language}
+                    </span>
+                    <span className="text-[10px] font-medium text-[#6B635B] block">
+                      {currentLang?.description || ''}
+                    </span>
+                  </div>
+                </div>
 
-            <button
-              type="button"
-              onClick={() => handleSelectLanguage('en')}
-              className={`flex-1 py-2 px-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                language === 'en'
-                  ? 'bg-[#3D6B52] text-white border border-[#24201D] shadow-2xs'
-                  : 'text-[#6B635B] hover:text-[#24201D] hover:bg-white/60'
-              }`}
-            >
-              <span className="text-sm">🇬🇧</span>
-              <span className="text-[11px] font-bold leading-tight">English</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectLanguage('ru')}
-              className={`flex-1 py-2 px-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                language === 'ru'
-                  ? 'bg-[#3D6B52] text-white border border-[#24201D] shadow-2xs'
-                  : 'text-[#6B635B] hover:text-[#24201D] hover:bg-white/60'
-              }`}
-            >
-              <span className="text-sm">🇷🇺</span>
-              <span className="text-[11px] font-bold leading-tight">Русский</span>
-            </button>
-          </div>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white border border-[#24201D] text-[10px] font-black uppercase tracking-wider text-[#2D503C] shadow-2xs group-hover:bg-[#3D6B52] group-hover:text-white transition-colors font-display">
+                  <span>{language === 'ru' ? 'Выбрать' : language === 'uz' ? 'Oʻzgartirish' : 'Change'}</span>
+                  <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                </div>
+              </button>
+            );
+          })()}
         </div>
 
         {/* 1. Audio Feedback Capsule */}
@@ -768,6 +784,116 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         isOpen={isTermsModalOpen}
         onClose={() => setIsTermsModalOpen(false)}
       />
+
+      {/* Pop-up Language Selection Panel (Extensible list without emoji icons) */}
+      {isLanguageModalOpen && (
+        <div
+          className="fixed inset-0 z-[120] bg-[#24201D]/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setIsLanguageModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm bg-[#FAF8F5] border-[2px] border-[#24201D] rounded-3xl shadow-[5px_5px_0px_#24201D] p-5 space-y-4 font-body select-none animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b-[1.75px] border-[#24201D]/15">
+              <div>
+                <h3 className="text-base font-black font-display text-[#24201D] leading-tight">
+                  {t('settings.languageTitle')}
+                </h3>
+                <p className="text-[10px] font-bold text-[#6B635B] mt-0.5">
+                  {language === 'ru'
+                    ? 'Выберите язык интерфейса приложения'
+                    : language === 'uz'
+                    ? 'Ilova interfeysi tilini tanlang'
+                    : 'Choose your preferred application language'}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  playClickSound();
+                  setIsLanguageModalOpen(false);
+                }}
+                className="w-8 h-8 rounded-xl bg-white hover:bg-stone-100 border-[1.5px] border-[#24201D] shadow-[1.5px_1.5px_0px_#24201D] flex items-center justify-center text-[#6B635B] hover:text-[#24201D] cursor-pointer active:translate-y-0.5 transition-all"
+              >
+                <X className="w-4 h-4 stroke-[2.5]" />
+              </button>
+            </div>
+
+            {/* List of Languages (Clean typography, no emoji icons, easily extensible) */}
+            <div className="space-y-2">
+              {INTERFACE_LANGUAGES.map((item) => {
+                const isSelected = language === item.code;
+                return (
+                  <button
+                    key={item.code}
+                    type="button"
+                    onClick={() => {
+                      handleSelectLanguage(item.code);
+                      setIsLanguageModalOpen(false);
+                    }}
+                    className={`w-full p-3 rounded-2xl border-[1.75px] border-[#24201D] flex items-center justify-between transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-[#3D6B52] text-white shadow-[2.5px_2.5px_0px_#24201D] -translate-y-0.5'
+                        : 'bg-white hover:bg-[#F4F0EA] text-[#24201D] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 text-left">
+                      <span
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black font-display border border-[#24201D] shadow-2xs ${
+                          isSelected
+                            ? 'bg-white text-[#2D503C]'
+                            : 'bg-[#F4F0EA] text-[#24201D]'
+                        }`}
+                      >
+                        {item.tag}
+                      </span>
+                      <div>
+                        <span
+                          className={`text-sm font-black font-display block leading-tight ${
+                            isSelected ? 'text-white' : 'text-[#24201D]'
+                          }`}
+                        >
+                          {item.name}
+                        </span>
+                        <span
+                          className={`text-[10px] font-medium block ${
+                            isSelected ? 'text-[#DDE8DE]' : 'text-[#6B635B]'
+                          }`}
+                        >
+                          {item.description}
+                        </span>
+                      </div>
+                    </div>
+
+                    {isSelected ? (
+                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/20 border border-white/40 text-[9px] font-black uppercase tracking-wider text-white font-display">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                        <span>{language === 'ru' ? 'Активен' : language === 'uz' ? 'Faol' : 'Active'}</span>
+                      </div>
+                    ) : (
+                      <div className="w-4 h-4 rounded-full border-[1.5px] border-[#24201D]/30" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Footer Notice */}
+            <div className="pt-2 text-center">
+              <span className="text-[10px] font-medium text-stone-400">
+                {language === 'ru'
+                  ? 'Язык применится мгновенно ко всем модулям'
+                  : language === 'uz'
+                  ? 'Til barcha modullar uchun darhol qoʻllanadi'
+                  : 'Language will apply instantly across all modules'}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

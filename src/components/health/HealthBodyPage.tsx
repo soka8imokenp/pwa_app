@@ -441,7 +441,7 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
             title={t('healthBody.scaleConnectBtn')}
             className="py-2.5 px-3 bg-[#EEF2FF] hover:bg-[#E0E7FF] text-[#4F46E5] border-[1.75px] border-[#24201D] rounded-xl text-xs font-black shadow-[2px_2px_0px_#24201D] cursor-pointer active:translate-y-0.5 transition-all flex items-center justify-center gap-2 uppercase tracking-wider font-display"
           >
-            <Bluetooth className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
+            <Scale className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
             <span>{t('healthBody.scaleConnectBtn')}</span>
           </button>
 

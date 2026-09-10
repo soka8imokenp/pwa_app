@@ -38,7 +38,7 @@ Return STRICT JSON ONLY in the following format (no markdown, no backticks, just
 }`;
 
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -282,7 +282,9 @@ COACHING CAPABILITIES & GUIDELINES:
   });
 
   const candidateModels = [
-    'gemini-3.5-flash-lite',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
   ];
 
   let lastError: any = null;
@@ -365,7 +367,7 @@ Topics: muscle protein synthesis, NEAT, hydration & fat oxidation, sleep & ghrel
 NO preamble, NO introduction, NO sparkles ("✨"). Output ONLY the science insight text in English.`;
 
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

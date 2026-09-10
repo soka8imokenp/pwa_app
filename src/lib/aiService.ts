@@ -6,7 +6,7 @@ import type { SubTask } from '../types';
 import type { MealType } from '../types/health';
 import { triggerTwoWaySync } from './syncEngine';
 
-export const APP_GEMINI_MODEL = 'gemini-3.5-flash-lite';
+export const APP_GEMINI_MODEL = 'gemini-2.5-flash';
 
 export function getStoredGeminiApiKey(): string {
   if (typeof window !== 'undefined') {
@@ -1012,7 +1012,9 @@ ${ragContext}`;
   const executedActions: AIChatMessage['executedActions'] = [];
 
   const candidateModels = [
-    'gemini-3.5-flash-lite',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
   ];
 
   let lastError: any = null;

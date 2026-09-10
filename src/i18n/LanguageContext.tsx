@@ -80,7 +80,9 @@ export function formatDateDirect(dateStr: string, langOverride?: Language): stri
     const monthIndex = date.getMonth();
     const weekdayIndex = (date.getDay() + 6) % 7; // 0 = Mon, 6 = Sun
 
-    const monthName = dict.date.months[monthIndex] || format(date, 'MMM');
+    const monthName = (lang === 'ru' && dict.date.monthsGenitive?.[monthIndex])
+      ? dict.date.monthsGenitive[monthIndex]
+      : (dict.date.months[monthIndex] || format(date, 'MMM'));
     const weekdayName = dict.date.weekdaysShort[weekdayIndex] || format(date, 'EEE');
 
     if (lang === 'uz') {
@@ -125,7 +127,10 @@ export function getRelativeDayDirect(dateStr: string, langOverride?: Language): 
     if (isTomorrow(date)) return dict.common.tomorrow;
 
     const day = date.getDate();
-    const monthName = dict.date.months[date.getMonth()];
+    const monthIndex = date.getMonth();
+    const monthName = (lang === 'ru' && dict.date.monthsGenitive?.[monthIndex])
+      ? dict.date.monthsGenitive[monthIndex]
+      : dict.date.months[monthIndex];
     return `${day} ${monthName}`;
   } catch {
     return dateStr;

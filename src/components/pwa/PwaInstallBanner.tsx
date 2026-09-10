@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Download, WifiOff, Smartphone, X } from 'lucide-react';
 import { BrutalButton } from '../common/BrutalButton';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export const PwaInstallBanner: React.FC = () => {
+  const { language } = useLanguage();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -53,7 +55,9 @@ export const PwaInstallBanner: React.FC = () => {
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-black text-slate-900 dark:text-purple-50">
-                {!isOnline ? 'Offline Mode Active' : 'Install KAIRO PWA'}
+                {!isOnline
+                  ? (language === 'ru' ? 'Офлайн-режим активен' : language === 'uz' ? 'Oflayn rejim faol' : 'Offline Mode Active')
+                  : (language === 'ru' ? 'Установить KAIRO PWA' : language === 'uz' ? 'KAIRO PWA oʻrnatish' : 'Install KAIRO PWA')}
               </span>
               <span
                 className={`w-2 h-2 rounded-full ${
@@ -63,8 +67,16 @@ export const PwaInstallBanner: React.FC = () => {
             </div>
             <p className="text-[11px] font-bold text-slate-600 dark:text-purple-300">
               {!isOnline
-                ? 'All features & changes save locally via IndexedDB'
-                : 'Add to home screen for 100% offline standalone app'}
+                ? (language === 'ru'
+                    ? 'Все данные сохраняются локально через IndexedDB'
+                    : language === 'uz'
+                    ? 'Barcha maʼlumotlar IndexedDB orqali saqlanadi'
+                    : 'All features & changes save locally via IndexedDB')
+                : (language === 'ru'
+                    ? 'Добавьте на главный экран для 100% офлайн работы'
+                    : language === 'uz'
+                    ? '100% oflayn ishlash uchun asosiy ekranga qoʻshing'
+                    : 'Add to home screen for 100% offline standalone app')}
             </p>
           </div>
         </div>
@@ -78,7 +90,7 @@ export const PwaInstallBanner: React.FC = () => {
               className="text-xs py-1 px-2.5 flex items-center gap-1"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Install</span>
+              <span>{language === 'ru' ? 'Установить' : language === 'uz' ? 'Oʻrnatish' : 'Install'}</span>
             </BrutalButton>
           )}
 

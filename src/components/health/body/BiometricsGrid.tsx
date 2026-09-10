@@ -27,7 +27,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
   metrics,
   onSelectMetric,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const {
     tdee,
     targetWaterMl,
@@ -36,6 +36,29 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
     waistToHeightRatio,
     waistRiskCategory,
   } = metrics;
+
+  const getLocalizedWaistCategory = (cat?: string) => {
+    if (!cat) {
+      return language === 'ru'
+        ? 'Укажите в профиле'
+        : language === 'uz'
+        ? 'Profilga kiriting'
+        : 'Set in profile';
+    }
+    if (cat.includes('Low') || cat.includes('Underweight')) {
+      return language === 'ru' ? 'Дефицит (низкий вес)' : language === 'uz' ? 'Kam vazn' : 'Low (Underweight)';
+    }
+    if (cat.includes('Healthy') || cat.includes('<0.5')) {
+      return language === 'ru' ? 'Норма (<0.5)' : language === 'uz' ? 'Meʼyor (<0.5)' : 'Healthy (<0.5)';
+    }
+    if (cat.includes('Increased')) {
+      return language === 'ru' ? 'Повышенный риск' : language === 'uz' ? 'Oshgan xavf' : 'Increased Risk';
+    }
+    if (cat.includes('High')) {
+      return language === 'ru' ? 'Высокий риск' : language === 'uz' ? 'Yuqori xavf' : 'High Risk';
+    }
+    return cat;
+  };
 
   const deficitSurplusKcal =
     profile.goal === 'lose' ? -400 : profile.goal === 'gain' ? 350 : 0;
@@ -63,10 +86,7 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
             <Activity className="w-4 h-4 stroke-[2.5]" />
           </div>
           <div className="min-w-0">
-            <span className="text-[9px] font-black uppercase tracking-widest text-[#6B635B] font-display block leading-none">
-              {t('biometrics.telemetryMatrix')}
-            </span>
-            <h3 className="text-sm font-black font-display text-[#24201D] mt-0.5 leading-none truncate">
+            <h3 className="text-xs sm:text-sm font-black font-display text-[#24201D] truncate uppercase tracking-wider">
               {t('biometrics.dailyEnergyTargets')}
             </h3>
           </div>
@@ -87,17 +107,30 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
             onSelectMetric({
               title: t('biometrics.whtrTitle'),
               value: waistToHeightRatio ? String(waistToHeightRatio) : 'N/A',
-              category: waistRiskCategory || 'Enter waist in Profile',
+              category: getLocalizedWaistCategory(waistRiskCategory),
               statusType: isWhtrOptimal ? 'optimal' : 'alert',
-              statusLabel: isWhtrOptimal ? t('biometrics.whtrOptimal') : waistRiskCategory || t('biometrics.whtrAlert'),
+              statusLabel: isWhtrOptimal ? t('biometrics.whtrOptimal') : getLocalizedWaistCategory(waistRiskCategory),
               normRange: '< 0.50 Ratio',
               numericValue: waistToHeightRatio,
               metricId: 'whtr',
               description:
-                'The Waist-to-Height Ratio (WHtR) is recognized by the WHO and UK NICE as the most accurate clinical metric for assessing central visceral fat and cardiovascular health, outperforming BMI alone.',
-              formula: 'Waist Circumference (cm) ÷ Height (cm)',
+                language === 'ru'
+                  ? 'WHtR признан ВОЗ и NICE UK наиболее точным клиническим показателем абдоминального (висцерального) жира и сердечно-сосудистого здоровья.'
+                  : language === 'uz'
+                  ? 'WHtR JSST va NICE tomonidan visseral yogʻ va yurak-qon tomir salomatligini baholashda eng aniq klinik koʻrsatkich deb tan olingan.'
+                  : 'The Waist-to-Height Ratio (WHtR) is recognized by the WHO and UK NICE as the most accurate clinical metric for assessing central visceral fat and cardiovascular health, outperforming BMI alone.',
+              formula:
+                language === 'ru'
+                  ? 'Окружность талии (см) ÷ Рост (см)'
+                  : language === 'uz'
+                  ? 'Bel aylanasi (sm) ÷ Boʻy (sm)'
+                  : 'Waist Circumference (cm) ÷ Height (cm)',
               clinicalTip:
-                'Keep your waist circumference under half your height (WHtR < 0.50) to minimize metabolic syndrome and visceral adiposity risk.',
+                language === 'ru'
+                  ? 'Держите окружность талии меньше половины вашего роста (WHtR < 0.50), чтобы свести к минимуму метаболический синдром и абдоминальное ожирение.'
+                  : language === 'uz'
+                  ? 'Metabolik sindrom va visseral semizlik xavfini kamaytirish uchun bel aylanangizni boʻyingizning yarmidan kamroq (WHtR < 0.50) saqlang.'
+                  : 'Keep your waist circumference under half your height (WHtR < 0.50) to minimize metabolic syndrome and visceral adiposity risk.',
             });
           }}
           className="p-3 bg-[#F0FDF4] hover:bg-[#DCFCE7] border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] text-left cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#24201D] group flex flex-col justify-between space-y-2"
@@ -122,7 +155,9 @@ export const BiometricsGrid: React.FC<BiometricsGridProps> = ({
 
           <div className="pt-1 border-t border-[#15803D]/20 flex items-center justify-between text-[9px] font-bold">
             <span className={isWhtrOptimal ? 'text-[#15803D]' : 'text-[#DC2626]'}>
-              {isWhtrOptimal ? '● Safe (< 0.50)' : waistRiskCategory || 'Set in profile'}
+              {isWhtrOptimal
+                ? (language === 'ru' ? '● Норма (< 0.50)' : language === 'uz' ? '● Xavfsiz (< 0.50)' : '● Safe (< 0.50)')
+                : getLocalizedWaistCategory(waistRiskCategory)}
             </span>
           </div>
         </button>

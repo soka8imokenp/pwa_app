@@ -19,6 +19,7 @@ import {
   type XiaomiBiometricMetrics,
 } from '../../lib/xiaomiScale';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { getLocalizedSomatotype } from './body/ZeppBodyCompositionCard';
 
 interface XiaomiScaleModalProps {
   isOpen: boolean;
@@ -39,7 +40,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
   profile,
   onSaveReading,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [status, setStatus] = useState<ScanStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [liveWeight, setLiveWeight] = useState<number>(0);
@@ -555,7 +556,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                             {reading.metrics.bodyScore}
                           </span>
                           <span className="text-[8px] font-black uppercase tracking-wider text-[#6B635B] font-display mt-0.5">
-                            SCORE
+                            {language === 'ru' ? 'БАЛЛ' : language === 'uz' ? 'BALL' : 'SCORE'}
                           </span>
                         </div>
                         <div>
@@ -563,7 +564,7 @@ export const XiaomiScaleModal: React.FC<XiaomiScaleModalProps> = ({
                             {t.zepp.bodyScore}
                           </span>
                           <h4 className="text-sm font-black font-display text-[#24201D] leading-tight">
-                            {t.zepp.bodyType}: {reading.metrics.bodyType}
+                            {t.zepp.bodyType}: {getLocalizedSomatotype(reading.metrics.bodyType, language)}
                           </h4>
                           <span className="text-[9px] text-[#2D503C] font-bold block mt-0.5">
                             {reading.metrics.bodyScore >= 85 ? t.zepp.statusOptimal : t.zepp.statusAttention}

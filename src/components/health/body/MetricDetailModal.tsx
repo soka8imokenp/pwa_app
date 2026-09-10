@@ -91,7 +91,7 @@ export function getMetricGaugePercentage(
 }
 
 export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({ info, onClose }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   if (!info) return null;
 
   const getMetricIcon = () => {
@@ -264,7 +264,7 @@ export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({ info, onCl
         <div className="p-3.5 bg-[#DDE8DE]/60 border border-[#3D6B52]/30 rounded-2xl space-y-1.5">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-[#2D503C] font-display">
             <Activity className="w-4 h-4 text-[#2D503C]" />
-            <span>Formula</span>
+            <span>{language === 'ru' ? 'Формула' : language === 'uz' ? 'Formula' : 'Formula'}</span>
           </div>
           <div className="p-2.5 bg-white/80 border border-[#2D503C]/20 rounded-xl">
             <span className="text-xs font-mono font-bold text-[#24201D] block break-all">
@@ -277,7 +277,7 @@ export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({ info, onCl
         <div className="p-4 bg-[#FBECCF] border border-[#854D0E]/30 rounded-2xl space-y-1.5">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-[#854D0E] font-display">
             <Target className="w-4 h-4 text-[#854D0E]" />
-            <span>Recommendation</span>
+            <span>{language === 'ru' ? 'Рекомендация' : language === 'uz' ? 'Tavsiya' : 'Recommendation'}</span>
           </div>
           <p className="text-xs font-bold text-[#713F12] leading-relaxed">
             {info.clinicalTip}

@@ -13,7 +13,7 @@ export const WeightHistoryList: React.FC<WeightHistoryListProps> = ({
   weightLogs,
   onDeleteLog,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [displayLimit, setDisplayLimit] = useState(7);
 
   // Newest first
@@ -65,10 +65,16 @@ export const WeightHistoryList: React.FC<WeightHistoryListProps> = ({
 
                 <div className="flex flex-wrap items-center gap-2 text-[10px] text-[#6B635B]">
                   {log.bodyFatPercentage && (
-                    <span>Fat: <b>{log.bodyFatPercentage}%</b></span>
+                    <span>
+                      {language === 'ru' ? 'Жир:' : language === 'uz' ? 'Yogʻ:' : 'Fat:'}{' '}
+                      <b>{log.bodyFatPercentage}%</b>
+                    </span>
                   )}
                   {log.waistCm && (
-                    <span>Waist: <b>{log.waistCm}cm</b></span>
+                    <span>
+                      {language === 'ru' ? 'Талия:' : language === 'uz' ? 'Bel:' : 'Waist:'}{' '}
+                      <b>{log.waistCm}cm</b>
+                    </span>
                   )}
                   {log.note && (
                     <span className="italic text-stone-500">&ldquo;{log.note}&rdquo;</span>
@@ -80,7 +86,7 @@ export const WeightHistoryList: React.FC<WeightHistoryListProps> = ({
                 <button
                   type="button"
                   onClick={() => handleDelete(log.id!)}
-                  title="Delete weigh-in"
+                  title={language === 'ru' ? 'Удалить замер' : language === 'uz' ? 'Oʻlchovni oʻchirish' : 'Delete weigh-in'}
                   className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 cursor-pointer transition-all"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -98,7 +104,11 @@ export const WeightHistoryList: React.FC<WeightHistoryListProps> = ({
               }}
               className="w-full py-2 bg-[#FAF8F5] hover:bg-stone-100 border border-[#24201D]/20 rounded-xl text-xs font-bold text-[#6B635B] cursor-pointer"
             >
-              Show More ({sortedLogs.length - displayLimit} remaining)
+              {language === 'ru'
+                ? `Показать еще (${sortedLogs.length - displayLimit})`
+                : language === 'uz'
+                ? `Yana koʻrsatish (${sortedLogs.length - displayLimit} ta qoldi)`
+                : `Show More (${sortedLogs.length - displayLimit} remaining)`}
             </button>
           )}
         </div>

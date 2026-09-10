@@ -410,11 +410,21 @@ export const HealthBodyPage: React.FC<HealthBodyPageProps> = ({
                 className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase text-white shadow-2xs"
                 style={{ backgroundColor: bmiColor }}
               >
-                {bmi > 0 ? bmiCategoryLabel.split(' ')[0] : '—'}
+                {bmi > 0 ? (
+                  metrics.bmiCategory === 'underweight'
+                    ? (language === 'ru' ? 'Дефицит' : language === 'uz' ? 'Kam vazn' : 'Underweight')
+                    : metrics.bmiCategory === 'normal'
+                    ? (language === 'ru' ? 'Норма' : language === 'uz' ? 'Meʼyor' : 'Normal')
+                    : metrics.bmiCategory === 'overweight'
+                    ? (language === 'ru' ? 'Избыток' : language === 'uz' ? 'Ortiqcha' : 'Overweight')
+                    : metrics.bmiCategory === 'obese'
+                    ? (language === 'ru' ? 'Ожирение' : language === 'uz' ? 'Semizlik' : 'Obese')
+                    : bmiCategoryLabel.split(' ')[0]
+                ) : '—'}
               </span>
             </div>
             <span className="text-[10px] font-bold text-[#6B635B] block">
-              {idealWeightMin > 0 ? t('healthBody.idealRange', { min: idealWeightMin, max: idealWeightMax }) : 'Ideal: —'}
+              {idealWeightMin > 0 ? t('healthBody.idealRange', { min: idealWeightMin, max: idealWeightMax }) : `${language === 'ru' ? 'Идеал' : 'Ideal'}: —`}
             </span>
           </div>
         </div>

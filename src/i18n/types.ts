@@ -85,6 +85,7 @@ export interface TranslationDictionary {
     todayJump: string;
     calendarPlanner: string;
     months: string[];
+    monthsGenitive?: string[];
     weekdaysShort: string[];
     weekdaysFull: string[];
   };

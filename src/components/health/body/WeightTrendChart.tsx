@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { playClickSound } from '../../../lib/sound';
 import { exportWeightLogsToCsv } from '../../../lib/exportImport';
+import { useLanguage } from '../../../i18n/LanguageContext';
 
 export interface ChartPoint {
   x: number;
@@ -43,6 +44,7 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
   currentWeight,
   allWeightLogs,
 }) => {
+  const { language } = useLanguage();
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
   const [selectedPointIndex, setSelectedPointIndex] = useState<number | null>(null);
   const [showInfo, setShowInfo] = useState(false);
@@ -308,7 +310,13 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-black font-display uppercase tracking-wider text-[#24201D]">
               <Info className="w-3.5 h-3.5 text-[#3D6B52]" />
-              <span>Weight Dynamics & Moving Average</span>
+              <span>
+                {language === 'ru'
+                  ? 'Динамика веса и скользящее среднее'
+                  : language === 'uz'
+                  ? 'Vazn dinamikasi va harakatlanuvchi oʻrtacha'
+                  : 'Weight Dynamics & Moving Average'}
+              </span>
             </div>
             <button
               type="button"
@@ -319,7 +327,19 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
             </button>
           </div>
           <p className="text-[11px] text-[#6B635B] leading-relaxed">
-            Daily body weight naturally fluctuates by 1–2 kg due to water balance, sodium intake, and digestive contents. The dots represent your daily logged weigh-ins, while the solid green line is your <strong>7-Day Moving Average</strong>, filtering out day-to-day noise to reveal your true physiological fat loss or muscle gain trend.
+            {language === 'ru' ? (
+              <>
+                Масса тела естественным образом колеблется на 1–2 кг из-за водного баланса, соли и пищеварения. Точки — это ваши ежедневные замеры, а сплошная зеленая линия — <strong>7-дневное скользящее среднее</strong>, сглаживающее суточный шум и показывающее реальный тренд изменения веса.
+              </>
+            ) : language === 'uz' ? (
+              <>
+                Tana vazni suv balansi, tuz va hazm qilish tufayli kuniga 1–2 kg tabiiy tebranadi. Nuqtalar — kunlik oʻlchovlar, yashil chiziq esa <strong>7 kunlik oʻrtacha koʻrsatkich</strong> boʻlib, kundalik shovqinni bartaraf etib, haqiqiy tendensiyani koʻrsatadi.
+              </>
+            ) : (
+              <>
+                Daily body weight naturally fluctuates by 1–2 kg due to water balance, sodium intake, and digestive contents. The dots represent your daily logged weigh-ins, while the solid green line is your <strong>7-Day Moving Average</strong>, filtering out day-to-day noise to reveal your true physiological fat loss or muscle gain trend.
+              </>
+            )}
           </p>
         </div>
       )}
@@ -329,7 +349,7 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
         <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#24201D]/15 text-xs flex-wrap">
           <div className="flex items-baseline gap-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] font-display">
-              7-Day MA:
+              {language === 'ru' ? '7-дн. среднее:' : language === 'uz' ? '7 kunlik MA:' : '7-Day MA:'}
             </span>
             <span className="font-mono-num font-black text-sm text-[#24201D]">
               {stats.latestMA} kg
@@ -338,7 +358,7 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
 
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-[#6B635B] font-bold">
-              Period:
+              {language === 'ru' ? 'Период:' : language === 'uz' ? 'Davr:' : 'Period:'}
               <span
                 className={`ml-1 font-mono-num font-black ${
                   stats.delta < 0
@@ -355,19 +375,19 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
             {stats.trend === 'down' && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#DDE8DE] text-[#2D503C] border border-[#2D503C]/20 text-[9px] font-black uppercase">
                 <TrendingDown className="w-3 h-3" />
-                Down
+                {language === 'ru' ? 'Снижение' : language === 'uz' ? 'Kamayish' : 'Down'}
               </span>
             )}
             {stats.trend === 'up' && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#F7E3DC] text-[#C25E40] border border-[#C25E40]/20 text-[9px] font-black uppercase">
                 <TrendingUp className="w-3 h-3" />
-                Up
+                {language === 'ru' ? 'Рост' : language === 'uz' ? 'Oʻsish' : 'Up'}
               </span>
             )}
             {stats.trend === 'stable' && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-stone-200 text-stone-700 border border-stone-300 text-[9px] font-black uppercase">
                 <Minus className="w-3 h-3" />
-                Stable
+                {language === 'ru' ? 'Стабильно' : language === 'uz' ? 'Barqaror' : 'Stable'}
               </span>
             )}
           </div>
@@ -379,18 +399,20 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#3D6B52] border border-[#24201D]" />
-            <span>Actual</span>
+            <span>{language === 'ru' ? 'Факт' : language === 'uz' ? 'Haqiqiy' : 'Actual'}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-0.5 bg-[#2D503C] rounded-full" />
-            <span>7-Day Trend</span>
+            <span>{language === 'ru' ? '7-дневный тренд' : language === 'uz' ? '7 kunlik trend' : '7-Day Trend'}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-0.5 border-t border-dashed border-[#C25E40]" />
-            <span>Goal</span>
+            <span>{language === 'ru' ? 'Цель' : language === 'uz' ? 'Maqsad' : 'Goal'}</span>
           </div>
         </div>
-        <span className="font-mono-num text-[9px] text-stone-400">Tap points for details</span>
+        <span className="font-mono-num text-[9px] text-stone-400">
+          {language === 'ru' ? 'Нажмите на точку для деталей' : language === 'uz' ? 'Tafsilotlar uchun nuqtani bosing' : 'Tap points for details'}
+        </span>
       </div>
 
       {/* 4. SVG Canvas */}
@@ -456,7 +478,11 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
                     fill="#C25E40"
                     className="font-mono-num"
                   >
-                    Goal: {targetWeight}kg
+                    {language === 'ru'
+                      ? `Цель: ${targetWeight} кг`
+                      : language === 'uz'
+                      ? `Maqsad: ${targetWeight} kg`
+                      : `Goal: ${targetWeight}kg`}
                   </text>
                 </g>
               )}
@@ -536,7 +562,11 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
           {/* Single entry baseline hint */}
           {chartData.points.length === 1 && (
             <div className="mt-1 px-2.5 py-1 text-center text-[10px] text-[#8C827A] font-bold">
-              1 weigh-in logged. Add 2+ entries to view the moving average trend line.
+              {language === 'ru'
+                ? 'Внесено 1 измерение. Добавьте от 2 записей для построения линии тренда.'
+                : language === 'uz'
+                ? '1 ta oʻlchov kiritildi. Trend chizigʻini koʻrish uchun 2+ ta yozuv qoʻshing.'
+                : '1 weigh-in logged. Add 2+ entries to view the moving average trend line.'}
             </div>
           )}
 
@@ -577,7 +607,11 @@ export const WeightTrendChart: React.FC<WeightTrendChartProps> = ({
         </div>
       ) : (
         <div className="py-8 text-center text-xs text-[#6B635B] font-bold">
-          No weigh-ins logged yet. Tap &ldquo;Weigh-In&rdquo; to start tracking.
+          {language === 'ru'
+            ? 'Записей веса пока нет. Нажмите «Внести вес», чтобы начать.'
+            : language === 'uz'
+            ? 'Hali vazn yozuvlari yoʻq. Boshlash uchun “Vazn kiritish” tugmasini bosing.'
+            : 'No weigh-ins logged yet. Tap “Weigh-In” to start tracking.'}
         </div>
       )}
     </div>

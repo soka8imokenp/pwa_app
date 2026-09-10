@@ -214,11 +214,11 @@ export const SecurityLockScreen: React.FC<SecurityLockScreenProps> = ({ onUnlock
             onClick={handleBiometricUnlock}
             disabled={isAuthenticatingBio}
             className="h-13 sm:h-14 rounded-2xl bg-[#DDE8DE] hover:bg-[#C9DCCB] active:bg-[#3D6B52] active:text-white border-[1.75px] border-[#24201D] text-[#2D503C] shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 active:shadow-none cursor-pointer flex flex-col items-center justify-center transition-all group"
-            title="Touch ID"
+            title={language === 'ru' ? 'Биометрия' : language === 'uz' ? 'Biometriya' : 'Touch ID'}
           >
             <Fingerprint className="w-5 h-5 stroke-[2.25] group-hover:scale-110 transition-transform" />
             <span className="text-[8px] font-extrabold tracking-wider uppercase mt-0.5">
-              Touch ID
+              {language === 'ru' ? 'Биометрия' : language === 'uz' ? 'Biometriya' : 'Touch ID'}
             </span>
           </button>
 

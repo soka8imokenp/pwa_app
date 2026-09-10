@@ -40,6 +40,34 @@ interface ZeppBodyCompositionCardProps {
 
 type FilterTab = 'all' | 'achieved' | 'attention' | 'not_reached';
 
+export function getLocalizedSomatotype(bodyType: string, lang: string): string {
+  const mapRu: Record<string, string> = {
+    'Obese': 'Ожирение',
+    'Overweight': 'Избыточный вес',
+    'Thick-set': 'Плотное телосложение',
+    'Lack of Exercise': 'Недостаток активности',
+    'Balanced': 'Сбалансированное',
+    'Balanced Muscular': 'Атлетическое (мускулистое)',
+    'Skinny': 'Худощавое',
+    'Balanced Skinny': 'Стройное',
+    'Skinny Muscular': 'Сухощавое мускулистое',
+  };
+  const mapUz: Record<string, string> = {
+    'Obese': 'Semiz',
+    'Overweight': 'Ortiqcha vazn',
+    'Thick-set': 'Gavdali / toʻliq',
+    'Lack of Exercise': 'Harakatsiz',
+    'Balanced': 'Muvozanatli',
+    'Balanced Muscular': 'Mushakdor (atletik)',
+    'Skinny': 'Ozgʻin',
+    'Balanced Skinny': 'Xushbichim',
+    'Skinny Muscular': 'Sifatli ozgʻin',
+  };
+  if (lang === 'ru') return mapRu[bodyType] || bodyType;
+  if (lang === 'uz') return mapUz[bodyType] || bodyType;
+  return bodyType;
+}
+
 export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = ({
   profile,
   metrics,
@@ -48,7 +76,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
   onOpenScaleModal,
   onSelectMetric,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
 
@@ -308,7 +336,9 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
             </div>
 
             <div className="text-right">
-              <span className="text-[10px] text-[#6B635B] font-medium block">Progress</span>
+              <span className="text-[10px] text-[#6B635B] font-medium block">
+                {language === 'ru' ? 'Прогресс' : language === 'uz' ? 'Rivojlanish' : 'Progress'}
+              </span>
               <span className="text-xs font-black font-mono-num text-[#24201D]">
                 {deltaSign !== '0' ? `${deltaSign} kg` : t('healthBody.normal')}
               </span>
@@ -340,7 +370,7 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
               <span>{t('zepp.bodyType')}</span>
             </div>
             <span className="text-base font-black font-display text-[#24201D] block truncate leading-tight mt-0.5">
-              {metrics.bodyType}
+              {getLocalizedSomatotype(metrics.bodyType, language)}
             </span>
             <span className="text-[9px] text-[#6B635B] font-medium block truncate">
               {t('zepp.bodyType')}
@@ -378,7 +408,9 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
                   </span>
                 )
               ) : (
-                <span className="text-[9px] text-stone-400 font-bold">Baseline</span>
+                <span className="text-[9px] text-stone-400 font-bold">
+                  {language === 'ru' ? 'Базовый' : language === 'uz' ? 'Boshlangʻich' : 'Baseline'}
+                </span>
               )}
             </div>
           </div>
@@ -387,8 +419,16 @@ export const ZeppBodyCompositionCard: React.FC<ZeppBodyCompositionCardProps> = (
         {/* Tactile 8-Pip Biomarkers Balance Strip */}
         <div className="p-3 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D] space-y-2">
           <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider font-display">
-            <span className="text-[#24201D]">Biomarkers Balance</span>
-            <span className="text-[#2D503C] font-mono-num">{achievedItems.length} of 8 Targets Met</span>
+            <span className="text-[#24201D]">
+              {language === 'ru' ? 'Баланс биомаркеров' : language === 'uz' ? 'Biomarkerlar balansi' : 'Biomarkers Balance'}
+            </span>
+            <span className="text-[#2D503C] font-mono-num">
+              {language === 'ru'
+                ? `${achievedItems.length} из 8 в норме`
+                : language === 'uz'
+                ? `${achievedItems.length}/8 meʼyorda`
+                : `${achievedItems.length} of 8 Targets Met`}
+            </span>
           </div>
 
           {/* 8 Distinct Segmented Pips */}

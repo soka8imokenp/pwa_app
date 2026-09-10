@@ -61,7 +61,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
   onReorderPriority,
   onQuickCreateTask,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [localPriorities, setLocalPriorities] = useState<Task[]>(priorityTasks);
 
   React.useEffect(() => {
@@ -329,7 +329,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#6B635B] uppercase">
                       {getCategoryIcon(task.category)}
-                      {task.category || 'general'}
+                      {t.priorities?.categories?.[task.category as any] || t.categories?.[task.category as any] || task.category || 'general'}
                     </span>
                     <span className="text-[10px] text-stone-400">•</span>
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#6B635B]">
@@ -339,7 +339,7 @@ export const PrioritiesPage: React.FC<PrioritiesPageProps> = ({
 
                     {task.isRecurring && (
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#DDE8DE] border border-[#24201D] text-[9px] font-bold text-[#24201D]">
-                        <Repeat className="w-2.5 h-2.5" /> Routine
+                        <Repeat className="w-2.5 h-2.5" /> {language === 'ru' ? 'Рутина' : language === 'uz' ? 'Muntazam' : 'Routine'}
                       </span>
                     )}
                   </div>

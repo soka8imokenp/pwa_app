@@ -9,24 +9,29 @@ import {
   Check,
 } from 'lucide-react';
 import { playClickSound } from '../../lib/sound';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface DailyMoodAndNoteProps {
   selectedDate: string;
 }
 
-interface MoodOption {
+interface MoodConfig {
   id: string;
-  label: string;
   icon: React.ReactNode;
   activeBg: string;
   activeBorder: string;
   textColor: string;
+  labelUz: string;
+  labelRu: string;
+  labelEn: string;
 }
 
-const MOODS: MoodOption[] = [
+const MOODS: MoodConfig[] = [
   {
     id: 'energized',
-    label: 'Energized',
+    labelEn: 'Energized',
+    labelRu: 'Энергия',
+    labelUz: 'Gʻayratli',
     icon: <Flame className="w-4 h-4" />,
     activeBg: 'bg-[#F7E3DC]',
     activeBorder: 'border-[#C25E40]',
@@ -34,7 +39,9 @@ const MOODS: MoodOption[] = [
   },
   {
     id: 'focused',
-    label: 'Focused',
+    labelEn: 'Focused',
+    labelRu: 'Фокус',
+    labelUz: 'Diqqatli',
     icon: <Sun className="w-4 h-4" />,
     activeBg: 'bg-[#FBECCF]',
     activeBorder: 'border-[#E09F3E]',
@@ -42,7 +49,9 @@ const MOODS: MoodOption[] = [
   },
   {
     id: 'cozy',
-    label: 'Cozy',
+    labelEn: 'Cozy',
+    labelRu: 'Уют',
+    labelUz: 'Qulay',
     icon: <Coffee className="w-4 h-4" />,
     activeBg: 'bg-[#DDE8DE]',
     activeBorder: 'border-[#3D6B52]',
@@ -50,7 +59,9 @@ const MOODS: MoodOption[] = [
   },
   {
     id: 'reflective',
-    label: 'Reflective',
+    labelEn: 'Reflective',
+    labelRu: 'Мысли',
+    labelUz: 'Mulohazali',
     icon: <CloudRain className="w-4 h-4" />,
     activeBg: 'bg-[#DEE8EF]',
     activeBorder: 'border-[#476C85]',
@@ -58,7 +69,9 @@ const MOODS: MoodOption[] = [
   },
   {
     id: 'rest',
-    label: 'Resting',
+    labelEn: 'Resting',
+    labelRu: 'Отдых',
+    labelUz: 'Dam olish',
     icon: <Moon className="w-4 h-4" />,
     activeBg: 'bg-[#E8E0D2]',
     activeBorder: 'border-[#8C7A68]',
@@ -67,9 +80,16 @@ const MOODS: MoodOption[] = [
 ];
 
 export const DailyMoodAndNote: React.FC<DailyMoodAndNoteProps> = ({ selectedDate }) => {
+  const { language } = useLanguage();
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [dailyNote, setDailyNote] = useState<string>('');
   const [isSavedRecently, setIsSavedRecently] = useState(false);
+
+  const getMoodLabel = (m: MoodConfig) => {
+    if (language === 'ru') return m.labelRu;
+    if (language === 'uz') return m.labelUz;
+    return m.labelEn;
+  };
 
   // Load from localStorage for the given date
   useEffect(() => {
@@ -98,17 +118,19 @@ export const DailyMoodAndNote: React.FC<DailyMoodAndNoteProps> = ({ selectedDate
     setTimeout(() => setIsSavedRecently(false), 2000);
   };
 
+  const currentMoodObj = MOODS.find((m) => m.id === selectedMood);
+
   return (
     <div className="neo-card p-4 bg-white space-y-3.5 select-none font-body">
       {/* 1. Mood Section */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B635B] font-display">
-            Daily State
+            {language === 'ru' ? 'Состояние дня' : language === 'uz' ? 'Kunlik holat' : 'Daily State'}
           </span>
-          {selectedMood && (
-            <span className="text-[10px] font-bold text-[#24201D] capitalize">
-              {MOODS.find((m) => m.id === selectedMood)?.label}
+          {currentMoodObj && (
+            <span className="text-[10px] font-bold text-[#24201D]">
+              {getMoodLabel(currentMoodObj)}
             </span>
           )}
         </div>
@@ -116,11 +138,12 @@ export const DailyMoodAndNote: React.FC<DailyMoodAndNoteProps> = ({ selectedDate
         <div className="grid grid-cols-5 gap-1.5">
           {MOODS.map((mood) => {
             const isSelected = selectedMood === mood.id;
+            const label = getMoodLabel(mood);
             return (
               <button
                 key={mood.id}
                 onClick={() => handleSelectMood(mood.id)}
-                title={mood.label}
+                title={label}
                 className={`py-2 px-1 rounded-xl border-[1.5px] border-[#24201D] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
                   isSelected
                     ? `${mood.activeBg} ${mood.textColor} shadow-[1.5px_1.5px_0px_#24201D] -translate-y-0.5 font-bold`
@@ -128,7 +151,7 @@ export const DailyMoodAndNote: React.FC<DailyMoodAndNoteProps> = ({ selectedDate
                 }`}
               >
                 {mood.icon}
-                <span className="text-[9px] font-bold tracking-tight">{mood.label}</span>
+                <span className="text-[9px] font-bold tracking-tight">{label}</span>
               </button>
             );
           })}
@@ -141,14 +164,14 @@ export const DailyMoodAndNote: React.FC<DailyMoodAndNoteProps> = ({ selectedDate
           <div className="flex items-center gap-1.5 text-[#6B635B]">
             <NotebookPen className="w-3.5 h-3.5 stroke-[2]" />
             <span className="text-[10px] font-bold uppercase tracking-wider font-display">
-              Daily Reflection / Thought
+              {language === 'ru' ? 'Мысль / заметка дня' : language === 'uz' ? 'Kunlik fikr / eslatma' : 'Daily Reflection / Thought'}
             </span>
           </div>
 
           {isSavedRecently && (
             <div className="flex items-center gap-1 text-[10px] font-bold text-[#3D6B52] animate-in fade-in">
               <Check className="w-3 h-3 stroke-[2.5]" />
-              <span>Saved</span>
+              <span>{language === 'ru' ? 'Сохранено' : language === 'uz' ? 'Saqlandi' : 'Saved'}</span>
             </div>
           )}
         </div>
@@ -157,7 +180,13 @@ export const DailyMoodAndNote: React.FC<DailyMoodAndNoteProps> = ({ selectedDate
           rows={2}
           value={dailyNote}
           onChange={(e) => handleNoteChange(e.target.value)}
-          placeholder="Capture a thought, win, or idea for today..."
+          placeholder={
+            language === 'ru'
+              ? 'Запишите мысль, победу или идею дня...'
+              : language === 'uz'
+              ? 'Kunlik fikr, gʻalaba yoki gʻoyani yozing...'
+              : 'Capture a thought, win, or idea for today...'
+          }
           className="w-full p-2.5 bg-[#F4F0EA] border-[1.5px] border-[#24201D] rounded-xl text-xs font-medium text-[#24201D] placeholder:text-stone-400 outline-none resize-none shadow-[1px_1px_0px_#24201D] focus:bg-white transition-colors"
         />
       </div>

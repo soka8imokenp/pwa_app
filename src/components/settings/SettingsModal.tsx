@@ -51,6 +51,8 @@ import { SecuritySetupModal } from '../security/SecuritySetupModal';
 import { PrivacyPolicyModal } from '../modals/PrivacyPolicyModal';
 import { TermsOfServiceModal } from '../modals/TermsOfServiceModal';
 import { useTranslation } from '../../i18n/LanguageContext';
+import type { Language } from '../../i18n/types';
+
 export interface InterfaceLanguageOption {
   code: Language;
   name: string;

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { Language, TranslationDictionary } from './types';
+export type { Language, TranslationDictionary } from './types';
 import { translations } from './translations';
 import { parseISO, isToday, isYesterday, isTomorrow, format } from 'date-fns';
 

@@ -15,6 +15,8 @@ import { playClickSound, playSuccessChime } from '../../lib/sound';
 import confetti from 'canvas-confetti';
 import { authApi, setAuthToken, setRefreshToken } from '../../lib/api';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 
 export interface UserProfile {
   id?: string;
@@ -322,6 +324,9 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             // Clean the hash from the URL without triggering page reload
             window.history.replaceState(null, '', window.location.pathname + window.location.search);
             processGoogleAuth(token);
+            if (Capacitor.isNativePlatform()) {
+              Browser.close().catch(() => {});
+            }
           }
         } catch (e) {
           console.error('Failed to parse Google OAuth redirect hash:', e);
@@ -334,7 +339,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     return () => window.removeEventListener('hashchange', checkHash);
   }, []);
 
-  const openGoogleOAuthRedirect = () => {
+  const openGoogleOAuthRedirect = async () => {
     let redirectUri = window.location.origin;
     if (!redirectUri.endsWith('/')) {
       redirectUri += '/';
@@ -346,7 +351,11 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       redirectUri
     )}&response_type=token%20id_token&scope=openid%20email%20profile&nonce=${nonce}&prompt=select_account`;
 
-    window.location.href = authUrl;
+    if (Capacitor.isNativePlatform()) {
+      await Browser.open({ url: authUrl });
+    } else {
+      window.location.href = authUrl;
+    }
   };
 
   const handleGoogleSignIn = () => {

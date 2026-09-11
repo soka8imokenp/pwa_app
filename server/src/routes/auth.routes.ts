@@ -7,6 +7,7 @@ import {
   refreshUserToken,
   logoutUser,
   authenticateWithGoogle,
+  linkGoogleAccount,
 } from '../services/auth.service.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.middleware.js';
 import { authRateLimiter } from '../middleware/rateLimiter.js';
@@ -64,6 +65,17 @@ authRouter.post('/google', authRateLimiter, async (req, res) => {
     res.status(200).json(result);
   } catch (err: any) {
     res.status(400).json({ error: err.message || 'Google authentication failed' });
+  }
+});
+
+// 2.2. Link Google Account to Logged-In Profile
+authRouter.post('/link-google', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const validated = GoogleAuthSchema.parse(req.body);
+    const result = await linkGoogleAccount(req.user!.userId, validated.idToken);
+    res.status(200).json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'Linking Google account failed' });
   }
 });
 

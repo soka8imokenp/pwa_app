@@ -316,7 +316,14 @@ export async function authenticateWithGoogle(idToken: string) {
     const hashedPassword = await bcrypt.hash(randomPassword, 12);
     const firstName = given_name || (name ? name.split(' ')[0] : 'Sumire');
     const lastName = family_name || (name ? name.split(' ').slice(1).join(' ') : 'User');
-    const username = email.split('@')[0] || `user_${Date.now().toString(36)}`;
+    
+    let usernameBase = (email.split('@')[0] || `user_${Date.now().toString(36)}`).replace(/[^a-zA-Z0-9_]/g, '_');
+    let username = usernameBase;
+    let count = 1;
+    while (await prisma.user.findUnique({ where: { username } })) {
+      username = `${usernameBase}_${count}`;
+      count++;
+    }
 
     user = await prisma.user.create({
       data: {
@@ -352,5 +359,79 @@ export async function authenticateWithGoogle(idToken: string) {
       soundEnabled: user.soundEnabled,
     },
     ...tokens,
+  };
+}
+
+/**
+ * Links a Google Account to an existing logged-in user profile
+ */
+export async function linkGoogleAccount(userId: string, idToken: string) {
+  if (!idToken) {
+    throw new Error('Google ID token is required');
+  }
+
+  let googlePayload: any = null;
+
+  // Try 1: ID Token info
+  try {
+    const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
+    if (res.ok) googlePayload = await res.json();
+  } catch (_) {}
+
+  // Try 2: Access Token info
+  if (!googlePayload || !googlePayload.email) {
+    try {
+      const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(idToken)}`);
+      if (res.ok) googlePayload = await res.json();
+    } catch (_) {}
+  }
+
+  // Try 3: UserInfo API endpoint
+  if (!googlePayload || !googlePayload.email) {
+    try {
+      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      if (res.ok) googlePayload = await res.json();
+    } catch (_) {}
+  }
+
+  if (!googlePayload || !googlePayload.email) {
+    throw new Error('Invalid or expired Google authentication token');
+  }
+
+  const { email, picture } = googlePayload;
+
+  const existingEmailUser = await prisma.user.findUnique({
+    where: { email: email.toLowerCase() },
+  });
+
+  if (existingEmailUser && existingEmailUser.id !== userId) {
+    throw new Error(`Google account email (${email}) is already associated with another user account.`);
+  }
+
+  const currentUser = await prisma.user.findUnique({ where: { id: userId } });
+  if (!currentUser) {
+    throw new Error('Current user profile not found.');
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      email: email.toLowerCase(),
+      avatarUrl: picture || currentUser.avatarUrl || undefined,
+    },
+  });
+
+  return {
+    success: true,
+    user: {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      username: updatedUser.username,
+      avatarUrl: updatedUser.avatarUrl,
+    },
   };
 }

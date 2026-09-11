@@ -14,13 +14,13 @@ services:
       - JWT_SECRET=${JWT_SECRET:-daily_sumire_jwt_secret_production_32_chars_min}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-daily_sumire_refresh_secret_production_32_chars_min}
       - CORS_ORIGIN=https://daily.kawaii.uz,https://www.daily.kawaii.uz,https://service.kawaii.uz,http://localhost:5173,capacitor://localhost,https://localhost
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-""}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-"98363494043-t58b883m6upt2mrtegt90e7lq08srq01.apps.googleusercontent.com"}
     volumes:
       - ./server/prisma:/app/server/prisma
     networks:
       - app_default
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:5050/api/health"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5050/api/health').then(r => process.exit(r.ok ? 0 : 1))"]
       interval: 30s
       timeout: 5s
       retries: 3

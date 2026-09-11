@@ -63,6 +63,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
 
   // Error message
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [returningToAppUrl, setReturningToAppUrl] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -365,6 +366,15 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       const hash = window.location.hash;
       if (hash && (hash.includes('access_token=') || hash.includes('id_token='))) {
         try {
+          // If in mobile browser (Brave, Chrome), hand off token back to installed APK via custom scheme!
+          if (!Capacitor.isNativePlatform() && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            const deepLink = `sumire://auth${hash}`;
+            setReturningToAppUrl(deepLink);
+            try {
+              window.location.href = deepLink;
+            } catch (_) {}
+          }
+
           const hashClean = hash.startsWith('#') ? hash.substring(1) : hash;
           const params = new URLSearchParams(hashClean);
           const idToken = params.get('id_token');
@@ -609,6 +619,26 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
             >
               {language === 'uz' ? 'Roʻyxatdan oʻtish' : language === 'ru' ? 'Регистрация' : 'Sign Up'}
             </button>
+          </div>
+        )}
+
+        {/* Returning to Native App Banner */}
+        {returningToAppUrl && (
+          <div className="w-full mb-4 p-4 bg-[#3D6B52] text-white border-[2px] border-[#24201D] rounded-2xl shadow-[3px_3px_0px_#24201D] flex flex-col items-center text-center gap-2 animate-bounce">
+            <CheckCircle2 className="w-6 h-6 text-[#F0BB58]" />
+            <span className="text-xs font-black uppercase tracking-wider font-display">
+              {language === 'uz' ? 'Tizimga muvaffaqiyatli kirdingiz!' : language === 'ru' ? 'Вход успешно выполнен!' : 'Signed in successfully!'}
+            </span>
+            <p className="text-[10px] text-white/90">
+              {language === 'uz' ? 'Ilovaga qaytish uchun pastdagi tugmani bosing:' : language === 'ru' ? 'Нажмите кнопку ниже для перехода в приложение:' : 'Tap below to return to the app:'}
+            </p>
+            <a
+              href={returningToAppUrl}
+              className="mt-1 px-5 py-2.5 bg-[#F0BB58] text-[#24201D] border-[1.75px] border-[#24201D] rounded-xl font-black text-xs uppercase tracking-wider shadow-[2px_2px_0px_#24201D] active:translate-y-0.5 transition-all inline-flex items-center gap-2"
+            >
+              <span>{language === 'uz' ? 'Ilovani ochish' : language === 'ru' ? 'Открыть приложение' : 'Open App'}</span>
+              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+            </a>
           </div>
         )}
 

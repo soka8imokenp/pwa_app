@@ -460,19 +460,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     playClickSound();
     setErrorMsg(null);
 
-    // Check if on mobile or WebView
-    const isMobileOrApp = typeof window !== 'undefined' && (
-      window.location.origin.includes('localhost') ||
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-    );
-
-    // On mobile / Android APK or WebView, direct OAuth redirect opens cleanly and never gets suppressed
-    if (isMobileOrApp) {
-      openGoogleOAuthRedirect();
-      return;
-    }
-
-    // On desktop browser, attempt Google Identity Services Token Client first, with redirect fallback
+    // On all platforms (desktop & mobile), attempt Google Identity Services Token Client popup first
     const google = typeof window !== 'undefined' ? (window as any).google : null;
     if (google?.accounts?.oauth2) {
       try {

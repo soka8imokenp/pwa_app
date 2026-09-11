@@ -99,6 +99,9 @@ if (fs.existsSync(webDistPath)) {
     setHeaders: (res, filePath) => {
       if (filePath.endsWith('index.html')) {
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+      } else if (filePath.includes('.well-known') || filePath.endsWith('assetlinks.json')) {
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'public, max-age=3600');
       }
     }
   }));

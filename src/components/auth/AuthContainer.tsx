@@ -18,6 +18,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
+import { processGoogleToken } from '../../lib/googleAuth';
 
 export interface UserProfile {
   id?: string;
@@ -243,78 +244,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      let user: UserProfile | null = null;
-
-      // 1. If it's a JWT ID Token (starts with eyJ), decode user profile immediately
-      if (token.startsWith('eyJ')) {
-        const payload = decodeJwtPayload(token);
-        if (payload && payload.email) {
-          user = {
-            id: payload.sub || `google_${Date.now()}`,
-            firstName: payload.given_name || (payload.name ? payload.name.split(' ')[0] : 'User'),
-            lastName: payload.family_name || (payload.name ? payload.name.split(' ').slice(1).join(' ') : ''),
-            email: payload.email,
-            username: payload.email.split('@')[0],
-            avatarId: payload.picture,
-          };
-        }
-      }
-
-      // 2. If user profile not obtained from JWT, query Google Userinfo API
-      if (!user) {
-        try {
-          const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (userInfoRes.ok) {
-            const info = await userInfoRes.json();
-            user = {
-              id: info.sub || `google_${Date.now()}`,
-              firstName: info.given_name || (info.name ? info.name.split(' ')[0] : 'User'),
-              lastName: info.family_name || (info.name ? info.name.split(' ').slice(1).join(' ') : ''),
-              email: info.email,
-              username: info.email ? info.email.split('@')[0] : 'user',
-              avatarId: info.picture,
-            };
-          }
-        } catch (e) {
-          console.warn('Google userinfo fetch note:', e);
-        }
-      }
-
-      // Fallback if token was opaque and userinfo couldn't be reached
-      const finalUser: UserProfile = user || {
-        id: `google_${Date.now()}`,
-        firstName: 'Google',
-        lastName: 'User',
-        email: 'google.user@gmail.com',
-        username: 'google_user',
-      };
-
-      // 3. Best-effort backend synchronization (if backend server is reachable)
-      try {
-        const res = await authApi.loginWithGoogle(token);
-        setAuthToken(res.accessToken || res.token);
-        if (res.refreshToken) {
-          setRefreshToken(res.refreshToken);
-        }
-        if (res.user) {
-          Object.assign(finalUser, res.user);
-        }
-      } catch (backendErr) {
-        console.warn('Backend server currently offline or unreachable, proceeding with verified Google profile:', backendErr);
-      }
-
-      localStorage.setItem('kairo_auth_user', JSON.stringify(finalUser));
-
-      playSuccessChime();
-      confetti({
-        particleCount: 80,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#3D6B52', '#4285F4', '#EA4335', '#FBBC05'],
-      });
-
+      const finalUser = await processGoogleToken(token);
       onLoginSuccess(finalUser);
     } catch (err: any) {
       console.error('Google authentication error:', err);
@@ -328,31 +258,48 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const handleUrlString = (urlString: string) => {
+    const handleUrlString = async (urlString: string) => {
       try {
-        const hashIndex = urlString.indexOf('#');
-        if (hashIndex !== -1) {
-          const hash = urlString.substring(hashIndex + 1);
-          if (hash.includes('access_token=') || hash.includes('id_token=')) {
-            const params = new URLSearchParams(hash);
-            const idToken = params.get('id_token');
-            const accessToken = params.get('access_token');
-            const token = idToken || accessToken;
-            if (token) {
-              processGoogleAuth(token);
-              if (Capacitor.isNativePlatform()) {
-                Browser.close().catch(() => {});
-              }
+        console.log('[AuthContainer] Received deep link URL:', urlString);
+        let paramPart = '';
+        const hashIdx = urlString.indexOf('#');
+        const queryIdx = urlString.indexOf('?');
+        if (hashIdx !== -1) {
+          paramPart = urlString.substring(hashIdx + 1);
+        } else if (queryIdx !== -1) {
+          paramPart = urlString.substring(queryIdx + 1);
+        }
+
+        if (paramPart) {
+          const params = new URLSearchParams(paramPart);
+          const idToken = params.get('id_token');
+          const accessToken = params.get('access_token');
+          const token = idToken || accessToken;
+          if (token) {
+            await processGoogleAuth(token);
+            if (Capacitor.isNativePlatform()) {
+              Browser.close().catch(() => {});
             }
           }
         }
       } catch (e) {
-        console.error('Failed to parse appUrlOpen redirect:', e);
+        console.error('Failed to parse auth deep link:', e);
       }
     };
 
+    // Expose global deep-link receiver for MainActivity.java
+    (window as any).__onAuthDeepLink = handleUrlString;
+
     let appUrlSub: any = null;
     if (Capacitor.isNativePlatform()) {
+      // Check cold-start launch URL
+      CapApp.getLaunchUrl().then((launchUrl) => {
+        if (launchUrl?.url) {
+          handleUrlString(launchUrl.url);
+        }
+      }).catch(() => {});
+
+      // Listen for runtime deep links (singleTask / onNewIntent)
       CapApp.addListener('appUrlOpen', (data: any) => {
         if (data?.url) {
           handleUrlString(data.url);
@@ -366,13 +313,17 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       const hash = window.location.hash;
       if (hash && (hash.includes('access_token=') || hash.includes('id_token='))) {
         try {
-          // If in mobile browser (Brave, Chrome), hand off token back to installed APK via custom scheme!
+          // If in mobile browser, hand off token back to installed APK via Intent URI & custom scheme!
           if (!Capacitor.isNativePlatform() && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            const deepLink = `sumire://auth${hash}`;
-            setReturningToAppUrl(deepLink);
+            const intentLink = `intent://auth${hash}#Intent;scheme=sumire;package=com.kairo.planner;S.browser_fallback_url=https%3A%2F%2Fdaily.kawaii.uz;end;`;
+            setReturningToAppUrl(intentLink);
             try {
-              window.location.href = deepLink;
-            } catch (_) {}
+              window.location.href = intentLink;
+            } catch (_) {
+              try {
+                window.location.href = `sumire://auth${hash}`;
+              } catch (__) {}
+            }
           }
 
           const hashClean = hash.startsWith('#') ? hash.substring(1) : hash;
@@ -443,14 +394,15 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       redirectUri += '/';
     }
     const nonce = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    const isApp = Capacitor.isNativePlatform() || window.location.origin.includes('localhost');
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
       GOOGLE_CLIENT_ID
     )}&redirect_uri=${encodeURIComponent(
       redirectUri
-    )}&response_type=token%20id_token&scope=openid%20email%20profile&nonce=${nonce}&prompt=select_account`;
+    )}&response_type=token%20id_token&scope=openid%20email%20profile&nonce=${nonce}&prompt=select_account&state=${isApp ? 'app_native' : 'web'}`;
 
     if (Capacitor.isNativePlatform()) {
-      await Browser.open({ url: authUrl });
+      await Browser.open({ url: authUrl, presentationStyle: 'popover' });
     } else {
       window.location.href = authUrl;
     }
@@ -460,7 +412,13 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     playClickSound();
     setErrorMsg(null);
 
-    // On all platforms (desktop & mobile), attempt Google Identity Services Token Client popup first
+    // In Capacitor native app, open secure OAuth tab directly
+    if (Capacitor.isNativePlatform()) {
+      openGoogleOAuthRedirect();
+      return;
+    }
+
+    // On web desktop / browser, attempt Google Identity Services Token Client popup first
     const google = typeof window !== 'undefined' ? (window as any).google : null;
     if (google?.accounts?.oauth2) {
       try {

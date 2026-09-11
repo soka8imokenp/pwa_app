@@ -225,6 +225,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     private String pendingAssistantUri = null;
+    private String pendingAuthUri = null;
 
     private void handleAssistantIntent(Intent intent) {
         if (intent == null) return;
@@ -232,10 +233,23 @@ public class MainActivity extends BridgeActivity {
             Uri data = intent.getData();
             String action = intent.getAction();
 
-            // 1. Custom scheme deep links (sumire:// or kairo://)
-            if (data != null && ("sumire".equalsIgnoreCase(data.getScheme()) || "kairo".equalsIgnoreCase(data.getScheme()))) {
-                dispatchAssistantUriToJs(data.toString());
-                return;
+            // 1. Custom scheme deep links (sumire:// or kairo://) or App Link (https://daily.kawaii.uz)
+            if (data != null) {
+                String uriStr = data.toString();
+                String scheme = data.getScheme();
+                String host = data.getHost();
+
+                // Check if this is an OAuth authentication return
+                if (uriStr.contains("access_token=") || uriStr.contains("id_token=") || "auth".equalsIgnoreCase(host)) {
+                    dispatchAuthUriToJs(uriStr);
+                    return;
+                }
+
+                // Otherwise, process as Google Assistant / Gemini voice command deep link
+                if (scheme != null && ("sumire".equalsIgnoreCase(scheme) || "kairo".equalsIgnoreCase(scheme))) {
+                    dispatchAssistantUriToJs(uriStr);
+                    return;
+                }
             }
 
             // 2. Android Assistant standard note creation intent
@@ -261,6 +275,22 @@ public class MainActivity extends BridgeActivity {
                 }
             }
         } catch (Exception ignored) {}
+    }
+
+    private void dispatchAuthUriToJs(String uriString) {
+        if (uriString == null || uriString.isEmpty()) return;
+        this.pendingAuthUri = uriString;
+        runOnUiThread(() -> {
+            try {
+                if (getBridge() != null && getBridge().getWebView() != null) {
+                    String safeUri = uriString.replace("'", "\\'");
+                    getBridge().getWebView().evaluateJavascript(
+                        "window.__onAuthDeepLink && window.__onAuthDeepLink('" + safeUri + "');",
+                        null
+                    );
+                }
+            } catch (Exception ignored) {}
+        });
     }
 
     private void dispatchAssistantUriToJs(String uriString) {
@@ -562,6 +592,13 @@ public class MainActivity extends BridgeActivity {
                 stepCounterInterface = new StepCounterJsInterface();
                 webView.addJavascriptInterface(stepCounterInterface, "AndroidStepCounter");
                 webView.addJavascriptInterface(new AssistantJsInterface(), "AndroidAssistant");
+
+                if (pendingAuthUri != null) {
+                    final String authUriToDeliver = pendingAuthUri;
+                    webView.postDelayed(() -> {
+                        dispatchAuthUriToJs(authUriToDeliver);
+                    }, 500);
+                }
 
                 if (pendingAssistantUri != null) {
                     final String uriToDeliver = pendingAssistantUri;

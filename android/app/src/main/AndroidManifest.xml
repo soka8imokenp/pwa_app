@@ -120,6 +120,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="sumire" />
+                <data android:scheme="sumire" android:host="auth" />
             </intent-filter>
 
             <!-- Deep Link Intent Filter for kairo:// custom scheme -->
@@ -128,10 +129,11 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="kairo" />
+                <data android:scheme="kairo" android:host="auth" />
             </intent-filter>
 
             <!-- App Link Intent Filter for https://daily.kawaii.uz OAuth redirects -->
-            <intent-filter>
+            <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />

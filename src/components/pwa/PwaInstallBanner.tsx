@@ -39,7 +39,14 @@ export const PwaInstallBanner: React.FC = () => {
     }
   };
 
-  if (isDismissed && isOnline) return null;
+  const isAuthReturn = typeof window !== 'undefined' && (
+    window.location.hash.includes('access_token=') ||
+    window.location.hash.includes('id_token=') ||
+    window.location.search.includes('access_token=') ||
+    window.location.search.includes('id_token=')
+  );
+
+  if (isAuthReturn || (isDismissed && isOnline)) return null;
 
   return (
     <div className="fixed bottom-4 right-4 left-4 sm:left-auto sm:max-w-md z-40 animate-in slide-in-from-bottom-5 duration-200">

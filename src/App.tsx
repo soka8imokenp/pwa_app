@@ -18,6 +18,11 @@ import { ModalManager } from './components/layout/ModalManager';
 import { OfflineBanner } from './components/common/OfflineBanner';
 import { ToastContainer } from './components/common/ToastContainer';
 import { AuthContainer, UserProfile } from './components/auth/AuthContainer';
+import { OAuthReturnScreen } from './components/auth/OAuthReturnScreen';
+import { processGoogleToken } from './lib/googleAuth';
+import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 import { AppSplashScreen } from './components/common/AppSplashScreen';
 import { initNotificationSystem } from './lib/notifications';
 import { checkForAppUpdate, AppUpdateInfo } from './lib/appUpdater';
@@ -44,6 +49,72 @@ export function App() {
     }
     return null;
   });
+
+  // Check if current browser window is returning from Google OAuth redirect (#access_token=... or #id_token=...)
+  const [oauthReturnData, setOauthReturnData] = useState<{ hash: string; search: string } | null>(() => {
+    if (typeof window !== 'undefined' && !Capacitor.isNativePlatform()) {
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      if (
+        hash.includes('access_token=') ||
+        hash.includes('id_token=') ||
+        search.includes('access_token=') ||
+        search.includes('id_token=')
+      ) {
+        return { hash, search };
+      }
+    }
+    return null;
+  });
+
+  // Global App deep link listener for OAuth return in native APK
+  useEffect(() => {
+    const handleDeepLinkToken = async (urlString: string) => {
+      try {
+        console.log('[App] Received deep link:', urlString);
+        let paramPart = '';
+        const hashIdx = urlString.indexOf('#');
+        const queryIdx = urlString.indexOf('?');
+        if (hashIdx !== -1) {
+          paramPart = urlString.substring(hashIdx + 1);
+        } else if (queryIdx !== -1) {
+          paramPart = urlString.substring(queryIdx + 1);
+        }
+
+        if (paramPart) {
+          const params = new URLSearchParams(paramPart);
+          const idToken = params.get('id_token');
+          const accessToken = params.get('access_token');
+          const token = idToken || accessToken;
+          if (token) {
+            const user = await processGoogleToken(token);
+            setCurrentUser(user);
+            if (Capacitor.isNativePlatform()) {
+              Browser.close().catch(() => {});
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to handle deep link token in App:', e);
+      }
+    };
+
+    (window as any).__onAuthDeepLink = handleDeepLinkToken;
+
+    if (Capacitor.isNativePlatform()) {
+      CapApp.getLaunchUrl().then((res) => {
+        if (res?.url) handleDeepLinkToken(res.url);
+      }).catch(() => {});
+
+      const subPromise = CapApp.addListener('appUrlOpen', (data) => {
+        if (data?.url) handleDeepLinkToken(data.url);
+      });
+
+      return () => {
+        subPromise.then((s) => s.remove()).catch(() => {});
+      };
+    }
+  }, []);
 
   const [selectedDate, setSelectedDate] = useState(getTodayString());
   const [activeTab, setActiveTab] = useState<TabView>('priorities');
@@ -157,12 +228,14 @@ export function App() {
 
     window.addEventListener('sumire:navigate', handleWebNavigate);
 
-    // Auto-check for updates from GitHub Releases
-    checkForAppUpdate().then((update) => {
-      if (update && update.hasUpdate) {
-        setAvailableUpdate(update);
-      }
-    });
+    // Auto-check for updates from GitHub Releases (skip during OAuth return handoff)
+    if (!oauthReturnData) {
+      checkForAppUpdate().then((update) => {
+        if (update && update.hasUpdate) {
+          setAvailableUpdate(update);
+        }
+      });
+    }
 
     // Check if streak greeting was shown today; if not, greet user with Duolingo streak screen!
     if (typeof window !== 'undefined') {
@@ -274,6 +347,33 @@ export function App() {
     localStorage.removeItem('kairo_auth_user');
     setCurrentUser(null);
   };
+
+  // If returning from Google OAuth in mobile browser, show dedicated Return Screen to hand off to native app
+  if (oauthReturnData) {
+    return (
+      <OAuthReturnScreen
+        hash={oauthReturnData.hash}
+        search={oauthReturnData.search}
+        onContinueInWeb={async () => {
+          try {
+            const raw = oauthReturnData.hash || oauthReturnData.search;
+            const clean = raw.startsWith('#') || raw.startsWith('?') ? raw.substring(1) : raw;
+            const params = new URLSearchParams(clean);
+            const token = params.get('id_token') || params.get('access_token');
+            if (token) {
+              const user = await processGoogleToken(token);
+              setCurrentUser(user);
+            }
+          } catch (e) {
+            console.error('Failed to process web login:', e);
+          } finally {
+            window.history.replaceState(null, '', window.location.pathname);
+            setOauthReturnData(null);
+          }
+        }}
+      />
+    );
+  }
 
   // If not authenticated, render Login / Register / Forgot Password screen
   if (!currentUser) {

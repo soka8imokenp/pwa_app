@@ -1,7 +1,7 @@
 {
   "name": "pwa-app",
   "private": true,
-  "version": "1.8.144",
+  "version": "1.8.145",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
+    "@capacitor/app": "^8.1.1",
     "@capacitor/browser": "^8.0.4",
     "@capacitor/core": "^8.5.0",
     "@capacitor/local-notifications": "^8.3.0",

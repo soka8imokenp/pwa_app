@@ -130,6 +130,14 @@
                 <data android:scheme="kairo" />
             </intent-filter>
 
+            <!-- App Link Intent Filter for https://daily.kawaii.uz OAuth redirects -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="daily.kawaii.uz" />
+            </intent-filter>
+
             <!-- Android Assistant standard note creation & text share intent filter -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />

@@ -17,6 +17,7 @@ import { authApi, setAuthToken, setRefreshToken } from '../../lib/api';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
 
 export interface UserProfile {
   id?: string;
@@ -54,6 +55,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
   const [email, setEmail] = useState('');
   const [regUsername, setRegUsername] = useState('');
   const [regPassword, setRegPassword] = useState('');
+  const [showRegPassword, setShowRegPassword] = useState(false);
 
   // Forgot password
   const [forgotEmail, setForgotEmail] = useState('');
@@ -130,13 +132,24 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     e.preventDefault();
     setErrorMsg(null);
 
-    if (!fullName.trim() || !email.trim() || !regUsername.trim() || !regPassword.trim()) {
+    if (!fullName.trim() || !email.trim() || !regPassword.trim()) {
       setErrorMsg(
         language === 'uz'
-          ? 'Iltimos, barcha maydonlarni toʻldiring.'
+          ? 'Iltimos, ism, elektron pochta va parolni kiriting.'
           : language === 'ru'
-          ? 'Пожалуйста, заполните все поля.'
-          : 'Please fill in all fields.'
+          ? 'Пожалуйста, заполните имя, email и пароль.'
+          : 'Please enter your name, email, and password.'
+      );
+      return;
+    }
+
+    if (regPassword.length < 4) {
+      setErrorMsg(
+        language === 'uz'
+          ? 'Parol kamida 4 ta belgidan iborat boʻlishi kerak.'
+          : language === 'ru'
+          ? 'Пароль должен содержать минимум 4 символа.'
+          : 'Password must be at least 4 characters.'
       );
       return;
     }
@@ -146,11 +159,13 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       const parts = fullName.trim().split(' ');
       const firstName = parts[0] || 'User';
       const lastName = parts.slice(1).join(' ') || '';
+      const autoUsername = (regUsername.trim() || email.split('@')[0] || `user_${Date.now().toString(36).slice(-4)}`)
+        .replace(/[^a-zA-Z0-9_]/g, '_');
 
       const res = await authApi.register({
-        email,
+        email: email.trim().toLowerCase(),
         password: regPassword,
-        username: regUsername,
+        username: autoUsername,
         firstName,
         lastName,
       });
@@ -174,20 +189,22 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       if (err?.message && err.message.includes('already exists')) {
         setErrorMsg(
           language === 'uz'
-            ? 'Ushbu email bilan roʻyxatdan oʻtilgan.'
+            ? 'Ushbu email bilan allaqachon roʻyxatdan oʻtilgan. Tizimga kiring.'
             : language === 'ru'
-            ? 'Пользователь с таким email уже существует.'
-            : 'User with this email already exists.'
+            ? 'Пользователь с таким email уже зарегистрирован. Войдите.'
+            : 'An account with this email already exists. Please sign in.'
         );
         return;
       }
       // Offline fallback
       const parts = fullName.trim().split(' ');
+      const autoUsername = (regUsername.trim() || email.split('@')[0] || `user_${Date.now().toString(36).slice(-4)}`)
+        .replace(/[^a-zA-Z0-9_]/g, '_');
       const user: UserProfile = {
         firstName: parts[0] || 'User',
         lastName: parts.slice(1).join(' ') || '',
-        email,
-        username: regUsername,
+        email: email.trim().toLowerCase(),
+        username: autoUsername,
       };
       localStorage.setItem('kairo_auth_user', JSON.stringify(user));
       playSuccessChime();
@@ -306,9 +323,43 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     }
   };
 
-  // Check on mount or hashchange if returning from Google OAuth redirect with hash (#access_token=... or #id_token=...)
+  // Check on mount or hashchange/deep-link if returning from Google OAuth redirect (#access_token=... or #id_token=...)
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    const handleUrlString = (urlString: string) => {
+      try {
+        const hashIndex = urlString.indexOf('#');
+        if (hashIndex !== -1) {
+          const hash = urlString.substring(hashIndex + 1);
+          if (hash.includes('access_token=') || hash.includes('id_token=')) {
+            const params = new URLSearchParams(hash);
+            const idToken = params.get('id_token');
+            const accessToken = params.get('access_token');
+            const token = idToken || accessToken;
+            if (token) {
+              processGoogleAuth(token);
+              if (Capacitor.isNativePlatform()) {
+                Browser.close().catch(() => {});
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse appUrlOpen redirect:', e);
+      }
+    };
+
+    let appUrlSub: any = null;
+    if (Capacitor.isNativePlatform()) {
+      CapApp.addListener('appUrlOpen', (data: any) => {
+        if (data?.url) {
+          handleUrlString(data.url);
+        }
+      }).then((sub) => {
+        appUrlSub = sub;
+      }).catch(() => {});
+    }
 
     const checkHash = () => {
       const hash = window.location.hash;
@@ -336,11 +387,48 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
 
     checkHash();
     window.addEventListener('hashchange', checkHash);
-    return () => window.removeEventListener('hashchange', checkHash);
+    return () => {
+      window.removeEventListener('hashchange', checkHash);
+      if (appUrlSub?.remove) {
+        appUrlSub.remove();
+      }
+    };
+  }, []);
+
+  // Google One Tap on web desktop/mobile web for frictionless instant sign-in
+  useEffect(() => {
+    if (typeof window === 'undefined' || Capacitor.isNativePlatform()) return;
+
+    const initGoogleOneTap = () => {
+      const google = (window as any).google;
+      if (google?.accounts?.id) {
+        try {
+          google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: async (response: any) => {
+              if (response?.credential) {
+                await processGoogleAuth(response.credential);
+              }
+            },
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          });
+          google.accounts.id.prompt();
+        } catch (e) {
+          console.warn('Google One Tap note:', e);
+        }
+      }
+    };
+
+    const timer = setTimeout(initGoogleOneTap, 1200);
+    return () => clearTimeout(timer);
   }, []);
 
   const openGoogleOAuthRedirect = async () => {
     let redirectUri = window.location.origin;
+    if (Capacitor.isNativePlatform() || redirectUri.includes('localhost')) {
+      redirectUri = 'https://daily.kawaii.uz';
+    }
     if (!redirectUri.endsWith('/')) {
       redirectUri += '/';
     }
@@ -632,17 +720,21 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
               />
             </div>
 
-            {/* Username */}
+            {/* Username (Optional) */}
             <div className="p-2.5 bg-white border-[1.75px] border-[#24201D] rounded-2xl shadow-[2px_2px_0px_#24201D]">
-              <label className="block text-[9px] font-black uppercase text-[#6B635B] mb-0.5 font-display">
-                {language === 'uz' ? 'Foydalanuvchi nomi' : language === 'ru' ? 'Имя пользователя' : 'Username'}
-              </label>
+              <div className="flex items-center justify-between mb-0.5">
+                <label className="block text-[9px] font-black uppercase text-[#6B635B] font-display">
+                  {language === 'uz' ? 'Foydalanuvchi nomi' : language === 'ru' ? 'Имя пользователя' : 'Username'}
+                </label>
+                <span className="text-[8px] font-bold text-[#A89F91]">
+                  {language === 'uz' ? 'ixtiyoriy' : language === 'ru' ? 'опционально' : 'optional'}
+                </span>
+              </div>
               <input
                 type="text"
-                required
                 value={regUsername}
                 onChange={(e) => setRegUsername(e.target.value)}
-                placeholder="alex_pro"
+                placeholder={email ? email.split('@')[0] : 'alex_pro'}
                 className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
               />
             </div>
@@ -652,14 +744,23 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
               <label className="block text-[9px] font-black uppercase text-[#6B635B] mb-0.5 font-display">
                 {language === 'uz' ? 'Parol' : language === 'ru' ? 'Пароль' : 'Password'}
               </label>
-              <input
-                type="password"
-                required
-                value={regPassword}
-                onChange={(e) => setRegPassword(e.target.value)}
-                placeholder={language === 'uz' ? 'Kamida 4 ta belgi' : language === 'ru' ? 'Минимум 4 символа' : 'At least 4 characters'}
-                className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
-              />
+              <div className="flex items-center gap-2">
+                <input
+                  type={showRegPassword ? 'text' : 'password'}
+                  required
+                  value={regPassword}
+                  onChange={(e) => setRegPassword(e.target.value)}
+                  placeholder={language === 'uz' ? 'Kamida 4 ta belgi' : language === 'ru' ? 'Минимум 4 символа' : 'At least 4 characters'}
+                  className="w-full text-xs font-bold text-[#24201D] outline-none placeholder:text-[#A89F91] bg-transparent"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowRegPassword(!showRegPassword)}
+                  className="p-1 text-[#6B635B] hover:text-[#24201D] cursor-pointer"
+                >
+                  {showRegPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
             </div>
 
             {/* Sign Up Button */}

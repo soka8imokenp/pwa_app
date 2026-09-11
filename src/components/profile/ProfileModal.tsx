@@ -165,6 +165,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         tokenClient.requestAccessToken({ prompt: 'select_account' });
       } else {
         let redirectUri = window.location.origin;
+        if (Capacitor.isNativePlatform() || redirectUri.includes('localhost')) {
+          redirectUri = 'https://daily.kawaii.uz';
+        }
         if (!redirectUri.endsWith('/')) redirectUri += '/';
         const nonce = Math.random().toString(36).substring(2) + Date.now().toString(36);
         const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(

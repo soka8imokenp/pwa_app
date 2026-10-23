@@ -27,6 +27,7 @@ model User {
   links        Link[]
   pushSubs     PushSubscription[]
   refreshTokens RefreshToken[]
+  syncRecords   SyncRecord[]
 
   healthProfile HealthProfile?
   weightLogs    WeightLog[]
@@ -237,3 +238,21 @@ model RefreshToken {
   @@index([userId])
 }
 
+
+
+/// Sync protocol v2: lossless, entity-agnostic records written by native clients.
+/// `data` is the client's JSON payload; conflicts are resolved last-writer-wins on clientUpdatedAt.
+model SyncRecord {
+  userId          String
+  entity          String
+  recordId        String
+  data            String
+  clientUpdatedAt BigInt
+  deleted         Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, entity, recordId])
+  @@index([userId, updatedAt])
+}

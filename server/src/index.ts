@@ -4,6 +4,7 @@ import { config } from './config/env.js';
 import { authRouter } from './routes/auth.routes.js';
 import { syncRouter } from './routes/sync.routes.js';
 import { pushRouter } from './routes/push.routes.js';
+import { syncV2Router } from './routes/syncV2.routes.js';
 import { generalApiLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
@@ -80,6 +81,7 @@ app.get('/api/health', (_req, res) => {
 
 // 6. Routes
 app.use('/api/auth', authRouter);
+app.use('/api/sync/v2', generalApiLimiter, syncV2Router);
 app.use('/api/sync', generalApiLimiter, syncRouter);
 app.use('/api/push', generalApiLimiter, pushRouter);
 

@@ -96,6 +96,23 @@ export interface ClientSyncPushPayload {
   }>;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Client-generated UUIDs are kept so the same record has the same id on every device. */
+function clientId(id?: string): { id: string } | {} {
+  return id && UUID_RE.test(id) ? { id } : {};
+}
+
+/**
+ * Match on the most specific key the client sent. Falling back to a natural key (e.g. title+date)
+ * only when nothing better exists – the old OR-of-everything merged distinct tasks with equal titles.
+ */
+function matchKey<T extends object>(item: { id?: string; clientLocalId?: number }, natural: T, extra: object = {}) {
+  if (item.id) return { id: item.id };
+  if (item.clientLocalId) return { clientLocalId: item.clientLocalId, ...extra };
+  return natural;
+}
+
 export async function processSyncPush(userId: string, payload: ClientSyncPushPayload) {
   const now = new Date();
 
@@ -103,14 +120,7 @@ export async function processSyncPush(userId: string, payload: ClientSyncPushPay
   if (payload.tasks && payload.tasks.length > 0) {
     for (const item of payload.tasks) {
       const existing = await prisma.task.findFirst({
-        where: {
-          userId,
-          OR: [
-            ...(item.id ? [{ id: item.id }] : []),
-            ...(item.clientLocalId ? [{ clientLocalId: item.clientLocalId, date: item.date }] : []),
-            { title: item.title, date: item.date },
-          ],
-        },
+        where: { userId, ...matchKey(item, { title: item.title, date: item.date }, { date: item.date }) },
       });
 
       if (existing) {
@@ -133,7 +143,9 @@ export async function processSyncPush(userId: string, payload: ClientSyncPushPay
       } else {
         await prisma.task.create({
           data: {
+            ...clientId(item.id),
             userId,
+            deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
             clientLocalId: item.clientLocalId,
             title: item.title,
             isPriority: item.isPriority,
@@ -152,14 +164,7 @@ export async function processSyncPush(userId: string, payload: ClientSyncPushPay
     for (const item of payload.habits) {
       const targetDaysStr = JSON.stringify(item.targetDays || ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
       const existing = await prisma.habit.findFirst({
-        where: {
-          userId,
-          OR: [
-            ...(item.id ? [{ id: item.id }] : []),
-            ...(item.clientLocalId ? [{ clientLocalId: item.clientLocalId }] : []),
-            { title: item.title },
-          ],
-        },
+        where: { userId, ...matchKey(item, { title: item.title, deletedAt: null }) },
       });
 
       if (existing) {
@@ -181,7 +186,9 @@ export async function processSyncPush(userId: string, payload: ClientSyncPushPay
       } else {
         await prisma.habit.create({
           data: {
+            ...clientId(item.id),
             userId,
+            deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
             clientLocalId: item.clientLocalId,
             title: item.title,
             icon: item.icon || 'zap',
@@ -262,14 +269,7 @@ export async function processSyncPush(userId: string, payload: ClientSyncPushPay
   if (payload.links && payload.links.length > 0) {
     for (const item of payload.links) {
       const existing = await prisma.link.findFirst({
-        where: {
-          userId,
-          OR: [
-            ...(item.id ? [{ id: item.id }] : []),
-            ...(item.clientLocalId ? [{ clientLocalId: item.clientLocalId }] : []),
-            { url: item.url },
-          ],
-        },
+        where: { userId, ...matchKey(item, { url: item.url, deletedAt: null }) },
       });
 
       if (existing) {
@@ -292,7 +292,9 @@ export async function processSyncPush(userId: string, payload: ClientSyncPushPay
       } else {
         await prisma.link.create({
           data: {
+            ...clientId(item.id),
             userId,
+            deletedAt: item.deletedAt ? new Date(item.deletedAt) : null,
             clientLocalId: item.clientLocalId,
             title: item.title,
             url: item.url,
@@ -451,7 +453,7 @@ export async function processSyncPush(userId: string, payload: ClientSyncPushPay
 }
 
 export async function processSyncPull(userId: string, sinceTimestamp?: number) {
-  const since = sinceTimestamp ? new Date(sinceTimestamp) : new Date(0);
+  const since = sinceTimestamp && Number.isFinite(sinceTimestamp) && sinceTimestamp > 0 ? new Date(sinceTimestamp) : new Date(0);
 
   const [
     tasks,

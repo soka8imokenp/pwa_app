@@ -18,11 +18,6 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
       - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
@@ -40,7 +35,7 @@ jobs:
           packages: 'platforms;android-35 build-tools;35.0.0 build-tools;34.0.0 platform-tools'
 
       - name: Install Node Dependencies
-        run: pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
+        run: npm ci --no-audit --no-fund
 
       - name: Auto-Synchronize Version from Tag / Commit
         run: |
@@ -64,7 +59,7 @@ jobs:
           sed -i "s/versionName \".*\"/versionName \"${CLEAN_VERSION}\"/" android/app/build.gradle
 
       - name: Build Web App
-        run: pnpm build
+        run: npm run build
 
       - name: Sync Capacitor Android
         run: npx cap sync android

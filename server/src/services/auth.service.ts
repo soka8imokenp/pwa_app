@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { prisma } from '../lib/prisma.js';
 import { config } from '../config/env.js';
+import { verifyGoogleToken } from './googleVerify.js';
 
 export interface RegisterDto {
   email: string;
@@ -16,6 +17,8 @@ export interface LoginDto {
   email: string;
   password: string;
 }
+
+const DUMMY_HASH = '$2b$10$/O0ntnxJO3mz3OY9mJcRYufl2JuLOocjpxA5D4ctGQEB6J/VKnkbi';
 
 function hashToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex');
@@ -44,19 +47,13 @@ export async function generateTokenPair(userId: string, email: string) {
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
   // 3. Persist hashed refresh token for revocation and rotation tracking
-  try {
-    if ((prisma as any).refreshToken) {
-      await (prisma as any).refreshToken.create({
-        data: {
-          userId,
-          tokenHash,
-          expiresAt,
-        },
-      });
-    }
-  } catch (err) {
-    console.warn('RefreshToken table persistence skipped (will rely on signed JWT signature):', err);
-  }
+  await prisma.refreshToken.create({
+    data: {
+      userId,
+      tokenHash,
+      expiresAt,
+    },
+  });
 
   return {
     accessToken,
@@ -107,11 +104,12 @@ export async function loginUser(dto: LoginDto) {
     where: { email: dto.email.toLowerCase().trim() },
   });
 
+  // Compare against a dummy hash when the user doesn't exist so response time doesn't reveal registered e-mails.
+  const isMatch = await bcrypt.compare(dto.password, user?.passwordHash ?? DUMMY_HASH);
   if (!user) {
     throw new Error('Invalid email or password');
   }
 
-  const isMatch = await bcrypt.compare(dto.password, user.passwordHash);
   if (!isMatch) {
     throw new Error('Invalid email or password');
   }
@@ -136,12 +134,12 @@ export async function loginUser(dto: LoginDto) {
  * Exchanges a valid, unrevoked refresh token for a fresh token pair (Rotation Flow)
  */
 export async function refreshUserToken(providedRefreshToken: string) {
-  if (!providedRefreshToken || typeof providedRefreshToken !== 'string') {
+  if (!providedRefreshToken || typeof providedRefreshToken !== 'string' || providedRefreshToken.length > 2048) {
     throw new Error('Refresh token is required');
   }
 
-  const parts = providedRefreshToken.split('_');
-  const jwtPart = parts.length > 1 ? parts.slice(1).join('_') : parts[0];
+  const sep = providedRefreshToken.indexOf('_');
+  const jwtPart = sep >= 0 ? providedRefreshToken.slice(sep + 1) : providedRefreshToken;
 
   let decoded: any;
   try {
@@ -149,63 +147,45 @@ export async function refreshUserToken(providedRefreshToken: string) {
   } catch {
     throw new Error('Invalid or expired refresh token');
   }
-
   if (!decoded || !decoded.userId || decoded.type !== 'refresh') {
     throw new Error('Invalid refresh token payload');
   }
 
   const tokenHash = hashToken(providedRefreshToken);
+  const record = await prisma.refreshToken.findUnique({ where: { tokenHash } });
 
-  // Check revocation if table exists
-  try {
-    if ((prisma as any).refreshToken) {
-      const record = await (prisma as any).refreshToken.findUnique({
-        where: { tokenHash },
-      });
-
-      if (record) {
-        if (record.revokedAt) {
-          throw new Error('Refresh token has already been revoked. Please sign in again.');
-        }
-        if (new Date() > record.expiresAt) {
-          throw new Error('Refresh token has expired');
-        }
-
-        // Revoke the used token as part of rotation
-        await (prisma as any).refreshToken.update({
-          where: { id: record.id },
-          data: { revokedAt: new Date() },
-        });
-      }
-    }
-  } catch (err: any) {
-    if (err.message && err.message.includes('revoked')) {
-      throw err;
-    }
+  // Every valid refresh token is stored at issue time. Unknown = forged or already purged.
+  if (!record || record.userId !== decoded.userId) {
+    throw new Error('Refresh token is not recognised. Please sign in again.');
+  }
+  if (record.revokedAt) {
+    // Re-use of a rotated token means it was stolen (or replayed): kill every session of this user.
+    await prisma.refreshToken.updateMany({
+      where: { userId: record.userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    throw new Error('Refresh token has already been used. All sessions were signed out for safety.');
+  }
+  if (new Date() > record.expiresAt) {
+    throw new Error('Refresh token has expired');
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: decoded.userId },
+  // Rotate: revoke the presented token atomically (guards against two parallel refreshes).
+  const revoked = await prisma.refreshToken.updateMany({
+    where: { id: record.id, revokedAt: null },
+    data: { revokedAt: new Date() },
   });
+  if (revoked.count !== 1) {
+    throw new Error('Refresh token has already been used');
+  }
 
+  const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
   if (!user) {
     throw new Error('User associated with this token no longer exists');
   }
 
   const newTokens = await generateTokenPair(user.id, user.email);
-
-  return {
-    user: {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      username: user.username,
-      themeAccent: user.themeAccent,
-      soundEnabled: user.soundEnabled,
-    },
-    ...newTokens,
-  };
+  return { user: publicUser(user), ...newTokens };
 }
 
 /**
@@ -215,12 +195,10 @@ export async function logoutUser(providedRefreshToken?: string) {
   if (providedRefreshToken) {
     try {
       const tokenHash = hashToken(providedRefreshToken);
-      if ((prisma as any).refreshToken) {
-        await (prisma as any).refreshToken.updateMany({
-          where: { tokenHash, revokedAt: null },
-          data: { revokedAt: new Date() },
-        });
-      }
+      await prisma.refreshToken.updateMany({
+        where: { tokenHash, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
     } catch (err) {
       console.warn('Logout token revocation note:', err);
     }
@@ -252,162 +230,64 @@ export async function getUserProfile(userId: string) {
 }
 
 /**
- * Authenticates or registers a user via Google OAuth ID Token
+ * Authenticates or registers a user via a Google ID token or access token.
+ * The token must be issued to our own OAuth client (see verifyGoogleToken).
  */
 export async function authenticateWithGoogle(idToken: string) {
-  if (!idToken) {
-    throw new Error('Google ID token is required');
-  }
-
-  // 1. Verify token with Google public endpoints (supports both ID Token and Access Token)
-  let googlePayload: any = null;
-
-  // Try 1: ID Token info
-  try {
-    const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
-    if (res.ok) {
-      googlePayload = await res.json();
-    }
-  } catch (_) {}
-
-  // Try 2: Access Token info
-  if (!googlePayload || !googlePayload.email) {
-    try {
-      const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(idToken)}`);
-      if (res.ok) {
-        googlePayload = await res.json();
-      }
-    } catch (_) {}
-  }
-
-  // Try 3: UserInfo API endpoint
-  if (!googlePayload || !googlePayload.email) {
-    try {
-      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: `Bearer ${idToken}` },
-      });
-      if (res.ok) {
-        googlePayload = await res.json();
-      }
-    } catch (_) {}
-  }
-
-  if (!googlePayload || !googlePayload.email) {
-    throw new Error('Invalid or expired Google authentication token');
-  }
-
-  const { email, given_name, family_name, name, picture, email_verified } = googlePayload;
-
-  if (!email) {
-    throw new Error('Google account does not have an associated email');
-  }
-
-  if (email_verified === 'false' || email_verified === false) {
+  const g = await verifyGoogleToken(idToken);
+  if (!g.emailVerified) {
     throw new Error('Google account email is not verified');
   }
 
-  // 2. Find or create user in local SQLite/Postgres database
-  let user = await prisma.user.findUnique({
-    where: { email: email.toLowerCase() },
-  });
+  let user = await prisma.user.findUnique({ where: { email: g.email } });
 
   if (!user) {
-    const randomPassword = crypto.randomUUID();
-    const hashedPassword = await bcrypt.hash(randomPassword, 12);
-    const firstName = given_name || (name ? name.split(' ')[0] : 'Sumire');
-    const lastName = family_name || (name ? name.split(' ').slice(1).join(' ') : 'User');
-    
-    let usernameBase = (email.split('@')[0] || `user_${Date.now().toString(36)}`).replace(/[^a-zA-Z0-9_]/g, '_');
+    // Random, unguessable password: the account is Google-only until the user sets one.
+    const hashedPassword = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12);
+    const firstName = g.givenName || (g.name ? g.name.split(' ')[0] : 'Sumire');
+    const lastName = g.familyName || (g.name ? g.name.split(' ').slice(1).join(' ') : null);
+
+    const usernameBase = (g.email.split('@')[0] || `user_${Date.now().toString(36)}`)
+      .replace(/[^a-zA-Z0-9_]/g, '_')
+      .slice(0, 24);
     let username = usernameBase;
-    let count = 1;
-    while (await prisma.user.findUnique({ where: { username } })) {
-      username = `${usernameBase}_${count}`;
-      count++;
+    for (let i = 1; await prisma.user.findUnique({ where: { username } }); i++) {
+      username = `${usernameBase}_${i}`;
     }
 
     user = await prisma.user.create({
       data: {
-        email: email.toLowerCase(),
+        email: g.email,
         passwordHash: hashedPassword,
         firstName,
-        lastName,
+        lastName: lastName || null,
         username,
-        avatarUrl: picture || undefined,
+        avatarUrl: g.picture || undefined,
         themeAccent: '#3D6B52',
         soundEnabled: true,
       },
     });
-  } else if (!user.avatarUrl && picture) {
-    user = await prisma.user.update({
-      where: { id: user.id },
-      data: { avatarUrl: picture },
-    });
+  } else if (!user.avatarUrl && g.picture) {
+    user = await prisma.user.update({ where: { id: user.id }, data: { avatarUrl: g.picture } });
   }
 
-  // 3. Issue our dual-token pair (15m access, 30d refresh)
   const tokens = await generateTokenPair(user.id, user.email);
-
-  return {
-    user: {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      username: user.username,
-      avatarUrl: user.avatarUrl,
-      themeAccent: user.themeAccent,
-      soundEnabled: user.soundEnabled,
-    },
-    ...tokens,
-  };
+  return { user: publicUser(user), ...tokens };
 }
 
 /**
- * Links a Google Account to an existing logged-in user profile
+ * Links a Google account to the signed-in profile. Changing the e-mail is only allowed to a
+ * verified Google address that no other account uses.
  */
 export async function linkGoogleAccount(userId: string, idToken: string) {
-  if (!idToken) {
-    throw new Error('Google ID token is required');
+  const g = await verifyGoogleToken(idToken);
+  if (!g.emailVerified) {
+    throw new Error('Google account email is not verified');
   }
 
-  let googlePayload: any = null;
-
-  // Try 1: ID Token info
-  try {
-    const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
-    if (res.ok) googlePayload = await res.json();
-  } catch (_) {}
-
-  // Try 2: Access Token info
-  if (!googlePayload || !googlePayload.email) {
-    try {
-      const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(idToken)}`);
-      if (res.ok) googlePayload = await res.json();
-    } catch (_) {}
-  }
-
-  // Try 3: UserInfo API endpoint
-  if (!googlePayload || !googlePayload.email) {
-    try {
-      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: `Bearer ${idToken}` },
-      });
-      if (res.ok) googlePayload = await res.json();
-    } catch (_) {}
-  }
-
-  if (!googlePayload || !googlePayload.email) {
-    throw new Error('Invalid or expired Google authentication token');
-  }
-
-  const { email, picture } = googlePayload;
-
-  const existingEmailUser = await prisma.user.findUnique({
-    where: { email: email.toLowerCase() },
-  });
-
+  const existingEmailUser = await prisma.user.findUnique({ where: { email: g.email } });
   if (existingEmailUser && existingEmailUser.id !== userId) {
-    throw new Error(`Google account email (${email}) is already associated with another user account.`);
+    throw new Error('This Google account is already associated with another user account.');
   }
 
   const currentUser = await prisma.user.findUnique({ where: { id: userId } });
@@ -418,20 +298,32 @@ export async function linkGoogleAccount(userId: string, idToken: string) {
   const updatedUser = await prisma.user.update({
     where: { id: userId },
     data: {
-      email: email.toLowerCase(),
-      avatarUrl: picture || currentUser.avatarUrl || undefined,
+      email: g.email,
+      avatarUrl: g.picture || currentUser.avatarUrl || undefined,
     },
   });
 
+  return { success: true, user: publicUser(updatedUser) };
+}
+
+function publicUser(user: {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string | null;
+  username: string | null;
+  avatarUrl?: string | null;
+  themeAccent: string;
+  soundEnabled: boolean;
+}) {
   return {
-    success: true,
-    user: {
-      id: updatedUser.id,
-      email: updatedUser.email,
-      firstName: updatedUser.firstName,
-      lastName: updatedUser.lastName,
-      username: updatedUser.username,
-      avatarUrl: updatedUser.avatarUrl,
-    },
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    username: user.username,
+    avatarUrl: user.avatarUrl ?? null,
+    themeAccent: user.themeAccent,
+    soundEnabled: user.soundEnabled,
   };
 }

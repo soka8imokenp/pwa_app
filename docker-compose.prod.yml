@@ -11,10 +11,15 @@ services:
       - PORT=5050
       - NODE_ENV=production
       - DATABASE_URL=file:/app/server/prisma/dev.db
-      - JWT_SECRET=${JWT_SECRET:-daily_sumire_jwt_secret_production_32_chars_min}
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-daily_sumire_refresh_secret_production_32_chars_min}
+      # Required – generate with: openssl rand -hex 48
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in .env}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET must be set in .env}
+      # Optional – web push. Generate with: npx web-push generate-vapid-keys
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
       - CORS_ORIGIN=https://daily.kawaii.uz,https://www.daily.kawaii.uz,https://service.kawaii.uz,http://localhost:5173,capacitor://localhost,https://localhost
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-"98363494043-t58b883m6upt2mrtegt90e7lq08srq01.apps.googleusercontent.com"}
+      # Comma-separated OAuth client IDs whose tokens are accepted (web, Android, iOS)
+      - GOOGLE_CLIENT_IDS=${GOOGLE_CLIENT_IDS:-98363494043-t58b883m6upt2mrtegt90e7lq08srq01.apps.googleusercontent.com}
     volumes:
       - ./server/prisma:/app/server/prisma
     networks:

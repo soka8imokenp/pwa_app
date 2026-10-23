@@ -19,7 +19,8 @@ syncRouter.post('/push', authMiddleware, validateBody(syncPushPayloadSchema), as
 // Pull cloud updates since last client timestamp
 syncRouter.get('/pull', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const since = req.query.since ? Number(req.query.since) : undefined;
+    const raw = Number(req.query.since);
+    const since = Number.isFinite(raw) && raw > 0 ? raw : undefined;
     const result = await processSyncPull(req.user!.userId, since);
     res.json(result);
   } catch (err: any) {

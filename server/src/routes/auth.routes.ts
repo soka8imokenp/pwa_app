@@ -10,7 +10,7 @@ import {
   linkGoogleAccount,
 } from '../services/auth.service.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.middleware.js';
-import { authRateLimiter } from '../middleware/rateLimiter.js';
+import { authRateLimiter, refreshRateLimiter } from '../middleware/rateLimiter.js';
 
 export const authRouter = Router();
 
@@ -20,15 +20,15 @@ const GoogleAuthSchema = z.object({
 
 const RegisterSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
-  firstName: z.string().min(1),
-  lastName: z.string().optional(),
-  username: z.string().optional(),
+  password: z.string().min(8).max(128),
+  firstName: z.string().trim().min(1).max(60),
+  lastName: z.string().trim().max(60).optional(),
+  username: z.string().trim().regex(/^[a-zA-Z0-9_.]{3,30}$/).optional(),
 });
 
 const LoginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(1),
+  password: z.string().min(1).max(128),
 });
 
 const RefreshSchema = z.object({
@@ -80,7 +80,7 @@ authRouter.post('/link-google', authMiddleware, async (req: AuthRequest, res: Re
 });
 
 // 3. Silent Refresh Token Exchange
-authRouter.post('/refresh', async (req, res) => {
+authRouter.post('/refresh', refreshRateLimiter, async (req, res) => {
   try {
     const validated = RefreshSchema.parse(req.body);
     const result = await refreshUserToken(validated.refreshToken);

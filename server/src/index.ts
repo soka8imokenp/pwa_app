@@ -114,12 +114,14 @@ if (fs.existsSync(webDistPath)) {
 // 7. Global Centralized Error Handling
 app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   const isCorsError = err.message && err.message.includes('CORS');
-  const status = err.status || (isCorsError ? 403 : 500);
+  const status = err.status || err.statusCode || (isCorsError ? 403 : 500);
 
   console.error(`💥 [${new Date().toISOString()}] [ERROR] [${req.method} ${req.originalUrl}]`, err.stack || err.message);
 
+  // Never leak stack traces / Prisma internals to clients in production.
+  const exposeMessage = !config.isProduction || status < 500;
   res.status(status).json({
-    error: err.message || 'Internal server error',
+    error: exposeMessage ? err.message || 'Internal server error' : 'Internal server error',
     code: isCorsError ? 'CORS_FORBIDDEN' : err.code || 'INTERNAL_ERROR',
     timestamp: Date.now(),
   });

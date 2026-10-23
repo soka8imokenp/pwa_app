@@ -1,14 +1,19 @@
 import webpush from 'web-push';
 import { prisma } from '../lib/prisma.js';
-import { config } from '../config/env.js';
+import { config, pushEnabled } from '../config/env.js';
 
-webpush.setVapidDetails(
-  config.vapid.subject,
-  config.vapid.publicKey,
-  config.vapid.privateKey
-);
+if (pushEnabled) {
+  webpush.setVapidDetails(config.vapid.subject, config.vapid.publicKey, config.vapid.privateKey);
+} else {
+  console.warn('[push] VAPID keys not configured – web push is disabled');
+}
 
-export async function savePushSubscription(userId: string, subscription: any) {
+export interface PushSubscriptionInput {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+}
+
+export async function savePushSubscription(userId: string, subscription: PushSubscriptionInput) {
   const existing = await prisma.pushSubscription.findUnique({
     where: { endpoint: subscription.endpoint },
   });
@@ -33,6 +38,7 @@ export async function savePushSubscription(userId: string, subscription: any) {
 }
 
 export async function sendPushNotificationToUser(userId: string, title: string, body: string) {
+  if (!pushEnabled) throw new Error('Web push is not configured on this server');
   const subscriptions = await prisma.pushSubscription.findMany({
     where: { userId },
   });

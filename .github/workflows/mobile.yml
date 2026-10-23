@@ -27,14 +27,14 @@ jobs:
     name: Android – tests & APK
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
 
       - name: Decode release keystore (optional)
         env:
@@ -77,7 +77,7 @@ jobs:
 
       - name: Upload build log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: android-build-log
           path: mobile/build.log
@@ -89,7 +89,7 @@ jobs:
           cp composeApp/build/outputs/apk/debug/*.apk ../dist/DailySumire-native-debug.apk
           ls -la ../dist
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: DailySumire-native-apk
           path: dist/*.apk
@@ -116,12 +116,12 @@ jobs:
     name: iOS – shared code compiles
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
       - name: Compile iOS framework
         run: |
           chmod +x gradlew

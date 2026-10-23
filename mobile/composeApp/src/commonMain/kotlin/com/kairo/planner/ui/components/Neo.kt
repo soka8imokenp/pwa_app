@@ -32,6 +32,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -418,7 +420,7 @@ fun NeoCheckbox(checked: Boolean, onToggle: () -> Unit, color: Color = Sumire.co
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            androidx.compose.material.icons.Icons.Rounded.Check,
+            Icons.Rounded.Check,
             null,
             tint = c.onAccent,
             modifier = Modifier.size(size * 0.7f).graphicsLayer { scaleX = scale; scaleY = scale },

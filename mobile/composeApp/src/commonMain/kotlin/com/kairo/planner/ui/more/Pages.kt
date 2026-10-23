@@ -94,7 +94,7 @@ fun BacklogPage(onBack: () -> Unit) {
     }) {
         if (tasks.isEmpty()) EmptyState("📦", s.backlog, s.noTasksSubtitle)
         LazyColumn(contentPadding = PaddingValues(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            tasks.groupBy { it.date }.toSortedMap(compareByDescending { it }).forEach { (date, list) ->
+            tasks.groupBy { it.date }.entries.sortedByDescending { it.key }.forEach { (date, list) ->
                 item(key = "d-$date") {
                     Text(s.dateShort(date), style = Sumire.type.label(), color = Sumire.colors.inkMuted, modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp))
                 }

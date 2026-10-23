@@ -16,7 +16,7 @@ enum class PlannerTab { TODAY, HABITS, FOCUS, MORE }
 enum class HealthTab { BODY, FOOD, ACTIVITY, COACH }
 
 /** Full-screen pages pushed on top of the tabs (from the "More" tab or settings). */
-enum class Page { SETTINGS, BACKLOG, STATS, LINKS, ACTIVITY_LOG, PROFILE, HEALTH_CONNECT, ABOUT }
+enum class Page { SETTINGS, BACKLOG, STATS, LINKS, ACTIVITY_LOG, PROFILE, HEALTH_CONNECT, ABOUT, ACCOUNT }
 
 sealed interface Sheet {
     data class TaskEditor(val task: Task? = null, val date: String, val priority: Boolean = false) : Sheet

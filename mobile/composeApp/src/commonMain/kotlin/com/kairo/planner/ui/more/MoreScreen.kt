@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.CloudSync
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Info
@@ -96,6 +97,7 @@ fun MoreScreen(contentPadding: PaddingValues) {
         MenuGroup {
             MenuRow(Icons.Rounded.Person, c.matchaSoft, s.healthProfile) { app.open(Page.PROFILE) }
             MenuRow(Icons.Rounded.Favorite, c.plumSoft, s.healthConnect) { app.open(Page.HEALTH_CONNECT) }
+            MenuRow(Icons.Rounded.CloudSync, c.indigoSoft, s.account, s.accountHint) { app.open(Page.ACCOUNT) }
             MenuRow(Icons.Rounded.Settings, c.sand, s.settings) { app.open(Page.SETTINGS) }
             MenuRow(Icons.Rounded.Info, c.indigoSoft, s.about) { app.open(Page.ABOUT) }
         }

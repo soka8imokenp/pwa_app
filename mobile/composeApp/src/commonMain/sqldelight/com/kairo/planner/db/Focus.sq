@@ -25,3 +25,6 @@ SELECT DISTINCT date FROM focus_session WHERE duration_minutes > 0;
 
 insertFocus:
 INSERT OR REPLACE INTO focus_session(id, task_id, task_title, duration_minutes, mode, date, completed_at, updated_at) VALUES ?;
+
+selectFocusById:
+SELECT * FROM focus_session WHERE id = ?;

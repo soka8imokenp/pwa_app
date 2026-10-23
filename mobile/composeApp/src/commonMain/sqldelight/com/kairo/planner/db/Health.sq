@@ -183,3 +183,15 @@ SELECT * FROM step_log WHERE updated_at > ?;
 
 upsertSteps:
 INSERT OR REPLACE INTO step_log VALUES ?;
+
+selectWeightById:
+SELECT * FROM weight_log WHERE id = ?;
+
+selectMealById:
+SELECT * FROM meal_log WHERE id = ?;
+
+selectWaterById:
+SELECT * FROM water_log WHERE id = ?;
+
+selectWorkoutById:
+SELECT * FROM workout_log WHERE id = ?;

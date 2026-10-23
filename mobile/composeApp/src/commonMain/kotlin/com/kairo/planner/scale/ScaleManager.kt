@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.datetime.toInstant
 import kotlin.uuid.Uuid
 
 /** Platform hooks the scale manager needs (Bluetooth adapter state, persisted de-dup key). */
@@ -140,8 +141,12 @@ class ScaleManager(
 
         if (!reading.loadRemoved) sawLivePacket = true
         // A "removed" packet seen before any live packet is the scale's memory of an earlier weigh-in.
-        // Accept it only if it carries a new timestamp, so the user can still pick up a measurement made seconds before opening the screen.
-        if (reading.loadRemoved && !sawLivePacket && reading.deviceTimestamp == null) return
+        // Accept it only when it is recent, so a measurement made seconds before opening the screen is still picked up,
+        // but yesterday's weigh-in is not presented as a new one.
+        if (reading.loadRemoved && !sawLivePacket) {
+            val age = reading.deviceTimestamp?.let { ageMinutes(it) }
+            if (age == null || age > 15) return
+        }
 
         _state.value = ScaleState.Measuring(device, reading)
         val now = Time.nowMs()
@@ -209,6 +214,16 @@ class ScaleManager(
         gattJob?.cancel()
         gattJob = null
     }
+
+    /** Minutes between the scale's clock stamp and now, or null if it can't be parsed. */
+    private fun ageMinutes(stamp: String): Long? = runCatching {
+        val (date, time) = stamp.split(' ')
+        val (y, mo, d) = date.split('-').map { it.toInt() }
+        val (h, mi, se) = time.split(':').map { it.toInt() }
+        val ldt = kotlinx.datetime.LocalDateTime(y, mo, d, h, mi, se)
+        val ms = ldt.toInstant(Time.zone()).toEpochMilliseconds()
+        kotlin.math.abs(Time.nowMs() - ms) / 60_000
+    }.getOrNull()
 
     companion object {
         const val STABLE_WITHOUT_IMPEDANCE_MS = 6_000L

@@ -28,3 +28,6 @@ UPDATE link SET clicks = clicks + 1, updated_at = :now WHERE id = :id;
 
 softDeleteLink:
 UPDATE link SET deleted_at = :now, updated_at = :now WHERE id = :id;
+
+selectLinkById:
+SELECT * FROM link WHERE id = ?;

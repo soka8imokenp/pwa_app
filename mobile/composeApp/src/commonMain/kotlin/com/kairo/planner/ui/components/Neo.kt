@@ -56,6 +56,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -345,6 +347,7 @@ fun NeoTextField(
     minLines: Int = 1,
     trailing: @Composable (() -> Unit)? = null,
     leading: @Composable (() -> Unit)? = null,
+    password: Boolean = false,
 ) {
     val c = Sumire.colors
     val shape = RoundedCornerShape(14.dp)
@@ -358,6 +361,7 @@ fun NeoTextField(
         cursorBrush = SolidColor(c.matcha),
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
         keyboardActions = KeyboardActions(onAny = { onImeAction() }),
+        visualTransformation = if (password) PasswordVisualTransformation() else VisualTransformation.None,
         modifier = modifier,
         decorationBox = { inner ->
             Row(

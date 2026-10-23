@@ -38,6 +38,9 @@ interface PlatformServices {
     fun stopFocusTimer()
 
     fun keepScreenOn(on: Boolean)
+
+    /** Native "Sign in with Google" – returns a Google ID token for [webClientId], or null if cancelled/unsupported. */
+    suspend fun googleIdToken(webClientId: String): String? = null
 }
 
 val LocalPlatform = staticCompositionLocalOf<PlatformServices> { NoopPlatform }

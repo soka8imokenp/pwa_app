@@ -114,7 +114,14 @@ Visit `http://localhost:5173` to explore Daily Sumire!
 
 ---
 
-## 📱 Android Build (Capacitor)
+## 📱 Native app (Kotlin Multiplatform)
+
+The new native Android app (shared code also compiles for iOS) lives in [`mobile/`](mobile/README.md):
+Compose Multiplatform UI, offline SQLDelight database, BLE smart scales, Health Connect, step counter,
+Sumire AI and lossless cloud sync (`/api/sync/v2`). CI builds it on every push and publishes the APKs to the
+`kmp-preview` pre-release.
+
+## 📱 Android Build (Capacitor, legacy)
 
 Daily Sumire can be built into a production Android APK:
 
@@ -137,8 +144,14 @@ cd android
 To run the production backend with Docker:
 
 ```bash
-docker compose up -d --build
+# required – the server refuses to start without them (and they must differ)
+echo "JWT_SECRET=$(openssl rand -hex 48)" >> .env
+echo "JWT_REFRESH_SECRET=$(openssl rand -hex 48)" >> .env
+# optional: GOOGLE_CLIENT_IDS (comma-separated OAuth client ids), VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY
+docker compose -f docker-compose.prod.yml up -d --build
 ```
+
+Changing the JWT secrets signs every user out once – that is expected.
 
 The containerized service runs behind healthchecks with persistent SQLite storage mounted at `/app/server/prisma`.
 
@@ -146,7 +159,7 @@ The containerized service runs behind healthchecks with persistent SQLite storag
 
 ## 📖 API Documentation
 
-The complete OpenAPI 3.0 specification is available at [`server/docs/openapi.json`](file:///home/soka/1/pwa_app/server/docs/openapi.json).
+The complete OpenAPI 3.0 specification is available at [`server/docs/openapi.json`](server/docs/openapi.json).
 
 Key routes:
 - `POST /api/auth/register` — Create user account (Rate limited)

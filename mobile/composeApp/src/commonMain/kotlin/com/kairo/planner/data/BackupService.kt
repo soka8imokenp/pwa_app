@@ -141,9 +141,13 @@ class BackupService(private val db: SumireDatabase, private val health: HealthRe
         db.transaction {
             root.arr("habits").forEach { el ->
                 val h = el.jsonObject
+                if (h.s("deletedAt") != null) return@forEach
                 val oldId = h.s("id") ?: newId()
                 val id = if (oldId.length >= 32) oldId else newId()
                 habitIdMap[oldId] = id
+                // Cloud (v1) exports reference habits by their device-local id or by title.
+                h.s("clientLocalId")?.let { habitIdMap["local:$it"] = id }
+                h.s("title")?.let { habitIdMap["title:${it.lowercase()}"] = id }
                 db.habitQueries.upsertHabit(
                     HabitRow(
                         id = id,
@@ -163,11 +167,15 @@ class BackupService(private val db: SumireDatabase, private val health: HealthRe
             }
             root.arr("habitLogs").forEach { el ->
                 val l = el.jsonObject
-                val hid = habitIdMap[l.s("habitId") ?: return@forEach] ?: l.s("habitId") ?: return@forEach
+                val hid = l.s("habitId")?.let { habitIdMap[it] ?: it }
+                    ?: l.s("clientLocalHabitId")?.let { habitIdMap["local:$it"] }
+                    ?: l.s("habitTitle")?.let { habitIdMap["title:${it.lowercase()}"] }
+                    ?: return@forEach
                 db.habitQueries.upsertLog(hid, l.s("date") ?: return@forEach, if (l.b("completed") != false) 1L else 0L, now)
             }
             root.arr("tasks").forEach { el ->
                 val t = el.jsonObject
+                if (t.s("deletedAt") != null) return@forEach
                 val subs = (t["subtasks"] as? JsonArray)?.mapNotNull { s ->
                     val o = s as? JsonObject ?: return@mapNotNull null
                     SubTask(o.s("id") ?: newId(), o.s("title") ?: return@mapNotNull null, o.b("isCompleted") ?: false)
@@ -205,6 +213,7 @@ class BackupService(private val db: SumireDatabase, private val health: HealthRe
             }
             root.arr("links").forEach { el ->
                 val l = el.jsonObject
+                if (l.s("deletedAt") != null) return@forEach
                 db.linkQueries.upsertLink(
                     LinkRow(newId(), l.s("title") ?: return@forEach, l.s("url") ?: return@forEach, l.s("icon") ?: "🔗", l.s("iconBg") ?: "#DDE8DE", l.s("category") ?: "general", l.l("clicks") ?: 0, l.l("createdAt") ?: now, now, null),
                 )
@@ -227,7 +236,7 @@ class BackupService(private val db: SumireDatabase, private val health: HealthRe
         }
 
         // Profile first, so imported weights get a correct BMI/composition.
-        root.arr("healthProfile").firstOrNull()?.jsonObject?.let { p ->
+        (root.arr("healthProfile").firstOrNull()?.jsonObject ?: (root["healthProfile"] as? JsonObject))?.let { p ->
             health.saveProfile(
                 HealthProfile(
                     name = p.s("name") ?: "",
@@ -295,7 +304,10 @@ class BackupService(private val db: SumireDatabase, private val health: HealthRe
 
     private fun JsonObject.arr(k: String): List<kotlinx.serialization.json.JsonElement> = (this[k] as? JsonArray)?.toList() ?: emptyList()
     private fun JsonObject.s(k: String): String? = (this[k] as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotEmpty() && it != "null" }
-    private fun JsonObject.l(k: String): Long? = (this[k] as? JsonPrimitive)?.contentOrNull?.toDoubleOrNull()?.toLong()
+    private fun JsonObject.l(k: String): Long? {
+        val raw = (this[k] as? JsonPrimitive)?.contentOrNull ?: return null
+        return raw.toDoubleOrNull()?.toLong() ?: runCatching { kotlin.time.Instant.parse(raw).toEpochMilliseconds() }.getOrNull()
+    }
     private fun JsonObject.d(k: String): Double? = (this[k] as? JsonPrimitive)?.contentOrNull?.toDoubleOrNull()
     private fun JsonObject.b(k: String): Boolean? = (this[k] as? JsonPrimitive)?.contentOrNull?.toBooleanStrictOrNull()
     private fun JsonObject.list(k: String): List<String> = (this[k] as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull } ?: emptyList()

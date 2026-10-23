@@ -94,6 +94,7 @@ import com.kairo.planner.ui.health.ScaleSheet
 import com.kairo.planner.ui.health.StepsEditorSheet
 import com.kairo.planner.ui.health.WorkoutEditorSheet
 import com.kairo.planner.ui.more.AboutPage
+import com.kairo.planner.ui.more.AccountPage
 import com.kairo.planner.ui.more.ActivityLogPage
 import com.kairo.planner.ui.more.BacklogPage
 import com.kairo.planner.ui.more.HealthConnectPage
@@ -186,6 +187,7 @@ fun MainScaffold(app: AppState = remember { AppState() }) {
                             Page.PROFILE -> ProfilePage(back)
                             Page.HEALTH_CONNECT -> HealthConnectPage(back)
                             Page.ABOUT -> AboutPage(back)
+                            Page.ACCOUNT -> AccountPage(back)
                         }
                     }
                 }

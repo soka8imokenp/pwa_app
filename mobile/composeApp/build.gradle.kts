@@ -62,6 +62,7 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.multiplatform.settings.test)
         }
         androidMain.dependencies {
             implementation(compose.preview)
@@ -72,6 +73,9 @@ kotlin {
             implementation(libs.androidx.health.connect)
             implementation(libs.androidx.biometric)
             implementation(libs.androidx.fragment)
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play)
+            implementation(libs.googleid)
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.sqldelight.android.driver)

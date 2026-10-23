@@ -30,6 +30,7 @@ import com.kairo.planner.platform.AppPermission
 import com.kairo.planner.platform.BiometricAuth
 import com.kairo.planner.platform.LocalPlatform
 import com.kairo.planner.platform.PlatformServices
+import com.kairo.planner.sync.SyncEngine
 import com.kairo.planner.ui.MainScaffold
 import com.kairo.planner.ui.onboarding.OnboardingScreen
 import com.kairo.planner.ui.planner.TodayViewModel
@@ -45,6 +46,7 @@ fun App(platform: PlatformServices) {
     val settings = koinInject<AppSettings>()
     val lock = koinInject<AppLock>()
     val sync = koinInject<HealthSync>()
+    val cloud = koinInject<SyncEngine>()
     val biometric = koinInject<BiometricAuth>()
     val langCode by settings.language.collectAsState()
     val themeName by settings.theme.collectAsState()
@@ -70,6 +72,7 @@ fun App(platform: PlatformServices) {
                 scope.launch {
                     sync.refreshSteps()
                     sync.importFromHealthConnect()
+                    cloud.syncNow()
                 }
             }
             LifecycleEventEffect(Lifecycle.Event.ON_STOP) { lock.onBackground() }

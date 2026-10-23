@@ -106,6 +106,8 @@ class TodayViewModel(
     fun shiftDate(days: Int) { selectedDate.value = selectedDate.value.plusDays(days) }
     fun goToday() { selectedDate.value = Time.today() }
 
+    fun quickAdd(title: String) = viewModelScope.launch { planner.addTask(title, selectedDate.value.key()) }
+
     fun toggle(task: Task) = viewModelScope.launch { planner.setCompleted(task, !task.isCompleted) }
     fun toggleSubtask(task: Task, subId: String) = viewModelScope.launch { planner.toggleSubtask(task, subId) }
     fun togglePriority(task: Task, onFull: () -> Unit) = viewModelScope.launch {

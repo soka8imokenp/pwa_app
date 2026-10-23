@@ -167,11 +167,7 @@ fun TodayScreen(contentPadding: PaddingValues, vm: TodayViewModel = koinViewMode
                 NeoIconButton(Icons.Rounded.Add, s.addTask, { app.show(Sheet.TaskEditor(null, ui.date.toString())) }, size = 32.dp)
             }
         }
-        if (ui.tasks.isEmpty()) {
-            item(key = "tasks-empty") {
-                QuickAddRow { app.show(Sheet.TaskEditor(null, ui.date.toString())) }
-            }
-        }
+        item(key = "quick-add") { QuickAdd(onAdd = { vm.quickAdd(it) }) }
         items(ui.tasks, key = { "t-" + it.id }) { task ->
             SwipeableTask(task, onDelete = onDelete, onTomorrow = vm::moveToTomorrow) {
                 TaskCard(
@@ -447,13 +443,26 @@ private fun EmptySlot(index: Int, onClick: () -> Unit) {
     }
 }
 
+/** Inline "type and press enter" task creation – the fastest path for the most frequent action. */
 @Composable
-private fun QuickAddRow(onAdd: () -> Unit) {
-    Text(
-        S.noTasksSubtitle,
-        style = Sumire.type.small(),
-        color = Sumire.colors.inkMuted,
-        modifier = Modifier.padding(horizontal = 20.dp).clickable(onClick = onAdd),
+private fun QuickAdd(onAdd: (String) -> Unit) {
+    var text by remember { mutableStateOf("") }
+    val submit = {
+        if (text.isNotBlank()) {
+            onAdd(text.trim())
+            text = ""
+        }
+    }
+    NeoTextField(
+        text, { text = it },
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        placeholder = S.taskTitleHint,
+        imeAction = androidx.compose.ui.text.input.ImeAction.Done,
+        onImeAction = submit,
+        leading = { Icon(Icons.Rounded.Add, null, tint = Sumire.colors.inkMuted) },
+        trailing = if (text.isNotBlank()) {
+            { Icon(Icons.Rounded.ArrowForward, S.add, tint = Sumire.colors.matcha, modifier = Modifier.clickable(onClick = submit)) }
+        } else null,
     )
 }
 

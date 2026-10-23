@@ -55,3 +55,6 @@ SELECT * FROM day_note WHERE date BETWEEN ? AND ?;
 
 upsertDayNote:
 INSERT OR REPLACE INTO day_note VALUES ?;
+
+selectDayNotesChangedSince:
+SELECT * FROM day_note WHERE updated_at > ?;

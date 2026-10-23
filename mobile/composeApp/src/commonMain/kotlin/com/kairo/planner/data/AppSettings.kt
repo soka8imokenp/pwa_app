@@ -69,6 +69,8 @@ class AppSettings(private val s: Settings) {
 
     var lastSyncAt by delegate(long("last_sync_at", 0L))
     var lastPullServerTs by delegate(long("last_pull_server_ts", 0L))
+    /** Account id whose legacy (v1) cloud data was already imported – the import is not idempotent. */
+    var legacyImportedFor by delegate(str("legacy_imported_for", ""))
 
     private val soundPref = bool("sound", true)
     val sound: StateFlow<Boolean> = soundPref.state
@@ -138,5 +140,7 @@ class AppSettings(private val s: Settings) {
 
     companion object {
         const val DEFAULT_SERVER_URL = "https://daily.kawaii.uz/api"
+        /** Public OAuth web client id of daily.kawaii.uz – the audience of Google ID tokens the server accepts. */
+        const val GOOGLE_WEB_CLIENT_ID = "98363494043-t58b883m6upt2mrtegt90e7lq08srq01.apps.googleusercontent.com"
     }
 }

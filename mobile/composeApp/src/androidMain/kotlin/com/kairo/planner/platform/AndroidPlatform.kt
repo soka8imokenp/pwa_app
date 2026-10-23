@@ -210,6 +210,20 @@ class AndroidPlatform(
 
     override fun stopFocusTimer() = FocusNotifier.stop(context)
 
+    override suspend fun googleIdToken(webClientId: String): String? {
+        val activity = ActivityHolder.activity ?: return null
+        val option = com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption.Builder(webClientId).build()
+        val request = androidx.credentials.GetCredentialRequest.Builder().addCredentialOption(option).build()
+        val result = androidx.credentials.CredentialManager.create(activity).getCredential(activity, request)
+        val cred = result.credential
+        if (cred is androidx.credentials.CustomCredential &&
+            cred.type == com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+        ) {
+            return com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.createFrom(cred.data).idToken
+        }
+        return null
+    }
+
     override fun keepScreenOn(on: Boolean) {
         val w = ActivityHolder.activity?.window ?: return
         ContextCompat.getMainExecutor(context).execute {

@@ -55,3 +55,6 @@ INSERT OR REPLACE INTO habit_log(habit_id, date, completed, updated_at) VALUES (
 
 selectCompletedDates:
 SELECT DISTINCT date FROM habit_log WHERE completed = 1;
+
+selectLog:
+SELECT * FROM habit_log WHERE habit_id = ? AND date = ?;

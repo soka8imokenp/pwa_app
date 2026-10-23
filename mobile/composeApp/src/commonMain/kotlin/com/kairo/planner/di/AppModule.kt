@@ -16,6 +16,8 @@ import com.kairo.planner.domain.planner.AppLock
 import com.kairo.planner.domain.planner.FocusController
 import com.kairo.planner.platform.PlatformServices
 import com.kairo.planner.scale.ScaleManager
+import com.kairo.planner.sync.ApiClient
+import com.kairo.planner.sync.SyncEngine
 import com.kairo.planner.ui.health.ActivityViewModel
 import com.kairo.planner.ui.health.BodyViewModel
 import com.kairo.planner.ui.health.CoachViewModel
@@ -45,7 +47,9 @@ val sharedModule: Module = module {
     single(APP_SCOPE) { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
     single { createDatabase(get<DriverFactory>()) }
     single { AppSettings(get()) }
-    single<ChangeListener> { ChangeListener { } }
+    single { ApiClient(get(), get()) }
+    single { SyncEngine(get(), get(), get(), get(APP_SCOPE)) }
+    single<ChangeListener> { get<SyncEngine>() }
     single {
         HttpClient {
             install(ContentNegotiation) { json(AppJson) }

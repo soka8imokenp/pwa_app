@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="focus_running">Fokus sessiyasi davom etmoqda</string>
+    <string name="focus_done_title">Sessiya tugadi</string>
+    <string name="focus_done_body">Ajoyib! Dam oling va suv iching.</string>
+</resources>

@@ -1,0 +1,30 @@
+CREATE TABLE link (
+    id TEXT NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    url TEXT NOT NULL,
+    icon TEXT NOT NULL DEFAULT '🔗',
+    icon_bg TEXT NOT NULL DEFAULT '#DDE8DE',
+    category TEXT NOT NULL DEFAULT 'general',
+    clicks INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    deleted_at INTEGER
+);
+
+selectLinks:
+SELECT * FROM link WHERE deleted_at IS NULL ORDER BY clicks DESC, created_at;
+
+selectAllLinks:
+SELECT * FROM link;
+
+selectLinksChangedSince:
+SELECT * FROM link WHERE updated_at > ?;
+
+upsertLink:
+INSERT OR REPLACE INTO link(id, title, url, icon, icon_bg, category, clicks, created_at, updated_at, deleted_at) VALUES ?;
+
+incrementClicks:
+UPDATE link SET clicks = clicks + 1, updated_at = :now WHERE id = :id;
+
+softDeleteLink:
+UPDATE link SET deleted_at = :now, updated_at = :now WHERE id = :id;

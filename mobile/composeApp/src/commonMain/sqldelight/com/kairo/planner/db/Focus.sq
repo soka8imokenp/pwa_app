@@ -1,0 +1,27 @@
+CREATE TABLE focus_session (
+    id TEXT NOT NULL PRIMARY KEY,
+    task_id TEXT,
+    task_title TEXT,
+    duration_minutes INTEGER NOT NULL,
+    mode TEXT NOT NULL DEFAULT 'pomodoro',
+    date TEXT NOT NULL,
+    completed_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+CREATE INDEX focus_date ON focus_session(date);
+
+selectFocusBetween:
+SELECT * FROM focus_session WHERE date BETWEEN ? AND ? ORDER BY completed_at DESC;
+
+selectAllFocus:
+SELECT * FROM focus_session;
+
+selectFocusChangedSince:
+SELECT * FROM focus_session WHERE updated_at > ?;
+
+selectFocusDates:
+SELECT DISTINCT date FROM focus_session WHERE duration_minutes > 0;
+
+insertFocus:
+INSERT OR REPLACE INTO focus_session(id, task_id, task_title, duration_minutes, mode, date, completed_at, updated_at) VALUES ?;

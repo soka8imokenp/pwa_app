@@ -1,0 +1,57 @@
+CREATE TABLE habit (
+    id TEXT NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    icon TEXT NOT NULL DEFAULT 'bolt',
+    color TEXT NOT NULL DEFAULT '#3D6B52',
+    target_days TEXT NOT NULL DEFAULT 'mon,tue,wed,thu,fri,sat,sun',
+    reminder_minute INTEGER,
+    archived INTEGER NOT NULL DEFAULT 0,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    deleted_at INTEGER
+);
+
+CREATE TABLE habit_log (
+    habit_id TEXT NOT NULL,
+    date TEXT NOT NULL,
+    completed INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (habit_id, date)
+);
+
+CREATE INDEX habit_log_date ON habit_log(date);
+
+selectActive:
+SELECT * FROM habit WHERE deleted_at IS NULL AND archived = 0 ORDER BY sort_order, created_at;
+
+selectAllHabits:
+SELECT * FROM habit;
+
+selectHabitById:
+SELECT * FROM habit WHERE id = ?;
+
+selectHabitsChangedSince:
+SELECT * FROM habit WHERE updated_at > ?;
+
+upsertHabit:
+INSERT OR REPLACE INTO habit(id, title, icon, color, target_days, reminder_minute, archived, sort_order, created_at, updated_at, deleted_at)
+VALUES ?;
+
+softDeleteHabit:
+UPDATE habit SET deleted_at = :now, updated_at = :now WHERE id = :id;
+
+selectLogsSince:
+SELECT * FROM habit_log WHERE date >= ?;
+
+selectAllLogs:
+SELECT * FROM habit_log;
+
+selectLogsChangedSince:
+SELECT * FROM habit_log WHERE updated_at > ?;
+
+upsertLog:
+INSERT OR REPLACE INTO habit_log(habit_id, date, completed, updated_at) VALUES (?, ?, ?, ?);
+
+selectCompletedDates:
+SELECT DISTINCT date FROM habit_log WHERE completed = 1;

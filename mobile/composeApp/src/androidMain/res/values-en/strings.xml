@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="focus_running">Focus session running</string>
+    <string name="focus_done_title">Session complete</string>
+    <string name="focus_done_body">Great work! Take a break and drink some water.</string>
+</resources>

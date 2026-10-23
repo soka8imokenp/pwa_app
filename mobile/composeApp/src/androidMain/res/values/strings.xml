@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Daily Sumire</string>
+    <string name="focus_running">Идёт фокус-сессия</string>
+    <string name="focus_done_title">Сессия завершена</string>
+    <string name="focus_done_body">Отличная работа! Сделай паузу и попей воды.</string>
+</resources>

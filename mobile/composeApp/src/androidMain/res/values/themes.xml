@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="sumire_matcha">#3D6B52</color>
+    <color name="sumire_canvas">#F4F0EA</color>
+
+    <!-- Matcha green system splash: identical colour to the first frame of the Compose intro, so there is no flash. -->
+    <style name="Theme.Sumire.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/sumire_matcha</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+        <item name="postSplashScreenTheme">@style/Theme.Sumire</item>
+    </style>
+
+    <style name="Theme.Sumire" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/sumire_matcha</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

@@ -1,0 +1,57 @@
+CREATE TABLE activity_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    action TEXT NOT NULL,
+    entity TEXT NOT NULL,
+    title TEXT NOT NULL,
+    details TEXT NOT NULL DEFAULT ''
+);
+
+CREATE INDEX activity_ts ON activity_log(ts);
+
+CREATE TABLE chat_message (
+    id TEXT NOT NULL PRIMARY KEY,
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    actions_json TEXT NOT NULL DEFAULT '[]',
+    suggestion_json TEXT,
+    created_at INTEGER NOT NULL
+);
+
+CREATE TABLE day_note (
+    date TEXT NOT NULL PRIMARY KEY,
+    mood INTEGER NOT NULL DEFAULT 0,
+    note TEXT NOT NULL DEFAULT '',
+    updated_at INTEGER NOT NULL
+);
+
+insertActivity:
+INSERT INTO activity_log(ts, date, action, entity, title, details) VALUES (?, ?, ?, ?, ?, ?);
+
+selectRecentActivity:
+SELECT * FROM activity_log ORDER BY ts DESC LIMIT ?;
+
+clearActivity:
+DELETE FROM activity_log;
+
+trimActivity:
+DELETE FROM activity_log WHERE ts < ?;
+
+selectChat:
+SELECT * FROM chat_message ORDER BY created_at;
+
+insertChat:
+INSERT OR REPLACE INTO chat_message VALUES ?;
+
+clearChat:
+DELETE FROM chat_message;
+
+selectDayNote:
+SELECT * FROM day_note WHERE date = ?;
+
+selectDayNotesBetween:
+SELECT * FROM day_note WHERE date BETWEEN ? AND ?;
+
+upsertDayNote:
+INSERT OR REPLACE INTO day_note VALUES ?;
